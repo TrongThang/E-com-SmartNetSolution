@@ -24,7 +24,7 @@ function get_error_response(errors = null, status_code = 200, data = null, field
         errorList = errors.map(({ errorCode, fieldError }) => {
             const errorName = Object.keys(ERROR_CODES).find(key => ERROR_CODES[key] === errorCode);
             const message = (fieldError || '') + (errorName && MESSAGES[errorName] ? MESSAGES[errorName] : 'Lỗi không xác định');
-            return { error: errorCode, message };
+            return { code: errorCode, message };
         });
     } 
     // Nếu truyền vào là một lỗi đơn lẻ
@@ -33,7 +33,7 @@ function get_error_response(errors = null, status_code = 200, data = null, field
         
         const errorCode = errors;
         const message = (fieldError || '') + ERROR_MESSAGES[errorCode]
-        errorList.push({ error: errors, message });
+        errorList.push({ code: errors, message });
     }
 
     // Trả về object JSON (không dùng res ở đây, để controller xử lý)

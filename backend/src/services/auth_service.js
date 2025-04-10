@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response');
 const { PrismaClient, sql } = require('@prisma/client');
+const { hashPassword } = require('../helpers/auth.helper');
+const { generateAccountId, generateCustomerId } = require('../helpers/generate.helper')
 
 const prisma = new PrismaClient();
 
@@ -104,7 +106,55 @@ const refreshTokenAPI = async (req, res) => {
     }
 };
 
+const register = async ({ username, password, confirm_password, surname, lastname, phone, email, gender }) => {
+	if (password !== confirm_password) {
+		return get_error_response(ERROR_CODES.ACCOUNT_PASSWORD_NOT_MATCH, STATUS_CODE.BAD_REQUEST);
+	}	
+
+	const checkAccount = await prisma.account.findFirst({
+		where: {
+			username: username
+		}
+	});
+	if (checkAccount) {
+		return get_error_response(ERROR_CODES.ACCOUNT_USERNAME_EXIST, STATUS_CODE.BAD_REQUEST);
+	}
+
+	const checkCustomer = await prisma.customer.findFirst({
+		where: {
+			email: email
+		}
+	});
+	if (checkCustomer) {
+		return get_error_response(ERROR_CODES.CUSTOMER_EMAIL_EXISTED, STATUS_CODE.BAD_REQUEST);
+	}
+
+	const customer_id = generateCustomerId();
+	console.log('Customer ID:', customer_id);
+	const customer = await prisma.customer.create({
+		data: {
+			id: customer_id,
+			surname: surname, lastname: lastname, phone: phone, email: email, gender: gender
+		}
+	})
+
+	// Hash mật khẩu trước khi lưu vào cơ sở dữ liệu
+	const hashedPassword = await hashPassword(password);
+	const accountId = generateAccountId();
+	console.log('Account ID:', accountId);
+	const account = await prisma.account.create({
+		data: {
+			account_id: accountId,
+			username: username,
+			password: hashedPassword,
+			customer_id: customer.id
+		}
+	});
+
+	return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, account);
+}
+
 module.exports = {
-    loginAPI,
-    refreshTokenAPI
+    loginAPI, register_service: register,
+    refreshTokenAPI,
 }

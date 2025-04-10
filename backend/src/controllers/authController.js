@@ -1,12 +1,14 @@
 const { PrismaClient } = require('@prisma/client');
 const {
     loginAPI,
-    refreshTokenAPI
+    refreshTokenAPI,
+    register_service
 } = require('../services/auth_service');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response');
+const { loginSchema } = require('../schemas/account.schema');
 
 class AuthController {
     constructor() {
@@ -14,17 +16,23 @@ class AuthController {
     }
 
     async register(req, res) {
-        try {
-            const { email, password, name } = req.body;
+        const { username, password, confirm_password, surname, lastname, phone, email, gender } = req.body;
 
-            
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Có lỗi xảy ra trong quá trình đăng ký' });
-        }
+        const response = await register_service({
+            username,
+            password,
+            confirm_password,
+            surname,
+            lastname,
+            phone,
+            email,
+            gender
+        })
+
+        return res.status(response.status_code).json(response);
     }
 
-    async login(req, res) {
+    async login(req, res, loginSchema) {
         const { username, password, type } = req.body;
 
         const response = await loginAPI(username, password, type);
