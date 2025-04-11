@@ -1,9 +1,9 @@
 const express = require('express');
-const { login, getMe, register } = require('../controllers/authController');
+const { login, getMe, register, sendOtpEmail } = require('../controllers/authController');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const authRouter = express.Router();
 
-const { loginSchema, registerCustomoerSchema } = require('../schemas/account.schema');
+const { loginSchema, registerCustomerSchema, sendOtpSchema } = require('../schemas/account.schema');
 
 const asyncHandler = (fn) => {
     return (req, res, next) => {
@@ -12,7 +12,9 @@ const asyncHandler = (fn) => {
 };
 
 authRouter.post('/login', validateMiddleware(loginSchema), asyncHandler(login));
-authRouter.post('/register', validateMiddleware(registerCustomoerSchema), asyncHandler(register));
+authRouter.post('/register', validateMiddleware(registerCustomerSchema), asyncHandler(register));
+authRouter.post('/send-otp', validateMiddleware(sendOtpSchema), asyncHandler(sendOtpEmail));
+// authRouter.post('/verify-otp', validateMiddleware(sendOtpSchema), asyncHandler(verifyOtpEmail));
 authRouter.post('/account/get-me', getMe);
 
 

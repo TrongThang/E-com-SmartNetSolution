@@ -8,7 +8,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response');
-const { loginSchema } = require('../schemas/account.schema');
+const { loginSchema, sendOtpSchema } = require('../schemas/account.schema');
+const NotificationService = require("../services/notification_service");
+
+const notificationService = new NotificationService(); // Truyền Prisma client vào
 
 class AuthController {
     constructor() {
@@ -32,7 +35,7 @@ class AuthController {
         return res.status(response.status_code).json(response);
     }
 
-    async login(req, res, loginSchema) {
+    async login(req, res) {
         const { username, password, type } = req.body;
 
         const response = await loginAPI(username, password, type);
@@ -63,6 +66,14 @@ class AuthController {
     // Phương thức để đóng kết nối Prisma khi cần
     async disconnect() {
         await this.prisma.$disconnect();
+    }
+
+    async sendOtpEmail(req, res) {
+        const { account_id, email } = req.body;
+
+        const response = await notificationService.sendOtpEmail(account_id, email);
+        
+        return res.status(response.status_code).json(response);
     }
 }
 

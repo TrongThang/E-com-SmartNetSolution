@@ -1,6 +1,14 @@
 const { z } = require('zod');
 const { ERROR_CODES, ERROR_MESSAGES } = require('../contants/errors');
 
+const sendOtpSchema = z.object({
+    body: z.object({
+        email: z.string().email({
+            message: `[${ERROR_CODES.CUSTOMER_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_EMAIL_INVALID]}`,
+        }),
+    }),
+});
+
 const loginSchema = z.object({
     body: z.object({
         username: z.string().min(1, {
@@ -23,7 +31,7 @@ const loginSchema = z.object({
 });
 
 
-const registerCustomoerSchema = z.object({
+const registerCustomerSchema = z.object({
     body: z.object({
         username: z.string().min(1, {
             message: `[${ERROR_CODES.ACCOUNT_USERNAME_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_USERNAME_REQUIRED]}`,
@@ -61,5 +69,6 @@ const registerCustomoerSchema = z.object({
 
 module.exports = {
     loginSchema,
-    registerCustomoerSchema,
+    registerCustomerSchema,
+    sendOtpSchema,
 }
