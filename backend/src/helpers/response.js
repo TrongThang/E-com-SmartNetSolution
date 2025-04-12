@@ -2,20 +2,18 @@ const { ERROR_MESSAGES } = require("../contants/errors.js");
 
 const { ERROR_CODES, MESSAGES } =  import("../contants/errors.js");
 
-// export default function get_error_response (errorCode, status_code = 200, result = null, fieldError = null) {
-//     // Xử lý thông điệp lỗi
-//     const fieldErrorMessage = fieldError || '';
-//     const errorName = Object.keys(ERROR_CODES).find(key => ERROR_CODES[key] === errorCode);
-//     const message = fieldErrorMessage + (errorName && MESSAGES[errorName] ? MESSAGES[errorName] : 'Lỗi không xác định');
-
-//     // Trả về object JSON
-//     return res.status(status_code).json({
-//         error: errorCode,
-//         message: message,
-//         data: result
-//     });
-// }
-
+///
+// Hàm này dùng để tạo ra một response lỗi cho API
+// Dùng cho cả lỗi đơn lẻ và lỗi nhiều
+// Nếu truyền vào là một mảng lỗi thì nó sẽ convert thành một mảng các lỗi
+// Nếu truyền vào là một lỗi đơn lẻ thì nó sẽ convert thành một lỗi duy nhất
+// Nếu không truyền vào lỗi nào thì nó sẽ trả về một lỗi mặc định
+// Nếu không truyền vào status_code thì nó sẽ trả về 200
+// Nếu không truyền vào data thì nó sẽ không trả về data
+// Nếu không truyền vào fieldError thì nó sẽ không trả về fieldError
+// Nếu không truyền vào message thì nó sẽ không trả về message
+// Nếu không truyền vào errorCode thì nó sẽ không trả về errorCode
+///
 function get_error_response(errors = null, status_code = 200, data = null, fieldError = null) {
     let errorList = [];
 

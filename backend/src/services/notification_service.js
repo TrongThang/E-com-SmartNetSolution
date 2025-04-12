@@ -18,8 +18,8 @@ class NotificationService {
     constructor() {
         this.prisma = new PrismaClient();
     }
-    
-    async sendOtpEmail(account_id, email) {
+
+    async checkAccountEmail (account_id, email) {
         const account = await this.prisma.account.findUnique({
             where: { account_id: account_id },
             select: {
@@ -30,23 +30,35 @@ class NotificationService {
                     select: {
                         id: true,
                         email: true,
+                        email_verified: true,
                     },
                 },
             },
         });
+        
         if (!account) {
             return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
         }
-        console.log('account: ', account)   
-        console.log('send: ',email)
-        console.log('gốc: ', account.customer.email)
+        
         if (account.customer.email !== email) {
             return get_error_response(ERROR_CODES.ACCOUNT_EMAIL_NOT_MATCH, STATUS_CODE.BAD_REQUEST);
         }
-
-        if (account.email_verified) {
+    
+        if (account.customer.email_verified) {
             return get_error_response(ERROR_CODES.ACCOUNT_EMAIL_IS_VERIFIED, STATUS_CODE.BAD_REQUEST);
         }
+    
+        return account;
+    }
+    
+    async sendOtpEmail(account_id, email) {
+        const result_check = await this.checkAccountEmail(account_id, email);
+
+        if (result_check.status_code) {
+            return result_check; // Trả về lỗi nếu có
+        }
+        console.log("result_check", result_check);
+        const account = result_check;
         
         try {
             let otp = generateVerificationOTPCode(); // Tạo mã OTP mới
@@ -81,6 +93,52 @@ class NotificationService {
             return get_error_response(ERROR_CODES.EMAIL_SEND_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
         }
         
+    }
+
+    async verifyOtpEmail(account_id, email, otp) {
+        const account = await this.checkAccountEmail(account_id, email);
+
+        if (account.status_code) {
+            return account; // Trả về lỗi nếu có
+        }
+
+        if (!account.verification_code) {
+            return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_CODE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+        }
+
+        if (account.verification_code !== otp.toString()) {
+            return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_CODE_NOT_MATCH, STATUS_CODE.BAD_REQUEST);
+        }
+
+        if (getVietnamTimeNow() > account.verification_expiry) {
+            return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_CODE_EXPIRED, STATUS_CODE.BAD_REQUEST);
+        }
+        
+        try {
+            // Cập nhật bảng account
+            await this.prisma.account.update({
+                where: { account_id: account_id },
+                data: {
+                    verification_code: null,
+                    verification_expiry: null,
+                },
+            });
+
+            // Cập nhật bảng customer
+            await this.prisma.customer.update({
+                where: { id: account.customer.id },
+                data: {
+                    email_verified: true,
+                },
+            });
+            
+            return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, { message: "Xác minh thành công" });
+        } catch (error) {
+            console.error("Lỗi xác minh OTP:", error);
+            return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
+        }
+
+    
     }
 }
 

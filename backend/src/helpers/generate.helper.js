@@ -25,7 +25,6 @@ function generateAccountId(input = Date.now()) {
 const generateCustomerId = (input = Date.now()) => generatePrefixedUUID("CUST", input);
 const generateEmployeeId = (input = Date.now()) => generatePrefixedUUID("EMPL", input);
 
-
 function generateVerificationOTPCode() {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Tạo số ngẫu nhiên từ 100000 đến 999999
 }

@@ -75,6 +75,14 @@ class AuthController {
         
         return res.status(response.status_code).json(response);
     }
+
+    async verifyOtpEmail(req, res) {
+        const { account_id, email, otp } = req.body;
+
+        const response = await notificationService.verifyOtpEmail(account_id, email, otp);
+
+        return res.status(response.status_code).json(response);
+    }
 }
 
 module.exports = new AuthController();

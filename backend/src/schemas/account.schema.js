@@ -1,11 +1,26 @@
 const { z } = require('zod');
 const { ERROR_CODES, ERROR_MESSAGES } = require('../contants/errors');
+const { REGEX } = require('../contants/format_contants');
 
 const sendOtpSchema = z.object({
     body: z.object({
         email: z.string().email({
             message: `[${ERROR_CODES.CUSTOMER_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_EMAIL_INVALID]}`,
         }),
+    }),
+});
+
+const verifyOtpSchema = z.object({
+    body: z.object({
+        // account_id: z.string().uuid({
+        //     message: `[${ERROR_CODES.ACCOUNT_ID_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_ID_INVALID]}`,
+        // }),
+        // email: z.string().email({
+        //     message: `[${ERROR_CODES.CUSTOMER_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_EMAIL_INVALID]}`,
+        // }),
+        // otp: z.string().regex(/^\d{6}$/, {
+        //         message: `[${ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID]}`,
+        // }),
     }),
 });
 
@@ -20,7 +35,6 @@ const loginSchema = z.object({
         }),
         type: z.enum(['CUSTOMER', 'EMPLOYEE'], {
             message: `[${ERROR_CODES.ACCOUNT_TYPE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_TYPE_INVALID]}`,
-            
         }),
         remember_me: z.boolean({
             invalid_type_error: {
@@ -54,7 +68,7 @@ const registerCustomerSchema = z.object({
             .min(1, {
                 message: `[${ERROR_CODES.CUSTOMER_PHONE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_PHONE_INVALID]}`,
             })
-            .regex(/^\d{10}$/, {
+            .regex(REGEX.PHONE, {
                 message: `[${ERROR_CODES.CUSTOMER_PHONE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_PHONE_INVALID]}`,
             }),
         email: z.string().email({
@@ -68,7 +82,6 @@ const registerCustomerSchema = z.object({
 
 
 module.exports = {
-    loginSchema,
-    registerCustomerSchema,
-    sendOtpSchema,
+    loginSchema, registerCustomerSchema,
+    sendOtpSchema, verifyOtpSchema,
 }

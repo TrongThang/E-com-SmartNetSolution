@@ -19,6 +19,8 @@ function validateMiddleware(schema) {
                         const [code, message] = err.message.match(/\[(\d+)\](.+)/).slice(1); // Tách code và message
                         return {
                             path: err.path.join('.'),
+                            content: err.path[0],
+                            field: err.path[1],
                             message,
                             error_code: Number(code),
                             code: err.code,
