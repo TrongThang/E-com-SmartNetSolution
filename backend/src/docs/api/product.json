@@ -1,0 +1,22 @@
+{
+    "name": "Product",
+    "description": "A product in the store.",
+    "image": "https://example.com/product.jpg",
+    "selling_price": 19.99,
+    "category_id": 1, 
+    "unit_id": 1, 
+    "warrenty_time_id": 1, 
+    "is_hide": false,
+    "status": 3, 
+    "attributes": [
+        {
+            "id": "1",
+            "value": "Red"
+        },
+        {
+            "id": "2",
+            "value": "M"
+        }
+    ],
+    "delete": [4]
+}

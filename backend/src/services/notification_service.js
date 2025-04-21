@@ -57,7 +57,6 @@ class NotificationService {
         if (result_check.status_code) {
             return result_check; // Trả về lỗi nếu có
         }
-        console.log("result_check", result_check);
         const account = result_check;
         
         try {
@@ -137,8 +136,6 @@ class NotificationService {
             console.error("Lỗi xác minh OTP:", error);
             return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
         }
-
-    
     }
 }
 

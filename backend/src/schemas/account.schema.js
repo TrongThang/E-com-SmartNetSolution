@@ -12,15 +12,15 @@ const sendOtpSchema = z.object({
 
 const verifyOtpSchema = z.object({
     body: z.object({
-        // account_id: z.string().uuid({
-        //     message: `[${ERROR_CODES.ACCOUNT_ID_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_ID_INVALID]}`,
-        // }),
-        // email: z.string().email({
-        //     message: `[${ERROR_CODES.CUSTOMER_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_EMAIL_INVALID]}`,
-        // }),
-        // otp: z.string().regex(/^\d{6}$/, {
-        //         message: `[${ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID]}`,
-        // }),
+        account_id: z.string().uuid({
+            message: `[${ERROR_CODES.ACCOUNT_ID_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_ID_INVALID]}`,
+        }),
+        email: z.string().email({
+            message: `[${ERROR_CODES.CUSTOMER_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_EMAIL_INVALID]}`,
+        }),
+        otp: z.string().regex(/^\d{6}$/, {
+                message: `[${ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID]}`,
+        }),
     }),
 });
 

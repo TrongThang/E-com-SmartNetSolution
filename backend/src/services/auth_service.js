@@ -11,10 +11,12 @@ async function loginAPI (username, password, type, remember_me = null) {
 	try {
 		include_clause = type === 'CUSTOMER' ? { customer: true } : { employee: true };
 		console.log('chuẩn bị tìm kiếm:', username, password, type, remember_me);
+
+		const hashedPassword = await hashPassword(password);
+		
 		const user = await prisma.account.findFirst({
 			where: {
 				username: username,
-				password: password,
 				role_id: type,
 				// report: { equals: 0 }
 			},

@@ -63,11 +63,6 @@ class AuthController {
         }
     }
 
-    // Phương thức để đóng kết nối Prisma khi cần
-    async disconnect() {
-        await this.prisma.$disconnect();
-    }
-
     async sendOtpEmail(req, res) {
         const { account_id, email } = req.body;
 
