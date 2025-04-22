@@ -4,6 +4,7 @@ const { get_error_response } = require('../helpers/response');
 const { PrismaClient, sql } = require('@prisma/client');
 const { convertToSlug, removeTagHtml } = require('../helpers/extension.helper');
 const { executeSelectData } = require('../helpers/sql_query')
+const { configDataProductDetail, diffAttributeSets } = require('../helpers/product.helper')
 
 
 const prisma = new PrismaClient();
@@ -113,7 +114,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
     //ADD filter liked by updated_at -> a month 
     
     const products = await executeSelectData({
-        table: get_table, queryJoin: query_join, strGetColumn: get_attr, filter: filter, 
+        table: get_table, queryJoin: query_join, strGetColumn: get_attr, filter: filter, configData: configDataProductDetail,
     })
     
     return get_error_response(errorCode=ERROR_CODES.SUCCESS, status_code=STATUS_CODE.OK, data = products); 

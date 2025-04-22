@@ -79,7 +79,8 @@ async function executeSelectData({
     page = null,
     sort = null,
     order = null,
-    queryJoin = null
+    queryJoin = null,
+    configData = null,
 }) {
     // Xây dựng WHERE clause
     const buildWhere = filter
@@ -124,7 +125,7 @@ async function executeSelectData({
     
     // Xây dựng câu SQL chính
     const query = `
-        SELECT DISTINCT ${queryJoin ? `${table}.` : ''}id as ID, ${strGetColumn}, ${queryGetTime}
+        SELECT DISTINCT ${queryJoin ? `${table}.` : ''}id, ${strGetColumn}, ${queryGetTime}
         FROM ${table}
         ${queryJoin || ''}
         WHERE ${whereCondition}
@@ -140,14 +141,18 @@ async function executeSelectData({
     `;  
     console.log(totalCountQuery)
     
-    const data = await QueryHelper.queryRaw(query);
+    let data = await QueryHelper.queryRaw(query);
+    if (configData && typeof configData === 'function') {
+        data = configData(data);
+        console.log('Formatted data:', data);
+    }
 
     const totalCountResult = await QueryHelper.queryRaw(totalCountQuery);
     const totalCount = Number(totalCountResult[0].total); // Chuyển BigInt thành Number
 
     // Tính tổng số trang
     const totalPage = parsedLimit ? Math.ceil(totalCount / parsedLimit) : 1;
-    console.log('Total count type:', typeof totalCountResult[0].total);
+
     return {
         data,
         total_page: totalPage,

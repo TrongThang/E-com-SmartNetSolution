@@ -18,5 +18,20 @@
             "value": "M"
         }
     ],
-    "delete": [4]
+    "delete": [4],
+    "attribute_groups": [
+        {
+            "id": 1,
+            "name": "Điện năng",
+            "attributes": [
+                {
+                    "id": 2,
+                    "name": "Công suất",
+                    "value": "23W"
+                }
+            ]
+        }
+    ]
 }
+
+
