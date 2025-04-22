@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const {
     getProductService,
+    getProductDetailService,
     createProductService,
     updateProductService,
     deleteProductService,
@@ -17,7 +18,20 @@ class ProductController {
     }
 
     async getProduct(req, res) {
+        const { filter = null, limit = null, sort = null, order = null, role = null, type = null } = req.body || {};
 
+        const response = await getProductService(filter, limit, sort, order, role, type)
+
+        return res.status(response.status_code).json(response);
+    }
+
+    async getProductDetail(req, res) {
+        console.log('Xem chi tiết sản phẩm!');
+        
+        const { id } = req.params;
+        
+        const response = await getProductDetailService(Number(id))
+        
         return res.status(response.status_code).json(response);
     }
 
@@ -33,3 +47,5 @@ class ProductController {
 
 
 }
+
+module.exports = new ProductController();

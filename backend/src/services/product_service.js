@@ -1,9 +1,123 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
+const { ROLE } = require('../contants/info');
 const { get_error_response } = require('../helpers/response');
 const { PrismaClient, sql } = require('@prisma/client');
 const { convertToSlug, removeTagHtml } = require('../helpers/extension.helper');
+const { executeSelectData } = require('../helpers/sql_query')
+
 
 const prisma = new PrismaClient();
+// 0: Sản phẩm ngừng bán
+// >= 1: Sản phẩm đang bán
+// 1: Sản phẩm bán
+// 2: Sản phẩm khuyến mãi
+// 3: Sản phẩm nổi bật
+// 4: Sản phẩm mới
+// 5: sản phẩm bán chạy
+// Nếu không nhập limit thì mặc định là lấy hết
+const getProductService = async (filter, limit, sort, order, role, type) => {
+
+    // product.name, slug, description, description_normal, image, selling_price, category_id, views, status, unit_id 
+    let get_attr = `product.name, product.slug, product.description, product.image, selling_price, views, status
+    category_id, categories.name as categories`
+    
+    let get_table = `product`
+    let query_join = `LEFT JOIN categories ON product.category_id = categories.category_id`
+
+    // if (role == "CUSTOMER") {
+    get_attr += `, COALESCE(review.avg_rating, 0) AS average_rating`
+    query_join += `
+        LEFT JOIN (
+            SELECT product_id, AVG(rating) AS avg_rating
+            FROM review_product
+            GROUP BY product_id
+        ) review ON product.id = review.product_id
+        LEFT JOIN (
+            SELECT product_id, COUNT(id) AS total_liked
+            FROM liked
+            GROUP BY product_id
+        ) liked ON product.id = liked.product_id
+    `
+    // }
+
+    try {
+        const products = await executeSelectData({ table: get_table, queryJoin: query_join, strGetColumn: get_attr, limit: limit, filter: filter, sort: sort, order: order })
+
+        return get_error_response(errors=ERROR_CODES.SUCCESS, status_code=STATUS_CODE.OK, data = products); 
+    } catch (error) {
+        console.error('Lỗi:', error)
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.OK,
+        )
+    }
+};
+
+const getProductDetailService = async (id, role = null, type = null) => {
+    const product = await prisma.product.findUnique({
+        where: { id: id }
+    })
+
+    if (!product) {
+        return get_error_response(
+            errors = ERROR_CODES.PRODUCT_NOT_FOUND,
+            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
+        )
+    }
+
+    const filter = JSON.stringify([
+        {
+            field: "product.id",
+            condition: "contains",
+            value: id
+        }
+    ])
+    let get_attr = `product.name, product.slug, product.description, description_normal, product.image, selling_price, views, status, product.is_hide,
+        product.category_id, categories.name as categories, unit_id, unit.name as unit_name,
+        attribute.id as attribute_id, attribute.name as attribute, attribute_group.id as attribute_group_id, attribute_group.name as attribute_group, attribute_product.value as attribute_value
+    `
+    let get_table = `product`
+    let query_join = `
+        LEFT JOIN categories ON product.category_id = categories.category_id
+        LEFT JOIN unit ON product.unit_id = unit.id
+        -- LEFT JOIN warranty_time ON product.warranty_time_id = warranty_time.id
+        LEFT JOIN attribute_product ON product.id = attribute_product.product_id
+        LEFT JOIN attribute ON attribute_product.attribute_id = attribute.id
+        LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id
+    `
+
+    if (type == 'admin' && role == ROLE) {
+        get_attr += `, COALESCE(inventory.stock, 0) AS stock`
+        query_join += `
+            LEFT JOIN (
+                SELECT product_id, SUM(stock) AS stock
+                FROM warehouse_inventory
+                GROUP BY product_id
+            ) inventory ON product.id = inventory.product_id
+        `
+    }
+
+    get_attr += `, COALESCE(review.avg_rating, 0) AS average_rating, COALESCE(CAST(liked.total_liked AS CHAR), '0') AS total_liked`
+    query_join =  query_join + `
+        LEFT JOIN (
+            SELECT product_id, CAST(AVG(rating) AS DECIMAL(5,2)) AS avg_rating
+            FROM review_product
+            GROUP BY product_id
+        ) review ON product.id = review.product_id
+        LEFT JOIN (
+            SELECT product_id, COUNT(id) AS total_liked
+            FROM liked
+            GROUP BY product_id
+        ) liked ON product.id = liked.product_id
+    `
+    //ADD filter liked by updated_at -> a month 
+    
+    const products = await executeSelectData({
+        table: get_table, queryJoin: query_join, strGetColumn: get_attr, filter: filter, 
+    })
+    
+    return get_error_response(errorCode=ERROR_CODES.SUCCESS, status_code=STATUS_CODE.OK, data = products); 
+}
 
 const checkBeforeProduct = async (category_id, unit_id, warrenty_time_id) => {
     const category = await prisma.category.findUnique({
@@ -139,7 +253,7 @@ async function updateProductService({ id, name, description, image, selling_pric
     if (check_attr) {
         return check_attr
     }
-    const { toAdd, toUpdate, toDelete } =  diffAttributeSets(attributes, attributes_in_category);
+    const { toAdd, toUpdate, toDelete } =  (attributes, attributes_in_category);
     
     createManyAttribute = await prisma.attribute_product.createMany({
         data: toAdd.map(async (item) => {
@@ -252,5 +366,9 @@ const check_attributes = async (attributes, category_id) => {
 }
 
 module.exports = {
-    createProductService
+    getProductService,
+    getProductDetailService,
+    createProductService,
+    updateProductService,
+    deleteProductService,
 };

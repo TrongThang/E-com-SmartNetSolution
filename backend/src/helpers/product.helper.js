@@ -19,7 +19,10 @@ function diffAttributeSets(request, in_db) {
         }
     });
 
-    // Kiểm tra cần xóa 
+    // Kiểm tra cần xóa
+    // db = [2, 4, 5], req = [1, 2, 3]
+
+    // => add: 1, 3 -  update: 2 - delete: 4, 5 (db - req)
     dbMap.forEach((dbItem, id) => {
         if (!requestMap.has(id)) {
             toDelete.push(dbItem);
