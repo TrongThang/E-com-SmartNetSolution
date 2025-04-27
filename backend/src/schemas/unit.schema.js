@@ -15,7 +15,7 @@ const CreateUnitSchema = BaseUnitSchema;
 
 const UpdateUnitSchema = BaseUnitSchema.extend({
     body: BaseUnitSchema.shape.body.extend({
-        id: z.number().int().positive({
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.UNIT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.UNIT_ID_REQUIRED]}`,
         }),
     }),

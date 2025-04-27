@@ -42,10 +42,10 @@ const createContactSchema = baseContactSchema;
 // });
 const updateContactSchema = z.object({
     body: z.object({
-        id: z.number().int().positive({
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.CONTACT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_ID_REQUIRED]}`,
         }),
-        status: z.number().int({
+        status: z.coerce.number().int().refine(val => [0, 1, 2, 3].includes(val), {
             message: `[${ERROR_CODES.CONTACT_STATUS_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_STATUS_INVALID]}`,
         }),
     }),

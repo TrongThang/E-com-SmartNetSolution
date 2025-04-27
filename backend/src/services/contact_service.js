@@ -1,4 +1,3 @@
-
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response');
 const { executeSelectData } = require('../helpers/sql_query');
@@ -78,8 +77,11 @@ const updateContactStatusService = async ({ id, status }) => {
             return get_error_response(ERROR_CODES.CONTACT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
         }
         const updated = await prisma.contact.update({
-            where: { id},
-            data: { status, updated_at: new Date() },
+            where: { id },
+            data: {
+                status: Number(status),
+                updated_at: new Date()
+            },
         });
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, updated);
     } catch (error) {

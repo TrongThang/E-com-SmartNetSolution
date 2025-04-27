@@ -49,7 +49,7 @@ const getWarrentyTimeDetailService = async (id) => {
 // Tạo mới warrenty time
 const createWarrentyTimeService = async ({ name, time }) => {
     try {
-        const exist = await prisma.warrenty_time.findFirst({ where: { name,deleted_at: null } });
+        const exist = await prisma.warrenty_time.findFirst({ where: { name, deleted_at: null } });
         if (exist) {
             return get_error_response(ERROR_CODES.WARRANTY_TIME_NAME_EXISTED, STATUS_CODE.CONFLICT);
         }
@@ -65,7 +65,7 @@ const createWarrentyTimeService = async ({ name, time }) => {
 // Cập nhật warrenty time
 const updateWarrentyTimeService = async ({ id, name, time }) => {
     try {
-        const exist = await prisma.warrenty_time.findUnique({ where: { id } });
+        const exist = await prisma.warrenty_time.findUnique({ where: { id: Number(id) } });
         if (!exist || exist.deleted_at) {
             return get_error_response(ERROR_CODES.WARRANTY_TIME_NOT_FOUND, STATUS_CODE.NOT_FOUND);
         }
@@ -74,7 +74,7 @@ const updateWarrentyTimeService = async ({ id, name, time }) => {
         const nameExists = await prisma.warrenty_time.findFirst({
             where: {
                 name,
-                id: { not: id },
+                id: { not: Number(id) },
                 deleted_at: null
             }
         });
@@ -83,8 +83,12 @@ const updateWarrentyTimeService = async ({ id, name, time }) => {
         }
 
         const updated = await prisma.warrenty_time.update({
-            where: { id },
-            data: { name, time, updated_at: new Date() }
+            where: { id: Number(id) },
+            data: {
+                name,
+                time: Number(time),
+                updated_at: new Date()
+            }
         });
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, updated);
     } catch (error) {
@@ -95,12 +99,12 @@ const updateWarrentyTimeService = async ({ id, name, time }) => {
 // Xóa mềm warrenty time
 const deleteWarrentyTimeService = async (id) => {
     try {
-        const exist = await prisma.warrenty_time.findUnique({ where: { id : Number(id)} });
+        const exist = await prisma.warrenty_time.findUnique({ where: { id: Number(id) } });
         if (!exist || exist.deleted_at) {
             return get_error_response(ERROR_CODES.WARRANTY_TIME_NOT_FOUND, STATUS_CODE.NOT_FOUND);
         }
         await prisma.warrenty_time.update({
-            where: { id : Number(id)},
+            where: { id: Number(id) },
             data: { deleted_at: new Date() }
         });
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK);
