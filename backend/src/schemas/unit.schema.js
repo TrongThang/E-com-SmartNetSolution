@@ -15,20 +15,16 @@ const CreateUnitSchema = BaseUnitSchema;
 
 const UpdateUnitSchema = BaseUnitSchema.extend({
     body: BaseUnitSchema.shape.body.extend({
-        id: z.string().min(1, {
+        id: z.number().int().positive({
             message: `[${ERROR_CODES.UNIT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.UNIT_ID_REQUIRED]}`,
-        }).max(5, {
-            message: `[${ERROR_CODES.UNIT_ID_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.UNIT_ID_MAX_LENGTH]}`,
         }),
     }),
 });
 
 const DeleteUnitSchema = z.object({
     params: z.object({
-        id: z.string().min(1, {
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.UNIT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.UNIT_ID_REQUIRED]}`,
-        }).max(5, {
-            message: `[${ERROR_CODES.UNIT_ID_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.UNIT_ID_MAX_LENGTH]}`,
         }),
     }),
 });

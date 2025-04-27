@@ -53,7 +53,9 @@ const ERROR_CODES = {
     CATEGORY_NOT_FOUND: 1,
   
     // UNIT - 4xxx
-    UNIT_NOT_FOUND: 1,
+    UNIT_NOT_FOUND: 4001,
+    UNIT_NAME_EXISTED: 4002,
+    UNIT_IN_USE: 4003,
   
     // WARRANTY_TIME - 5xxx
     WARRANTY_TIME_NOT_FOUND: 1,
@@ -218,6 +220,9 @@ const ERROR_MESSAGES = {
 
     // UNIT
     [ERROR_CODES.UNIT_NOT_FOUND]: "Không tìm thấy đơn vị tính",
+    [ERROR_CODES.UNIT_NAME_EXISTED]: "Tên đơn vị tính đã tồn tại",
+    [ERROR_CODES.UNIT_IN_USE]: "Đơn vị tính đang được sử dụng bởi sản phẩm",
+
 
     // WARRANTY_TIME
     [ERROR_CODES.WARRANTY_TIME_NOT_FOUND]: "Không tìm thấy thời gian bảo hành",

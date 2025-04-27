@@ -242,11 +242,12 @@ model components {
 }
 
 model contact {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   fullname   String?   @db.VarChar(500)
   title      String?   @db.VarChar(500)
   content    String?   @db.Text
   email      String?   @db.VarChar(100)
+  status     Int?     @db.TinyInt
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
@@ -716,7 +717,7 @@ model product {
   image               String?               @db.MediumText
   selling_price       Float?
   category_id         Int?
-  unit_id             String?               @db.VarChar(5)
+  unit_id             Int?
   warrenty_time_id    Int?
   views               Int?
   is_hide             Boolean?
@@ -878,7 +879,7 @@ model shared_permissions {
 }
 
 model slideshow {
-  id          Int       @id
+  id         Int       @id @default(autoincrement())
   text_button String?   @db.VarChar(500)
   link        String?   @db.VarChar(500)
   image       String?   @db.MediumText
@@ -978,7 +979,7 @@ model tickets {
 }
 
 model unit {
-  id         String    @id @db.VarChar(5)
+  id         Int       @id @default(autoincrement())
   name       String?   @db.VarChar(50)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
@@ -1044,7 +1045,7 @@ model warehouse_inventory {
 }
 
 model warrenty_time {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   name       String?   @db.VarChar(150)
   time       Int?
   created_at DateTime? @db.Timestamp(0)
