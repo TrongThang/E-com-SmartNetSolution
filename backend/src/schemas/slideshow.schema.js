@@ -36,7 +36,7 @@ const UpdateSlideshowSchema = BaseSlideshowSchema.extend({
 
 const DeleteSlideshowSchema = z.object({
     params: z.object({
-        id: z.number().int().positive({
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.SLIDESHOW_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.SLIDESHOW_ID_REQUIRED]}`,
         }),
     }),
