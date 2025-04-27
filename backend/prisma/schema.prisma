@@ -51,7 +51,7 @@ model account {
 }
 
 model address_book {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   customer_id String?   @db.VarChar(12)
   district    String?   @db.VarChar(500)
   city        String?   @db.VarChar(500)

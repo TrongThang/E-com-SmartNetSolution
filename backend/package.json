@@ -15,10 +15,14 @@
     "@prisma/client": "^6.5.0",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
-    "prisma": "^6.5.0"
+    "prisma": "^6.6.0"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express-session": "^1.18.1",
+    "generate": "^0.14.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.10.0",
     "nodemailer-express-handlebars": "^7.0.0",
