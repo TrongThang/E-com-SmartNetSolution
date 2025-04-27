@@ -6,11 +6,12 @@ const productRouter = require('./product_route');
 const unitRouter = require('./unit_route');
 const slideshowRouter = require('./slideshow_route');
 const contactRouter = require('./contact_route');
+const warrentyTimeRouter = require('./warrentyTime_route');
 
 router.use('/auth', authRouter)
 router.use('/product', productRouter)
 router.use('/unit', unitRouter)
 router.use('/slideshow', slideshowRouter)
 router.use('/contact', contactRouter)
-
+router.use('/warrenty-time', warrentyTimeRouter)
 module.exports = router

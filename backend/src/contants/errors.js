@@ -69,7 +69,17 @@ const ERROR_CODES = {
     UNIT_ID_REQUIRED: 4013,
 
     // WARRANTY_TIME - 5xxx
-    WARRANTY_TIME_NOT_FOUND: 1,
+    
+        WARRANTY_TIME_SUCCESS: 5000,
+        WARRANTY_TIME_NOT_FOUND: 5001,
+        WARRANTY_TIME_CREATE_FAILED: 5002,
+        WARRANTY_TIME_NAME_EXISTED: 5003,
+        WARRANTY_TIME_UPDATED_FAILED: 5004,
+        WARRANTY_TIME_DELETED_FAILED: 5005,
+        WARRANTY_TIME_NAME_MIN_LENGTH: 5006,
+        WARRANTY_TIME_NAME_MAX_LENGTH: 5006,
+        WARRANTY_TIME_INVALID: 5007,
+        WARRANTY_TIME_ID_REQUIRED: 5008,
 
     // ORDER - 6xxx
     ORDER_SUCCESS: 6000,
@@ -282,7 +292,17 @@ const ERROR_MESSAGES = {
 
 
     // WARRANTY_TIME
+    
+    [ERROR_CODES.WARRANTY_TIME_SUCCESS]: "Thao tác với thời gian bảo hành thành công",
     [ERROR_CODES.WARRANTY_TIME_NOT_FOUND]: "Không tìm thấy thời gian bảo hành",
+    [ERROR_CODES.WARRANTY_TIME_CREATE_FAILED]: "Tạo thời gian bảo hành thất bại",
+    [ERROR_CODES.WARRANTY_TIME_NAME_EXISTED]: "Tên thời gian bảo hành đã tồn tại",
+    [ERROR_CODES.WARRANTY_TIME_UPDATED_FAILED]: "Cập nhật thời gian bảo hành thất bại",
+    [ERROR_CODES.WARRANTY_TIME_DELETED_FAILED]: "Xóa thời gian bảo hành thất bại",
+    [ERROR_CODES.WARRANTY_TIME_NAME_MIN_LENGTH]: "Tên thời gian bảo hành phải có ít nhất 1 ký tự",
+    [ERROR_CODES.WARRANTY_TIME_NAME_MAX_LENGTH]: "Tên thời gian bảo hành không được vượt quá 150 ký tự",
+    [ERROR_CODES.WARRANTY_TIME_INVALID]: "Thời gian bảo hành không hợp lệ",
+    [ERROR_CODES.WARRANTY_TIME_ID_REQUIRED]: "ID thời gian bảo hành là bắt buộc",
 
     // ORDER
     [ERROR_CODES.ORDER_SUCCESS]: "Thao tác với đơn hàng thành công",

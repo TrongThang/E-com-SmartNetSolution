@@ -26,7 +26,7 @@ const UpdateWarrantyTimeSchema = BaseWarrantyTimeSchema.extend({
 
 const DeleteWarrantyTimeSchema = z.object({
     params: z.object({
-        id: z.number().int().positive({
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.WARRANTY_TIME_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.WARRANTY_TIME_ID_REQUIRED]}`,
         }),
     }),
