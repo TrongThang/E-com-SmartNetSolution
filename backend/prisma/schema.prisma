@@ -247,7 +247,7 @@ model contact {
   title      String?   @db.VarChar(500)
   content    String?   @db.Text
   email      String?   @db.VarChar(100)
-  status     Int?     @db.TinyInt
+  status     Int?     @db.TinyInt @default(1)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
