@@ -103,6 +103,11 @@ const deleteWarrentyTimeService = async (id) => {
         if (!exist || exist.deleted_at) {
             return get_error_response(ERROR_CODES.WARRANTY_TIME_NOT_FOUND, STATUS_CODE.NOT_FOUND);
         }
+        // Kiểm tra liên kết với product
+        const product = await prisma.product.findFirst({ where: { warrenty_time_id: id } });
+        if (product) {
+            return get_error_response(ERROR_CODES.WARRANTY_TIME_IN_USE, STATUS_CODE.CONFLICT);
+        }
         await prisma.warrenty_time.update({
             where: { id: Number(id) },
             data: { deleted_at: new Date() }

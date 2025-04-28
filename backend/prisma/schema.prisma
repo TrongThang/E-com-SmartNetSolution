@@ -1022,7 +1022,7 @@ model user_groups {
 }
 
 model warehouse {
-  id               Int                @id
+  id               Int                @id @default(autoincrement())
   name             String?            @db.VarChar(500)
   address          String?            @db.VarChar(500)
   created_at       DateTime?          @db.Timestamp(0)
