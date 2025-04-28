@@ -194,6 +194,16 @@ const ERROR_CODES = {
     ADDRESS_BOOK_DETAIL_MAX_LENGTH: 1912,
     ADDRESS_BOOK_IS_DEFAULT_INVALID: 1913,
     ADDRESS_BOOK_ID_REQUIRED: 1914,
+
+    // LIKED - 20xx
+    LIKED_SUCCESS: 2000,
+    LIKED_NOT_FOUND: 2001,
+    LIKED_CREATE_FAILED: 2002,
+    LIKED_DELETED_FAILED: 2003,
+    LIKED_ALREADY_EXISTS: 2004,
+    LIKED_CUSTOMER_ID_REQUIRED: 2005,
+    LIKED_PRODUCT_ID_REQUIRED: 2006,
+    LIKED_ID_REQUIRED: 2007,
 };
 
 const ERROR_MESSAGES = {
@@ -376,6 +386,16 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.ADDRESS_BOOK_DETAIL_MAX_LENGTH]: "Chi tiết địa chỉ không được vượt quá 255 ký tự",
     [ERROR_CODES.ADDRESS_BOOK_IS_DEFAULT_INVALID]: "Giá trị mặc định không hợp lệ",
     [ERROR_CODES.ADDRESS_BOOK_ID_REQUIRED]: "ID địa chỉ là bắt buộc",
+
+    // LIKED
+    [ERROR_CODES.LIKED_SUCCESS]: "Thao tác với danh sách yêu thích thành công",
+    [ERROR_CODES.LIKED_NOT_FOUND]: "Không tìm thấy sản phẩm yêu thích",
+    [ERROR_CODES.LIKED_CREATE_FAILED]: "Thêm sản phẩm yêu thích thất bại",
+    [ERROR_CODES.LIKED_DELETED_FAILED]: "Xóa sản phẩm yêu thích thất bại",
+    [ERROR_CODES.LIKED_ALREADY_EXISTS]: "Sản phẩm đã có trong danh sách yêu thích",
+    [ERROR_CODES.LIKED_CUSTOMER_ID_REQUIRED]: "ID khách hàng là bắt buộc",
+    [ERROR_CODES.LIKED_PRODUCT_ID_REQUIRED]: "ID sản phẩm là bắt buộc",
+    [ERROR_CODES.LIKED_ID_REQUIRED]: "ID yêu thích là bắt buộc",
 };
 
 module.exports = {

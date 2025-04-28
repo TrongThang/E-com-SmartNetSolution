@@ -552,7 +552,7 @@ model info_website {
 }
 
 model liked {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   customer_id String    @db.VarChar(12)
   product_id  Int?
   created_at  DateTime? @db.Timestamp(0)
