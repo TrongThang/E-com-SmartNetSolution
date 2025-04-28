@@ -1,17 +1,25 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
+const { executeSelectData } = require('../helpers/sql_query')
 const { get_error_response } = require('../helpers/response');
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
 const getAddressBookService = async (id) => {
+    // Các cột cần lấy từ address_book và customer
+    let get_attr = `city, district, ward, street, detail, is_default`
+    
+    let get_table = `address_book`
+
+    // Điều kiện lọc theo customer_id và deleted_at is null
+    let filter = `[{"field":"customer_id","condition":"=","value":"${id}"}]`
+
     try {
-        const addressBooks = await prisma.address_book.findMany({
-            where: {
-                customer_id: id,
-                deleted_at: null
-            }
-        });
+        const addressBooks = await executeSelectData({ 
+            table: get_table,
+            strGetColumn: get_attr,
+            filter: filter
+        })
 
         return get_error_response(
             errors=ERROR_CODES.SUCCESS, 
@@ -29,10 +37,10 @@ const getAddressBookService = async (id) => {
 
 const createAddressBookService = async (customer_id, district, city, ward, street, detail, is_default) => {
     try {
-        // Convert is_default to boolean
+        // Chuyển đổi is_default sang kiểu boolean
         const isDefaultBoolean = is_default === "true" || is_default === true;
         
-        // If this is a default address, update other addresses to non-default
+        // Nếu đang tạo địa chỉ mặc định, cập nhật các địa chỉ khác thành không mặc định
         if (isDefaultBoolean) {
             await prisma.address_book.updateMany({
                 where: {
@@ -61,8 +69,8 @@ const createAddressBookService = async (customer_id, district, city, ward, stree
         });
 
         return get_error_response(
-            errors=ERROR_CODES.SUCCESS, 
-            status_code=STATUS_CODE.OK, 
+            errors=ERROR_CODES.SUCCESS,
+            status_code=STATUS_CODE.CREATED,
             data=addressBook
         );
     }
@@ -77,7 +85,7 @@ const createAddressBookService = async (customer_id, district, city, ward, stree
 
 const updateAddressBookService = async (customer_id, id, district, city, ward, street, detail, is_default) => {
     try {
-        // Convert id from string to integer
+        // Chuyển đổi id từ chuỗi sang số nguyên
         const addressId = parseInt(id);
         
         if (isNaN(addressId)) {
@@ -88,10 +96,10 @@ const updateAddressBookService = async (customer_id, id, district, city, ward, s
             );
         }
 
-        // Convert is_default to boolean
+        // Chuyển đổi is_default sang kiểu boolean
         const isDefaultBoolean = is_default === "true" || is_default === true;
 
-        // If this is being set as default address, update other addresses to non-default
+        // Nếu đang đặt làm địa chỉ mặc định, cập nhật các địa chỉ khác thành không mặc định
         if (isDefaultBoolean) {
             await prisma.address_book.updateMany({
                 where: {
@@ -136,9 +144,10 @@ const updateAddressBookService = async (customer_id, id, district, city, ward, s
         );
     }
 }
+
 const deleteAddressBookService = async (customer_id, id) => {
     try {
-        // Convert id from string to integer
+        // Chuyển đổi id từ chuỗi sang số nguyên
         const addressId = parseInt(id);
         
         if (isNaN(addressId)) {
@@ -149,13 +158,13 @@ const deleteAddressBookService = async (customer_id, id) => {
             );
         }
 
-        // Check if the address to be deleted is default
+        // Kiểm tra xem địa chỉ cần xóa có phải là địa chỉ mặc định không
         const addressToDelete = await prisma.address_book.findUnique({
             where: { id: addressId }
         });
 
         if (addressToDelete?.is_default) {
-            // Find the newest address (excluding the one being deleted)
+            // Tìm địa chỉ mới nhất (không bao gồm địa chỉ đang xóa)
             const newestAddress = await prisma.address_book.findFirst({
                 where: {
                     customer_id: customer_id,
@@ -167,7 +176,7 @@ const deleteAddressBookService = async (customer_id, id) => {
                 }
             });
 
-            // If there's another address, set it as default
+            // Nếu còn địa chỉ khác, đặt địa chỉ đó làm mặc định
             if (newestAddress) {
                 await prisma.address_book.update({
                     where: { id: newestAddress.id },
@@ -179,7 +188,7 @@ const deleteAddressBookService = async (customer_id, id) => {
             }
         }
 
-        // Delete the address
+        // Xóa địa chỉ
         await prisma.address_book.delete({
             where: { id: addressId, customer_id: customer_id }
         });
