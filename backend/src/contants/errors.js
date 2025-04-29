@@ -204,6 +204,18 @@ const ERROR_CODES = {
     LIKED_CUSTOMER_ID_REQUIRED: 2005,
     LIKED_PRODUCT_ID_REQUIRED: 2006,
     LIKED_ID_REQUIRED: 2007,
+
+    // BLOG - 21xx
+    BLOG_SUCCESS: 2100,
+    BLOG_NOT_FOUND: 2101,
+    BLOG_CREATE_FAILED: 2102,
+    BLOG_UPDATED_FAILED: 2103,
+    BLOG_DELETED_FAILED: 2104,
+    BLOG_TITLE_TOO_LONG: 2105,
+    BLOG_AUTHOR_TOO_LONG: 2106,
+    BLOG_CONTENT_TOO_LONG: 2107,
+    BLOG_ID_REQUIRED: 2108,
+    BLOG_IS_HIDE_INVALID: 2109,
 };
 
 const ERROR_MESSAGES = {
@@ -396,6 +408,18 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.LIKED_CUSTOMER_ID_REQUIRED]: "ID khách hàng là bắt buộc",
     [ERROR_CODES.LIKED_PRODUCT_ID_REQUIRED]: "ID sản phẩm là bắt buộc",
     [ERROR_CODES.LIKED_ID_REQUIRED]: "ID yêu thích là bắt buộc",
+
+    // BLOG
+    [ERROR_CODES.BLOG_SUCCESS]: "Thao tác với blog thành công",
+    [ERROR_CODES.BLOG_NOT_FOUND]: "Không tìm thấy blog",
+    [ERROR_CODES.BLOG_CREATE_FAILED]: "Tạo blog thất bại",
+    [ERROR_CODES.BLOG_UPDATED_FAILED]: "Cập nhật blog thất bại",
+    [ERROR_CODES.BLOG_DELETED_FAILED]: "Xóa blog thất bại",
+    [ERROR_CODES.BLOG_TITLE_TOO_LONG]: "Tiêu đề blog không được vượt quá 500 ký tự",
+    [ERROR_CODES.BLOG_AUTHOR_TOO_LONG]: "Tên tác giả không được vượt quá 12 ký tự",
+    [ERROR_CODES.BLOG_CONTENT_TOO_LONG]: "Nội dung blog không được vượt quá 500 ký tự",
+    [ERROR_CODES.BLOG_ID_REQUIRED]: "ID blog là bắt buộc",
+    [ERROR_CODES.BLOG_IS_HIDE_INVALID]: "Giá trị ẩn/hiện blog không hợp lệ",
 };
 
 module.exports = {
