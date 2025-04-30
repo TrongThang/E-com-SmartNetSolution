@@ -284,8 +284,12 @@ const deleteBlogService = async (id) => {
             );
         }
 
-        await prisma.blog.delete({
-            where: { id: id }
+        // Thực hiện xóa mềm bằng cách cập nhật deleted_at
+        await prisma.blog.update({
+            where: { id: id },
+            data: {
+                deleted_at: new Date()
+            }
         });
 
         return get_error_response(

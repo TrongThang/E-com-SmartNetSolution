@@ -29,7 +29,7 @@ const BaseBlogSchema = z.object({
 const CreateBlogSchema = BaseBlogSchema;
 
 const UpdateBlogSchema = BaseBlogSchema.extend({
-    params: z.object({
+    body: z.object({
         id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.BLOG_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.BLOG_ID_REQUIRED]}`
         })

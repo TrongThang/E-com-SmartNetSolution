@@ -14,7 +14,7 @@ blogRouter.get('/', asyncHandler(getBlog));
 blogRouter.get('/:id', asyncHandler(getBlogDetail));
 blogRouter.post('/', validateMiddleware(CreateBlogSchema), asyncHandler(createBlog));
 blogRouter.put('/', validateMiddleware(UpdateBlogSchema), asyncHandler(updateBlog));
-blogRouter.delete('/', validateMiddleware(DeleteBlogSchema), asyncHandler(deleteBlog));
+blogRouter.delete('/:id', validateMiddleware(DeleteBlogSchema), asyncHandler(deleteBlog));
 
 module.exports = blogRouter;
 

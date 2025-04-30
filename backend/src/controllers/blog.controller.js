@@ -49,8 +49,7 @@ class BlogController {
     }
 
     async updateBlog(req, res) {
-        const { id } = req.params;
-        const { category_id, product_id, title, author, content, content_normal, image, score, is_hide } = req.body;
+        const { id, category_id, product_id, title, author, content, content_normal, image, score, is_hide } = req.body;
 
         const response = await updateBlogService({
             id: Number(id),
