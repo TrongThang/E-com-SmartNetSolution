@@ -4,6 +4,7 @@ const { executeSelectData } = require('../helpers/sql_query');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// Lấy danh sách slideshow
 const getSlideshowService = async (filter, limit, sort, order) => {
     let get_attr = ` slideshow.text_button, slideshow.link, slideshow.image, slideshow.status`;
     let get_table = `slideshow`;
@@ -25,6 +26,7 @@ const getSlideshowService = async (filter, limit, sort, order) => {
     }
 };
 
+// Lấy chi tiết slideshow
 const getSlideshowDetailService = async (id) => {
     try {
         const filter = JSON.stringify([
@@ -47,6 +49,7 @@ const getSlideshowDetailService = async (id) => {
     }
 };
 
+// Tạo slideshow
 const createSlideshowService = async ({ text_button, link, image, status }) => {
     try {
         const slideshow = await prisma.slideshow.create({
@@ -59,6 +62,7 @@ const createSlideshowService = async ({ text_button, link, image, status }) => {
     }
 };
 
+// Cập nhật slideshow
 const updateSlideshowService = async ({ id, text_button, link, image, status }) => {
     try {
         const slideshow = await prisma.slideshow.findUnique({ where: { id } });
@@ -76,6 +80,7 @@ const updateSlideshowService = async ({ id, text_button, link, image, status }) 
     }
 };
 
+// Xóa slideshow
 const deleteSlideshowService = async (id) => {
     try {
         const slideshow = await prisma.slideshow.findUnique({ where: { id: Number(id) } });

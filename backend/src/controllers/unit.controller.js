@@ -26,7 +26,6 @@ class UnitController {
 
     async createUnit(req, res) {
         const { name } = req.body;
-
         const response = await createUnitService({ name });
         return res.status(response.status_code).json(response);
     }

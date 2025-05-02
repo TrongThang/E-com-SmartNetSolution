@@ -6,7 +6,7 @@ const slideshowRouter = express.Router();
 
 const asyncHandler = fn => (req, res, next) => fn(req, res, next).catch(next);
 
-slideshowRouter.get('/', asyncHandler(getSlideshow)); // GET all slideshow
+slideshowRouter.get('/', asyncHandler(getSlideshow)); 
 slideshowRouter.get('/:id', asyncHandler(getSlideshowDetail));
 slideshowRouter.post('/', validateMiddleware(CreateSlideshowSchema), asyncHandler(createSlideshow));
 slideshowRouter.put('/', validateMiddleware(UpdateSlideshowSchema), asyncHandler(updateSlideshow));

@@ -24,7 +24,7 @@ const getWarehouseService = async (filter, limit, sort, order) => {
     }
 };
 
-
+// Lấy chi tiết warehouse (bao gồm sản phẩm đã nhập vào kho)
 const getWarehouseDetailService = async (id) => {
     try {
         // Lấy thông tin kho

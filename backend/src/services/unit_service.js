@@ -5,6 +5,7 @@ const { executeSelectData } = require('../helpers/sql_query');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// Lấy danh sách unit
 const getUnitService = async (filter, limit, sort, order) => {
     let get_attr = ` name`;
     let get_table = `unit`;
@@ -26,6 +27,7 @@ const getUnitService = async (filter, limit, sort, order) => {
     }
 };
 
+// Lấy chi tiết unit
 const getUnitDetailService = async (id) => {
     try {
         const unit = await prisma.unit.findUnique({ where: { id: Number(id) } });
@@ -39,6 +41,7 @@ const getUnitDetailService = async (id) => {
     }
 };
 
+// Tạo unit
 const createUnitService = async ({ name }) => {
     try {
         // Kiểm tra name đã tồn tại chưa (chưa bị xóa mềm)
@@ -56,6 +59,7 @@ const createUnitService = async ({ name }) => {
     }
 };
 
+// Cập nhật unit
 const updateUnitService = async ({ id, name }) => {
     try {
         const unit = await prisma.unit.findUnique({ where: { id } });
@@ -78,6 +82,7 @@ const updateUnitService = async ({ id, name }) => {
     }
 };
 
+// Xóa unit
 const deleteUnitService = async (id) => {
     try {
         const unit = await prisma.unit.findUnique({ where: { id } });
