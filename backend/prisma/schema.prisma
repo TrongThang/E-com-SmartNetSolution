@@ -809,7 +809,7 @@ model production_tracking {
 }
 
 model review_product {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   review_id   Int?
   customer_id String?   @db.VarChar(12)
   product_id  Int?

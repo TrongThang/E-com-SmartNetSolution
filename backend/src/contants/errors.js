@@ -237,6 +237,18 @@ const ERROR_CODES = {
     CONTACT_CONTENT_MAX_LENGTH: 1816,
     CONTACT_ID_REQUIRED: 1817,
     CONTACT_ID_INVALID: 1818,
+
+    // REVIEW_PRODUCT - 19xx
+    REVIEW_SUCCESS: 1900,
+    REVIEW_NOT_FOUND: 1901,
+    REVIEW_CREATE_FAILED: 1902,
+    REVIEW_UPDATED_FAILED: 1903,
+    REVIEW_DELETED_FAILED: 1904,
+    REVIEW_EXISTED: 1905,
+    REVIEW_FORBIDDEN: 1906,
+    REVIEW_ORDER_REQUIRED: 1907,
+    REVIEW_RATING_INVALID: 1908,
+    REVIEW_COMMENT_REQUIRED: 1909,
 };
 
 const ERROR_MESSAGES = {
@@ -461,6 +473,18 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.CONTACT_CONTENT_MAX_LENGTH]: "Nội dung không được vượt quá 500 ký tự",
     [ERROR_CODES.CONTACT_ID_REQUIRED]: "ID liên hệ là bắt buộc",
     [ERROR_CODES.CONTACT_ID_INVALID]: "ID liên hệ không hợp lệ",
+
+    // REVIEW_PRODUCT
+    [ERROR_CODES.REVIEW_SUCCESS]: "Thao tác với đánh giá thành công",
+    [ERROR_CODES.REVIEW_NOT_FOUND]: "Không tìm thấy đánh giá",
+    [ERROR_CODES.REVIEW_CREATE_FAILED]: "Tạo đánh giá thất bại",
+    [ERROR_CODES.REVIEW_UPDATED_FAILED]: "Cập nhật đánh giá thất bại",
+    [ERROR_CODES.REVIEW_DELETED_FAILED]: "Xóa đánh giá thất bại",
+    [ERROR_CODES.REVIEW_EXISTED]: "Bạn đã đánh giá sản phẩm này rồi",
+    [ERROR_CODES.REVIEW_FORBIDDEN]: "Bạn không có quyền thao tác với đánh giá này",
+    [ERROR_CODES.REVIEW_ORDER_REQUIRED]: "Bạn cần mua sản phẩm trước khi đánh giá",
+    [ERROR_CODES.REVIEW_RATING_INVALID]: "Số sao đánh giá không hợp lệ",
+    [ERROR_CODES.REVIEW_COMMENT_REQUIRED]: "Nội dung đánh giá là bắt buộc",
 };
 
 module.exports = {
