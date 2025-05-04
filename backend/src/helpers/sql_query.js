@@ -117,7 +117,7 @@ async function executeSelectData({
     const resultIds = idResult.map(row => row.id);
     
     const whereCondition = resultIds.length
-        ? `${table}.id IN (${resultIds.join(',')})`
+        ? `${table}.id IN (${resultIds.map(id => `'${id}'`).join(',')})`
         : '1=0';
     
     // Xử lý các cột thời gian

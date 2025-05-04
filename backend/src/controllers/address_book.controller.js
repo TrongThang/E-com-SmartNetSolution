@@ -1,7 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { getAddressBookService, createAddressBookService, updateAddressBookService, deleteAddressBookService } = require('../services/address_book_service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response');
 
 class AddressBookController {
     constructor() {
