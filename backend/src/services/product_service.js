@@ -170,7 +170,6 @@ async function createProductService({ name, description, image, selling_price, c
     if (check_product) {
         return check_product
     }
-
     // CHECK FILE IMAGE
 
     const description_normal = removeTagHtml(description);
@@ -336,33 +335,27 @@ const check_attributes = async (attributes, category_id) => {
         include: { attribute: true },
     })
 
-    attributes.forEach(async (item) => {
+    for (const item of attributes) {
         const attribute = attributes_in_category.find(
             (attr) => attr.id === item.id
         )
 
         if (!attribute) {
-            return {
-                error: true,
-                data_error: get_error_response(
-                    ERROR_CODES.ATTRIBUTE_NOT_FOUND,
-                    STATUS_CODE.BAD_REQUEST
-                )
-            }
+            return get_error_response(
+                ERROR_CODES.ATTRIBUTE_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST
+            )
         }
 
-        if (attribute.datatype != typeof (item.value)) {
-            return {
-                error: true,
-                data_error: get_error_response(
-                    ERROR_CODES.ATTRIBUTE_DATATYPE_NOT_MATCH,
-                    STATUS_CODE.BAD_REQUEST
-                )
-            }
+        if (attribute.datatype !== typeof item.value) {
+            return get_error_response(
+                ERROR_CODES.ATTRIBUTE_DATATYPE_NOT_MATCH,
+                STATUS_CODE.BAD_REQUEST
+            )
         }
-    })
+    }
 
-    return attributes;
+    return null; // Return null if no errors found
 }
 
 module.exports = {

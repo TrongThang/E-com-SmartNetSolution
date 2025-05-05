@@ -8,4 +8,5 @@ function addVietnamMinutes(minutes) {
     return new Date(Date.now() + VIETNAM_OFFSET + minutes * 60 * 1000);
 }
 
-module.exports = { getVietnamTimeNow, addVietnamMinutes };
+
+module.exports = { getVietnamTimeNow, addVietnamMinutes};

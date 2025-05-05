@@ -12,7 +12,6 @@ function validateMiddleware(schema) {
         } catch (error) {
             if (error instanceof ZodError) {
                 console.log(JSON.stringify(error.errors, null, 2));
-
                 return res.status(400).json({
                     message: 'Dữ liệu không hợp lệ',
                     errors: error.errors.map(err => {

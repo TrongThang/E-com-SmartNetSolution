@@ -1,6 +1,9 @@
 const express = require('express');
 const { validateMiddleware } = require('../middleware/validate.middleware');
-const { getCategories, getCategoriesDetail, createCategories } = require('../controllers/categoriesController');
+const { createCategoriesSchema, updateCategoriesSchema } = require('../schemas/categories.schema');
+const { getCategories, getCategoriesDetail, createCategories,
+    updateCategories, deletedSoftCategories,
+    deletedCategories, restoreCategories, } = require('../controllers/categoriesController');
 const categoriesRouter = express.Router();
 
 const asyncHandler = (fn) => {
@@ -11,6 +14,10 @@ const asyncHandler = (fn) => {
 
 categoriesRouter.get('/', asyncHandler(getCategories));
 categoriesRouter.get('/:id', asyncHandler(getCategoriesDetail));
-categoriesRouter.post('/', asyncHandler(createCategories));
+categoriesRouter.post('/', validateMiddleware(createCategoriesSchema), asyncHandler(createCategories));
+categoriesRouter.put('/:id', validateMiddleware(updateCategoriesSchema), asyncHandler(updateCategories));
+categoriesRouter.delete('/:id', asyncHandler(deletedCategories));
+categoriesRouter.patch('/:id/softDelete', asyncHandler(deletedSoftCategories));
+categoriesRouter.patch('/:id/restore', asyncHandler(restoreCategories));
 
 module.exports = categoriesRouter;

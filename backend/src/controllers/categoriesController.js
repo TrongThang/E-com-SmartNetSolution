@@ -1,11 +1,14 @@
 const { getCategoriesService,
     getCategoriesDetailService,
-    createCategoriesService } = require('../services/categories.service');
-const { get_error_response } = require('../helpers/response');
-const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
+    createCategoriesService,
+    updateCategoriesService,
+    deletedSoftCategoriesService,
+    restoreCategoriesService,
+    deletedCategoriesService
+} = require('../services/categories_service');
 const { PrismaClient } = require('@prisma/client');
-
 class CategoriesController {
+
     constructor() {
         this.prisma = new PrismaClient();
     }
@@ -22,10 +25,33 @@ class CategoriesController {
         return res.status(response.status_code).json(response);
     }
     async createCategories(req, res) {
-        const { name, description, image, is_hide, attribute } = req.body || {};
-        const response = await createCategoriesService({ name, description, image, is_hide, attribute });
+        const { name, description, image, is_hide, attribute_id, parent_id } = req.body || {};
+        const response = await createCategoriesService({ name, description, image, is_hide, attribute_id, parent_id });
         return res.status(response.status_code).json(response);
     }
+    async updateCategories(req, res) {
+        const { id } = req.params;
+        const { name, description, image, is_hide, attribute_id, parent_id } = req.body || {};
+        const response = await updateCategoriesService({ id, name, description, image, is_hide, attribute_id, parent_id });
+        return res.status(response.status_code).json(response);
+    }
+    async deletedSoftCategories(req, res) {
+        const { id } = req.params;
+        const { forceDelete } = req.body || {};
+        const response = await deletedSoftCategoriesService(Number(id), forceDelete);
+        return res.status(response.status_code).json(response);
+    }
+    async deletedCategories(req, res) {
+        const { id } = req.params;
+        const response = await deletedCategoriesService(id);
+        return res.status(response.status_code).json(response);
+    }
+    async restoreCategories(req, res) {
+        const { id } = req.params;
+        const response = await restoreCategoriesService(id);
+        return res.status(response.status_code).json(response);
+    }
+
 }
 
 module.exports = new CategoriesController();

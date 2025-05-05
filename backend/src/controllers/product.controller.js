@@ -44,6 +44,7 @@ class ProductController {
 
         return res.status(response.status_code).json(response);
     }
+    
 
 
 }
