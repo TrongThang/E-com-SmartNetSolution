@@ -14,7 +14,7 @@ const { ERROR_CODES, MESSAGES } =  import("../contants/errors.js");
 // Nếu không truyền vào message thì nó sẽ không trả về message
 // Nếu không truyền vào errorCode thì nó sẽ không trả về errorCode
 ///
-function get_error_response(errors = null, status_code = 200, data = null, fieldError = null) {
+function get_error_response(errors = null, status_code = 200, data = null, fieldErrors = null) {
     let errorList = [];
 
     // Nếu truyền vào là một mảng lỗi

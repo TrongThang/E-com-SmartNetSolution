@@ -1,0 +1,43 @@
+{
+    "employee_id": 1,
+    "export_date": "2022-01-01T00:00:00Z",
+    "orders": [
+        {
+            "id": 1,
+            "products": [
+                {
+                    "id": 1,
+                    "name": "Product A",
+                    "quantity": 2,
+                    "sale_price": 10,
+                    "batch_product_details": [
+                        {
+                            "imp_batch_id": 120,
+                            "serial_number": "SN123456",
+                            "import_price": 5
+                        },
+                        {
+                            "imp_batch_id": 122,
+                            "serial_number": "SN789210",
+                            "import_price": 8
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "name": "Product B",
+                    "quantity": 1,
+                    "price": 20.0,
+                    "sale_price": 50,
+                    "batch_product_details": [
+                        {
+                            "imp_batch_id": 110,
+                            "import_price": 20,
+                            "serial_number": "BN123456"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

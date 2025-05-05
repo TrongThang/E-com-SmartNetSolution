@@ -1,4 +1,4 @@
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('./response.helper');
 const QueryHelper = require('./query.helper');
 
 function buildWhereQuery(filter, table = null) {
