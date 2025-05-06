@@ -18,6 +18,7 @@ const BaseCustomerSchema = z.object({
             .max(50, {
                 message: `[${ERROR_CODES.CUSTOMER_LASTNAME_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_LASTNAME_MAX_LENGTH]}`
             }),
+        image: z.string().optional(),
         phone: z.string()
             .regex(REGEX.PHONE, {
                 message: `[${ERROR_CODES.CUSTOMER_PHONE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_PHONE_INVALID]}`

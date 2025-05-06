@@ -24,11 +24,12 @@ class CustomerController {
     }
 
     async createCustomer(req, res) {
-        const { surname, lastname, phone, email, gender, birthdate } = req.body;
+        const { surname, lastname, image, phone, email, gender, birthdate } = req.body;
 
         const response = await createCustomerService({
             surname,
             lastname,
+            image,
             phone,
             email,
             gender,

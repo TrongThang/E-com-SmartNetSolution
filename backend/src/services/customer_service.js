@@ -86,7 +86,7 @@ async function getCustomerDetailService(id) {
     }
 }
 
-async function createCustomerService({ surname, lastname, phone, email, gender, birthdate }) {
+async function createCustomerService({ surname, lastname, image, phone, email, gender, birthdate }) {
     try {
         const id = generateCustomerId();
         
@@ -98,6 +98,7 @@ async function createCustomerService({ surname, lastname, phone, email, gender, 
                 id: id,
                 surname: surname,
                 lastname: lastname,
+                image: image || null,
                 phone: phone || null,
                 email: email || null,
                 gender: genderValue,
@@ -123,7 +124,7 @@ async function createCustomerService({ surname, lastname, phone, email, gender, 
     }
 }
 
-async function updateCustomerService({ id, surname, lastname, phone, email, gender, birthdate }) {
+async function updateCustomerService({ id, surname, lastname, image, phone, email, gender, birthdate }) {
     try {
         // Kiểm tra customer có tồn tại không
         const existingCustomer = await prisma.customer.findUnique({
@@ -146,6 +147,7 @@ async function updateCustomerService({ id, surname, lastname, phone, email, gend
             data: {
                 surname,
                 lastname,
+                image: image || null,
                 phone: phone || null,
                 email: email || null,
                 gender: genderValue,
