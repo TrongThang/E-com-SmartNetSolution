@@ -1,6 +1,6 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { ROLE } = require('../contants/info');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
 const { PrismaClient, sql } = require('@prisma/client');
 const { convertToSlug, removeTagHtml } = require('../helpers/extension.helper');
 const { executeSelectData } = require('../helpers/sql_query')
@@ -14,7 +14,6 @@ const prisma = new PrismaClient();
 // 2: Sản phẩm khuyến mãi
 // 3: Sản phẩm nổi bật
 // 4: Sản phẩm mới
-// 5: sản phẩm bán chạy
 // Nếu không nhập limit thì mặc định là lấy hết
 const getProductService = async (filter, limit, sort, order, role, type) => {
 

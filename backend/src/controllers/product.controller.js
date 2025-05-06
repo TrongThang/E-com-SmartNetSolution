@@ -10,7 +10,8 @@ const {
     getProductsByCategoryIdAndStatusAndIsHideService
 } = require('../services/product_service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
+const { check_info_product } = require('../helpers/product.helper');
 
 class ProductController {
     constructor() {
@@ -46,7 +47,13 @@ class ProductController {
     }
     
 
+    async checkInfoProduct(req, res) {
+        const { product } = req.body;
+        
+        const response = await check_info_product(product)
 
+        return res.status(response.status_code).json(response);
+    }
 }
 
 module.exports = new ProductController();
