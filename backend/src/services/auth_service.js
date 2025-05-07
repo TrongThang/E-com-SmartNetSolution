@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
 const { PrismaClient, sql } = require('@prisma/client');
 const { hashPassword } = require('../helpers/auth.helper');
 const { generateAccountId, generateCustomerId } = require('../helpers/generate.helper')

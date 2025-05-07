@@ -7,7 +7,7 @@ const {
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
 const { loginSchema, sendOtpSchema } = require('../schemas/account.schema');
 const NotificationService = require("../services/notification_service");
 
