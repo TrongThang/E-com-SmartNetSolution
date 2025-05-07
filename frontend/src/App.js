@@ -1,8 +1,9 @@
-import React from 'react';
-import GenericTable from './components/common/GenericTable';
+import './App.css';
+import DefaultLayout from './components/layout/defaultLayout';
+
 function App() {
 	return (
-		<GenericTable />
+		<DefaultLayout />
 	);
 }
 
