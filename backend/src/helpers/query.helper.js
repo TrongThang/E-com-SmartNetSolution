@@ -15,6 +15,14 @@ class QueryHelper {
     //     return await this.prisma.$executeRaw(sql([query], ...params));
     // }
 
+    async isExistId (id, model) {
+        if (model && typeof model.findByPk === 'function') {
+            const existingRecord = await model.findByPk(id);
+            return existingRecord;
+        }
+        return false;
+    };
+    
     async disconnect() {
         await this.prisma.$disconnect();
     }

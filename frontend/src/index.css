@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary: #e02424;
+  --neutral: #4b5563;
+  --neutral-light: #d1d5db;
+  --background: #ffffff;
+  --border: #e5e7eb;
+}

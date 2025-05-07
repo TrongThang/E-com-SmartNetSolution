@@ -1,3 +1,9 @@
+const { ERROR_CODES, STATUS_CODE, ERROR_MESSAGES } = require("../contants/errors");
+const { PRODUCT } = require("../contants/info");
+const queryHelper = require("./query.helper");
+const { prisma } = require("./query.helper");
+const { get_error_response } = require("./response.helper");
+
 function diffAttributeSets(request, in_db) {
     const requestMap = new Map();
     const dbMap = new Map();
@@ -106,6 +112,76 @@ function configDataProductDetail(productRows) {
     });
 }
 
+async function check_info_product(product_id, quantity_sold) {
+    const product = await queryHelper.queryRaw(`
+        SELECT 
+            p.name, p.selling_price, p.status, COALESCE(SUM(w.stock), 0) AS total_quantity
+        FROM product p
+        LEFT JOIN warehouse_inventory w ON p.id = w.product_id
+        WHERE p.id = ${product_id}
+        GROUP BY p.id, p.selling_price, p.status
+    `);
+    let errors = [];
+    let fieldErrors = [];
+    // Không tồn tại sản phẩm
+    if (!product) {
+        errors.push(ERROR_CODES.PRODUCT_NOT_FOUND)
+        fieldErrors.push('id')
+    }
+
+    if (product.name !== product_check.name) {
+        errors.push(ERROR_CODES.PRODUCT_CHANGED_NAME)
+        fieldErrors.push('name')
+    }
+    
+    // Sản phẩm bị ẩn
+    if (product.is_hide) {
+        errors.push(ERROR_CODES.PRODUCT_IS_HIDE)
+        fieldErrors.push('is_hide')
+    }
+
+    // Sản phẩm ngừng bán hoặc hết hàng
+    if (product.status < PRODUCT.ACTIVE) {
+        errors.push(ERROR_CODES.PRODUCT_NON_ACTIVE)
+        fieldErrors.push('status')
+    }
+
+    // Sản phẩm có giá khác so với giá thực tế
+    if (product.selling_price !== product_check.selling_price) {
+        errors.push(ERROR_CODES.PRODUCT_SELLING_PRICE_NOT_MATCH)
+        fieldErrors.push('selling_price')
+    }
+
+    // Sản phẩm được mua với số lượng lớn hơn số lượng tồn kho
+    if (quantity_sold > product.total_quantity) {
+        errors.push(ERROR_CODES.PRODUCT_NOT_ENOUGH_STOCK)
+        fieldErrors.push('quantity_sold')
+    }
+
+    if (errors) {
+        
+        return get_error_response(errors, STATUS_CODE.NOT_ACCEPTABLE, fieldErrors)
+    }
+    
+    return null;
+}
+
+async function check_list_info_product(list_product) {
+    let errors = [];
+    list_product.map((product) => {
+        const result_check = check_info_product(product.id, product.quantity_sold);
+
+        if (result_check) {
+            return errors.push(result_check);
+        }
+    })
+
+    if (errors.length > 0) {
+        return get_error_response(errors, STATUS_CODE.NOT_ACCEPTABLE, errors.map((error) => error.fieldErrors).flat())
+    }
+    return null;
+}
+
 module.exports = {
-    diffAttributeSets, configDataProductDetail
+    diffAttributeSets, configDataProductDetail, check_info_product, check_list_info_product
 }
