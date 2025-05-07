@@ -13,13 +13,13 @@ export default function Navbar() {
                     <a href="#" className="text-[var(--neutral)] hover:text-[var(--primary)]">Giới thiệu</a>
                     <a href="#" className="text-[var(--neutral)] hover:text-[var(--primary)]">Liên hệ</a>
                 </nav>
-            </div>
+            </div>  
             <div className="flex items-center space-x-4">
                 <div className="flex max-w-sm items-center relative">
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm..."
+                    <Input
                         className="w-full border rounded-md p-2 pl-8 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        placeholder="Tìm kiếm..."
+                        onClick={(e) => e.stopPropagation()}
                     />
                     <Button type="submit" size="icon" className="absolute right-0 h-full rounded-l-none">
                         <Search className="h-4 w-4" />
