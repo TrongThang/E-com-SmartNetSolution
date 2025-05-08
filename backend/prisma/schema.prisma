@@ -51,7 +51,7 @@ model account {
 }
 
 model address_book {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   customer_id String?   @db.VarChar(12)
   district    String?   @db.VarChar(500)
   city        String?   @db.VarChar(500)
@@ -171,7 +171,7 @@ model batch_product_detail {
 }
 
 model blog {
-  id             Int         @id
+  id             Int         @id @default(autoincrement())
   category_id    Int?
   product_id     Int?
   title          String?     @db.VarChar(500)
@@ -186,9 +186,11 @@ model blog {
   deleted_at     DateTime?   @db.Timestamp(0)
   categories     categories? @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "blog_ibfk_1")
   product        product?    @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_ibfk_2")
+  employee       employee?   @relation("BlogToEmployee", fields: [author], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([category_id], map: "category_id")
   @@index([product_id], map: "product_id")
+  @@index([author], map: "author")
 }
 
 model cart {
@@ -405,6 +407,7 @@ model employee {
   import_warehouse                 import_warehouse[]
   order_order_saler_idToemployee   order[]            @relation("order_saler_idToemployee")
   order_order_shipper_idToemployee order[]            @relation("order_shipper_idToemployee")
+  blog                             blog[]             @relation("BlogToEmployee")
 }
 
 model export_warehouse {
@@ -553,7 +556,7 @@ model info_website {
 }
 
 model liked {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   customer_id String    @db.VarChar(12)
   product_id  Int?
   created_at  DateTime? @db.Timestamp(0)

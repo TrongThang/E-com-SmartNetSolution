@@ -254,6 +254,46 @@ const ERROR_CODES = {
     REVIEW_ORDER_REQUIRED: 1907,
     REVIEW_RATING_INVALID: 1908,
     REVIEW_COMMENT_REQUIRED: 1909,
+
+    // LIKED - 20xx
+    LIKED_SUCCESS: 2000,
+    LIKED_NOT_FOUND: 2001,
+    LIKED_CREATE_FAILED: 2002,
+    LIKED_DELETED_FAILED: 2003,
+    LIKED_ALREADY_EXISTS: 2004,
+    LIKED_CUSTOMER_ID_REQUIRED: 2005,
+    LIKED_PRODUCT_ID_REQUIRED: 2006,
+    LIKED_ID_REQUIRED: 2007,
+
+    // BLOG - 21xx
+    BLOG_SUCCESS: 2100,
+    BLOG_NOT_FOUND: 2101,
+    BLOG_CREATE_FAILED: 2102,
+    BLOG_UPDATED_FAILED: 2103,
+    BLOG_DELETED_FAILED: 2104,
+    BLOG_TITLE_TOO_LONG: 2105,
+    BLOG_AUTHOR_TOO_LONG: 2106,
+    BLOG_CONTENT_TOO_LONG: 2107,
+    BLOG_ID_REQUIRED: 2108,
+    BLOG_IS_HIDE_INVALID: 2109,
+
+    
+    // ADDRESS_BOOK - 22xx
+    ADDRESS_BOOK_SUCCESS: 2200,
+    ADDRESS_BOOK_NOT_FOUND: 2201,
+    ADDRESS_BOOK_CREATE_FAILED: 2202,
+    ADDRESS_BOOK_UPDATED_FAILED: 2203,
+    ADDRESS_BOOK_DELETED_FAILED: 2204,
+    ADDRESS_BOOK_DEFAULT_ADDRESS_NOT_FOUND: 2205,
+    ADDRESS_BOOK_CUSTOMER_ID_REQUIRED: 2206,
+    ADDRESS_BOOK_DISTRICT_MAX_LENGTH: 2207,
+    ADDRESS_BOOK_CITY_MAX_LENGTH: 2208,
+    ADDRESS_BOOK_WARD_MAX_LENGTH: 2209,
+    ADDRESS_BOOK_STREET_MAX_LENGTH: 2210,
+    ADDRESS_BOOK_DETAIL_MIN_LENGTH: 2211,
+    ADDRESS_BOOK_DETAIL_MAX_LENGTH: 2212,
+    ADDRESS_BOOK_IS_DEFAULT_INVALID: 2213,
+    ADDRESS_BOOK_ID_REQUIRED: 2214,
 };
 
 const ERROR_MESSAGES = {
@@ -491,6 +531,44 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.REVIEW_ORDER_REQUIRED]: "Bạn cần mua sản phẩm trước khi đánh giá",
     [ERROR_CODES.REVIEW_RATING_INVALID]: "Số sao đánh giá không hợp lệ",
     [ERROR_CODES.REVIEW_COMMENT_REQUIRED]: "Nội dung đánh giá là bắt buộc",
+    // ADDRESS_BOOK
+    [ERROR_CODES.ADDRESS_BOOK_SUCCESS]: "Thao tác với sổ địa chỉ thành công",
+    [ERROR_CODES.ADDRESS_BOOK_NOT_FOUND]: "Không tìm thấy sổ địa chỉ",
+    [ERROR_CODES.ADDRESS_BOOK_CREATE_FAILED]: "Tạo sổ địa chỉ thất bại",
+    [ERROR_CODES.ADDRESS_BOOK_UPDATED_FAILED]: "Cập nhật sổ địa chỉ thất bại",
+    [ERROR_CODES.ADDRESS_BOOK_DELETED_FAILED]: "Xóa sổ địa chỉ thất bại",
+    [ERROR_CODES.ADDRESS_BOOK_DEFAULT_ADDRESS_NOT_FOUND]: "Không tìm thấy địa chỉ mặc định",
+    [ERROR_CODES.ADDRESS_BOOK_CUSTOMER_ID_REQUIRED]: "ID khách hàng là bắt buộc",
+    [ERROR_CODES.ADDRESS_BOOK_DISTRICT_MAX_LENGTH]: "Địa chỉ không được vượt quá 255 ký tự",
+    [ERROR_CODES.ADDRESS_BOOK_CITY_MAX_LENGTH]: "Tên thành phố không được vượt quá 255 ký tự",
+    [ERROR_CODES.ADDRESS_BOOK_WARD_MAX_LENGTH]: "Tên phường không được vượt quá 255 ký tự",
+    [ERROR_CODES.ADDRESS_BOOK_STREET_MAX_LENGTH]: "Tên đường không được vượt quá 255 ký tự",
+    [ERROR_CODES.ADDRESS_BOOK_DETAIL_MIN_LENGTH]: "Chi tiết địa chỉ phải có ít nhất 1 ký tự",
+    [ERROR_CODES.ADDRESS_BOOK_DETAIL_MAX_LENGTH]: "Chi tiết địa chỉ không được vượt quá 255 ký tự",
+    [ERROR_CODES.ADDRESS_BOOK_IS_DEFAULT_INVALID]: "Giá trị mặc định không hợp lệ",
+    [ERROR_CODES.ADDRESS_BOOK_ID_REQUIRED]: "ID địa chỉ là bắt buộc",
+
+    // LIKED
+    [ERROR_CODES.LIKED_SUCCESS]: "Thao tác với danh sách yêu thích thành công",
+    [ERROR_CODES.LIKED_NOT_FOUND]: "Không tìm thấy sản phẩm yêu thích",
+    [ERROR_CODES.LIKED_CREATE_FAILED]: "Thêm sản phẩm yêu thích thất bại",
+    [ERROR_CODES.LIKED_DELETED_FAILED]: "Xóa sản phẩm yêu thích thất bại",
+    [ERROR_CODES.LIKED_ALREADY_EXISTS]: "Sản phẩm đã có trong danh sách yêu thích",
+    [ERROR_CODES.LIKED_CUSTOMER_ID_REQUIRED]: "ID khách hàng là bắt buộc",
+    [ERROR_CODES.LIKED_PRODUCT_ID_REQUIRED]: "ID sản phẩm là bắt buộc",
+    [ERROR_CODES.LIKED_ID_REQUIRED]: "ID yêu thích là bắt buộc",
+
+    // BLOG
+    [ERROR_CODES.BLOG_SUCCESS]: "Thao tác với blog thành công",
+    [ERROR_CODES.BLOG_NOT_FOUND]: "Không tìm thấy blog",
+    [ERROR_CODES.BLOG_CREATE_FAILED]: "Tạo blog thất bại",
+    [ERROR_CODES.BLOG_UPDATED_FAILED]: "Cập nhật blog thất bại",
+    [ERROR_CODES.BLOG_DELETED_FAILED]: "Xóa blog thất bại",
+    [ERROR_CODES.BLOG_TITLE_TOO_LONG]: "Tiêu đề blog không được vượt quá 500 ký tự",
+    [ERROR_CODES.BLOG_AUTHOR_TOO_LONG]: "Tên tác giả không được vượt quá 12 ký tự",
+    [ERROR_CODES.BLOG_CONTENT_TOO_LONG]: "Nội dung blog không được vượt quá 500 ký tự",
+    [ERROR_CODES.BLOG_ID_REQUIRED]: "ID blog là bắt buộc",
+    [ERROR_CODES.BLOG_IS_HIDE_INVALID]: "Giá trị ẩn/hiện blog không hợp lệ",
 };
 
 module.exports = {

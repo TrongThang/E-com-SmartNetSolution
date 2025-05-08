@@ -4,10 +4,10 @@ const { ERROR_CODES, ERROR_MESSAGES } = require('../contants/errors');
 
 const BaseLikedSchema = z.object({
     body: z.object({
-        product_id: z.number().int().positive({
+        product_id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.LIKED_PRODUCT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.LIKED_PRODUCT_ID_REQUIRED]}`,
         }),
-        customer_id: z.number().int().positive({
+        customer_id: z.string({
             message: `[${ERROR_CODES.LIKED_CUSTOMER_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.LIKED_CUSTOMER_ID_REQUIRED]}`,
         }),
     }),
@@ -25,7 +25,7 @@ const UpdateLikedSchema = BaseLikedSchema.extend({
 
 const DeleteLikedSchema = z.object({
     params: z.object({
-        id: z.number().int().positive({
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.LIKED_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.LIKED_ID_REQUIRED]}`,
         }),
     }),
