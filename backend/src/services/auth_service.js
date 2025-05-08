@@ -1,39 +1,50 @@
 const jwt = require('jsonwebtoken');
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
 const { PrismaClient, sql } = require('@prisma/client');
-const { hashPassword } = require('../helpers/auth.helper');
+const { hashPassword, verifyPassword } = require('../helpers/auth.helper');
 const { generateAccountId, generateCustomerId } = require('../helpers/generate.helper')
 
 const prisma = new PrismaClient();
 
-async function loginAPI (username, password, type, remember_me = null) {
+async function getUserAdminInfo(account_id) {
+	const user = await prisma.account.findFirst({
+		where: {
+			account_id: account_id
+		},
+		include: {
+			customer: true,
+			employee: true
+		}
+	});
+
+	return user;
+}
+
+async function loginAPI (username, password, type = "CUSTOMER", remember_me = null) {
 	try {
 		include_clause = type === 'CUSTOMER' ? { customer: true } : { employee: true };
-		console.log('chuẩn bị tìm kiếm:', username, password, type, remember_me);
 
-		const hashedPassword = await hashPassword(password);
-		
 		const user = await prisma.account.findFirst({
 			where: {
 				username: username,
 				role_id: type,
 				// report: { equals: 0 }
-			},
-			include: include_clause
+			}
 		})
-		console.log('User:', user);
-
-		let token;
-		if (user === null) {
-			return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+		
+		if( verifyPassword(password, user.password) === false) {
+			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
 		}
 
 		// Tạo token JWT khi đăng nhập thành công
 		accessToken = jwt.sign(
 			{
-				account_id: user.customer_id || user.employee_id,
+				account_id: user.account_id,
 				username: user.username,
+				customer_id: user.customer_id || undefined,
+				employee_id: user.employee_id || undefined,
+				// name: user.customer.lastname || user.employee.lastname || undefined,
 				role_id: user.role_id
 			},
 			process.env.SECRET_KEY,

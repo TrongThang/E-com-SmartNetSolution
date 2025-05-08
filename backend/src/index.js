@@ -1,10 +1,24 @@
 const express = require('express');
 require('dotenv').config();
+const morgan = require('morgan'); // Thêm morgan để ghi log
 const configServer = require('./config/server');
 const connection = require('./config/database');
 
 const app = express();
 const port = process.env.PORT || 8081;
+
+
+// Định nghĩa định dạng tùy chỉnh cho morgan
+morgan.token('body', (req) => JSON.stringify(req.body));
+morgan.token('query', (req) => JSON.stringify(req.query));
+app.use(
+    morgan(
+        '🚀 :method :url :status :response-time ms | ' +
+        'Headers: :req[header] | ' +
+        'Query: :query | ' +
+        'Body: :body'
+    )
+);
 
 configServer(app);
 

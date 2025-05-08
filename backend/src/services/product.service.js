@@ -86,21 +86,10 @@ const getProductDetailService = async (id, role = null, type = null) => {
         LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id
     `
 
-    if (type == 'admin' && role == ROLE) {
-        get_attr += `, COALESCE(inventory.stock, 0) AS stock`
-        query_join += `
-            LEFT JOIN (
-                SELECT product_id, SUM(stock) AS stock
-                FROM warehouse_inventory
-                GROUP BY product_id
-            ) inventory ON product.id = inventory.product_id
-        `
-    }
-
-    get_attr += `, COALESCE(review.avg_rating, 0) AS average_rating, COALESCE(CAST(liked.total_liked AS CHAR), '0') AS total_liked`
+    get_attr += `, COALESCE(review.avg_rating, 0) AS average_rating, COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, COALESCE(CAST(liked.total_liked AS CHAR), '0') AS total_liked, COALESCE(inventory.stock, 0) AS stock, COALESCE(sold.sold, 0) AS sold`
     query_join =  query_join + `
         LEFT JOIN (
-            SELECT product_id, CAST(AVG(rating) AS DECIMAL(5,2)) AS avg_rating
+            SELECT product_id, CAST(AVG(rating) AS DECIMAL(5,2)) AS avg_rating, COUNT(id) AS total_review
             FROM review_product
             GROUP BY product_id
         ) review ON product.id = review.product_id
@@ -109,13 +98,32 @@ const getProductDetailService = async (id, role = null, type = null) => {
             FROM liked
             GROUP BY product_id
         ) liked ON product.id = liked.product_id
+        LEFT JOIN (
+            SELECT product_id, SUM(stock) AS stock
+            FROM warehouse_inventory
+            GROUP BY product_id
+        ) inventory ON product.id = inventory.product_id
+        LEFT JOIN (
+            SELECT product_id, SUM(quantity_sold) AS sold
+            FROM order_detail
+            GROUP BY product_id
+        ) sold ON product.id = sold.product_id
     `
-    //ADD filter liked by updated_at -> a month 
-    
+    //ADD filter liked by updated_at -> a month
+
     const products = await executeSelectData({
         table: get_table, queryJoin: query_join, strGetColumn: get_attr, filter: filter, configData: configDataProductDetail,
     })
     
+    const images = await prisma.image_product.findMany({
+        where: { product_id: id },
+        select: {
+            id: true, product_id: true, image: true
+        }
+    })
+
+    products.data[0].images = images;
+
     return get_error_response(errorCode=ERROR_CODES.SUCCESS, status_code=STATUS_CODE.OK, data = products); 
 }
 

@@ -9,15 +9,15 @@ datasource db {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model account {
-  account_id                                                 String                @id @db.VarChar(12)
-  customer_id                                                String?               @db.VarChar(12)
-  employee_id                                                String?               @db.VarChar(12)
-  role_id                                                    String?               @db.VarChar(5)
+  account_id                                                 String                @id @db.VarChar(32)
+  customer_id                                                String?               @db.VarChar(32)
+  employee_id                                                String?               @db.VarChar(32)
+  role_id                                                    String?               @db.VarChar(12)
   username                                                   String                @db.VarChar(50)
-  password                                                   String?               @db.VarChar(50)
+  password                                                   String?               @db.VarChar(255)
   verification_code                                          String?               @db.VarChar(6)
   verification_expiry                                        DateTime?             @db.DateTime(0)
-  report                                                     Int?                  @db.TinyInt
+  report                                                     Int?                  @default(0) @db.TinyInt
   is_new                                                     Boolean?
   status                                                     Int?                  @db.TinyInt
   created_at                                                 DateTime?             @db.Timestamp(0)
@@ -117,7 +117,7 @@ model attribute {
 }
 
 model attribute_category {
-  id           Int         @id
+  id           Int         @id @default(autoincrement()) @db.UnsignedInt
   attribute_id Int?
   category_id  Int?
   created_at   DateTime?   @db.Timestamp(0)
@@ -140,16 +140,17 @@ model attribute_group {
 }
 
 model attribute_product {
-  product_id   Int        @id
-  attribute_id Int?
+  product_id   Int
+  attribute_id Int
   is_hide      Boolean?
-  value        String?    @db.VarChar(500)
-  created_at   DateTime?  @db.Timestamp(0)
-  updated_at   DateTime?  @db.Timestamp(0)
-  deleted_at   DateTime?  @db.Timestamp(0)
-  product      product    @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_1")
-  attribute    attribute? @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_2")
+  value        String?   @db.VarChar(500)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+  product      product   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_1")
+  attribute    attribute @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_2")
 
+  @@id([product_id, attribute_id])
   @@index([attribute_id], map: "attribute_id")
 }
 
@@ -207,8 +208,8 @@ model cart {
 
 model categories {
   category_id        Int                  @id
-  key                String?              @db.VarChar(50)
   name               String?              @db.VarChar(500)
+  key                String?              @db.VarChar(50)
   slug               String?              @db.VarChar(500)
   parent_id          Int?
   image              String?              @db.MediumText
@@ -254,7 +255,7 @@ model contact {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model customer {
-  id             String           @id @db.VarChar(12)
+  id             String           @id @db.VarChar(32)
   surname        String?          @db.VarChar(500)
   lastname       String?          @db.VarChar(500)
   image          String?          @db.MediumText
@@ -302,7 +303,6 @@ model detail_import {
   product_id           Int
   quantity             Int?
   import_price         Float?
-  sale_price           Float?
   discount             Int?
   amount               Int?
   is_gift              Boolean?
@@ -509,7 +509,7 @@ model houses {
 model image_product {
   id         Int       @id
   product_id Int?
-  image      String?   @db.MediumText
+  image        String?   @db.MediumText
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
@@ -592,9 +592,9 @@ model order {
   shipper_id                          String?         @db.VarChar(12)
   export_date                         DateTime?       @db.Date
   total_import_money                  Float?
-  total_money                         Float?
   discount                            Float?
   vat                                 Float?          @db.Float
+  total_money                         Float?
   amount                              Float?
   prepaid                             Float?
   remaining                           Float?
@@ -606,6 +606,7 @@ model order {
   name_recipient                      String?         @db.VarChar(150)
   note                                String?         @db.VarChar(500)
   platform_order                      String?         @db.VarChar(50)
+  status                              Int?            @default(0) @db.TinyInt
   created_at                          DateTime?       @db.Timestamp(0)
   updated_at                          DateTime?       @db.Timestamp(0)
   deleted_at                          DateTime?       @db.Timestamp(0)
@@ -624,9 +625,7 @@ model order_detail {
   id             Int       @id
   order_id       Int?
   product_id     Int?
-  batch_code     String?   @db.VarChar(50)
   unit           String?   @db.VarChar(30)
-  import_price   Float?
   sale_price     Float?
   discount       Float?
   quantity_sold  Float?
@@ -687,6 +686,9 @@ model payment_info {
 model permission {
   id              Int               @id
   name            String?           @db.VarChar(500)
+  type            String?           @db.VarChar(100)
+  code            String?           @db.VarChar(100)
+  view_in_menu    String?           @db.VarChar(100)
   created_at      DateTime?         @db.Timestamp(0)
   updated_at      DateTime?         @db.Timestamp(0)
   deleted_at      DateTime?         @db.Timestamp(0)
@@ -724,7 +726,7 @@ model product {
   created_at          DateTime?             @db.Timestamp(0)
   updated_at          DateTime?             @db.Timestamp(0)
   deleted_at          DateTime?             @db.Timestamp(0)
-  attribute_product   attribute_product?
+  attribute_product   attribute_product[]
   blog                blog[]
   cart                cart[]
   detail_export       detail_export[]
@@ -745,8 +747,8 @@ model product {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model production_batches {
-  batch_id                                        Int                   @unique(map: "batch_id")
-  production_batch_id                             String                @db.VarChar(255) 
+  batch_id                                        Int
+  production_batch_id                             String                @db.VarChar(255)
   template_id                                     Int?
   quantity                                        Int
   status                                          String?               @default("pending") @db.VarChar(20)
@@ -808,9 +810,9 @@ model production_tracking {
 }
 
 model review_product {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   review_id   Int?
-  customer_id String?   @db.VarChar(12)
+  customer_id String?   @db.VarChar(32)
   product_id  Int?
   comment     String?   @db.Text
   image       String?   @db.MediumText
@@ -828,7 +830,7 @@ model review_product {
 }
 
 model role {
-  id              String            @id @db.VarChar(5)
+  id              String            @id @db.VarChar(12)
   name            String?           @db.VarChar(500)
   created_at      DateTime?         @db.Timestamp(0)
   updated_at      DateTime?         @db.Timestamp(0)

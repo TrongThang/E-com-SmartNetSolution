@@ -18,7 +18,8 @@ const configServer = (app) => {
     app.use(cors({
         origin: '*', // Cho phép tất cả origin (có thể giới hạn cụ thể nếu cần)
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        // allowedHeaders: ['Content-Type', 'Authorization'],
+        allowedHeaders: '*',
     }));
 
     // Middleware session để quản lý phiên người dùng

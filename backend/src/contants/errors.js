@@ -340,6 +340,7 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.ACCOUNT_TYPE_INVALID]: "Loại tài khoản không hợp lệ",
     [ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID]: "Mã xác thực không chính xác",
     [ERROR_CODES.ACCOUNT_EMAIL_NOT_MATCH]: "Email không khớp với tài khoản",
+    [ERROR_CODES.ACCOUNT_PASSWORD_NOT_MATCH]: "Email không khớp với tài khoản",
     [ERROR_CODES.ACCOUNT_EMAIL_IS_VERIFIED]: "Email đã được xác thực",
     [ERROR_CODES.ACCOUNT_VERIFICATION_CODE_NOT_FOUND]: "Không tìm thấy mã xác thực",
     [ERROR_CODES.ACCOUNT_VERIFICATION_CODE_NOT_MATCH]: "Mã xác thực không khớp",

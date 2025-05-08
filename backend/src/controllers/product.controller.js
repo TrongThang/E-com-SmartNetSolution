@@ -8,7 +8,7 @@ const {
     getProductsByCategoryIdService,
     getProductsByCategoryIdAndStatusService,
     getProductsByCategoryIdAndStatusAndIsHideService
-} = require('../services/product_service');
+} = require('../services/product.service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 const { check_info_product } = require('../helpers/product.helper');
@@ -28,7 +28,7 @@ class ProductController {
 
     async getProductDetail(req, res) {
         console.log('Xem chi tiết sản phẩm!');
-        
+        console.log('ID:', req.params.id);
         const { id } = req.params;
         
         const response = await getProductDetailService(Number(id))

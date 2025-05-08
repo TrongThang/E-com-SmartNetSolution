@@ -19,10 +19,10 @@ async function createExportWarehouse(exportWarehouse) {
     }
     
     // Kiểm tra tính hợp lệ của total_profit
-    const error = validateNumber(exportWarehouse.total_profit);
-    if (error) {
-        return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_TOTAL_PROFIT_INVALID, STATUS_CODE.BAD_REQUEST);
-    }
+    // const error = validateNumber(exportWarehouse.total_profit);
+    // if (error) {
+    //     return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_TOTAL_PROFIT_INVALID, STATUS_CODE.BAD_REQUEST);
+    // }
 
     // Tạo bản ghi xuất kho trong transaction
     const exportWarehouseData = await prisma.$transaction(async (tx) => {

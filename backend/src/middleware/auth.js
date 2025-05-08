@@ -2,7 +2,7 @@
 const jwt = require('jsonwebtoken');
 const {prisma} = require('../config/database');
 const { STATUS_CODE, ERROR_CODES, ERROR_MESSAGES } = require('../docs/contants');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
 
 async function verify_token(req, res) {
     const authHeader = req.headers.authorization;
