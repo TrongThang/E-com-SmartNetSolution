@@ -13,7 +13,6 @@ function buildWhereQuery(filter, table = null) {
         filterObj.forEach(item => {
             let { field, condition, value } = item;
 
-
             switch (condition) {
                 case 'contains':
                     if (value) {
@@ -98,10 +97,13 @@ async function executeSelectData({
     const buildLimit = parsedLimit ? `LIMIT ${parsedLimit}` : '';
     const buildOffset = skip ? `OFFSET ${skip}` : '';
 
+    // Xác định cột ID dựa trên tên bảng
+    const idColumn = table === 'categories' ? 'category_id' : 'id';
+
     const queryGetIdTable = `
-        SELECT DISTINCT id
+        SELECT DISTINCT ${idColumn}
         FROM (
-            SELECT DISTINCT ${table}.id ${sort ? `, ${sort} as sort_column` : ''}
+            SELECT DISTINCT ${table}.${idColumn} ${sort ? `, ${sort} as sort_column` : ''}
             FROM ${table}
             ${queryJoin || ''}
             ${buildWhere}
@@ -124,7 +126,7 @@ async function executeSelectData({
 
     // Xây dựng câu SQL chính
     const query = `
-        SELECT DISTINCT ${queryJoin ? `${table}.` : ''}id, ${strGetColumn}, ${queryGetTime}
+        SELECT DISTINCT ${queryJoin ? `${table}.` : ''}${idColumn}, ${strGetColumn}, ${queryGetTime}
         FROM ${table}
         ${queryJoin || ''}
         WHERE ${whereCondition}

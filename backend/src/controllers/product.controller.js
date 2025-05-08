@@ -28,11 +28,10 @@ class ProductController {
 
     async getProductDetail(req, res) {
         console.log('Xem chi tiết sản phẩm!');
-        console.log('ID:', req.params.id);
         const { id } = req.params;
-        
+
         const response = await getProductDetailService(Number(id))
-        
+
         return res.status(response.status_code).json(response);
     }
 
@@ -40,11 +39,12 @@ class ProductController {
         const { name, description, description_normal, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes } = req.body;
 
         const response = await createProductService({
-            name, description, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes 
+            name, description, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes
         })
 
         return res.status(response.status_code).json(response);
     }
+    
 
     async checkInfoProduct(req, res) {
         const { product } = req.body;

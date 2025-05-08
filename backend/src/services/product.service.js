@@ -20,7 +20,7 @@ const getProductService = async (filter, limit, sort, order, role, type) => {
     // product.name, slug, description, description_normal, image, selling_price, category_id, views, status, unit_id 
     let get_attr = `product.name, product.slug, product.description, product.image, selling_price, views, status
     category_id, categories.name as categories`
-    
+
     let get_table = `product`
     let query_join = `LEFT JOIN categories ON product.category_id = categories.category_id`
 
@@ -42,8 +42,7 @@ const getProductService = async (filter, limit, sort, order, role, type) => {
 
     try {
         const products = await executeSelectData({ table: get_table, queryJoin: query_join, strGetColumn: get_attr, limit: limit, filter: filter, sort: sort, order: order })
-
-        return get_error_response(errors=ERROR_CODES.SUCCESS, status_code=STATUS_CODE.OK, data = products); 
+        return get_error_response(errors = ERROR_CODES.SUCCESS, status_code = STATUS_CODE.OK, data = products);
     } catch (error) {
         console.error('Lỗi:', error)
         return get_error_response(
@@ -133,7 +132,7 @@ const checkBeforeProduct = async (category_id, unit_id, warrenty_time_id) => {
             id: category_id
         }
     })
-    
+
     if (!category) {
         return get_error_response(
             ERROR_CODES.CATEGORY_NOT_FOUND,
@@ -178,9 +177,8 @@ async function createProductService({ name, description, image, selling_price, c
     if (check_product) {
         return check_product
     }
-
     // CHECK FILE IMAGE
-    
+
     const description_normal = removeTagHtml(description);
     const slug = convertToSlug(name);
 
@@ -261,8 +259,8 @@ async function updateProductService({ id, name, description, image, selling_pric
     if (check_attr) {
         return check_attr
     }
-    const { toAdd, toUpdate, toDelete } =  (attributes, attributes_in_category);
-    
+    const { toAdd, toUpdate, toDelete } = (attributes, attributes_in_category);
+
     createManyAttribute = await prisma.attribute_product.createMany({
         data: toAdd.map(async (item) => {
             return {
@@ -331,7 +329,7 @@ async function deleteProductService(id) {
     await prisma.$transaction([
         prisma.product.delete({ where: { id } })
     ]);
-    
+
     return get_error_response(
         ERROR_CODES.SUCCESS,
         STATUS_CODE.OK
@@ -344,33 +342,27 @@ const check_attributes = async (attributes, category_id) => {
         include: { attribute: true },
     })
 
-    attributes.forEach(async (item) => {
+    for (const item of attributes) {
         const attribute = attributes_in_category.find(
             (attr) => attr.id === item.id
         )
 
         if (!attribute) {
-            return {
-                error: true,
-                data_error: get_error_response(
-                    ERROR_CODES.ATTRIBUTE_NOT_FOUND,
-                    STATUS_CODE.BAD_REQUEST
-                )
-            }
-        }        
-
-        if (attribute.datatype != typeof(item.value)) {
-            return {
-                error: true,
-                data_error: get_error_response(
-                    ERROR_CODES.ATTRIBUTE_DATATYPE_NOT_MATCH,
-                    STATUS_CODE.BAD_REQUEST
-                )
-            }
+            return get_error_response(
+                ERROR_CODES.ATTRIBUTE_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST
+            )
         }
-    })
 
-    return attributes;
+        if (attribute.datatype !== typeof item.value) {
+            return get_error_response(
+                ERROR_CODES.ATTRIBUTE_DATATYPE_NOT_MATCH,
+                STATUS_CODE.BAD_REQUEST
+            )
+        }
+    }
+
+    return null; // Return null if no errors found
 }
 
 module.exports = {

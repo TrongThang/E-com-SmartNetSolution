@@ -7,6 +7,8 @@ const convertToSlug = (str) => {
     return str.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
 }
 
+
+
 module.exports = {
     removeTagHtml,
     convertToSlug
