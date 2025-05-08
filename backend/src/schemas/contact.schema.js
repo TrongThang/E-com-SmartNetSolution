@@ -21,30 +21,41 @@ const baseContactSchema = z.object({
         email: z.string().email({
             message: `[${ERROR_CODES.CONTACT_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_EMAIL_INVALID]}`,
         }),
-        status: z.number().int({
-            message: `[${ERROR_CODES.CONTACT_STATUS_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_STATUS_INVALID]}`,
-        }),
+        // status: z.number().int({
+        //     message: `[${ERROR_CODES.CONTACT_STATUS_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_STATUS_INVALID]}`,
+        // }),
     }),
 });
 
-const createContactSchema = baseContactSchema
+const createContactSchema = baseContactSchema;
 
 
-const updateContactSchema = baseContactSchema.extend({
-    body: baseContactSchema.shape.body.extend({
-        id: z.number().int().positive({
+// const updateContactSchema = baseContactSchema.extend({
+//     body: baseContactSchema.shape.body.extend({
+//         id: z.number().int().positive({
+//             message: `[${ERROR_CODES.CONTACT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_ID_REQUIRED]}`,
+//         }),
+//         status: z.number().int({
+//             message: `[${ERROR_CODES.CONTACT_STATUS_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_STATUS_INVALID]}`,
+//         }),
+//     }),
+// });
+const updateContactSchema = z.object({
+    body: z.object({
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.CONTACT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_ID_REQUIRED]}`,
         }),
-        status: z.number().int({
+        status: z.coerce.number().int().refine(val => [0, 1, 2, 3].includes(val), {
             message: `[${ERROR_CODES.CONTACT_STATUS_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_STATUS_INVALID]}`,
         }),
     }),
+    
 });
 
 const deleteContactSchema = z.object({
     params: z.object({
-        id: z.string().uuid({
-            message: `[${ERROR_CODES.CONTACT_ID_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_ID_INVALID]}`,
+        id: z.coerce.number().int().positive({
+            message: `[${ERROR_CODES.CONTACT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CONTACT_ID_REQUIRED]}`,
         }),
     }),
 });

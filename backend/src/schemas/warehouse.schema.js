@@ -20,7 +20,7 @@ const CreateWarehouseSchema = BaseWarehouseSchema;
 
 const UpdateWarehouseSchema = BaseWarehouseSchema.extend({
     body: BaseWarehouseSchema.shape.body.extend({
-        id: z.string().min(1, {
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.WAREHOUSE_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.WAREHOUSE_ID_REQUIRED]}`,
         }),
     }),
@@ -28,7 +28,7 @@ const UpdateWarehouseSchema = BaseWarehouseSchema.extend({
 
 const DeleteWarehouseSchema = z.object({
     params: z.object({
-        id: z.string().min(1, {
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.WAREHOUSE_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.WAREHOUSE_ID_REQUIRED]}`,
         }),
     }),

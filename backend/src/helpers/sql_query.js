@@ -65,7 +65,7 @@ function buildWhereQuery(filter, table = null) {
         });
     }
 
-    return sqlConditions.length > 0 
+    return sqlConditions.length > 0
         ? `WHERE ${sqlConditions.join(' AND ')} AND ${table}.deleted_at IS NULL`
         : `WHERE ${table}.deleted_at IS NULL`;
 }
@@ -114,14 +114,14 @@ async function executeSelectData({
     console.log(queryGetIdTable)
     const idResult = await QueryHelper.queryRaw(queryGetIdTable);
     const resultIds = idResult.map(row => row.id);
-    
+
     const whereCondition = resultIds.length
-        ? `${table}.id IN (${resultIds.join(',')})`
+        ? `${table}.id IN (${resultIds.map(id => typeof id === 'string' ? `'${id}'` : id).join(',')})`
         : '1=0';
-    
+
     // Xử lý các cột thời gian
     const queryGetTime = `${table}.created_at, ${table}.updated_at, ${table}.deleted_at`;
-    
+
     // Xây dựng câu SQL chính
     const query = `
         SELECT DISTINCT ${queryJoin ? `${table}.` : ''}id, ${strGetColumn}, ${queryGetTime}
@@ -138,7 +138,7 @@ async function executeSelectData({
         ${queryJoin || ''} 
         ${buildWhere}
     `;
-    
+
     let data = await QueryHelper.queryRaw(query);
     if (configData && typeof configData === 'function') {
         data = configData(data);
@@ -160,7 +160,7 @@ async function check_reference_existence(model, column_name, value, error_code) 
     const record = await model.findOne({
         where: {
             [column_name]: value,
-            deletedAt: null 
+            deletedAt: null
         }
     });
 
@@ -170,7 +170,7 @@ async function check_reference_existence(model, column_name, value, error_code) 
             error: get_error_response(error_code = error_code, status_code = 406)
         };
     }
-    
+
     return null;
 };
 
