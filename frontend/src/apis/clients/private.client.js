@@ -3,12 +3,12 @@ import Cookies from "js-cookie";
 
 // Tạo instance axios
 const axiosPrivate = axios.create({
-    baseURL: import.meta.env.SMART_NET_API_URL,
+    baseURL: "http://localhost:8081/api/",
     timeout: 1000000,
     headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
+        // "ngrok-skip-browser-warning": "true",
     },
 });
 

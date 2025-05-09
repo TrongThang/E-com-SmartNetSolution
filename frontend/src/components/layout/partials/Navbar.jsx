@@ -13,7 +13,7 @@ export default function Navbar() {
                     <a href="#" className="text-[var(--neutral)] hover:text-[var(--primary)]">Giới thiệu</a>
                     <a href="#" className="text-[var(--neutral)] hover:text-[var(--primary)]">Liên hệ</a>
                 </nav>
-            </div>  
+            </div>
             <div className="flex items-center space-x-4">
                 <div className="flex max-w-sm items-center relative">
                     <Input

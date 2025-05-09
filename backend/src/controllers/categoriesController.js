@@ -25,8 +25,8 @@ class CategoriesController {
         return res.status(response.status_code).json(response);
     }
     async createCategories(req, res) {
-        const { name, description, image, is_hide, attribute_id, parent_id } = req.body || {};
-        const response = await createCategoriesService({ name, description, image, is_hide, attribute_id, parent_id });
+        const { name, description, image, attribute_id, parent_id } = req.body || {};
+        const response = await createCategoriesService({ name, description, image, attribute_id, parent_id });
         return res.status(response.status_code).json(response);
     }
     async updateCategories(req, res) {

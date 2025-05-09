@@ -29,7 +29,7 @@ const getCategoriesService = async (filter, limit, sort, order) => {
                 condition: "is",
                 value: null
             }
-        ]); 
+        ]);
         // Execute query
         const result = await executeSelectData({
             strGetColumn: get_attr,
@@ -290,7 +290,7 @@ const getCategoriesDetailService = async (id) => {
 //Tạo danh mục mới và danh mục con và thuộc tính của danh mục => nếu chưa tạo thì thuộc tính để rỗng [], 
 // nếu tạo danh mục con thì parent_id = id_category cha
 //khi tạo mới danh mục thì created_at = now() còn update_at = null
-const createCategoriesService = async ({ name, description, image, is_hide, parent_id, attribute_id }) => {
+const createCategoriesService = async ({ name, description, image, parent_id, attribute_id }) => {
     try {
 
         // Kiểm tra tên danh mục đã tồn tại chưa
@@ -323,7 +323,7 @@ const createCategoriesService = async ({ name, description, image, is_hide, pare
                 slug: convertToSlug(name),
                 description: description || "",
                 image: image || "",
-                is_hide: is_hide || false,
+                is_hide: true,
                 parent_id: parent_id,
                 created_at: getVietnamTimeNow(),
             }

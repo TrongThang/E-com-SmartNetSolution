@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const axiosPublic = axios.create({
-    baseURL: import.meta.env.SMART_NET_API_URL, // Địa chỉ API public
+    baseURL: import.meta.env.VITE_SMART_NET_API_URL || "http://localhost:8081/api/", // Địa chỉ API public
     headers: {
         'ngrok-skip-browser-warning': 'true',
         'Accept': 'application/json',
