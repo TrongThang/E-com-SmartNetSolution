@@ -3,7 +3,7 @@ const { ORDER } = require("../contants/info");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
 const { prisma, isExistId } = require("../helpers/query.helper");
-const { get_error_response } = require("../helpers/response.helper");
+const { get_error_response } = require("../helpers/response.helper.helper");
 
 /**
  * Tạo bản ghi xuất kho và xử lý các đơn hàng liên quan

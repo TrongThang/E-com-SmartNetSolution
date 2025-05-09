@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
 const { generateCustomerId } = require('../helpers/generate.helper');
 

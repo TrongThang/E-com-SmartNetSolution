@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { getLikedService, createLikedService, deleteLikedService } = require('../services/liked_service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
 
 class LikedController {
     constructor() {

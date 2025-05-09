@@ -3,7 +3,7 @@ const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
 const { prisma, isExistId } = require("../helpers/query.helper");
 
-const { get_error_response } = require("../helpers/response.helper");
+const { get_error_response } = require("../helpers/response.helper.helper");
 
 async function createOrder(order) {
     const checkProduct = order.products.map((item) => { check_list_info_product(item.products) })

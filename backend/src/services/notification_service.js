@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { generateVerificationOTPCode } = require('../helpers/generate.helper');
-const { get_error_response } = require('../helpers/response');
+const { get_error_response } = require('../helpers/response.helper');
 
 const transporter = require('../config/nodemailer');
 const { getVietnamTimeNow, addVietnamMinutes } = require('../helpers/time.helper');
