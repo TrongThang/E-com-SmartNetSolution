@@ -1,8 +1,8 @@
+import AdminLayout from '@/components/layout/adminLayout';
 import DefaultLayout from '@/components/layout/defaultLayout';
-import CartPage from '@/pages/User/Cart.page';
-import ProductDetailPage from '@/pages/User/ProductDetail.page';
+import CartPage from '@/pages/user/Cart.page.jsx';
+import ProductDetailPage from '@/pages/user/ProductDetail.page.jsx';
 import { createBrowserRouter } from 'react-router-dom';
-// import AdminLayout from '../layouts/AdminLayout';
 // import ShopLayout from '../layouts/ShopLayout';
 // import AdminDashboard from '../pages/admin/Dashboard';
 // import AdminProducts from '../pages/admin/Products';
@@ -14,12 +14,13 @@ import { createBrowserRouter } from 'react-router-dom';
 
 export const router = createBrowserRouter([
     {
-        // path: '/admin',
-        // element: <AdminLayout />,
-        // children: [
-        //   {
-        //     index: true,
-        //     element: <AdminDashboard />,
+        path: '/admin',
+        element: <AdminLayout />,
+        children: [
+          {
+            index: true,
+            // element: <AdminCategory />,
+          }
         //   },
         //   {
         //     path: 'products',
@@ -29,7 +30,7 @@ export const router = createBrowserRouter([
         //     path: 'orders',
         //     element: <AdminOrders />,
         //   },
-        // ],
+        ],
     },
     {
         path: '/',

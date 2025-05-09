@@ -3,7 +3,7 @@ const { executeSelectData } = require('../helpers/sql_query');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { getVietnamTimeNow } = require('../helpers/time.helper');
 const { PrismaClient } = require('@prisma/client');
-const { get } = require('../routes/role_route');
+const { get } = require('../routes/role.route');
 
 const prisma = new PrismaClient();
 

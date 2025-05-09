@@ -4,7 +4,7 @@ const {
     createCustomerService,
     updateCustomerService,
     deleteCustomerService
-} = require('../services/customer_service');
+} = require('../services/customer.service');
 
 class CustomerController {
     async getCustomers(req, res) {

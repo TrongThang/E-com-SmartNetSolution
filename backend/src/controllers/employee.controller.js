@@ -3,7 +3,7 @@ const { getEmployeeService, getEmployeeDetailService,
     updateEmployeeService,
     updateProfileEmployeeService,
     toggleDeleteRestoreEmployeeService,
-} = require('../services/employee_service');
+} = require('../services/employee.service');
 const { PrismaClient } = require('@prisma/client');
 
 
