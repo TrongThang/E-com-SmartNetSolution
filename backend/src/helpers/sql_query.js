@@ -8,7 +8,6 @@ function buildWhereQuery(filter, table = null) {
     } catch (e) {
         throw new Error('Invalid filter JSON');
     }
-
     const sqlConditions = [];
     if (filterObj.length > 0) {
         filterObj.forEach(item => {
@@ -114,12 +113,13 @@ async function executeSelectData({
             ) AS sub
     `;
 
+    console.log(queryGetIdTable)
     const idResult = await QueryHelper.queryRaw(queryGetIdTable);
-    const resultIds = idResult.map(row => row[idColumn]);
+    const resultIds = idResult.map(row => row.id);
 
     const whereCondition = resultIds.length
-    ? `${table}.${idColumn} IN (${resultIds.map(id => typeof id === 'string' ? `'${id}'` : id).join(',')})`
-    : '1=0';
+        ? `${table}.id IN (${resultIds.map(id => typeof id === 'string' ? `'${id}'` : id).join(',')})`
+        : '1=0';
 
     // Xử lý các cột thời gian
     const queryGetTime = `${table}.created_at, ${table}.updated_at, ${table}.deleted_at`;
@@ -132,7 +132,7 @@ async function executeSelectData({
         WHERE ${whereCondition}
     `;
     console.log(query)
-
+    
     // Xây dựng câu SQL đếm tổng
     const totalCountQuery = `
         SELECT COUNT(*) AS total 
@@ -140,12 +140,10 @@ async function executeSelectData({
         ${queryJoin || ''} 
         ${buildWhere}
     `;
-    console.log(totalCountQuery)
 
     let data = await QueryHelper.queryRaw(query);
     if (configData && typeof configData === 'function') {
         data = configData(data);
-        console.log('Formatted data:', data);
     }
 
     const totalCountResult = await QueryHelper.queryRaw(totalCountQuery);

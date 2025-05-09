@@ -1,11 +1,18 @@
 import './App.css';
-import DefaultLayout from './components/layout/defaultLayout';
-import CategoriesPage from './pages/categoryManager';
-import HomePage from './pages/user/HomePage/homePage';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
+import { CartProvider } from '@/contexts/CartContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { Toaster } from 'sonner';
 
 function App() {
 	return (
-		<HomePage />
+		<AuthProvider>
+			<CartProvider>
+				<RouterProvider router={router} />
+				<Toaster />
+			</CartProvider>
+		</AuthProvider>
 	);
 }
 

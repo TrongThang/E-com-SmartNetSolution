@@ -1,14 +1,30 @@
 import axios from 'axios'
 
 const axiosPublic = axios.create({
-    baseURL: import.meta.env.VITE_SMART_NET_API_URL || "http://localhost:8081/api/", // Địa chỉ API public
+    baseURL: process.env.SMART_NET_API_URL || "http://localhost:8081/api/", // Địa chỉ API public
     headers: {
-        'ngrok-skip-browser-warning': 'true',
+        // 'ngrok-skip-browser-warning': 'true',
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         charset: 'UTF-8',
     }
 })
+
+axiosPublic.interceptors.request.use(
+    (config) => {
+         // Log thông tin request
+        console.log('🚀 Sending Request:', {
+            method: config.method.toUpperCase(),
+            url: config.url,
+            params: config.params,
+        });
+    
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 // Thêm interceptor nếu cần (tùy chọn)
 axiosPublic.interceptors.response.use(

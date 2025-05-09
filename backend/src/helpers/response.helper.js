@@ -30,7 +30,7 @@ function get_error_response(errors = null, status_code = 200, data = null, field
         console.log('Chuẩn bị convert lỗi đơn lẻ:', ERROR_MESSAGES[errors]);
         
         const errorCode = errors;
-        const message = (fieldError || '') + ERROR_MESSAGES[errorCode]
+        const message = ERROR_MESSAGES[errorCode]
         errorList.push({ code: errors, message });
     }
 

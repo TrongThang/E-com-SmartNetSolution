@@ -25,7 +25,7 @@ export interface FilterOption {
 export interface FilterSearch {
     field: string;
     condition: string;
-    value: string | undefined;
+    value: string | number| undefined ;
 }
 
 export interface ISortOrder<T = undefined> {
@@ -74,4 +74,56 @@ export interface ICategories {
     deleted_at: string | null;
     attribute_groups: any[]; // hoặc: AttributeGroup[] nếu bạn có định nghĩa interface riêng
     children: ICategories[]; // để hỗ trợ cây phân cấp danh mục
+}
+export interface IProduct {
+    id: number;
+    name: string;
+    code: string;
+    price: number;
+    quantity: number;
+    unit: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
+    import_warehouse_id: number | null;
+    import_warehouse?: IImportWarehouse | null;
+}
+
+export interface IProductDetail {
+    id: number;
+    name: string;
+    slug: string;
+    price: number;
+    quantity: number;
+    unit: string;
+    attributeGroups: IAttributeGroup[];
+    description: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface IAttributeGroup {
+    id: number;
+    name: string;
+    attributes: IAttribute[];
+}
+
+export interface IAttribute {
+    id: number;
+    name: string;
+    value: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface IReview {
+    id: number;
+    product_id: number;
+    customer_id: number;
+    surname: string;
+    lastname: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+    updated_at: string;
 }

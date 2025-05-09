@@ -12,12 +12,12 @@ model account {
   account_id                                                 String                @id @db.VarChar(32)
   customer_id                                                String?               @db.VarChar(32)
   employee_id                                                String?               @db.VarChar(32)
-  role_id                                                    String?               @db.VarChar(5)
+  role_id                                                    String?               @db.VarChar(12)
   username                                                   String                @db.VarChar(50)
   password                                                   String?               @db.VarChar(255)
   verification_code                                          String?               @db.VarChar(6)
   verification_expiry                                        DateTime?             @db.DateTime(0)
-  report                                                     Int?                  @db.TinyInt
+  report                                                     Int?                  @default(0) @db.TinyInt
   is_new                                                     Boolean?
   status                                                     Int?                  @db.TinyInt
   created_at                                                 DateTime?             @db.Timestamp(0)
@@ -51,7 +51,7 @@ model account {
 }
 
 model address_book {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   customer_id String?   @db.VarChar(32)
   district    String?   @db.VarChar(500)
   city        String?   @db.VarChar(500)
@@ -117,7 +117,7 @@ model attribute {
 }
 
 model attribute_category {
-  id           Int         @id @default(autoincrement())
+  id           Int         @id @default(autoincrement()) @db.UnsignedInt
   attribute_id Int?
   category_id  Int?
   created_at   DateTime?   @db.Timestamp(0)
@@ -140,16 +140,17 @@ model attribute_group {
 }
 
 model attribute_product {
-  product_id   Int        @id
-  attribute_id Int?
+  product_id   Int
+  attribute_id Int
   is_hide      Boolean?
-  value        String?    @db.VarChar(500)
-  created_at   DateTime?  @db.Timestamp(0)
-  updated_at   DateTime?  @db.Timestamp(0)
-  deleted_at   DateTime?  @db.Timestamp(0)
-  product      product    @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_1")
-  attribute    attribute? @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_2")
+  value        String?   @db.VarChar(500)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+  product      product   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_1")
+  attribute    attribute @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_2")
 
+  @@id([product_id, attribute_id])
   @@index([attribute_id], map: "attribute_id")
 }
 
@@ -170,7 +171,7 @@ model batch_product_detail {
 }
 
 model blog {
-  id             Int         @id
+  id             Int         @id @default(autoincrement())
   category_id    Int?
   product_id     Int?
   title          String?     @db.VarChar(500)
@@ -185,9 +186,11 @@ model blog {
   deleted_at     DateTime?   @db.Timestamp(0)
   categories     categories? @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "blog_ibfk_1")
   product        product?    @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_ibfk_2")
+  employee       employee?   @relation("BlogToEmployee", fields: [author], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([category_id], map: "category_id")
   @@index([product_id], map: "product_id")
+  @@index([author], map: "author")
 }
 
 model cart {
@@ -207,8 +210,8 @@ model cart {
 
 model categories {
   category_id        Int                  @id @default(autoincrement())
-  key                String?              @db.VarChar(50)
   name               String?              @db.VarChar(500)
+  key                String?              @db.VarChar(50)
   slug               String?              @db.VarChar(500)
   parent_id          Int?
   image              String?              @db.MediumText
@@ -242,11 +245,12 @@ model components {
 }
 
 model contact {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   fullname   String?   @db.VarChar(500)
   title      String?   @db.VarChar(500)
   content    String?   @db.Text
   email      String?   @db.VarChar(100)
+  status     Int?     @db.TinyInt @default(1)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
@@ -302,7 +306,6 @@ model detail_import {
   product_id           Int
   quantity             Int?
   import_price         Float?
-  sale_price           Float?
   discount             Int?
   amount               Int?
   is_gift              Boolean?
@@ -404,6 +407,7 @@ model employee {
   import_warehouse                 import_warehouse[]
   order_order_saler_idToemployee   order[]            @relation("order_saler_idToemployee")
   order_order_shipper_idToemployee order[]            @relation("order_shipper_idToemployee")
+  blog                             blog[]             @relation("BlogToEmployee")
 }
 
 model export_warehouse {
@@ -509,7 +513,7 @@ model houses {
 model image_product {
   id         Int       @id
   product_id Int?
-  image      String?   @db.MediumText
+  image        String?   @db.MediumText
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
@@ -552,7 +556,7 @@ model info_website {
 }
 
 model liked {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   customer_id String    @db.VarChar(32)
   product_id  Int?
   created_at  DateTime? @db.Timestamp(0)
@@ -592,9 +596,9 @@ model order {
   shipper_id                          String?         @db.VarChar(32)
   export_date                         DateTime?       @db.Date
   total_import_money                  Float?
-  total_money                         Float?
   discount                            Float?
   vat                                 Float?          @db.Float
+  total_money                         Float?
   amount                              Float?
   prepaid                             Float?
   remaining                           Float?
@@ -606,6 +610,7 @@ model order {
   name_recipient                      String?         @db.VarChar(150)
   note                                String?         @db.VarChar(500)
   platform_order                      String?         @db.VarChar(50)
+  status                              Int?            @default(0) @db.TinyInt
   created_at                          DateTime?       @db.Timestamp(0)
   updated_at                          DateTime?       @db.Timestamp(0)
   deleted_at                          DateTime?       @db.Timestamp(0)
@@ -624,9 +629,7 @@ model order_detail {
   id             Int       @id
   order_id       Int?
   product_id     Int?
-  batch_code     String?   @db.VarChar(50)
   unit           String?   @db.VarChar(30)
-  import_price   Float?
   sale_price     Float?
   discount       Float?
   quantity_sold  Float?
@@ -719,7 +722,7 @@ model product {
   image               String?               @db.MediumText
   selling_price       Float?
   category_id         Int?
-  unit_id             String?               @db.VarChar(5)
+  unit_id             Int?
   warrenty_time_id    Int?
   views               Int?
   is_hide             Boolean?
@@ -727,7 +730,7 @@ model product {
   created_at          DateTime?             @db.Timestamp(0)
   updated_at          DateTime?             @db.Timestamp(0)
   deleted_at          DateTime?             @db.Timestamp(0)
-  attribute_product   attribute_product?
+  attribute_product   attribute_product[]
   blog                blog[]
   cart                cart[]
   detail_export       detail_export[]
@@ -748,8 +751,8 @@ model product {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model production_batches {
-  batch_id                                        Int                   @unique(map: "batch_id")
-  production_batch_id                             String                @db.VarChar(255) 
+  batch_id                                        Int
+  production_batch_id                             String                @db.VarChar(255)
   template_id                                     Int?
   quantity                                        Int
   status                                          String?               @default("pending") @db.VarChar(20)
@@ -811,7 +814,7 @@ model production_tracking {
 }
 
 model review_product {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   review_id   Int?
   customer_id String?   @db.VarChar(32)
   product_id  Int?
@@ -831,7 +834,7 @@ model review_product {
 }
 
 model role {
-  id              String            @id @db.VarChar(5)
+  id              String            @id @db.VarChar(12)
   name            String?           @db.VarChar(500)
   created_at      DateTime?         @db.Timestamp(0)
   updated_at      DateTime?         @db.Timestamp(0)
@@ -881,7 +884,7 @@ model shared_permissions {
 }
 
 model slideshow {
-  id          Int       @id
+  id         Int       @id @default(autoincrement())
   text_button String?   @db.VarChar(500)
   link        String?   @db.VarChar(500)
   image       String?   @db.MediumText
@@ -981,7 +984,7 @@ model tickets {
 }
 
 model unit {
-  id         String    @id @db.VarChar(5)
+  id         Int       @id @default(autoincrement())
   name       String?   @db.VarChar(50)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
@@ -1024,7 +1027,7 @@ model user_groups {
 }
 
 model warehouse {
-  id               Int                @id
+  id               Int                @id @default(autoincrement())
   name             String?            @db.VarChar(500)
   address          String?            @db.VarChar(500)
   created_at       DateTime?          @db.Timestamp(0)
@@ -1047,7 +1050,7 @@ model warehouse_inventory {
 }
 
 model warrenty_time {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   name       String?   @db.VarChar(150)
   time       Int?
   created_at DateTime? @db.Timestamp(0)
