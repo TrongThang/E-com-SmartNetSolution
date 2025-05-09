@@ -6,7 +6,7 @@ const { getAttributeGroups,
     updateAttributeGroup,
     toggleDeleteRestoreAttributeGroup,
     restoreAttributeGroup
-} = require('../controllers/attribute_groupController');
+} = require('../controllers/attribute_group.controller');
 const { CreateAttributeGroupSchema, UpdateAttributeGroupSchema } = require('../schemas/groupAttribute.schema');
 
 const attributeGroupRouter = express.Router();

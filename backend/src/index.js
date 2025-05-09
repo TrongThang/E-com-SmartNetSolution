@@ -22,7 +22,7 @@ app.use(
 
 configServer(app);
 
-const routeAPI = require('./routes/routeAPI');
+const routeAPI = require('./routes');
 app.use('/api', routeAPI);
 
 app.get('/', (req, res) => {

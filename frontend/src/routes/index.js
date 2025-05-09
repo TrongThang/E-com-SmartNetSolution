@@ -1,6 +1,7 @@
 import DefaultLayout from '@/components/layout/defaultLayout';
 import CartPage from '@/pages/User/Cart.page';
 import ProductDetailPage from '@/pages/User/ProductDetail.page';
+import SearchPage from '@/pages/User/Serach.page';
 import { createBrowserRouter } from 'react-router-dom';
 // import AdminLayout from '../layouts/AdminLayout';
 // import ShopLayout from '../layouts/ShopLayout';
@@ -39,10 +40,10 @@ export const router = createBrowserRouter([
             //   index: true,
             //   element: <Home />,
             // },
-            // {
-            //   path: 'search',
-            //   element: <SearchProductPage />,
-            // },
+            {
+                path: 'search',
+                element: <SearchPage />,
+            },
             {
                 path: 'products/:id',
                 element: <ProductDetailPage />,

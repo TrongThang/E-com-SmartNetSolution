@@ -5,7 +5,7 @@ const { getCategoriesService,
     deletedSoftCategoriesService,
     restoreCategoriesService,
     deletedCategoriesService
-} = require('../services/categories_service');
+} = require('../services/categories.service');
 const { PrismaClient } = require('@prisma/client');
 class CategoriesController {
 

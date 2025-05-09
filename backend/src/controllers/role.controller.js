@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const { getRoleService, getRoleDetailService,
     createRoleService, updateRoleService,
     toggleDeleteRestoreRoleService
-} = require('../services/role_service');
+} = require('../services/role.service');
 
 class RoleController {
     constructor() {
