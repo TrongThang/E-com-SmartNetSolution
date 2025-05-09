@@ -75,8 +75,8 @@ function configDataProductDetail(productRows) {
                 slug: row.slug,
                 description: row.description,
                 description_normal: row.description_normal,
-                image: row.image,
                 selling_price: row.selling_price,
+                sold: row.sold,
                 views: row.views,
                 status: row.status,
                 is_hide: row.is_hide,
@@ -84,12 +84,17 @@ function configDataProductDetail(productRows) {
                 categories: row.categories,
                 unit_id: row.unit_id,
                 unit_name: row.unit_name,
+                stock: row.stock,
                 average_rating: row.average_rating,
                 total_liked: row.total_liked,
+                total_review: row.total_review,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
                 deleted_at: row.deleted_at,
                 attributes: [],
+                reviews: [],
+                images: [],
+                image: row.image,
             };
         }
         if (row.attribute_id || row.attribute_group_id) {
@@ -107,7 +112,7 @@ function configDataProductDetail(productRows) {
         const { attributes, ...productData } = product;
         return {
             ...productData,
-            attribute_groups: attributeGroups,
+            specifications: attributeGroups,
         };
     });
 }

@@ -8,7 +8,8 @@ FORMAT = {
 
 REGEX = {
     PHONE: /^\d{10}$/,
-    BIRTHDAY: /^\d{4}-\d{2}-\d{2}$/
+    BIRTHDAY: /^\d{4}-\d{2}-\d{2}$/,
+    EMAIL: /^[a-zA-Z0-9._%+-]+@gmail\.com$/
 }
 
 module.exports = {

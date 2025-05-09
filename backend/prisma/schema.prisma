@@ -9,15 +9,15 @@ datasource db {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model account {
-  account_id                                                 String                @id @db.VarChar(12)
-  customer_id                                                String?               @db.VarChar(12)
-  employee_id                                                String?               @db.VarChar(12)
-  role_id                                                    String?               @db.VarChar(5)
+  account_id                                                 String                @id @db.VarChar(32)
+  customer_id                                                String?               @db.VarChar(32)
+  employee_id                                                String?               @db.VarChar(32)
+  role_id                                                    String?               @db.VarChar(12)
   username                                                   String                @db.VarChar(50)
-  password                                                   String?               @db.VarChar(50)
+  password                                                   String?               @db.VarChar(255)
   verification_code                                          String?               @db.VarChar(6)
   verification_expiry                                        DateTime?             @db.DateTime(0)
-  report                                                     Int?                  @db.TinyInt
+  report                                                     Int?                  @default(0) @db.TinyInt
   is_new                                                     Boolean?
   status                                                     Int?                  @db.TinyInt
   created_at                                                 DateTime?             @db.Timestamp(0)
@@ -52,7 +52,7 @@ model account {
 
 model address_book {
   id          Int       @id @default(autoincrement())
-  customer_id String?   @db.VarChar(12)
+  customer_id String?   @db.VarChar(32)
   district    String?   @db.VarChar(500)
   city        String?   @db.VarChar(500)
   ward        String?   @db.VarChar(500)
@@ -100,7 +100,7 @@ model alerts {
 }
 
 model attribute {
-  id                 Int                  @id
+  id                 Int                  @id @default(autoincrement())
   name               String?              @db.VarChar(500)
   datatype           String?              @db.VarChar(500)
   required           Boolean?
@@ -117,7 +117,7 @@ model attribute {
 }
 
 model attribute_category {
-  id           Int         @id
+  id           Int         @id @default(autoincrement()) @db.UnsignedInt
   attribute_id Int?
   category_id  Int?
   created_at   DateTime?   @db.Timestamp(0)
@@ -131,7 +131,7 @@ model attribute_category {
 }
 
 model attribute_group {
-  id         Int         @id
+  id         Int         @id @default(autoincrement())
   name       String?     @db.VarChar(500)
   created_at DateTime?   @db.Timestamp(0)
   updated_at DateTime?   @db.Timestamp(0)
@@ -140,16 +140,17 @@ model attribute_group {
 }
 
 model attribute_product {
-  product_id   Int        @id
-  attribute_id Int?
+  product_id   Int
+  attribute_id Int
   is_hide      Boolean?
-  value        String?    @db.VarChar(500)
-  created_at   DateTime?  @db.Timestamp(0)
-  updated_at   DateTime?  @db.Timestamp(0)
-  deleted_at   DateTime?  @db.Timestamp(0)
-  product      product    @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_1")
-  attribute    attribute? @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_2")
+  value        String?   @db.VarChar(500)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+  product      product   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_1")
+  attribute    attribute @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_2")
 
+  @@id([product_id, attribute_id])
   @@index([attribute_id], map: "attribute_id")
 }
 
@@ -174,7 +175,7 @@ model blog {
   category_id    Int?
   product_id     Int?
   title          String?     @db.VarChar(500)
-  author         String?     @db.VarChar(12)
+  author         String?     @db.VarChar(32)
   content        String?     @db.VarChar(500)
   content_normal String?     @db.Text
   image          String?     @db.MediumText
@@ -194,7 +195,7 @@ model blog {
 
 model cart {
   id          Int       @id
-  customer_id String    @db.VarChar(12)
+  customer_id String    @db.VarChar(32)
   product_id  Int?
   quantity    Int?
   created_at  DateTime? @db.Timestamp(0)
@@ -208,9 +209,9 @@ model cart {
 }
 
 model categories {
-  category_id        Int                  @id
-  key                String?              @db.VarChar(50)
+  category_id        Int                  @id @default(autoincrement())
   name               String?              @db.VarChar(500)
+  key                String?              @db.VarChar(50)
   slug               String?              @db.VarChar(500)
   parent_id          Int?
   image              String?              @db.MediumText
@@ -244,11 +245,12 @@ model components {
 }
 
 model contact {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   fullname   String?   @db.VarChar(500)
   title      String?   @db.VarChar(500)
   content    String?   @db.Text
   email      String?   @db.VarChar(100)
+  status     Int?     @db.TinyInt @default(1)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
@@ -256,7 +258,7 @@ model contact {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model customer {
-  id             String           @id @db.VarChar(12)
+  id             String           @id @db.VarChar(32)
   surname        String?          @db.VarChar(500)
   lastname       String?          @db.VarChar(500)
   image          String?          @db.MediumText
@@ -304,7 +306,6 @@ model detail_import {
   product_id           Int
   quantity             Int?
   import_price         Float?
-  sale_price           Float?
   discount             Int?
   amount               Int?
   is_gift              Boolean?
@@ -325,7 +326,7 @@ model device_templates {
   template_id         Int                   @id @default(autoincrement())
   device_type_id      Int?
   name                String                @db.VarChar(100)
-  created_by          String?               @db.VarChar(12)
+  created_by          String?               @db.VarChar(32)
   created_at          DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
   updated_at          DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted          Boolean?              @default(false)
@@ -346,7 +347,7 @@ model devices {
   serial_number           String                    @unique(map: "serial_number") @db.VarChar(50)
   template_id             Int?
   space_id                Int?
-  account_id              String?                   @db.VarChar(12)
+  account_id              String?                   @db.VarChar(32)
   group_id                Int?
   hub_id                  String?                   @db.VarChar(50)
   firmware_id             Int?
@@ -389,7 +390,7 @@ model devices {
 }
 
 model employee {
-  id                               String             @id @db.VarChar(12)
+  id                               String             @id @db.VarChar(32)
   surname                          String?            @db.VarChar(500)
   lastname                         String?            @db.VarChar(500)
   image                            String?            @db.MediumText
@@ -413,7 +414,7 @@ model export_warehouse {
   id                Int             @id
   export_code       String?         @db.VarChar(12)
   export_number     Int?
-  employee_id       String?         @db.VarChar(12)
+  employee_id       String?         @db.VarChar(32)
   export_date       DateTime?       @db.Date
   file_authenticate String?         @db.MediumText
   total_profit      Float?
@@ -512,7 +513,7 @@ model houses {
 model image_product {
   id         Int       @id
   product_id Int?
-  image      String?   @db.MediumText
+  image        String?   @db.MediumText
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
@@ -525,7 +526,7 @@ model import_warehouse {
   id                Int             @id
   import_number     Int?
   import_id         String?         @db.VarChar(12)
-  employee_id       String?         @db.VarChar(12)
+  employee_id       String?         @db.VarChar(32)
   warehouse_id      Int?
   import_date       DateTime?       @db.Date
   file_authenticate String?         @db.MediumText
@@ -556,7 +557,7 @@ model info_website {
 
 model liked {
   id          Int       @id @default(autoincrement())
-  customer_id String    @db.VarChar(12)
+  customer_id String    @db.VarChar(32)
   product_id  Int?
   created_at  DateTime? @db.Timestamp(0)
   updated_at  DateTime? @db.Timestamp(0)
@@ -571,7 +572,7 @@ model liked {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model notification {
   id         Int       @id
-  account_id String?   @db.VarChar(12)
+  account_id String?   @db.VarChar(32)
   role_id    String?   @db.VarChar(5)
   text       String?   @db.VarChar(255)
   type       String?   @db.VarChar(200)
@@ -590,14 +591,14 @@ model order {
   id                                  Int             @id
   order_number                        Int?
   order_id                            String?         @db.VarChar(12)
-  customer_id                         String?         @db.VarChar(12)
-  saler_id                            String?         @db.VarChar(12)
-  shipper_id                          String?         @db.VarChar(12)
+  customer_id                         String?         @db.VarChar(32)
+  saler_id                            String?         @db.VarChar(32)
+  shipper_id                          String?         @db.VarChar(32)
   export_date                         DateTime?       @db.Date
   total_import_money                  Float?
-  total_money                         Float?
   discount                            Float?
   vat                                 Float?          @db.Float
+  total_money                         Float?
   amount                              Float?
   prepaid                             Float?
   remaining                           Float?
@@ -609,6 +610,7 @@ model order {
   name_recipient                      String?         @db.VarChar(150)
   note                                String?         @db.VarChar(500)
   platform_order                      String?         @db.VarChar(50)
+  status                              Int?            @default(0) @db.TinyInt
   created_at                          DateTime?       @db.Timestamp(0)
   updated_at                          DateTime?       @db.Timestamp(0)
   deleted_at                          DateTime?       @db.Timestamp(0)
@@ -627,9 +629,7 @@ model order_detail {
   id             Int       @id
   order_id       Int?
   product_id     Int?
-  batch_code     String?   @db.VarChar(50)
   unit           String?   @db.VarChar(30)
-  import_price   Float?
   sale_price     Float?
   discount       Float?
   quantity_sold  Float?
@@ -652,8 +652,8 @@ model ownership_history {
   history_id                                      Int            @default(autoincrement())
   approved_request_id                             Int
   device_serial                                   String?        @db.VarChar(50)
-  from_user_id                                    String?        @db.VarChar(12)
-  to_user_id                                      String?        @db.VarChar(12)
+  from_user_id                                    String?        @db.VarChar(32)
+  to_user_id                                      String?        @db.VarChar(32)
   transferred_at                                  DateTime?      @default(dbgenerated("(now())")) @db.DateTime(0)
   legal_expired_date                              DateTime?      @db.DateTime(0)
   is_expired                                      Boolean?       @default(false)
@@ -674,7 +674,7 @@ model ownership_history {
 
 model payment_info {
   id             Int       @id
-  customer_id    String?   @db.VarChar(12)
+  customer_id    String?   @db.VarChar(32)
   account_number String?   @db.VarChar(30)
   bank           String?   @db.VarChar(50)
   name_account   String?   @db.VarChar(150)
@@ -688,8 +688,11 @@ model payment_info {
 }
 
 model permission {
-  id              Int               @id
+  id              Int               @id @default(autoincrement())
   name            String?           @db.VarChar(500)
+  code            String?           @db.VarChar(500)
+  type            String?           @db.VarChar(500)
+  show_in_menu    String?           @db.VarChar(500)
   created_at      DateTime?         @db.Timestamp(0)
   updated_at      DateTime?         @db.Timestamp(0)
   deleted_at      DateTime?         @db.Timestamp(0)
@@ -697,7 +700,7 @@ model permission {
 }
 
 model permission_role {
-  id            Int        @id
+  id            Int        @id @default(autoincrement())
   role_id       String     @db.VarChar(5)
   permission_id Int
   created_at    DateTime?  @db.Timestamp(0)
@@ -719,7 +722,7 @@ model product {
   image               String?               @db.MediumText
   selling_price       Float?
   category_id         Int?
-  unit_id             String?               @db.VarChar(5)
+  unit_id             Int?
   warrenty_time_id    Int?
   views               Int?
   is_hide             Boolean?
@@ -727,7 +730,7 @@ model product {
   created_at          DateTime?             @db.Timestamp(0)
   updated_at          DateTime?             @db.Timestamp(0)
   deleted_at          DateTime?             @db.Timestamp(0)
-  attribute_product   attribute_product?
+  attribute_product   attribute_product[]
   blog                blog[]
   cart                cart[]
   detail_export       detail_export[]
@@ -748,14 +751,14 @@ model product {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model production_batches {
-  batch_id                                        Int                   @unique(map: "batch_id")
-  production_batch_id                             String                @db.VarChar(255) 
+  batch_id                                        Int
+  production_batch_id                             String                @db.VarChar(255)
   template_id                                     Int?
   quantity                                        Int
   status                                          String?               @default("pending") @db.VarChar(20)
-  created_by                                      String?               @db.VarChar(12)
+  created_by                                      String?               @db.VarChar(32)
   created_at                                      DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
-  approved_by                                     String?               @db.VarChar(12)
+  approved_by                                     String?               @db.VarChar(32)
   approved_at                                     DateTime?             @db.DateTime(0)
   updated_at                                      DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted                                      Boolean?              @default(false)
@@ -793,7 +796,7 @@ model production_tracking {
   device_serial         String?                 @db.VarChar(50)
   stage                 String                  @db.VarChar(50)
   status                String?                 @default("pending") @db.VarChar(20)
-  employee_id           String?                 @db.VarChar(12)
+  employee_id           String?                 @db.VarChar(32)
   started_at            DateTime?               @db.DateTime(0)
   completed_at          DateTime?               @db.DateTime(0)
   cost                  Decimal?                @db.Decimal(10, 2)
@@ -811,9 +814,9 @@ model production_tracking {
 }
 
 model review_product {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   review_id   Int?
-  customer_id String?   @db.VarChar(12)
+  customer_id String?   @db.VarChar(32)
   product_id  Int?
   comment     String?   @db.Text
   image       String?   @db.MediumText
@@ -831,7 +834,7 @@ model review_product {
 }
 
 model role {
-  id              String            @id @db.VarChar(5)
+  id              String            @id @db.VarChar(12)
   name            String?           @db.VarChar(500)
   created_at      DateTime?         @db.Timestamp(0)
   updated_at      DateTime?         @db.Timestamp(0)
@@ -845,8 +848,8 @@ model role {
 model share_requests {
   request_id                                   Int                 @id @default(autoincrement())
   device_serial                                String?             @db.VarChar(50)
-  from_user_id                                 String?             @db.VarChar(12)
-  to_user_id                                   String?             @db.VarChar(12)
+  from_user_id                                 String?             @db.VarChar(32)
+  to_user_id                                   String?             @db.VarChar(32)
   permission_type                              String?             @default("readonly") @db.VarChar(20)
   status                                       String?             @default("pending") @db.VarChar(20)
   requested_at                                 DateTime?           @default(dbgenerated("(now())")) @db.DateTime(0)
@@ -868,7 +871,7 @@ model share_requests {
 model shared_permissions {
   permission_id       Int       @id @default(autoincrement())
   device_serial       String?   @db.VarChar(50)
-  shared_with_user_id String?   @db.VarChar(12)
+  shared_with_user_id String?   @db.VarChar(32)
   permission_type     String?   @default("readonly") @db.VarChar(20)
   created_at          DateTime? @default(dbgenerated("(now())")) @db.DateTime(0)
   updated_at          DateTime? @default(dbgenerated("(now())")) @db.DateTime(0)
@@ -881,7 +884,7 @@ model shared_permissions {
 }
 
 model slideshow {
-  id          Int       @id
+  id         Int       @id @default(autoincrement())
   text_button String?   @db.VarChar(500)
   link        String?   @db.VarChar(500)
   image       String?   @db.MediumText
@@ -910,7 +913,7 @@ model spaces {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model sync_tracking {
   sync_id        Int           @id @default(autoincrement())
-  account_id     String?       @db.VarChar(12)
+  account_id     String?       @db.VarChar(32)
   user_device_id Int?
   ip_address     String?       @db.VarChar(45)
   last_synced_at DateTime?     @db.DateTime(0)
@@ -957,7 +960,7 @@ model ticket_types {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model tickets {
   ticket_id                            Int          @id @default(autoincrement())
-  user_id                              String?      @db.VarChar(12)
+  user_id                              String?      @db.VarChar(32)
   device_serial                        String?      @db.VarChar(50)
   ticket_type_id                       Int
   description                          String?      @db.Text
@@ -965,7 +968,7 @@ model tickets {
   status                               String?      @default("pending") @db.VarChar(20)
   created_at                           DateTime?    @default(dbgenerated("(now())")) @db.DateTime(0)
   updated_at                           DateTime?    @default(dbgenerated("(now())")) @db.DateTime(0)
-  assigned_to                          String?      @db.VarChar(12)
+  assigned_to                          String?      @db.VarChar(32)
   resolved_at                          DateTime?    @db.DateTime(0)
   resolve_solution                     String?      @db.Text
   is_deleted                           Boolean?     @default(false)
@@ -981,7 +984,7 @@ model tickets {
 }
 
 model unit {
-  id         String    @id @db.VarChar(5)
+  id         Int       @id @default(autoincrement())
   name       String?   @db.VarChar(50)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
@@ -992,7 +995,7 @@ model unit {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model user_devices {
   user_device_id Int             @id @default(autoincrement())
-  user_id        String?         @db.VarChar(12)
+  user_id        String?         @db.VarChar(32)
   device_name    String          @db.VarChar(100)
   device_id      String          @db.VarChar(255)
   device_token   String?         @db.Text
@@ -1010,7 +1013,7 @@ model user_devices {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model user_groups {
   user_group_id Int       @id @default(autoincrement())
-  account_id    String?   @db.VarChar(12)
+  account_id    String?   @db.VarChar(32)
   group_id      Int?
   role          String?   @default("member") @db.VarChar(20)
   joined_at     DateTime? @default(dbgenerated("(now())")) @db.DateTime(0)
@@ -1024,7 +1027,7 @@ model user_groups {
 }
 
 model warehouse {
-  id               Int                @id
+  id               Int                @id @default(autoincrement())
   name             String?            @db.VarChar(500)
   address          String?            @db.VarChar(500)
   created_at       DateTime?          @db.Timestamp(0)
@@ -1047,7 +1050,7 @@ model warehouse_inventory {
 }
 
 model warrenty_time {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   name       String?   @db.VarChar(150)
   time       Int?
   created_at DateTime? @db.Timestamp(0)

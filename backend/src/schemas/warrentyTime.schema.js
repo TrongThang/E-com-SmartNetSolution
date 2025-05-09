@@ -8,7 +8,7 @@ const BaseWarrantyTimeSchema = z.object({
         }).max(150, {
             message: `[${ERROR_CODES.WARRANTY_TIME_NAME_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.WARRANTY_TIME_NAME_MAX_LENGTH]}`,
         }),
-        time: z.number().int().nonnegative({
+        time: z.coerce.number().int().nonnegative({
             message: `[${ERROR_CODES.WARRANTY_TIME_INVALID}]${ERROR_MESSAGES[ERROR_CODES.WARRANTY_TIME_INVALID]}`,
         }),
     }),
@@ -18,7 +18,7 @@ const CreateWarrantyTimeSchema = BaseWarrantyTimeSchema;
 
 const UpdateWarrantyTimeSchema = BaseWarrantyTimeSchema.extend({
     body: BaseWarrantyTimeSchema.shape.body.extend({
-        id: z.number().int().positive({
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.WARRANTY_TIME_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.WARRANTY_TIME_ID_REQUIRED]}`,
         }),
     }),
@@ -26,7 +26,7 @@ const UpdateWarrantyTimeSchema = BaseWarrantyTimeSchema.extend({
 
 const DeleteWarrantyTimeSchema = z.object({
     params: z.object({
-        id: z.number().int().positive({
+        id: z.coerce.number().int().positive({
             message: `[${ERROR_CODES.WARRANTY_TIME_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.WARRANTY_TIME_ID_REQUIRED]}`,
         }),
     }),

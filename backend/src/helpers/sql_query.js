@@ -8,12 +8,10 @@ function buildWhereQuery(filter, table = null) {
     } catch (e) {
         throw new Error('Invalid filter JSON');
     }
-
     const sqlConditions = [];
     if (filterObj.length > 0) {
         filterObj.forEach(item => {
             let { field, condition, value } = item;
-
 
             switch (condition) {
                 case 'contains':
@@ -66,7 +64,7 @@ function buildWhereQuery(filter, table = null) {
         });
     }
 
-    return sqlConditions.length > 0 
+    return sqlConditions.length > 0
         ? `WHERE ${sqlConditions.join(' AND ')} AND ${table}.deleted_at IS NULL`
         : `WHERE ${table}.deleted_at IS NULL`;
 }
@@ -99,10 +97,13 @@ async function executeSelectData({
     const buildLimit = parsedLimit ? `LIMIT ${parsedLimit}` : '';
     const buildOffset = skip ? `OFFSET ${skip}` : '';
 
+    // Xác định cột ID dựa trên tên bảng
+    const idColumn = table === 'categories' ? 'category_id' : 'id';
+
     const queryGetIdTable = `
-        SELECT DISTINCT id
+        SELECT DISTINCT ${idColumn}
         FROM (
-            SELECT DISTINCT ${table}.id ${sort ? `, ${sort} as sort_column` : ''}
+            SELECT DISTINCT ${table}.${idColumn} ${sort ? `, ${sort} as sort_column` : ''}
             FROM ${table}
             ${queryJoin || ''}
             ${buildWhere}
@@ -112,39 +113,37 @@ async function executeSelectData({
             ) AS sub
     `;
 
-
+    console.log(queryGetIdTable)
     const idResult = await QueryHelper.queryRaw(queryGetIdTable);
     const resultIds = idResult.map(row => row.id);
-    
+
     const whereCondition = resultIds.length
-        ? `${table}.id IN (${resultIds.map(id => `'${id}'`).join(',')})`
+        ? `${table}.id IN (${resultIds.map(id => typeof id === 'string' ? `'${id}'` : id).join(',')})`
         : '1=0';
-    
+
     // Xử lý các cột thời gian
     const queryGetTime = `${table}.created_at, ${table}.updated_at, ${table}.deleted_at`;
-    
+
     // Xây dựng câu SQL chính
     const query = `
-        SELECT DISTINCT ${queryJoin ? `${table}.` : ''}id, ${strGetColumn}, ${queryGetTime}
+        SELECT DISTINCT ${queryJoin ? `${table}.` : ''}${idColumn}, ${strGetColumn}, ${queryGetTime}
         FROM ${table}
         ${queryJoin || ''}
         WHERE ${whereCondition}
     `;
     console.log(query)
-
+    
     // Xây dựng câu SQL đếm tổng
     const totalCountQuery = `
         SELECT COUNT(*) AS total 
         FROM ${table}
         ${queryJoin || ''} 
         ${buildWhere}
-    `;  
-    console.log(totalCountQuery)
-    
+    `;
+
     let data = await QueryHelper.queryRaw(query);
     if (configData && typeof configData === 'function') {
         data = configData(data);
-        console.log('Formatted data:', data);
     }
 
     const totalCountResult = await QueryHelper.queryRaw(totalCountQuery);
@@ -163,7 +162,7 @@ async function check_reference_existence(model, column_name, value, error_code) 
     const record = await model.findOne({
         where: {
             [column_name]: value,
-            deletedAt: null 
+            deletedAt: null
         }
     });
 
@@ -173,7 +172,7 @@ async function check_reference_existence(model, column_name, value, error_code) 
             error: get_error_response(error_code = error_code, status_code = 406)
         };
     }
-    
+
     return null;
 };
 
