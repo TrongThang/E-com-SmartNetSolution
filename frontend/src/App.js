@@ -9,8 +9,10 @@ function App() {
 	return (
 		<AuthProvider>
 			<CartProvider>
-				<RouterProvider router={router} />
-				<Toaster />
+			
+					<RouterProvider router={router} />
+					<Toaster />
+				
 			</CartProvider>
 		</AuthProvider>
 	);

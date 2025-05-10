@@ -765,7 +765,7 @@ model production_batches {
   device_templates                                device_templates?     @relation(fields: [template_id], references: [template_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_1")
   account_production_batches_created_byToaccount  account?              @relation("production_batches_created_byToaccount", fields: [created_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_2")
   account_production_batches_approved_byToaccount account?              @relation("production_batches_approved_byToaccount", fields: [approved_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_3")
-  production_tracking                             production_tracking[]
+
 
   @@id([batch_id, production_batch_id])
   @@index([approved_by], map: "approved_by")
@@ -804,7 +804,7 @@ model production_tracking {
   updated_at            DateTime?               @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted            Boolean?                @default(false)
   production_components production_components[]
-  production_batches    production_batches?     @relation(fields: [batch_id], references: [batch_id], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_1")
+ 
   devices               devices?                @relation(fields: [device_serial], references: [serial_number], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_2")
   account               account?                @relation(fields: [employee_id], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_3")
 

@@ -104,3 +104,19 @@ export interface IReview {
     created_at: string;
     updated_at: string;
 }
+
+export interface IBlog {
+    id: number;
+    title: string;
+    author: string;
+    content: string;
+    content_normal?: string;
+    image?: string; // base64 string
+    score?: number;
+    is_hide?: boolean;
+    category_name?: string;
+    product_name?: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string;
+  }

@@ -1,6 +1,8 @@
 import DefaultLayout from '@/components/layout/defaultLayout';
 import CartPage from '@/pages/User/Cart.page';
 import ProductDetailPage from '@/pages/User/ProductDetail.page';
+import BlogListPage from '@/pages/User/BlogList.page';
+import BlogDetailPage from '@/pages/User/BlogDetail.page';
 import { createBrowserRouter } from 'react-router-dom';
 // import AdminLayout from '../layouts/AdminLayout';
 // import ShopLayout from '../layouts/ShopLayout';
@@ -50,6 +52,14 @@ export const router = createBrowserRouter([
             {
                 path: 'cart',
                 element: <CartPage />,
+            },
+            {
+                path: 'blog',
+                element: <BlogListPage />,
+            },
+            {
+                path: 'blog/:id',
+                element: <BlogDetailPage />,
             },
             // {
             //   path: 'checkout',
