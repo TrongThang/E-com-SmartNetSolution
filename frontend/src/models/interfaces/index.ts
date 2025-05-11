@@ -25,7 +25,7 @@ export interface FilterOption {
 export interface FilterSearch {
     field: string;
     condition: string;
-    value: string | number| undefined ;
+    value: string | number | undefined;
 }
 
 export interface ISortOrder<T = undefined> {
@@ -119,4 +119,11 @@ export interface IBlog {
     created_at: string;
     updated_at: string;
     deleted_at?: string;
-  }
+}
+
+export interface IContact {
+    fullname: string;
+    email: string;
+    title: string;
+    content: string;
+}
