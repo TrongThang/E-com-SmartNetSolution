@@ -13,6 +13,11 @@ export const CART_ACTIONS = {
     UPDATE_QUANTITY_FAILURE: 'UPDATE_QUANTITY_FAILURE',
     CLEAR_CART_SUCCESS: 'CLEAR_CART_SUCCESS',
     CLEAR_CART_FAILURE: 'CLEAR_CART_FAILURE',
+    TOGGLE_SELECT_ITEM: 'TOGGLE_SELECT_ITEM',
+    SELECT_ALL: 'SELECT_ALL',
+    CLEAR_SELECTED: 'CLEAR_SELECTED',
+    UPDATE_SELECTED: 'UPDATE_SELECTED',
+    GET_SELECTED_ITEMS: 'GET_SELECTED_ITEMS',
 };
 
 // Action Creators
@@ -81,4 +86,22 @@ export const setCart = (cart) => ({
 
 export const syncCart = () => ({
     type: CART_ACTIONS.SYNC_CART,
+});
+
+export const toggleSelectItem = (id) => ({
+    type: CART_ACTIONS.TOGGLE_SELECT_ITEM,
+    payload: id,
+});
+
+export const selectAll = () => ({
+    type: CART_ACTIONS.SELECT_ALL,
+});
+
+export const clearSelected = () => ({
+    type: CART_ACTIONS.CLEAR_SELECTED,
+});
+
+export const updateSelected = (id, selected) => ({
+    type: CART_ACTIONS.UPDATE_SELECTED,
+    payload: { id, selected },
 });
