@@ -5,9 +5,15 @@ import BlogDetailPage from '@/pages/user/BlogDetail.page.jsx';
 import ContactPage from '@/pages/user/Contact.page.jsx';
 import CategoriesPage from '@/pages/categoryManager';
 import AttributeGroupPage from '@/pages/attribute_groupManager';
-import CartPage from '@/pages/user/Cart.page.jsx';
 import HomePage from '@/pages/user/home/Home.page';
 import ProductDetailPage from '@/pages/user/ProductDetail.page.jsx';
+import CreateExportWarehousePage from '@/pages/Admin/warehouse/export/Export.page';
+import CreateImportWarehousePage from '@/pages/Admin/warehouse/import/create';
+import CartPage from '@/pages/User/Cart.page';
+import CheckoutPage from '@/pages/User/checkout/Checkout.page';
+import CheckoutSuccessPage from '@/pages/User/checkout/success/CheckoutSuccess.page';
+import ProductDetailPage from '@/pages/User/ProductDetail.page';
+import SearchPage from '@/pages/User/Serach.page';
 import { createBrowserRouter } from 'react-router-dom';
 import ProfilePage from '@/pages/profileManager/profile';
 import EmployeeManagerPage from '@/pages/employeeManager';
@@ -21,62 +27,63 @@ import EmployeeManagerPage from '@/pages/employeeManager';
 // import Checkout from '../pages/shop/Checkout';
 
 export const router = createBrowserRouter([
-    {
-        // path: '/admin',
-        // element: <AdminLayout />,
-        // children: [
-        //   {
-        //     index: true,
-        //     element: <AdminDashboard />,
-        //   },
-        //   {
-        //     path: 'products',
-        //     element: <AdminProducts />,
-        //   },
-        //   {
-        //     path: 'orders',
-        //     element: <AdminOrders />,
-        //   },
-        // ],
-    },
-    {
-        path: '/',
-        element: <DefaultLayout />,
-        children: [
-            // {
-            //   index: true,
-            //   element: <Home />,
-            // },
-            // {
-            //   path: 'search',
-            //   element: <SearchProductPage />,
-            // },
-            {
-                path: 'products/:id',
-                element: <ProductDetailPage />,
-            },
-            {
-                path: 'cart',
-                element: <CartPage />,
-            },
-            {
-                path: 'blog',
-                element: <BlogListPage />,
-            },
-            {
-                path: 'blog/:id',
-                element: <BlogDetailPage />,
-            },
-            {
-                path: 'contact',
-                element: <ContactPage />,
-            },
-            // {
-            //   path: 'checkout',
-            //   element: <Checkout />,
-            // },
-        ],
-    },
+  {
+    // path: '/admin',
+    // element: <AdminLayout />,
+    // children: [
+    //   {
+    //     index: true,
+    //     element: <AdminDashboard />,
+    //   },
+    //   {
+    //     path: 'products',
+    //     element: <AdminProducts />,
+    //   },
+    //   {
+    //     path: 'orders',
+    //     element: <AdminOrders />,
+    //   },
+    // ],
+  },
+  {
+    path: '/',
+    element: <DefaultLayout />,
+    children: [
+      // {
+      //   index: true,
+      //   element: <Home />,
+      // },
+      {
+        path: 'search',
+        element: <SearchPage />,
+      },
+      {
+        path: 'products/:id',
+        element: <ProductDetailPage />,
+      },
+      {
+        path: 'cart',
+        element: <CartPage />,
+      },
+      {
+<<<<<<< HEAD
+        path: 'blog',
+        element: <BlogListPage />,
+      },
+      {
+        path: 'blog/:id',
+        element: <BlogDetailPage />,
+      },
+      {
+        path: 'contact',
+        element: <ContactPage />,
+      },
+      // {
+      //   path: 'checkout',
+      //   element: <Checkout />,
+      // },
+    ],
+  },
   {
     path: '/admin',
     element: <AdminLayout />,
@@ -101,7 +108,7 @@ export const router = createBrowserRouter([
         path: 'profile',
         element: <ProfilePage />,
       },
-      
+
       //   },
       //   {
       //     path: 'products',
@@ -139,4 +146,23 @@ export const router = createBrowserRouter([
       // },
     ],
   },
+=======
+                path: 'checkout',
+                element: <CheckoutPage />,
+            },
+            {
+                path: 'checkout/success',
+                element: <CheckoutSuccessPage />,
+            }
+        ],
+    },
+    {
+        path: '/warehouse/export/create',
+        element: <CreateExportWarehousePage />,
+    },
+    {
+        path: '/warehouse/import/create',
+        element: <CreateImportWarehousePage />,
+    },
+>>>>>>> 8a36140121868a233e2b3e9631afaeb870e35647
 ]);

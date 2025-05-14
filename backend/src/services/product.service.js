@@ -15,20 +15,17 @@ const prisma = new PrismaClient();
 // 3: Sản phẩm nổi bật
 // 4: Sản phẩm mới
 // Nếu không nhập limit thì mặc định là lấy hết
-const getProductService = async (filter, limit, sort, order, role, type) => {
-
+const getProductService = async (filters, logic, limit, sort, order, role, type) => {
     // product.name, slug, description, description_normal, image, selling_price, category_id, views, status, unit_id 
-    let get_attr = `product.name, product.slug, product.description, product.image, selling_price, views, status
-    category_id, categories.name as categories`
+    let get_attr = `product.name, product.slug, product.description, product.image, selling_price, views, status,
+    product.category_id, categories.name as categories, COALESCE(sold.sold, 0) AS sold, COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, COALESCE(review.avg_rating, 0) AS average_rating`
 
     let get_table = `product`
     let query_join = `LEFT JOIN categories ON product.category_id = categories.category_id`
 
-    // if (role == "CUSTOMER") {
-    get_attr += `, COALESCE(review.avg_rating, 0) AS average_rating`
     query_join += `
         LEFT JOIN (
-            SELECT product_id, AVG(rating) AS avg_rating
+            SELECT product_id, AVG(rating) AS avg_rating, COUNT(id) AS total_review
             FROM review_product
             GROUP BY product_id
         ) review ON product.id = review.product_id
@@ -37,11 +34,16 @@ const getProductService = async (filter, limit, sort, order, role, type) => {
             FROM liked
             GROUP BY product_id
         ) liked ON product.id = liked.product_id
+        LEFT JOIN (
+            SELECT product_id, SUM(quantity_sold) AS sold
+            FROM order_detail
+            GROUP BY product_id
+        ) sold ON product.id = sold.product_id
     `
     // }
 
     try {
-        const products = await executeSelectData({ table: get_table, queryJoin: query_join, strGetColumn: get_attr, limit: limit, filter: filter, sort: sort, order: order })
+        const products = await executeSelectData({ table: get_table, queryJoin: query_join, strGetColumn: get_attr, limit: limit, filter: filters, logic: logic, sort: sort, order: order })
         return get_error_response(errors = ERROR_CODES.SUCCESS, status_code = STATUS_CODE.OK, data = products);
     } catch (error) {
         console.error('Lỗi:', error)

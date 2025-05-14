@@ -1,17 +1,28 @@
 const express = require('express');
-const reviewRouter = express.Router();
+const router = express.Router();
 const reviewController = require('../controllers/review.controller');
 const { createReviewSchema, updateReviewSchema, deleteReviewSchema } = require('../schemas/review.schema');
 
 const { validateMiddleware } = require('../middleware/validate.middleware');
-
 const asyncHandler = (fn) => {
     return (req, res, next) => {
         fn(req, res, next).catch(next);
     };
-}
+};
 
 // Lấy danh sách review
-reviewRouter.get('/', asyncHandler(reviewController.getReviews));
+router.get('/', asyncHandler(reviewController.getReview));
 
-module.exports = reviewRouter;
+// Tạo review mới
+router.post('/', validateMiddleware(createReviewSchema), asyncHandler(reviewController.createReview));
+
+// Cập nhật review
+router.put('/', validateMiddleware(updateReviewSchema), asyncHandler(reviewController.updateReview));
+
+// Xóa review
+router.delete('/:id', validateMiddleware(deleteReviewSchema), asyncHandler(reviewController.deleteReview));
+
+// Lấy chi tiết review theo id
+router.get('/:id', asyncHandler(reviewController.getReviewDetail));
+
+module.exports = router;

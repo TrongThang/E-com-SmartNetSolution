@@ -3,8 +3,7 @@ import { useCart } from "@/contexts/CartContext";
 import { formatCurrency } from "@/utils/format";
 
 export default function CartItem({ product }) {
-    const { updateQuantity, removeFromCart } = useCart();
-    
+    const { updateQuantity, removeFromCart, toggleSelectItem } = useCart();
     const handleInputQuantity = (value) => {
         const quantity = Number(value) || 0;
         if (quantity > product.stock) {
@@ -17,6 +16,12 @@ export default function CartItem({ product }) {
     return (
         <div className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center space-x-4">
+                <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={product.selected}
+                    onChange={() => toggleSelectItem(product.id)}
+                />
                 <img 
                     src={product.image} 
                     alt={product.name} 

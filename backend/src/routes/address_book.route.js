@@ -10,7 +10,7 @@ const asyncHandler = (fn) => {
     };
 }
 
-addressBookRouter.get('/:customer_id', asyncHandler(getAddressBook));
+addressBookRouter.get('/customer/:customer_id', asyncHandler(getAddressBook));
 addressBookRouter.post('/', validateMiddleware(CreateAddressBookSchema), asyncHandler(createAddressBook));
 addressBookRouter.put('/', validateMiddleware(UpdateAddressBookSchema), asyncHandler(updateAddressBook));
 addressBookRouter.delete('/:customer_id/:id', validateMiddleware(DeleteAddressBookSchema), asyncHandler(deleteAddressBook));

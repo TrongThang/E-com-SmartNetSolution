@@ -17,6 +17,7 @@ const categoriesRouter = require('./categories.route');
 const attributeGroupRouter = require('./attribute_group.route')
 const employeeRouter = require('./employee.route');
 const roleRouter = require('./role.route');
+const orderRouter = require('./order.route');
 
 router.use('/auth', authRouter)
 router.use('/product', productRouter)
@@ -34,5 +35,6 @@ router.use('/categories', categoriesRouter)
 router.use('/attribute_group', attributeGroupRouter)
 router.use('/employee', employeeRouter)
 router.use('/role', roleRouter)
+router.use('/order', orderRouter)
 
 module.exports = router

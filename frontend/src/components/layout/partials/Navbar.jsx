@@ -35,6 +35,11 @@ export default function Navbar() {
         }
     }
 
+    const handleSearch = () => {
+        if (searchValue.trim()) {
+            navigate(`/search?keyword=${encodeURIComponent(searchValue.trim())}`);
+        }
+    };
     // Hàm xây dựng cây danh mục từ danh sách phẳng
     const buildCategoryTree = (categories) => {
         const categoryMap = {}
@@ -157,7 +162,7 @@ export default function Navbar() {
                                 )}
                             </div>
                         </div>
-                        
+
                         <Link to="/blog" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
                             Tin Tức
                             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
@@ -176,11 +181,22 @@ export default function Navbar() {
                         {/* Search */}
                         <div className="hidden md:flex items-center relative">
                             <Input
-                                className="w-[200px] lg:w-[250px] border-slate-200 rounded-full pl-10 pr-4 py-2 focus-visible:ring-blue-500 text-sm"
-                                placeholder="Tìm kiếm sản phẩm..."
-                                onClick={(e) => e.stopPropagation()}
+                                className="w-full border rounded-md p-2 pl-8 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                placeholder="Tìm kiếm..."
+                                value={searchValue}
+                                onChange={e => setSearchValue(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === "Enter") handleSearch();
+                                }}
                             />
-                            <Search className="absolute left-3 h-4 w-4 text-slate-400" />
+                            <Button
+                                type="button"
+                                size="icon"
+                                className="absolute right-0 h-full rounded-l-none"
+                                onClick={handleSearch}
+                            >
+                                <Search className="h-4 w-4" />
+                            </Button>
                         </div>
 
                         {/* Cart */}
