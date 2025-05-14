@@ -4,7 +4,7 @@ const employeeRouter = express.Router();
 const { getEmployees, getEmployeeDetails,
     createEmployee, updateEmployee,
     updateProfileEmployee, toggleDeleteRestoreEmployee 
-} = require('../controllers/employeeController');
+} = require('../controllers/employee.controller');
 const { CreateEmployeeSchema, UpdateEmployeeSchema } = require('../schemas/employee.schema');
 
 const asyncHandler = (fn) => {

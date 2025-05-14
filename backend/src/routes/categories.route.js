@@ -3,7 +3,7 @@ const { validateMiddleware } = require('../middleware/validate.middleware');
 const { createCategoriesSchema, updateCategoriesSchema } = require('../schemas/categories.schema');
 const { getCategories, getCategoriesDetail, createCategories,
     updateCategories, deletedSoftCategories,
-    deletedCategories, restoreCategories, } = require('../controllers/categoriesController');
+    deletedCategories, restoreCategories, } = require('../controllers/categories.controller');
 const categoriesRouter = express.Router();
 
 const asyncHandler = (fn) => {

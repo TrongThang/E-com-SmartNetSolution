@@ -4,7 +4,7 @@ const { validateMiddleware } = require('../middleware/validate.middleware');
 const { getRole, getRoleDetail, 
     createRole, updateRole,
     toggleDeleteRestoreRole
-} = require('../controllers/roleController');
+} = require('../controllers/role.controller');
 const { CreateRoleSchema, UpdateRoleSchema } = require('../schemas/role.schema');
 const roleRouter = express.Router();
 

@@ -115,12 +115,15 @@ async function executeSelectData({
 
     console.log(queryGetIdTable)
     const idResult = await QueryHelper.queryRaw(queryGetIdTable);
-    const resultIds = idResult.map(row => row.id);
+    console.log('idResult:', idResult);
+    const resultIds = idResult.map(row => row[idColumn]).filter(id => id !== undefined && id !== null);
 
+
+    console.log('resultIds:', resultIds);
     const whereCondition = resultIds.length
-        ? `${table}.id IN (${resultIds.map(id => typeof id === 'string' ? `'${id}'` : id).join(',')})`
+        ? `${table}.${idColumn} IN (${resultIds.map(id => typeof id === 'string' ? `'${id}'` : id).join(',')})`
         : '1=0';
-
+    console.log('whereCondition:', whereCondition);
     // Xử lý các cột thời gian
     const queryGetTime = `${table}.created_at, ${table}.updated_at, ${table}.deleted_at`;
 
@@ -132,7 +135,7 @@ async function executeSelectData({
         WHERE ${whereCondition}
     `;
     console.log(query)
-    
+
     // Xây dựng câu SQL đếm tổng
     const totalCountQuery = `
         SELECT COUNT(*) AS total 

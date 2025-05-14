@@ -4,7 +4,7 @@ const {
     createSlideshowService,
     updateSlideshowService,
     deleteSlideshowService
-} = require('../services/slideshow_service');
+} = require('../services/slideshow.service');
 
 class SlideshowController {
     async getSlideshow(req, res) {

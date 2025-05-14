@@ -4,8 +4,8 @@ const {
     createUnitService,
     updateUnitService,
     deleteUnitService
-} = require('../services/unit_service');
-
+} = require('../services/unit.service');
+const { generateUnitId } = require('../helpers/generate.helper');
 const { PrismaClient } = require('@prisma/client');
 
 class UnitController {

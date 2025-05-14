@@ -3,7 +3,7 @@ const { getAttributeGroupService,
     createAttributeGroupService,
     updateAttributeGroupService,
     toggleDeleteRestoreAttributeGroupService,
-} = require('../services/attribute_group_service');
+} = require('../services/attribute_group.service');
 
 const { PrismaClient } = require('@prisma/client');
 class AttributeGroupsController {

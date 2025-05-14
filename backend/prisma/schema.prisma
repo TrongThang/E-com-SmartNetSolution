@@ -571,7 +571,7 @@ model liked {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model notification {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   account_id String?   @db.VarChar(32)
   role_id    String?   @db.VarChar(5)
   text       String?   @db.VarChar(255)
@@ -751,7 +751,7 @@ model product {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model production_batches {
-  batch_id                                        Int
+  batch_id                                        Int @unique
   production_batch_id                             String                @db.VarChar(255)
   template_id                                     Int?
   quantity                                        Int
