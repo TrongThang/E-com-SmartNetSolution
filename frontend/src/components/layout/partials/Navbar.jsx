@@ -157,8 +157,9 @@ export default function Navbar() {
                                 )}
                             </div>
                         </div>
-                        <Link to="/about" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
-                            Giới thiệu
+                        
+                        <Link to="/blog" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
+                            Tin Tức
                             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
                         </Link>
                         <Link

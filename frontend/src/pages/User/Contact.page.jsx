@@ -4,7 +4,7 @@ import INQContact from "@/components/common/contact/INQContact.png";
 
 export default function ContactPage() {
     return (
-        <div className="max-w-5xl mx-auto py-6 space-y-6">
+        <div className="pt-28 max-w-5xl mx-auto py-6 space-y-6">
             <h2 className="text-center text-3xl font-bold">Bạn cần hỗ trợ ?</h2>
             <p className="text-center text-xl text-gray-600 mb-4">
                 INQ rất hân hạnh được hỗ trợ bạn, hãy điền thông tin cho chúng tôi nhé. Yêu cầu của bạn sẽ được xử lý và phản hồi trong thời gian sớm nhất.

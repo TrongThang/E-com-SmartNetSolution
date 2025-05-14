@@ -84,7 +84,7 @@ export default function BlogListPage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-28">
             <h1 className="text-3xl font-bold text-center mb-2">Danh sách bài viết</h1>
             <p className="text-lg text-center text-gray-500 mb-6">
                 Nơi bạn tìm thấy thông tin hữu ích, sản phẩm mới nổi bật và lời khuyên từ chuyên gia về SmartHome
