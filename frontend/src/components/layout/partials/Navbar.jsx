@@ -9,15 +9,61 @@ import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import LoginModal from "@/components/common/AuthModal"
+import categoryApi from "@/apis/modules/categories.api.ts"
 
 export default function Navbar() {
+    const [categories, setCategories] = useState([])
     const { totalItems, totalAmount } = useCart()
     const { isAuthenticated, user, logout } = useAuth()
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
     const [isScrolled, setIsScrolled] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-    // Detect scroll for sticky header effect
+    const fetchCategories = async () => {
+        try {
+            console.log("Đang fetch categories...")
+            const res = await categoryApi.list({})
+            console.log("Response:", res)
+            if (res.status_code == 200) {
+                // Giả sử API trả về danh mục phẳng, chúng ta cần chuyển đổi thành cấu trúc cây
+                const categoriesData = res.data?.categories || []
+                const nestedCategories = buildCategoryTree(categoriesData)
+                setCategories(nestedCategories)
+            }
+        } catch (error) {
+            console.error("Error fetching categories:", error)
+        }
+    }
+
+    // Hàm xây dựng cây danh mục từ danh sách phẳng
+    const buildCategoryTree = (categories) => {
+        const categoryMap = {}
+        const rootCategories = []
+
+        // Tạo map các danh mục theo ID
+        categories.forEach((category) => {
+            categoryMap[category.category_id] = {
+                ...category,
+                children: [],
+            }
+        })
+
+        // Xây dựng cây
+        categories.forEach((category) => {
+            if (category.parent_id) {
+                // Nếu có parent_id, thêm vào danh sách con của parent
+                if (categoryMap[category.parent_id]) {
+                    categoryMap[category.parent_id].children.push(categoryMap[category.category_id])
+                }
+            } else {
+                // Nếu không có parent_id, đây là danh mục gốc
+                rootCategories.push(categoryMap[category.category_id])
+            }
+        })
+
+        return rootCategories
+    }
+
     useEffect(() => {
         const handleScroll = () => {
             if (window.scrollY > 10) {
@@ -26,8 +72,12 @@ export default function Navbar() {
                 setIsScrolled(false)
             }
         }
-
         window.addEventListener("scroll", handleScroll)
+
+        fetchCategories()
+
+        console.log("Categories:", categories)
+
         return () => window.removeEventListener("scroll", handleScroll)
     }, [])
 
@@ -45,10 +95,7 @@ export default function Navbar() {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center space-x-10">
-                        <Link
-                            to="/"
-                            className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2"
-                        >
+                        <Link to="/" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
                             Trang chủ
                             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
                         </Link>
@@ -61,36 +108,56 @@ export default function Navbar() {
                                 <ChevronDown className="h-4 w-4 opacity-70" />
                             </Link>
                             <div className="absolute top-full left-0 bg-white shadow-lg rounded-md p-2 min-w-[200px] hidden group-hover:block transition-all">
-                                <Link
-                                    to="/categories/dien-thoai"
-                                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md"
-                                >
-                                    Điện thoại
-                                </Link>
-                                <Link
-                                    to="/categories/laptop"
-                                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md"
-                                >
-                                    Laptop
-                                </Link>
-                                <Link
-                                    to="/categories/tablet"
-                                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md"
-                                >
-                                    Máy tính bảng
-                                </Link>
-                                <Link
-                                    to="/categories/phu-kien"
-                                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md"
-                                >
-                                    Phụ kiện
-                                </Link>
+                                {Array.isArray(categories) && categories.length > 0 ? (
+                                    categories.map((category) => (
+                                        <div key={category.category_id} className="relative group/subcategory">
+                                            <Link
+                                                to={`/categories/${category.slug}`}
+                                                className="flex items-center justify-between px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md w-full"
+                                            >
+                                                <span>{category.name}</span>
+                                                {category.children && category.children.length > 0 && (
+                                                    <ChevronDown className="h-4 w-4 opacity-70 -rotate-90" />
+                                                )}
+                                            </Link>
+                                            {category.children && category.children.length > 0 && (
+                                                <div className="absolute top-0 left-full bg-white shadow-lg rounded-md p-2 min-w-[200px] hidden group-hover/subcategory:block ml-1">
+                                                    {category.children.map((subCategory) => (
+                                                        <div key={subCategory.category_id} className="relative group/subsubcategory">
+                                                            <Link
+                                                                to={`/categories/${category.slug}/${subCategory.slug}`}
+                                                                className="flex items-center justify-between px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md w-full"
+                                                            >
+                                                                <span>{subCategory.name}</span>
+                                                                {subCategory.children && subCategory.children.length > 0 && (
+                                                                    <ChevronDown className="h-4 w-4 opacity-70 -rotate-90" />
+                                                                )}
+                                                            </Link>
+                                                            {subCategory.children && subCategory.children.length > 0 && (
+                                                                <div className="absolute top-0 left-full bg-white shadow-lg rounded-md p-2 min-w-[200px] hidden group-hover/subsubcategory:block ml-1">
+                                                                    {subCategory.children.map((thirdLevelCategory) => (
+                                                                        <Link
+                                                                            key={thirdLevelCategory.category_id}
+                                                                            to={`/categories/${category.slug}/${subCategory.slug}/${thirdLevelCategory.slug}`}
+                                                                            className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md"
+                                                                        >
+                                                                            {thirdLevelCategory.name}
+                                                                        </Link>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <span className="block px-4 py-2 text-sm text-slate-500">Không có danh mục</span>
+                                )}
                             </div>
                         </div>
-                        <Link
-                            to="/about"
-                            className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2"
-                        >
+                        <Link to="/about" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
                             Giới thiệu
                             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
                         </Link>
@@ -122,10 +189,14 @@ export default function Navbar() {
                             border-slate-200 hover:border-blue-200 hover:bg-blue-50 transition-colors"
                         >
                             <ShoppingCart className="h-5 w-5 text-slate-600" />
-                            <span className="ml-2 font-medium text-sm text-blue-500 hidden sm:inline">{formatCurrency(totalAmount)}</span>
+                            <span className="ml-2 font-medium text-sm text-blue-500 hidden sm:inline">
+                                {formatCurrency(totalAmount)}
+                            </span>
                             {totalItems > 0 && (
-                                <span className="absolute top-2 right-2 bg-red-500 text-white 
-                                text-xs rounded-full flex items-center justify-center">
+                                <span
+                                    className="absolute top-2 right-2 bg-red-500 text-white 
+                                text-xs rounded-full flex items-center justify-center"
+                                >
                                     {totalItems}
                                 </span>
                             )}
