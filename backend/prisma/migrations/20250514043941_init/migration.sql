@@ -1,7 +1,4 @@
 -- AlterTable
-ALTER TABLE `address_book` MODIFY `id` INTEGER NOT NULL AUTO_INCREMENT;
-
--- AlterTable
 ALTER TABLE `alert_types` MODIFY `created_at` DATETIME(0) NULL DEFAULT (now()),
     MODIFY `updated_at` DATETIME(0) NULL DEFAULT (now());
 

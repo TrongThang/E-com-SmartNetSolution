@@ -25,7 +25,7 @@ export interface FilterOption {
 export interface FilterSearch {
     field: string;
     condition: string;
-    value: string | number| undefined ;
+    value: string | number | undefined;
 }
 
 export interface ISortOrder<T = undefined> {
@@ -87,6 +87,20 @@ export interface IProduct {
     updated_at: string;
     import_warehouse_id: number | null;
     import_warehouse?: IImportWarehouse | null;
+}
+
+export interface IEmployee {
+    id: number;
+    surname: string;
+    lastname: string;
+    image: string;
+    email: string;
+    birthdate: string;
+    gender: number;
+    phone: string;
+    status: number;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface IProductDetail {

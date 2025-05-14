@@ -1,6 +1,5 @@
 import { ESortOrderValue } from "@/models/enums/option";
-import { FilterSearch } from "@/models/interfaces";
-import { IApiResponse, ICategories } from "@/models/interfaces";
+import { FilterSearch, IApiResponse, ICategories } from "@/models/interfaces";
 import axiosPrivate from "../clients/private.client";
 
 const categoryEndpoints = {
@@ -18,6 +17,27 @@ const categoryApi = {
         return axiosPrivate.get(categoryEndpoints.list, {
             params: { ...params, filters: JSON.stringify(params.filters) },
         });
+    },
+    async add(data: any): Promise<IApiResponse> {
+        try {
+            return await axiosPrivate.post(categoryEndpoints.list, data);
+        } catch (error) {
+            throw error;
+        }
+    },
+    async edit(id: number, data: any): Promise<IApiResponse> {
+        try {
+            return await axiosPrivate.put(`${categoryEndpoints.list}/${id}`, data);
+        } catch (error) {
+            throw error;
+        }
+    },
+    async delete(id: number): Promise<IApiResponse> {
+        try {
+            return await axiosPrivate.delete(`${categoryEndpoints.list}/${id}`);
+        } catch (error) {
+            throw error;
+        }
     },
 };
 export default categoryApi; 

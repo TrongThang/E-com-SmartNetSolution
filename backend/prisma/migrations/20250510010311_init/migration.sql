@@ -1,14 +1,14 @@
 -- CreateTable
 CREATE TABLE `account` (
-    `account_id` VARCHAR(12) NOT NULL,
-    `customer_id` VARCHAR(12) NULL,
-    `employee_id` VARCHAR(12) NULL,
-    `role_id` VARCHAR(5) NULL,
+    `account_id` VARCHAR(32) NOT NULL,
+    `customer_id` VARCHAR(32) NULL,
+    `employee_id` VARCHAR(32) NULL,
+    `role_id` VARCHAR(12) NULL,
     `username` VARCHAR(50) NOT NULL,
-    `password` VARCHAR(50) NULL,
+    `password` VARCHAR(255) NULL,
     `verification_code` VARCHAR(6) NULL,
     `verification_expiry` DATETIME(0) NULL,
-    `report` TINYINT NULL,
+    `report` TINYINT NULL DEFAULT 0,
     `is_new` BOOLEAN NULL,
     `status` TINYINT NULL,
     `created_at` TIMESTAMP(0) NULL,
@@ -25,8 +25,8 @@ CREATE TABLE `account` (
 
 -- CreateTable
 CREATE TABLE `address_book` (
-    `id` INTEGER NOT NULL,
-    `customer_id` VARCHAR(12) NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `customer_id` VARCHAR(32) NULL,
     `district` VARCHAR(500) NULL,
     `city` VARCHAR(500) NULL,
     `ward` VARCHAR(500) NULL,
@@ -74,7 +74,7 @@ CREATE TABLE `alerts` (
 
 -- CreateTable
 CREATE TABLE `attribute` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(500) NULL,
     `datatype` VARCHAR(500) NULL,
     `required` BOOLEAN NULL,
@@ -90,7 +90,7 @@ CREATE TABLE `attribute` (
 
 -- CreateTable
 CREATE TABLE `attribute_category` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     `attribute_id` INTEGER NULL,
     `category_id` INTEGER NULL,
     `created_at` TIMESTAMP(0) NULL,
@@ -104,7 +104,7 @@ CREATE TABLE `attribute_category` (
 
 -- CreateTable
 CREATE TABLE `attribute_group` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(500) NULL,
     `created_at` TIMESTAMP(0) NULL,
     `updated_at` TIMESTAMP(0) NULL,
@@ -116,7 +116,7 @@ CREATE TABLE `attribute_group` (
 -- CreateTable
 CREATE TABLE `attribute_product` (
     `product_id` INTEGER NOT NULL,
-    `attribute_id` INTEGER NULL,
+    `attribute_id` INTEGER NOT NULL,
     `is_hide` BOOLEAN NULL,
     `value` VARCHAR(500) NULL,
     `created_at` TIMESTAMP(0) NULL,
@@ -124,7 +124,7 @@ CREATE TABLE `attribute_product` (
     `deleted_at` TIMESTAMP(0) NULL,
 
     INDEX `attribute_id`(`attribute_id`),
-    PRIMARY KEY (`product_id`)
+    PRIMARY KEY (`product_id`, `attribute_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -144,11 +144,11 @@ CREATE TABLE `batch_product_detail` (
 
 -- CreateTable
 CREATE TABLE `blog` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `category_id` INTEGER NULL,
     `product_id` INTEGER NULL,
     `title` VARCHAR(500) NULL,
-    `author` VARCHAR(12) NULL,
+    `author` VARCHAR(32) NULL,
     `content` VARCHAR(500) NULL,
     `content_normal` TEXT NULL,
     `image` MEDIUMTEXT NULL,
@@ -160,13 +160,14 @@ CREATE TABLE `blog` (
 
     INDEX `category_id`(`category_id`),
     INDEX `product_id`(`product_id`),
+    INDEX `author`(`author`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `cart` (
     `id` INTEGER NOT NULL,
-    `customer_id` VARCHAR(12) NOT NULL,
+    `customer_id` VARCHAR(32) NOT NULL,
     `product_id` INTEGER NULL,
     `quantity` INTEGER NULL,
     `created_at` TIMESTAMP(0) NULL,
@@ -180,9 +181,9 @@ CREATE TABLE `cart` (
 
 -- CreateTable
 CREATE TABLE `categories` (
-    `category_id` INTEGER NOT NULL,
-    `key` VARCHAR(50) NULL,
+    `category_id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(500) NULL,
+    `key` VARCHAR(50) NULL,
     `slug` VARCHAR(500) NULL,
     `parent_id` INTEGER NULL,
     `image` MEDIUMTEXT NULL,
@@ -212,11 +213,12 @@ CREATE TABLE `components` (
 
 -- CreateTable
 CREATE TABLE `contact` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `fullname` VARCHAR(500) NULL,
     `title` VARCHAR(500) NULL,
     `content` TEXT NULL,
     `email` VARCHAR(100) NULL,
+    `status` TINYINT NULL DEFAULT 1,
     `created_at` TIMESTAMP(0) NULL,
     `updated_at` TIMESTAMP(0) NULL,
     `deleted_at` TIMESTAMP(0) NULL,
@@ -226,7 +228,7 @@ CREATE TABLE `contact` (
 
 -- CreateTable
 CREATE TABLE `customer` (
-    `id` VARCHAR(12) NOT NULL,
+    `id` VARCHAR(32) NOT NULL,
     `surname` VARCHAR(500) NULL,
     `lastname` VARCHAR(500) NULL,
     `image` MEDIUMTEXT NULL,
@@ -268,7 +270,6 @@ CREATE TABLE `detail_import` (
     `product_id` INTEGER NOT NULL,
     `quantity` INTEGER NULL,
     `import_price` DOUBLE NULL,
-    `sale_price` DOUBLE NULL,
     `discount` INTEGER NULL,
     `amount` INTEGER NULL,
     `is_gift` BOOLEAN NULL,
@@ -287,7 +288,7 @@ CREATE TABLE `device_templates` (
     `template_id` INTEGER NOT NULL AUTO_INCREMENT,
     `device_type_id` INTEGER NULL,
     `name` VARCHAR(100) NOT NULL,
-    `created_by` VARCHAR(12) NULL,
+    `created_by` VARCHAR(32) NULL,
     `created_at` DATETIME(0) NULL DEFAULT (now()),
     `updated_at` DATETIME(0) NULL DEFAULT (now()),
     `is_deleted` BOOLEAN NULL DEFAULT false,
@@ -303,7 +304,7 @@ CREATE TABLE `devices` (
     `serial_number` VARCHAR(50) NOT NULL,
     `template_id` INTEGER NULL,
     `space_id` INTEGER NULL,
-    `account_id` VARCHAR(12) NULL,
+    `account_id` VARCHAR(32) NULL,
     `group_id` INTEGER NULL,
     `hub_id` VARCHAR(50) NULL,
     `firmware_id` INTEGER NULL,
@@ -333,7 +334,7 @@ CREATE TABLE `devices` (
 
 -- CreateTable
 CREATE TABLE `employee` (
-    `id` VARCHAR(12) NOT NULL,
+    `id` VARCHAR(32) NOT NULL,
     `surname` VARCHAR(500) NULL,
     `lastname` VARCHAR(500) NULL,
     `image` MEDIUMTEXT NULL,
@@ -354,7 +355,7 @@ CREATE TABLE `export_warehouse` (
     `id` INTEGER NOT NULL,
     `export_code` VARCHAR(12) NULL,
     `export_number` INTEGER NULL,
-    `employee_id` VARCHAR(12) NULL,
+    `employee_id` VARCHAR(32) NULL,
     `export_date` DATE NULL,
     `file_authenticate` MEDIUMTEXT NULL,
     `total_profit` DOUBLE NULL,
@@ -461,7 +462,7 @@ CREATE TABLE `import_warehouse` (
     `id` INTEGER NOT NULL,
     `import_number` INTEGER NULL,
     `import_id` VARCHAR(12) NULL,
-    `employee_id` VARCHAR(12) NULL,
+    `employee_id` VARCHAR(32) NULL,
     `warehouse_id` INTEGER NULL,
     `import_date` DATE NULL,
     `file_authenticate` MEDIUMTEXT NULL,
@@ -493,8 +494,8 @@ CREATE TABLE `info_website` (
 
 -- CreateTable
 CREATE TABLE `liked` (
-    `id` INTEGER NOT NULL,
-    `customer_id` VARCHAR(12) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `customer_id` VARCHAR(32) NOT NULL,
     `product_id` INTEGER NULL,
     `created_at` TIMESTAMP(0) NULL,
     `updated_at` TIMESTAMP(0) NULL,
@@ -507,8 +508,8 @@ CREATE TABLE `liked` (
 
 -- CreateTable
 CREATE TABLE `notification` (
-    `id` INTEGER NOT NULL,
-    `account_id` VARCHAR(12) NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `account_id` VARCHAR(32) NULL,
     `role_id` VARCHAR(5) NULL,
     `text` VARCHAR(255) NULL,
     `type` VARCHAR(200) NULL,
@@ -527,14 +528,14 @@ CREATE TABLE `order` (
     `id` INTEGER NOT NULL,
     `order_number` INTEGER NULL,
     `order_id` VARCHAR(12) NULL,
-    `customer_id` VARCHAR(12) NULL,
-    `saler_id` VARCHAR(12) NULL,
-    `shipper_id` VARCHAR(12) NULL,
+    `customer_id` VARCHAR(32) NULL,
+    `saler_id` VARCHAR(32) NULL,
+    `shipper_id` VARCHAR(32) NULL,
     `export_date` DATE NULL,
     `total_import_money` DOUBLE NULL,
-    `total_money` DOUBLE NULL,
     `discount` DOUBLE NULL,
     `vat` FLOAT NULL,
+    `total_money` DOUBLE NULL,
     `amount` DOUBLE NULL,
     `prepaid` DOUBLE NULL,
     `remaining` DOUBLE NULL,
@@ -546,6 +547,7 @@ CREATE TABLE `order` (
     `name_recipient` VARCHAR(150) NULL,
     `note` VARCHAR(500) NULL,
     `platform_order` VARCHAR(50) NULL,
+    `status` TINYINT NULL DEFAULT 0,
     `created_at` TIMESTAMP(0) NULL,
     `updated_at` TIMESTAMP(0) NULL,
     `deleted_at` TIMESTAMP(0) NULL,
@@ -561,9 +563,7 @@ CREATE TABLE `order_detail` (
     `id` INTEGER NOT NULL,
     `order_id` INTEGER NULL,
     `product_id` INTEGER NULL,
-    `batch_code` VARCHAR(50) NULL,
     `unit` VARCHAR(30) NULL,
-    `import_price` DOUBLE NULL,
     `sale_price` DOUBLE NULL,
     `discount` DOUBLE NULL,
     `quantity_sold` DOUBLE NULL,
@@ -585,8 +585,8 @@ CREATE TABLE `ownership_history` (
     `history_id` INTEGER NOT NULL AUTO_INCREMENT,
     `approved_request_id` INTEGER NOT NULL,
     `device_serial` VARCHAR(50) NULL,
-    `from_user_id` VARCHAR(12) NULL,
-    `to_user_id` VARCHAR(12) NULL,
+    `from_user_id` VARCHAR(32) NULL,
+    `to_user_id` VARCHAR(32) NULL,
     `transferred_at` DATETIME(0) NULL DEFAULT (now()),
     `legal_expired_date` DATETIME(0) NULL,
     `is_expired` BOOLEAN NULL DEFAULT false,
@@ -604,7 +604,7 @@ CREATE TABLE `ownership_history` (
 -- CreateTable
 CREATE TABLE `payment_info` (
     `id` INTEGER NOT NULL,
-    `customer_id` VARCHAR(12) NULL,
+    `customer_id` VARCHAR(32) NULL,
     `account_number` VARCHAR(30) NULL,
     `bank` VARCHAR(50) NULL,
     `name_account` VARCHAR(150) NULL,
@@ -619,8 +619,11 @@ CREATE TABLE `payment_info` (
 
 -- CreateTable
 CREATE TABLE `permission` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(500) NULL,
+    `code` VARCHAR(500) NULL,
+    `type` VARCHAR(500) NULL,
+    `show_in_menu` VARCHAR(500) NULL,
     `created_at` TIMESTAMP(0) NULL,
     `updated_at` TIMESTAMP(0) NULL,
     `deleted_at` TIMESTAMP(0) NULL,
@@ -630,7 +633,7 @@ CREATE TABLE `permission` (
 
 -- CreateTable
 CREATE TABLE `permission_role` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `role_id` VARCHAR(5) NOT NULL,
     `permission_id` INTEGER NOT NULL,
     `created_at` TIMESTAMP(0) NULL,
@@ -674,14 +677,14 @@ CREATE TABLE `production_batches` (
     `template_id` INTEGER NULL,
     `quantity` INTEGER NOT NULL,
     `status` VARCHAR(20) NULL DEFAULT 'pending',
-    `created_by` VARCHAR(12) NULL,
+    `created_by` VARCHAR(32) NULL,
     `created_at` DATETIME(0) NULL DEFAULT (now()),
-    `approved_by` VARCHAR(12) NULL,
+    `approved_by` VARCHAR(32) NULL,
     `approved_at` DATETIME(0) NULL,
     `updated_at` DATETIME(0) NULL DEFAULT (now()),
     `is_deleted` BOOLEAN NULL DEFAULT false,
 
-    UNIQUE INDEX `batch_id`(`batch_id`),
+    UNIQUE INDEX `production_batches_batch_id_key`(`batch_id`),
     INDEX `approved_by`(`approved_by`),
     INDEX `created_by`(`created_by`),
     INDEX `template_id`(`template_id`),
@@ -710,7 +713,7 @@ CREATE TABLE `production_tracking` (
     `device_serial` VARCHAR(50) NULL,
     `stage` VARCHAR(50) NOT NULL,
     `status` VARCHAR(20) NULL DEFAULT 'pending',
-    `employee_id` VARCHAR(12) NULL,
+    `employee_id` VARCHAR(32) NULL,
     `started_at` DATETIME(0) NULL,
     `completed_at` DATETIME(0) NULL,
     `cost` DECIMAL(10, 2) NULL,
@@ -726,9 +729,9 @@ CREATE TABLE `production_tracking` (
 
 -- CreateTable
 CREATE TABLE `review_product` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `review_id` INTEGER NULL,
-    `customer_id` VARCHAR(12) NULL,
+    `customer_id` VARCHAR(32) NULL,
     `product_id` INTEGER NULL,
     `comment` TEXT NULL,
     `image` MEDIUMTEXT NULL,
@@ -746,7 +749,7 @@ CREATE TABLE `review_product` (
 
 -- CreateTable
 CREATE TABLE `role` (
-    `id` VARCHAR(5) NOT NULL,
+    `id` VARCHAR(12) NOT NULL,
     `name` VARCHAR(500) NULL,
     `created_at` TIMESTAMP(0) NULL,
     `updated_at` TIMESTAMP(0) NULL,
@@ -759,8 +762,8 @@ CREATE TABLE `role` (
 CREATE TABLE `share_requests` (
     `request_id` INTEGER NOT NULL AUTO_INCREMENT,
     `device_serial` VARCHAR(50) NULL,
-    `from_user_id` VARCHAR(12) NULL,
-    `to_user_id` VARCHAR(12) NULL,
+    `from_user_id` VARCHAR(32) NULL,
+    `to_user_id` VARCHAR(32) NULL,
     `permission_type` VARCHAR(20) NULL DEFAULT 'readonly',
     `status` VARCHAR(20) NULL DEFAULT 'pending',
     `requested_at` DATETIME(0) NULL DEFAULT (now()),
@@ -779,7 +782,7 @@ CREATE TABLE `share_requests` (
 CREATE TABLE `shared_permissions` (
     `permission_id` INTEGER NOT NULL AUTO_INCREMENT,
     `device_serial` VARCHAR(50) NULL,
-    `shared_with_user_id` VARCHAR(12) NULL,
+    `shared_with_user_id` VARCHAR(32) NULL,
     `permission_type` VARCHAR(20) NULL DEFAULT 'readonly',
     `created_at` DATETIME(0) NULL DEFAULT (now()),
     `updated_at` DATETIME(0) NULL DEFAULT (now()),
@@ -792,7 +795,7 @@ CREATE TABLE `shared_permissions` (
 
 -- CreateTable
 CREATE TABLE `slideshow` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `text_button` VARCHAR(500) NULL,
     `link` VARCHAR(500) NULL,
     `image` MEDIUMTEXT NULL,
@@ -820,7 +823,7 @@ CREATE TABLE `spaces` (
 -- CreateTable
 CREATE TABLE `sync_tracking` (
     `sync_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `account_id` VARCHAR(12) NULL,
+    `account_id` VARCHAR(32) NULL,
     `user_device_id` INTEGER NULL,
     `ip_address` VARCHAR(45) NULL,
     `last_synced_at` DATETIME(0) NULL,
@@ -866,7 +869,7 @@ CREATE TABLE `ticket_types` (
 -- CreateTable
 CREATE TABLE `tickets` (
     `ticket_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` VARCHAR(12) NULL,
+    `user_id` VARCHAR(32) NULL,
     `device_serial` VARCHAR(50) NULL,
     `ticket_type_id` INTEGER NOT NULL,
     `description` TEXT NULL,
@@ -874,7 +877,7 @@ CREATE TABLE `tickets` (
     `status` VARCHAR(20) NULL DEFAULT 'pending',
     `created_at` DATETIME(0) NULL DEFAULT (now()),
     `updated_at` DATETIME(0) NULL DEFAULT (now()),
-    `assigned_to` VARCHAR(12) NULL,
+    `assigned_to` VARCHAR(32) NULL,
     `resolved_at` DATETIME(0) NULL,
     `resolve_solution` TEXT NULL,
     `is_deleted` BOOLEAN NULL DEFAULT false,
@@ -900,7 +903,7 @@ CREATE TABLE `unit` (
 -- CreateTable
 CREATE TABLE `user_devices` (
     `user_device_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` VARCHAR(12) NULL,
+    `user_id` VARCHAR(32) NULL,
     `device_name` VARCHAR(100) NOT NULL,
     `device_id` VARCHAR(255) NOT NULL,
     `device_token` TEXT NULL,
@@ -917,7 +920,7 @@ CREATE TABLE `user_devices` (
 -- CreateTable
 CREATE TABLE `user_groups` (
     `user_group_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `account_id` VARCHAR(12) NULL,
+    `account_id` VARCHAR(32) NULL,
     `group_id` INTEGER NULL,
     `role` VARCHAR(20) NULL DEFAULT 'member',
     `joined_at` DATETIME(0) NULL DEFAULT (now()),
@@ -931,7 +934,7 @@ CREATE TABLE `user_groups` (
 
 -- CreateTable
 CREATE TABLE `warehouse` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(500) NULL,
     `address` VARCHAR(500) NULL,
     `created_at` TIMESTAMP(0) NULL,
@@ -957,7 +960,7 @@ CREATE TABLE `warehouse_inventory` (
 
 -- CreateTable
 CREATE TABLE `warrenty_time` (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(150) NULL,
     `time` INTEGER NULL,
     `created_at` TIMESTAMP(0) NULL,
@@ -1014,6 +1017,9 @@ ALTER TABLE `blog` ADD CONSTRAINT `blog_ibfk_1` FOREIGN KEY (`category_id`) REFE
 
 -- AddForeignKey
 ALTER TABLE `blog` ADD CONSTRAINT `blog_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `product`(`id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE `blog` ADD CONSTRAINT `blog_author_fkey` FOREIGN KEY (`author`) REFERENCES `employee`(`id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE `cart` ADD CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer`(`id`) ON DELETE NO ACTION ON UPDATE NO ACTION;

@@ -1,110 +1,234 @@
 "use client"
+import {
+  BarChart3,
+  Users,
+  ShoppingCart,
+  Package,
+  Settings,
+  HelpCircle,
+  LogOut,
+  Menu,
+  FolderTree,
+  ShoppingBag,
+  FileText,
+  Settings2,
+  ChevronDown,
+  LayoutDashboard,
+  UserCog,
+} from "lucide-react"
 
-import React from 'react';
-import { Link } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Users, 
-  Settings,
-  Package,
-  Tag,
-  LogOut
-} from 'lucide-react';
+  SidebarMenuItem,
+  SidebarProvider
 
-const Navbar_admin = () => {
+} from "@/components/ui/sidebar"
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+
+function Navbar_admin() {
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen">
-        <Sidebar>
-          <SidebarHeader className="border-b border-border/5">
-            <div className="flex items-center gap-2 px-2">
-              <SidebarTrigger />
-              <Link to="/admin" className="flex items-center gap-2">
-                <span className="font-semibold">Admin Dashboard</span>
-              </Link>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/admin/dashboard">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+    <SidebarProvider>
+      <Sidebar className="bg-[#1F2937] text-white">
+        <SidebarHeader className="py-3 pe-9 pb-5">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <div>
+                  <div className="flex flex-col gap-0.5 leading-none ml-2">
+                    <span className="font-semibold">SmartNet Solutions </span>
+                    <span className="text-xs opacity-70">Admin Portal</span>
+                  </div>
+                </div>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/admin/products">
-                    <Package className="mr-2 h-4 w-4" />
-                    <span>Products</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          {/* Tổng Quan */}
+          <SidebarGroup>
+            <Collapsible defaultOpen className="group/collapsible w-full">
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                  Tổng Quan
+                  <ChevronDown className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/dashboard">
+                          <LayoutDashboard className="size-4" />
+                          <span>Dashboard</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/admin/categories">
-                    <Tag className="mr-2 h-4 w-4" />
-                    <span>Categories</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+          {/* Quản Lý */}
+          <SidebarGroup>
+            <Collapsible defaultOpen className="group/collapsible w-full">
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                  Quản Lý
+                  <ChevronDown className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/employees">
+                          <UserCog className="size-4" />
+                          <span>Quản lý nhân viên</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/users">
+                          <Users className="size-4" />
+                          <span>Người Dùng</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/products">
+                          <Package className="size-4" />
+                          <span>Sản Phẩm</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/orders">
+                          <ShoppingCart className="size-4" />
+                          <span>Đơn Hàng</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/admin/orders">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    <span>Orders</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+          {/* Danh Mục */}
+          <SidebarGroup>
+            <Collapsible defaultOpen className="group/collapsible w-full">
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                  Danh Mục
+                  <ChevronDown className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/attribute-groups">
+                          <FolderTree className="size-4" />
+                          <span>Tất Cả Danh Mục</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/categories/products">
+                          <ShoppingBag className="size-4" />
+                          <span>Danh Mục Sản Phẩm</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/categories/blog">
+                          <FileText className="size-4" />
+                          <span>Danh Mục Bài Viết</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/categories">
+                          <Settings2 className="size-4" />
+                          <span>Quản Lý Danh Mục</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/admin/users">
-                    <Users className="mr-2 h-4 w-4" />
-                    <span>Users</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/admin/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/logout">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
-      </div>
+          {/* Cài Đặt */}
+          <SidebarGroup>
+            <Collapsible className="group/collapsible w-full">
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                  Cài Đặt
+                  <ChevronDown className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/settings/general">
+                          <Settings className="size-4" />
+                          <span>Thiết Lập Chung</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/settings/appearance">
+                          <Settings2 className="size-4" />
+                          <span>Giao Diện</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <a href="/help">
+                  <HelpCircle className="size-4" />
+                  <span>Trợ Giúp</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
     </SidebarProvider>
-  );
-};
+  )
+}
 
 export default Navbar_admin;
