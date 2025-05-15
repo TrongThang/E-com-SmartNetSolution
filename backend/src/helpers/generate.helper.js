@@ -30,11 +30,20 @@ function generateVerificationOTPCode() {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Tạo số ngẫu nhiên từ 100000 đến 999999
 }
 
+function generateImportID (importNumber) {
+    // Tạo số hoá đơn mới
+    // Format: NK + Năm + Số thứ tự (4 chữ số)
+    // Ví dụ: NK-2024-0001, NK-2024-0002,...
+    const newImportNumber = `NK-${currentYear}-${String(importNumber).padStart(4, '0')}`;
+
+    return newImportNumber;
+};
+
 
 module.exports = {
     generateAccountId,
     generateCustomerId,
     generateEmployeeId,
     generateVerificationOTPCode,
-    
+    generateImportID,
 } 

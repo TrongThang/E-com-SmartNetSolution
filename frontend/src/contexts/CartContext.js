@@ -26,6 +26,26 @@ export const CartProvider = ({ children }) => {
     const [state, dispatch] = useReducer(cartReducer, initialState);
     const { isAuthenticated, user } = useState(false) // useAuth();
 
+    // Hàm lấy danh sách item đã chọn
+    const getItemSelected = () => {
+        return state.items.filter(item => item.selected);
+    };
+
+    // Hàm chọn/bỏ chọn 1 item
+    const toggleSelectItem = (id) => {
+        dispatch({ type: 'TOGGLE_SELECT_ITEM', payload: id });
+    };
+
+    // Hàm chọn tất cả
+    const selectAll = () => {
+        dispatch({ type: 'SELECT_ALL' });
+    };
+
+    // Hàm bỏ chọn tất cả
+    const clearSelected = () => {
+        dispatch({ type: 'CLEAR_SELECTED' });
+    };
+
     const cartStats = useMemo(() => {
         const items = state?.items || [];
 
@@ -51,6 +71,7 @@ export const CartProvider = ({ children }) => {
                     name: item.name,
                     price: item.price || item.selling_price,
                     quantity: item.quantity,
+                    selected: item.selected || false,
                     // Thêm các trường cần thiết khác
                 })),
                 total: cart.total
@@ -108,19 +129,19 @@ export const CartProvider = ({ children }) => {
                 dispatch(addToCartSuccess(updatedCart));
             } else {
                 const cookieCart = getCartFromCookie() || { items: [], total: 0 };
-                console.log('cookieCart:', cookieCart);
                 const existingItemIndex = cookieCart.items.findIndex(item => item.id === product.id);
 
-                console.log('New quantity to add:', product.quantity);
 
                 if (existingItemIndex !== -1) {
                     cookieCart.items[existingItemIndex].quantity += product.quantity;
+                    cookieCart.items[existingItemIndex].selected = true;
                 } else {
                     cookieCart.items.push({
                         id: product.id,
                         name: product.name,
                         price: product.price || product.selling_price,
                         quantity: product.quantity || 1,
+                        selected: true,
                         // Thêm các trường cần thiết khác
                     });
                 }
@@ -294,7 +315,11 @@ export const CartProvider = ({ children }) => {
                 clearCart: handleClearCart,
                 totalItems: cartStats.totalItems,
                 totalAmount: cartStats.totalAmount,
-                itemCount: cartStats.itemCount,
+                itemCount: cartStats.itemCount, 
+                getItemSelected,
+                toggleSelectItem,
+                selectAll,
+                clearSelected
             }}
         >
             {children}

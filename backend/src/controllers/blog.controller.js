@@ -5,7 +5,7 @@ const {
     createBlogService,
     updateBlogService,
     deleteBlogService
-} = require('../services/blog_service');
+} = require('../services/blog.service');
 
 class BlogController {
     constructor() {

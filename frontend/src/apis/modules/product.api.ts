@@ -12,6 +12,16 @@ const productPublic = {
 };
 
 const productApi = {
+    async search(params: {
+        page?: number;
+        limit?: number;
+        filters?: FilterSearch[];
+        order?: ESortOrderValue;
+    }): Promise<IApiResponse<IProduct[]>> {
+        return axiosPublic.get(productPublic.common, {
+            params: { ...params, filters: JSON.stringify(params.filters) },
+        });
+    },
     async list(params: {
         page?: number;
         limit?: number;

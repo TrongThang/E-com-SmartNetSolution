@@ -19,9 +19,9 @@ class ProductController {
     }
 
     async getProduct(req, res) {
-        const { filter = null, limit = null, sort = null, order = null, role = null, type = null } = req.body || {};
-
-        const response = await getProductService(filter, limit, sort, order, role, type)
+        const { filters, limit, sort, order, logic, role, type } = req.query || {};
+        
+        const response = await getProductService(filters, logic, limit, sort, order, role, type)
 
         return res.status(response.status_code).json(response);
     }

@@ -4,75 +4,85 @@ const QueryHelper = require('./query.helper');
 function buildWhereQuery(filter, table = null) {
     let filterObj;
     try {
-        filterObj = JSON.parse(filter);
+        filterObj = typeof filter === "string" ? JSON.parse(filter) : filter;
     } catch (e) {
         throw new Error('Invalid filter JSON');
     }
-    const sqlConditions = [];
-    if (filterObj.length > 0) {
-        filterObj.forEach(item => {
-            let { field, condition, value } = item;
 
-            switch (condition) {
-                case 'contains':
-                    if (value) {
-                        sqlConditions.push(`(${field} IS NOT NULL AND ${field} LIKE '%${value}%')`);
-                    } else {
-                        sqlConditions.push(`(${field} LIKE '%%' OR ${field} IS NULL)`);
-                    }
-                    break;
-                case 'notcontains':
-                    if (value) {
-                        sqlConditions.push(`(${field} IS NOT NULL AND ${field} NOT LIKE '%${value}%')`);
-                    } else {
-                        sqlConditions.push(`(${field} NOT LIKE '%%')`);
-                    }
-                    break;
-                case 'startswith':
-                    if (value) {
-                        sqlConditions.push(`(${field} IS NOT NULL AND ${field} LIKE '${value}%')`);
-                    } else {
-                        sqlConditions.push(`(${field} LIKE '%%' OR ${field} IS NULL)`);
-                    }
-                    break;
-                case 'endswith':
-                    if (value) {
-                        sqlConditions.push(`(${field} IS NOT NULL AND ${field} LIKE '%${value}')`);
-                    } else {
-                        sqlConditions.push(`(${field} LIKE '%%' OR ${field} IS NULL)`);
-                    }
-                    break;
-                case '=':
-                    sqlConditions.push(`${field} = '${value}'`);
-                    break;
-                case '<>':
-                    sqlConditions.push(`${field} <> '${value}'`);
-                    break;
-                case '<':
-                    sqlConditions.push(`${field} < ${value === '' ? 0 : value}`);
-                    break;
-                case '>':
-                    sqlConditions.push(`${field} > ${value === '' ? 0 : value}`);
-                    break;
-                case '<=':
-                    sqlConditions.push(`${field} <= ${value === '' ? 0 : value}`);
-                    break;
-                case '>=':
-                    sqlConditions.push(`${field} >= ${value === '' ? 0 : value}`);
-                    break;
-            }
-        });
+    function parseFilter(obj) {
+        // Nếu là group
+        if (obj.logic && Array.isArray(obj.filters)) {
+            const subConditions = obj.filters.map(parseFilter).filter(Boolean);
+            if (subConditions.length === 0) return "";
+            return `(${subConditions.join(` ${obj.logic} `)})`;
+        }
+        // Nếu là filter đơn
+        const { field, condition, value } = obj;
+        switch (condition) {
+            case 'contains':
+                return value ? `(${field} IS NOT NULL AND ${field} LIKE '%${value}%')` : `(${field} LIKE '%%' OR ${field} IS NULL)`;
+            case 'not_contains':
+                return value ? `(${field} IS NOT NULL AND ${field} NOT LIKE '%${value}%')` : `(${field} NOT LIKE '%%')`;
+            case 'in':
+                if (Array.isArray(value) && value.length > 0) {
+                    const inList = value.map(v => `'${v}'`).join(',');
+                    return `${field} IN (${inList})`;
+                }
+                break;
+            case 'notin':
+                if (Array.isArray(value) && value.length > 0) {
+                    const notInList = value.map(v => `'${v}'`).join(',');
+                    return `${field} NOT IN (${notInList})`;
+                }
+                break;
+            case 'startswith':
+                return value ? `(${field} IS NOT NULL AND ${field} LIKE '${value}%')` : `(${field} LIKE '%%' OR ${field} IS NULL)`;
+            case 'endswith':
+                return value ? `(${field} IS NOT NULL AND ${field} LIKE '%${value}')` : `(${field} LIKE '%%' OR ${field} IS NULL)`;
+            case '=':
+                return `${field} = '${value}'`;
+            case '<>':
+                return `${field} <> '${value}'`;
+            case '<':
+                return `${field} < ${value === '' ? 0 : value}`;
+            case '>':
+                return `${field} > ${value === '' ? 0 : value}`;
+            case '<=':
+                return `${field} <= ${value === '' ? 0 : value}`;
+            case '>=':
+                return `${field} >= ${value === '' ? 0 : value}`;
+            default:
+                return "";
+        }
+        return "";
     }
 
-    return sqlConditions.length > 0
-        ? `WHERE ${sqlConditions.join(' AND ')} AND ${table}.deleted_at IS NULL`
-        : `WHERE ${table}.deleted_at IS NULL`;
+    // Nếu là group ở root
+    let whereClause = "";
+    if (filterObj.logic && Array.isArray(filterObj.filters)) {
+        const conditions = filterObj.filters.map(parseFilter).filter(Boolean);
+        if (conditions.length > 0) {
+            whereClause = `WHERE ${conditions.join(` ${filterObj.logic} `)} AND ${table}.deleted_at IS NULL`;
+        }
+    } else if (Array.isArray(filterObj)) {
+        // Nếu là mảng filter đơn giản
+        const conditions = filterObj.map(parseFilter).filter(Boolean);
+        if (conditions.length > 0) {
+            whereClause = `WHERE ${conditions.join(' AND ')} AND ${table}.deleted_at IS NULL`;
+        }
+    }
+
+    if (!whereClause) {
+        whereClause = `WHERE ${table}.deleted_at IS NULL`;
+    }
+    return whereClause;
 }
 
 async function executeSelectData({
     table,
     strGetColumn,
     filter = null,
+    logic = null,
     limit = null,
     page = null,
     sort = null,
@@ -82,7 +92,7 @@ async function executeSelectData({
 }) {
     // Xây dựng WHERE clause
     const buildWhere = filter
-        ? buildWhereQuery(filter, table)
+        ? buildWhereQuery(filter, table, logic)
         : `WHERE ${table}.deleted_at IS NULL`;
 
     // Xử lý limit, page và offset
@@ -125,14 +135,20 @@ async function executeSelectData({
     const queryGetTime = `${table}.created_at, ${table}.updated_at, ${table}.deleted_at`;
 
     // Xây dựng câu SQL chính
-    const query = `
+    const queryPrimary = `
         SELECT DISTINCT ${queryJoin ? `${table}.` : ''}${idColumn}, ${strGetColumn}, ${queryGetTime}
         FROM ${table}
         ${queryJoin || ''}
         WHERE ${whereCondition}
+        ${buildSort}
     `;
-    console.log(query)
+    console.log('queryPrimary:', queryPrimary)
     
+    let data = await QueryHelper.queryRaw(queryPrimary);
+    if (configData && typeof configData === 'function') {
+        data = configData(data);
+    }
+
     // Xây dựng câu SQL đếm tổng
     const totalCountQuery = `
         SELECT COUNT(*) AS total 
@@ -140,11 +156,6 @@ async function executeSelectData({
         ${queryJoin || ''} 
         ${buildWhere}
     `;
-
-    let data = await QueryHelper.queryRaw(query);
-    if (configData && typeof configData === 'function') {
-        data = configData(data);
-    }
 
     const totalCountResult = await QueryHelper.queryRaw(totalCountQuery);
     const totalCount = Number(totalCountResult[0].total); // Chuyển BigInt thành Number

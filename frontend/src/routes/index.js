@@ -1,6 +1,11 @@
 import DefaultLayout from '@/components/layout/defaultLayout';
+import CreateExportWarehousePage from '@/pages/Admin/warehouse/export/Export.page';
+import CreateImportWarehousePage from '@/pages/Admin/warehouse/import/create';
 import CartPage from '@/pages/User/Cart.page';
+import CheckoutPage from '@/pages/User/checkout/Checkout.page';
+import CheckoutSuccessPage from '@/pages/User/checkout/success/CheckoutSuccess.page';
 import ProductDetailPage from '@/pages/User/ProductDetail.page';
+import SearchPage from '@/pages/User/Serach.page';
 import { createBrowserRouter } from 'react-router-dom';
 import ProfileLayout from '@/components/layout/ProfileLayout';
 import ProfileInfo from '@/pages/User/Profile/Info';
@@ -44,10 +49,10 @@ export const router = createBrowserRouter([
             //   index: true,
             //   element: <Home />,
             // },
-            // {
-            //   path: 'search',
-            //   element: <SearchProductPage />,
-            // },
+            {
+                path: 'search',
+                element: <SearchPage />,
+            },
             {
                 path: 'products/:id',
                 element: <ProductDetailPage />,
@@ -81,13 +86,23 @@ export const router = createBrowserRouter([
                         element: <div>Đổi mật khẩu</div>
                     }
                 ]
+            },
+            {
+                path: 'checkout',
+                element: <CheckoutPage />,
+            },
+            {
+                path: 'checkout/success',
+                element: <CheckoutSuccessPage />,
             }
-            // {
-            //   path: 'checkout',
-            //   element: <Checkout />,
-            // },
         ],
     },
+    {
+        path: '/warehouse/export/create',
+        element: <CreateExportWarehousePage />,
+    },
+    {
+        path: '/warehouse/import/create',
+        element: <CreateImportWarehousePage />,
+    },
 ]);
-
-export default router;

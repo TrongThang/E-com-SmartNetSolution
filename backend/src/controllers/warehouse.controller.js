@@ -4,7 +4,7 @@ const {
     createWarehouseService,
     updateWarehouseService,
     deleteWarehouseService
-} = require('../services/warehouse_service');
+} = require('../services/warehouse.service');
 
 class WarehouseController {
     async getWarehouse(req, res) {

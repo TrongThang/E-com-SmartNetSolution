@@ -4,7 +4,7 @@ const {
     createWarrentyTimeService,
     updateWarrentyTimeService,
     deleteWarrentyTimeService
-} = require('../services/warrentyTime_service');
+} = require('../services/warrentyTime.service');
 
 class WarrentyTimeController {
     async getAllWarrentyTime(req, res) {

@@ -97,6 +97,30 @@ export const cartReducer = (state, action) => {
                 isLoading: false,
                 error: action.payload,
             };
+        case CART_ACTIONS.TOGGLE_SELECT_ITEM:
+            return {
+                ...state,
+                items: state.items.map(item =>
+                    item.id === action.payload ? { ...item, selected: !item.selected } : item
+                ),
+            };
+        case CART_ACTIONS.SELECT_ALL:
+            return {
+                ...state,
+                items: state.items.map(item => ({ ...item, selected: true })),
+            };
+        case CART_ACTIONS.CLEAR_SELECTED:
+            return {
+                ...state,
+                items: state.items.map(item => ({ ...item, selected: false })),
+            };
+        case CART_ACTIONS.UPDATE_SELECTED:
+            return { 
+                ...state,
+                items: state.items.map(item =>
+                    item.id === action.payload.id ? { ...item, selected: action.payload.selected } : item
+                ),
+            };
         default:
             return state;
     }

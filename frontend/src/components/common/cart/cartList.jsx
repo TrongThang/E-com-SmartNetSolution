@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import CartItem from "./cartItem";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
+import { clearSelected, selectAll } from "@/contexts/cart.actions";
 
 export default function CartList() {
     const { state, clearCart } = useCart(); // Thay đổi ở đây
@@ -14,7 +15,16 @@ export default function CartList() {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = state.items.slice(indexOfFirstItem, indexOfLastItem); // Thay đổi ở đây
     const totalPages = Math.ceil(state.items.length / itemsPerPage); // Thay đổi ở đây
+    
+    const allSelected = state.items.length > 0 && state.items.every(item => item.selected);
 
+    const handleToggleAll = () => {
+        if (allSelected) {
+            clearSelected();
+        } else {
+            selectAll();
+        }
+    };
     const handlePageChange = (page) => {
         setSearchParams({ page });
     };
@@ -29,10 +39,21 @@ export default function CartList() {
 
     return (
         <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Sản phẩm ({state.items.length})</h2> {/* Thay đổi ở đây */}
-                <Button 
-                    variant="destructive" 
+            <div className="p-4 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={handleToggleAll}
+                        className="accent-blue-600 w-5 h-5"
+                        aria-label="Chọn tất cả sản phẩm"
+                    />
+                    <span className="font-medium">
+                        Chọn tất cả ({state.items.length})
+                    </span>
+                </div>
+                <Button
+                    variant="destructive"
                     size="sm"
                     onClick={clearCart}
                 >

@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { getLikedService, createLikedService, deleteLikedService } = require('../services/liked_service');
+const { getLikedService, createLikedService, deleteLikedService } = require('../services/liked.service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 

@@ -1,11 +1,95 @@
-const { ERROR_CODES, STATUS_CODE, ERROR_MESSAGES } = require("../contants/errors");
+const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
 const { prisma, isExistId } = require("../helpers/query.helper");
 
 const { get_error_response } = require("../helpers/response.helper.helper");
 
-async function createOrder(order) {
+function configOrderData(dbResults) {
+    if (!dbResults || dbResults.length === 0) {
+        return [];
+    }
+
+    // Tạo map để nhóm các sản phẩm theo order_id
+    const orderMap = new Map();
+
+    dbResults.forEach(record => {
+        if (!orderMap.has(record.id)) {
+            // Tạo order mới nếu chưa tồn tại
+            orderMap.set(record.id, {
+                id: record.id,
+                customer_name: record.name_recipient,
+                order_date: record.order_date,
+                status: record.status,
+                total_amount: record.amount,
+                products: []
+            });
+        }
+
+        // Thêm sản phẩm vào order tương ứng
+        if (record.product_id) {
+            const order = orderMap.get(record.id);
+            order.products.push({
+                id: record.product_id,
+                name: record.product_name,
+                quantity: record.quantity,
+                sale_price: record.price
+            });
+        }
+    });
+
+    // Chuyển map thành array
+    return Array.from(orderMap.values());
+}
+
+async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
+    let get_attr = `
+        order.id, 
+        order.name_recipient,
+        order.created_at as order_date,
+        order.status,
+        order.amount,
+        order_detail.product_id,
+        product.name as product_name,
+        order_detail.quantity_sold as quantity,
+        order_detail.sale_price as price
+    `;
+
+    let get_table = `\`order\``;
+    let query_join = `
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN product ON order_detail.product_id = product.id
+    `;
+
+    try {
+        const orders = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: filters,
+            logic: logic,
+            sort: sort,
+            order: order,
+            configData: configOrderData
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            orders
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+async function createOrder(shipping, payment) {
+    
     const checkProduct = order.products.map((item) => { check_list_info_product(item.products) })
     if(checkProduct) {
         return get_error_response(ERROR_CODES.PRODUCT_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
@@ -132,7 +216,7 @@ async function addOrderDetail(order_id, detailOrder) {
         totalAmount: totalMoney * (1 - detailOrder.discount / 100),
     }
     
-    const detailOrder = await prisma.order_detail.create({
+    const detailOrderNew = await prisma.order_detail.create({
         data: {
             order_id: order_id,
             product_id: detailOrder.product_id,
@@ -145,13 +229,15 @@ async function addOrderDetail(order_id, detailOrder) {
         }
     })
 
-    if (!detailOrder) {
+    if (!detailOrderNew) {
         return get_error_response(ERROR_CODES.ORDER_DETAIL_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
     }
     
     return total;
 }
 
+
 module.exports = {
     createOrder,
+    getOrdersForAdministrator,
 }
