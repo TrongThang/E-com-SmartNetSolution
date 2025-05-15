@@ -37,8 +37,7 @@ const BaseCustomerSchema = z.object({
         ], {
             message: `[${ERROR_CODES.CUSTOMER_GENDER_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_GENDER_INVALID]}`
         }).optional(),
-        birthdate: z.string()
-            .regex(REGEX.BIRTHDAY, {
+        birthdate: z.coerce.date({
                 message: `[${ERROR_CODES.CUSTOMER_BIRTHDATE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_BIRTHDATE_INVALID]}`
             })
             .optional()
@@ -49,19 +48,17 @@ const CreateCustomerSchema = BaseCustomerSchema;
 
 const UpdateCustomerSchema = BaseCustomerSchema.extend({
     body: BaseCustomerSchema.shape.body.extend({
-        id: z.string()
-            .min(1, {
-                message: `[${ERROR_CODES.CUSTOMER_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_ID_REQUIRED]}`
-            })
+        id: z.string({
+            message: `[${ERROR_CODES.CUSTOMER_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_ID_REQUIRED]}`
+        })
     })
 });
 
 const DeleteCustomerSchema = z.object({
     params: z.object({
-        id: z.string()
-            .min(1, {
-                message: `[${ERROR_CODES.CUSTOMER_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_ID_REQUIRED]}`
-            })
+        id: z.string({
+            message: `[${ERROR_CODES.CUSTOMER_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_ID_REQUIRED]}`
+        })
     })
 });
 

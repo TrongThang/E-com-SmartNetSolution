@@ -33,7 +33,7 @@ const getLikedService = async (id) => {
         }
 
         return get_error_response(
-            errors=ERROR_CODES.LIKED_SUCCESS, 
+            errors=ERROR_CODES.SUCCESS, 
             status_code=STATUS_CODE.OK, 
             data=liked
         );

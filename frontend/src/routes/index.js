@@ -2,6 +2,11 @@ import DefaultLayout from '@/components/layout/defaultLayout';
 import CartPage from '@/pages/User/Cart.page';
 import ProductDetailPage from '@/pages/User/ProductDetail.page';
 import { createBrowserRouter } from 'react-router-dom';
+import ProfileLayout from '@/components/layout/ProfileLayout';
+import ProfileInfo from '@/pages/User/Profile/Info';
+import AddressesPage from '@/pages/User/Profile/Address';
+import OrdersPage from '@/pages/User/Profile/Orders';
+import LikedPage from '@/pages/User/Profile/Liked';
 // import AdminLayout from '../layouts/AdminLayout';
 // import ShopLayout from '../layouts/ShopLayout';
 // import AdminDashboard from '../pages/admin/Dashboard';
@@ -51,6 +56,32 @@ export const router = createBrowserRouter([
                 path: 'cart',
                 element: <CartPage />,
             },
+            {
+                path: 'profile',
+                element: <ProfileLayout />,
+                children: [
+                    {
+                        path: 'info',
+                        element: <ProfileInfo />
+                    },
+                    {
+                        path: 'orders',
+                        element: <OrdersPage />
+                    },
+                    {
+                        path: 'addresses',
+                        element: <AddressesPage />
+                    },
+                    {
+                        path: 'liked',
+                        element: <LikedPage />
+                    },
+                    {
+                        path: 'change-password',
+                        element: <div>Đổi mật khẩu</div>
+                    }
+                ]
+            }
             // {
             //   path: 'checkout',
             //   element: <Checkout />,
@@ -58,3 +89,5 @@ export const router = createBrowserRouter([
         ],
     },
 ]);
+
+export default router;

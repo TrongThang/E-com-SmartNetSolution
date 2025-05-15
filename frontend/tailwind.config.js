@@ -13,6 +13,7 @@ module.exports = {
                 'neutral-light': 'var(--neutral-light, #d1d5db)',
                 background: 'var(--background, #ffffff)',
                 border: 'var(--border, #e5e7eb)',
+                'primary-foreground': '#ffffff',
             },
         },
     },

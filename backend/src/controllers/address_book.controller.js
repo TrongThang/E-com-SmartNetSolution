@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { getAddressBookService, createAddressBookService, updateAddressBookService, deleteAddressBookService } = require('../services/address_book_service');
+const { getAddressBookService, getDetailAddressBookService, createAddressBookService, updateAddressBookService, deleteAddressBookService } = require('../services/address_book_service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 
 class AddressBookController {
@@ -15,18 +15,28 @@ class AddressBookController {
         return res.status(response.status_code).json(response);
     };
 
-    async createAddressBook(req, res) {
-        const { customer_id, district, city, ward, street, detail, is_default } = req.body;
+    async getAddressBookDetail(req, res) {
+        const { id } = req.params;
 
-        const response = await createAddressBookService(customer_id, district, city, ward, street, detail, is_default);
+        const response = await getDetailAddressBookService(id);
+
+        return res.status(response.status_code).json(response);
+    }
+
+    async createAddressBook(req, res) {
+        const { customer_id, receiver_name, phone, district, city, ward, street, detail, is_default } = req.body;
+
+        const response = await createAddressBookService(customer_id, receiver_name, phone, district, city, ward, street, detail, is_default);
 
         return res.status(response.status_code).json(response);
     };
 
     async updateAddressBook(req, res) {
-        const { customer_id, id, district, city, ward, street, detail, is_default } = req.body;
+        const { customer_id, id, receiver_name, phone, district, city, ward, street, detail, is_default } = req.body;
 
-        const response = await updateAddressBookService(customer_id, id, district, city, ward, street, detail, is_default);
+        const response = await updateAddressBookService(customer_id, id, receiver_name, phone, district, city, ward, street, detail, is_default);
+
+        return res.status(response.status_code).json(response);
     }
 
     async deleteAddressBook(req, res) {
