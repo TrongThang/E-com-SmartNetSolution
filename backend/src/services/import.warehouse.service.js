@@ -102,8 +102,8 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
                 serial_number: item.serial_number,
                 deleted_at: null
             }
-        })
-
+        }) 
+        console.log("isExistSerial", isExistSerial)
         if (isExistSerial) {
             return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_SERIAL_NUMBER_EXIST, STATUS_CODE.BAD_REQUEST);
         }
@@ -116,11 +116,12 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
             }
         });
 
+        totalQuantity += 1
+
         if(!serialInsertResult) {
             return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
         }
 
-        totalQuantity += 1
     }
 
     const warehouseInventory = await prisma.warehouse_inventory.findFirst({
@@ -130,7 +131,6 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
             deleted_at: null
         }
     })
-    
 
     if(!warehouseInventory) {
         const warehouseInventory = await prisma.warehouse_inventory.create({
@@ -142,7 +142,7 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
             }
         })
     } else {
-        const warehouseInventory = await prisma.warehouse_inventory.update({
+        const warehouseInventoryUpdate = await prisma.warehouse_inventory.update({
             where: {
                 id: warehouseInventory.id
             },
@@ -152,7 +152,7 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
         })  
     }
 
-    return detailImportResult;
+    return warehouseInventoryUpdate;
 }
 
 module.exports = {

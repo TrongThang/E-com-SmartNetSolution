@@ -9,7 +9,7 @@ const getReviewService = async (filter, limit, sort, order, page = 1) => {
     let get_attr = `
         review_product.id, review_product.customer_id, review_product.product_id, 
         review_product.comment, review_product.image, review_product.rating, 
-        review_product.response, review_product.note, review_product.created_at, review_product.updated_at,
+        review_product.response, review_product.note,
         customer.surname, customer.lastname, customer.image as customer_image
     `;
     let get_table = "review_product";

@@ -18,9 +18,9 @@ export function OrderSelection({ onOrderSelect, selectedOrders }) {
         const fetchOrders = async () => {
             const filter = [
                 { field: "order.status", condition: ">=", value: 0 },
-                { field: "order.status", condition: "<", value: 1 }
+                { field: "order.status", condition: "<=", value: 1 }
             ]
-            const response = await axiosPublic.get(`/order/admin`, {
+            const response = await axiosPublic.get(`/order/admin`, {    
                 params: {
                     filter: JSON.stringify(filter),
                 }
