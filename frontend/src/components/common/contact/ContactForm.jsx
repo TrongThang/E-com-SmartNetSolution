@@ -76,8 +76,18 @@ export default function ContactForm() {
                 {errors.title && <div className="text-red-500 text-xs">{errors.title}</div>}
             </div>
             <div>
-                <Textarea name="content" placeholder="Tin nhắn" value={form.content} onChange={handleChange} rows={4} />
-                {errors.content && <div className="text-red-500 text-xs">{errors.content}</div>}
+                <Textarea 
+                    name="content" 
+                    placeholder="Tin nhắn" 
+                    value={form.content} 
+                    onChange={handleChange} 
+                    rows={4}
+                    maxLength={500}
+                />
+                <div className="flex justify-between items-center text-xs mt-1">
+                    <div className="text-red-500">{errors.content}</div>
+                    <div className="text-gray-500">{form.content.length}/500 ký tự</div>
+                </div>
             </div>
             <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-700 text-white" disabled={loading}>{loading ? "Đang gửi..." : "Gửi tin nhắn"}</Button>
             {msg && <div className="text-center text-sm mt-2">{msg}</div>}
