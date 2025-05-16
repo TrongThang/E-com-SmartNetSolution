@@ -6,9 +6,15 @@ import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+
 function Select({
   ...props
-}) {
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Radix UI Select component
+ *
+
+/*******  b6aa4e76-8f45-4932-9bed-1578ee079c9c  *******/}) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
 }
 

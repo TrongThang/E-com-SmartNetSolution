@@ -59,7 +59,7 @@ export default function BlogDetailPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-8 ">
                 <div className="flex gap-8">
                     <Card className="p-6 w-[60%]">
                         <div className="flex items-center gap-2 mb-2">
@@ -96,7 +96,7 @@ export default function BlogDetailPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-28">
             <div className="flex gap-8 relative">
                 <Card className="p-6 w-[60%]">
                     <div className="flex items-center gap-2 mb-2">

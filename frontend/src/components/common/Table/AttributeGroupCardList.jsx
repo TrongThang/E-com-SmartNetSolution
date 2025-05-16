@@ -15,6 +15,29 @@ const AttributeGroupCardList = ({ attributeGroups, onEdit, onDelete }) => {
     const closeModal = () => {
         setSelectedGroup(null)
     }
+    const handleDeleteGroup = async () => {
+        const confirm = await Swal.fire({
+            title: "Bạn có chắc muốn xóa nhóm thuộc tính này?",
+            text: "Thao tác này không thể hoàn tác!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Xóa",
+            cancelButtonText: "Hủy"
+        });
+        if (confirm.isConfirmed) {
+            try {
+                const res = await attributeGroupApi.deleted(attributeGroup.id);
+                if (res.status_code === 200) {
+                    Swal.fire("Đã xóa!", "Nhóm thuộc tính đã được xóa.", "success");
+                    onClose();
+                } else {
+                    Swal.fire("Lỗi", res.errors?.[0]?.message || "Xóa thất bại", "error");
+                }
+            } catch (err) {
+                Swal.fire("Lỗi", "Có lỗi xảy ra, vui lòng thử lại.", "error");
+            }
+        }
+    };
 
     return (
         <div className="relative">

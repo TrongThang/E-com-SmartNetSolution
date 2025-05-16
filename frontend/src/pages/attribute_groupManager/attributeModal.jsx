@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import attributeGroupApi from "@/apis/modules/attribute_group.api.ts"
+import Swal from "sweetalert2"
 
 const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
   const [attributes, setAttributes] = useState([])
@@ -20,11 +22,11 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
       setGroupName(attributeGroup.name || "")
       setAttributes(
         attributeGroup.attributes?.map((attr) => ({
-          id: attr.attribute_id || Date.now().toString() + Math.random().toString(36).substring(2, 9),
-          name: attr.attribute_name,
-          dataType: attr.data_type || "Text",
-          required: attr.required || false,
-          hidden: attr.hidden || false,
+          id: attr.attribute_id || attr.id || Date.now().toString() + Math.random().toString(36).substring(2, 9),
+          name: attr.name,
+          dataType: attr.datatype,
+          required: !!attr.required || null,
+          hidden: !!(attr.hidden ?? attr.is_hide),
         })) || [],
       )
     } else {
@@ -40,7 +42,7 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
       name: "",
       dataType: "Text",
       required: false,
-      hidden: false,
+      is_hide: false,
     }
     setAttributes([...attributes, newAttribute])
   }
@@ -51,7 +53,6 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
 
   const updateAttribute = (id, field, value) => {
     setAttributes(attributes.map((attr) => (attr.id === id ? { ...attr, [field]: value } : attr)))
-
     // Clear error for this field if it exists
     if (errors[`attribute_${id}_${field}`]) {
       setErrors({ ...errors, [`attribute_${id}_${field}`]: null })
@@ -76,25 +77,86 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validateForm()) {
-      return
+      return;
     }
 
-    // TODO: Implement API call to save attribute group
     const data = {
       name: groupName,
       attributes: attributes.map((attr) => ({
-        attribute_name: attr.name,
-        data_type: attr.dataType,
-        required: attr.required,
-        hidden: attr.hidden,
+        id: attr.id ? Number(attr.id) : undefined,
+        name: attr.name,
+        datatype: attr.dataType || null,
+        required: Boolean(attr.required),
+        is_hide: Boolean(attr.hidden),
       })),
+    };
+
+    try {
+      let res;
+      if (attributeGroup) {
+        res = await attributeGroupApi.edit(attributeGroup.id, data);
+      } else {
+        res = await attributeGroupApi.add(data);
+      }
+
+      if (res.status_code === 200) {
+        Swal.fire("Thành công", attributeGroup ? "Cập nhật thành công" : "Tạo mới thành công", "success");
+        onClose();
+      } else {
+        // Xử lý lỗi chi tiết từ backend
+        let errorMsg = "Có lỗi xảy ra";
+        const newErrors = {};
+        if (res.errors && res.errors.length > 0) {
+          errorMsg = res.errors.map(e => e.message).join("<br/>");
+          // Gán lỗi từng trường vào state errors để hiển thị dưới input
+          res.errors.forEach(err => {
+            if (err.path && Array.isArray(err.path) && err.path[1] === "attributes") {
+              const idx = err.path[2];
+              const field = err.path[3];
+              const attr = attributes[idx];
+              if (attr) {
+                newErrors[`attribute_${attr.id}_${field}`] = err.message;
+              }
+            }
+          });
+        }
+        setErrors(prev => ({ ...prev, ...newErrors }));
+        Swal.fire({
+          icon: "error",
+          title: attributeGroup ? "Cập nhật thất bại" : "Tạo mới thất bại",
+          html: errorMsg,
+        });
+      }
+    } catch (err) {
+      let errorMsg = "Có lỗi xảy ra, vui lòng thử lại.";
+      if (err?.response?.data?.errors && err.response.data.errors.length > 0) {
+        errorMsg = err.response.data.errors.map(e => e.message).join("<br/>");
+        // Xử lý lỗi từng trường nếu có
+        const newErrors = {};
+        err.response.data.errors.forEach(error => {
+          if (error.path && Array.isArray(error.path) && error.path[1] === "attributes") {
+            const idx = error.path[2];
+            const field = error.path[3];
+            const attr = attributes[idx];
+            if (attr) {
+              newErrors[`attribute_${attr.id}_${field}`] = error.message;
+            }
+          }
+        });
+        setErrors(prev => ({ ...prev, ...newErrors }));
+      }
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi",
+        html: errorMsg
+      });
     }
-    console.log(data)
-    onClose()
-  }
+  };
+ 
+
 
   if (!isOpen) return null
 
@@ -131,7 +193,7 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
 
         {/* Content - Scrollable */}
         <div className="overflow-y-auto p-5 bg-white flex-grow">
-          <form>
+          <form >
             <div className="mb-6">
               <label className="block mb-2 font-medium text-gray-800">
                 Tên nhóm thuộc tính <span className="text-red-500">*</span>
@@ -202,9 +264,8 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
                                 type="text"
                                 value={attr.name}
                                 onChange={(e) => updateAttribute(attr.id, "name", e.target.value)}
-                                className={`w-full h-9 ${
-                                  errors[`attribute_${attr.id}_name`] ? "border-red-500 focus-visible:ring-red-500" : ""
-                                }`}
+                                className={`w-full h-9 ${errors[`attribute_${attr.id}_name`] ? "border-red-500 focus-visible:ring-red-500" : ""
+                                  }`}
                                 placeholder="Nhập tên thuộc tính"
                               />
                               {errors[`attribute_${attr.id}_name`] && (
@@ -213,7 +274,7 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
                             </td>
                             <td className="p-3 bg-white">
                               <Select
-                                value={attr.dataType}
+                                value={attr.datatype}
                                 onValueChange={(value) => updateAttribute(attr.id, "dataType", value)}
                               >
                                 <SelectTrigger className="h-9 w-full">

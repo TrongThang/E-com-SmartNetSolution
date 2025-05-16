@@ -11,7 +11,6 @@ export function ProductCard({ product }) {
                 <img
                     src={image || "/placeholder.svg"}
                     alt={name}
-                    fill
                     className="object-contain p-2"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw 20vh"
                 />
@@ -34,9 +33,9 @@ export function ProductCard({ product }) {
                     className="w-full bg-blue-600 text-white transition-all duration-300 hover:bg-blue-700 hover:shadow-md"
                     asChild
                 >
-                    <Link href={`/products/${id}`}>Chi tiết</Link>
+                    <Link to={`/products/${id}`}>Chi tiết</Link>
                 </Button>
             </CardFooter>
         </Card>
-    )
+    );
 }
