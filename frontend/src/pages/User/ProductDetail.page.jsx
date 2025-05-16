@@ -52,7 +52,7 @@ export default function ProductDetailPage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4">
+        <div className="container mx-auto py-8 px-4 pt-28">
             {/* Product details would go here */}
             <ProductDetails device={device} />
 

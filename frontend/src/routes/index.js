@@ -6,14 +6,13 @@ import ContactPage from '@/pages/user/Contact.page.jsx';
 import CategoriesPage from '@/pages/categoryManager';
 import AttributeGroupPage from '@/pages/attribute_groupManager';
 import HomePage from '@/pages/user/home/Home.page';
-import ProductDetailPage from '@/pages/user/ProductDetail.page.jsx';
 import CreateExportWarehousePage from '@/pages/Admin/warehouse/export/Export.page';
 import CreateImportWarehousePage from '@/pages/Admin/warehouse/import/create';
-import CartPage from '@/pages/User/Cart.page';
-import CheckoutPage from '@/pages/User/checkout/Checkout.page';
-import CheckoutSuccessPage from '@/pages/User/checkout/success/CheckoutSuccess.page';
-import ProductDetailPage from '@/pages/User/ProductDetail.page';
-import SearchPage from '@/pages/User/Serach.page';
+import CartPage from '@/pages/user/Cart.page.jsx';
+import CheckoutPage from '@/pages/user/checkout/Checkout.page.jsx';
+import CheckoutSuccessPage from '@/pages/user/checkout/success/CheckoutSuccess.page.jsx';
+import ProductDetailPage from '@/pages/user/ProductDetail.page.jsx';
+import SearchPage from '@/pages/user/Search.page.jsx'; 
 import { createBrowserRouter } from 'react-router-dom';
 import ProfilePage from '@/pages/profileManager/profile';
 import EmployeeManagerPage from '@/pages/employeeManager';
@@ -54,6 +53,10 @@ export const router = createBrowserRouter([
       //   element: <Home />,
       // },
       {
+        path: '/',
+        element: <HomePage />,
+      },
+      {
         path: 'search',
         element: <SearchPage />,
       },
@@ -66,7 +69,6 @@ export const router = createBrowserRouter([
         element: <CartPage />,
       },
       {
-<<<<<<< HEAD
         path: 'blog',
         element: <BlogListPage />,
       },
@@ -120,49 +122,4 @@ export const router = createBrowserRouter([
       //   },
     ],
   },
-  {
-    path: '/',
-    element: <DefaultLayout />,
-    children: [
-      {
-        index: true,
-        element: <HomePage />,
-      },
-      // {
-      //   path: 'search',
-      //   element: <SearchProductPage />,
-      // },
-      {
-        path: 'products/:id',
-        element: <ProductDetailPage />,
-      },
-      {
-        path: 'cart',
-        element: <CartPage />,
-      },
-      // {
-      //   path: 'checkout',
-      //   element: <Checkout />,
-      // },
-    ],
-  },
-=======
-                path: 'checkout',
-                element: <CheckoutPage />,
-            },
-            {
-                path: 'checkout/success',
-                element: <CheckoutSuccessPage />,
-            }
-        ],
-    },
-    {
-        path: '/warehouse/export/create',
-        element: <CreateExportWarehousePage />,
-    },
-    {
-        path: '/warehouse/import/create',
-        element: <CreateImportWarehousePage />,
-    },
->>>>>>> 8a36140121868a233e2b3e9631afaeb870e35647
 ]);

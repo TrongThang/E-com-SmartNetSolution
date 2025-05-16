@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, ShoppingCart, User, ChevronDown, Menu } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
+import { useNavigate } from "react-router-dom"
 import { formatCurrency } from "@/utils/format"
 import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
@@ -12,12 +13,14 @@ import LoginModal from "@/components/common/AuthModal"
 import categoryApi from "@/apis/modules/categories.api.ts"
 
 export default function Navbar() {
+    const navigate = useNavigate()
     const [categories, setCategories] = useState([])
     const { totalItems, totalAmount } = useCart()
     const { isAuthenticated, user, logout } = useAuth()
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
     const [isScrolled, setIsScrolled] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [searchValue, setSearchValue] = useState("")
 
     const fetchCategories = async () => {
         try {

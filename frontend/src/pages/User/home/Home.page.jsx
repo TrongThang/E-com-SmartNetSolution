@@ -1,12 +1,46 @@
 import { Link } from "react-router-dom"
+import { useState } from "react"
 import { ChevronRight, Star } from 'lucide-react'
-
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import DeviceCard from "./DeviceCard.page.jsx"
+import ProductGrid from "@/components/common/product/ProductGrid.jsx"
+import productApi from "@/apis/modules/product.api.ts"
+import categoryApi from "@/apis/modules/categories.api.ts"
+import { useEffect } from "react"
+import CategoryGrid from "./categoryGird.page"
 
 export default function HomePage() {
+  const [newArrivals, setNewArrivals] = useState([])
+  const [featuredProducts, setFeaturedProducts] = useState([])
+  const [categories, setCategories] = useState([])
+  const fecthProducts = async () => {
+    try {
+      const res = await productApi.search({})
+      if (res.status_code === 200) {
+        const filterFeatured = (res.data?.data || []).filter(item => item.status === 3)
+        const filteredNewArrivals = (res.data?.data || []).filter(item => item.status === 4)
+        setFeaturedProducts(filterFeatured)
+        setNewArrivals(filteredNewArrivals)
+      }
+    } catch (error) {
+      console.error("Failed to fetch products:", error)
+    }
+  }
+  const fetchCategories = async () => {
+    try {
+      const res = await categoryApi.list({});
+      if (res.status_code === 200) {
+        setCategories(res.data?.categories || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error)
+    }
+  }
+  useEffect(() => {
+    fetchCategories()
+    fecthProducts()
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col bg-blue-50">
       <main className="flex-1">
@@ -51,24 +85,7 @@ export default function HomePage() {
                 Xem tất cả <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-              {categories.map((category, index) => (
-                <Link to="#" key={index} className="group">
-                  <div className="flex flex-col items-center rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-blue-100 hover:scale-105">
-                    <div className="mb-3 rounded-full bg-blue-50 p-4">
-                      <img
-                        src={`/placeholder.svg?height=48&width=48&text=${category.name}`}
-                        alt={category.name}
-                        className="h-12 w-12 object-contain"
-                      />
-                    </div>
-                    <span className="text-center text-sm font-medium text-gray-700 group-hover:text-blue-600">
-                      {category.name}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+              <CategoryGrid categories={categories} columns={5}/>
           </div>
         </section>
 
@@ -96,51 +113,23 @@ export default function HomePage() {
                 Xem tất cả <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {featuredProducts.map((product, index) => (
-                <DeviceCard key={index} product={product} />
-              ))}
-            </div>
+            <ProductGrid products={featuredProducts} columns={5} />
           </div>
         </section>
 
         {/* New Devices Section */}
-        <section className="py-12 bg-white">
+        <section className="py-12 bg-blue-50">
           <div className="mx-auto max-w-5xl px-4">
             <div className="mb-8 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-800">Thiết bị mới</h2>
+              <h2 className="text-2xl font-bold text-gray-800">Thiết bị nổi bật</h2>
               <Link to="#" className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700">
                 Xem tất cả <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {newArrivals.map((product, index) => (
-                <DeviceCard key={index} product={product} />
-              ))}
-            </div>
+            <ProductGrid products={newArrivals} columns={5} />
           </div>
         </section>
 
-        {/* Brands Section */}
-        <section className="py-10 bg-blue-50">
-          <div className="mx-auto max-w-5xl px-4">
-            <h2 className="text-2xl font-bold mb-8 text-center text-gray-800">Thương hiệu nổi bật</h2>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-6">
-              {brands.map((brand, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-lg p-4 flex items-center justify-center shadow-sm hover:shadow-md transition-all border border-gray-100"
-                >
-                  <img
-                    src={`/placeholder.svg?height=60&width=120&text=${brand}`}
-                    alt={brand}
-                    className="h-12 object-contain"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
@@ -331,31 +320,3 @@ export default function HomePage() {
     </div>
   )
 }
-
-// Sample data
-const categories = [
-  { name: "Điện thoại" },
-  { name: "Laptop" },
-  { name: "Máy tính bảng" },
-  { name: "Đồng hồ thông minh" },
-  { name: "Tai nghe" },
-  { name: "Phụ kiện" },
-]
-
-const featuredProducts = [
-  { name: "MacBook Air M3", price: "26.990.000", sold: 124 },
-  { name: "Samsung Galaxy Tab S9", price: "19.990.000", oldPrice: "22.990.000", sold: 98 },
-  { name: "Xiaomi 14 Pro", price: "18.990.000", sold: 156 },
-  { name: "ASUS ROG Phone 8", price: "24.990.000", sold: 87 },
-  { name: "Apple Watch Series 9", price: "10.990.000", oldPrice: "12.990.000", sold: 203 },
-]
-
-const newArrivals = [
-  { name: "Nothing Phone (2a)", price: "8.990.000" },
-  { name: "Laptop Lenovo Legion Pro 7", price: "39.990.000" },
-  { name: "Tai nghe Sony WH-1000XM5", price: "8.490.000" },
-  { name: "Google Pixel 8 Pro", price: "22.990.000" },
-  { name: "Samsung Galaxy Book4 Pro", price: "32.990.000" },
-]
-
-const brands = ["Apple", "Samsung", "Xiaomi", "Asus", "Lenovo", "Sony"]

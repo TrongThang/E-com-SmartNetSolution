@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { ChevronDown, ChevronRight, MoreVertical, Plus, Search, Folder } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import CategoriesTable from "@/components/common/Table/CategoriesTable";
 import categoryApi from "@/apis/modules/categories.api.ts";
-import ActionsColumn from "@/components/common/Table/ActionsColumn"
+import ActionsColumn from "@/components/common/table/ActionsColumn"
 import { Button } from "@/components/ui/button"
 
 export default function CategoryManagement() {
