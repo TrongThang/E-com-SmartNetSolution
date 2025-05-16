@@ -58,6 +58,7 @@ const createWarrentyTimeService = async ({ name, time }) => {
         });
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.CREATED, data);
     } catch (error) {
+        console.log("Loi khi tao warranty time :", error);
         return get_error_response(ERROR_CODES.WARRANTY_TIME_CREATE_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
 };

@@ -274,6 +274,12 @@ const updateAttributeGroupService = async (id, name, attributes) => {
             );
         }
 
+        // Cập nhật tên nhóm thuộc tính
+        await prisma.attribute_group.update({
+            where: { id: parseInt(id) },
+            data: { name: name }
+        });
+
         // Kiểm tra trùng tên thuộc tính trong cùng nhóm
         if (attributes && attributes.length > 0) {
             const attributeNames = attributes.map(attr => attr.name);
@@ -344,7 +350,7 @@ const updateAttributeGroupService = async (id, name, attributes) => {
                         required: attr.required || false,
                         is_hide: attr.is_hide || false,
                         group_attribute_id: parseInt(id),
-                        created_at: getVietnamTimeNow()
+                        updaete_at: getVietnamTimeNow()
                     });
                 }
             }
