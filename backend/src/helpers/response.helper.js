@@ -19,16 +19,13 @@ function get_error_response(errors = null, status_code = 200, data = null, field
 
     // Nếu truyền vào là một mảng lỗi
     if (Array.isArray(errors)) {
-        errorList = errors.map(({ errorCode, fieldError }) => {
-            const errorName = Object.keys(ERROR_CODES).find(key => ERROR_CODES[key] === errorCode);
-            const message = (fieldError || '') + (errorName && MESSAGES[errorName] ? MESSAGES[errorName] : 'Lỗi không xác định');
+        errorList = errors.map(errorCode => {
+            const message = ERROR_MESSAGES[errorCode] || 'Lỗi không xác định';
             return { code: errorCode, message };
         });
     } 
     // Nếu truyền vào là một lỗi đơn lẻ
     else if (errors) {
-        console.log('Chuẩn bị convert lỗi đơn lẻ:', ERROR_MESSAGES[errors]);
-        
         const errorCode = errors;
         const message = ERROR_MESSAGES[errorCode]
         errorList.push({ code: errors, message });
@@ -40,7 +37,7 @@ function get_error_response(errors = null, status_code = 200, data = null, field
         ...(data && { data }), // Chỉ thêm data nếu nó tồn tại
         ...(errorList.length > 0 && { errors: errorList }), // Chỉ thêm errors nếu có lỗi
     };
-    console.log('Chuẩn bị trả về lỗi:', result);
+    
     return result
 }
 

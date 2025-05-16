@@ -46,6 +46,10 @@ export const CartProvider = ({ children }) => {
         dispatch({ type: 'CLEAR_SELECTED' });
     };
 
+    const removeSelected = () => {
+        dispatch({ type: 'REMOVE_SELECTED' });
+    };
+
     const cartStats = useMemo(() => {
         const items = state?.items || [];
 
@@ -319,7 +323,8 @@ export const CartProvider = ({ children }) => {
                 getItemSelected,
                 toggleSelectItem,
                 selectAll,
-                clearSelected
+                clearSelected,
+                removeSelected
             }}
         >
             {children}

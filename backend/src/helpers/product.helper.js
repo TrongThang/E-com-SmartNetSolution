@@ -1,4 +1,4 @@
-const { ERROR_CODES, STATUS_CODE, ERROR_MESSAGES } = require("../contants/errors");
+const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
 const { PRODUCT } = require("../contants/info");
 const queryHelper = require("./query.helper");
 const { prisma } = require("./query.helper");
@@ -117,15 +117,16 @@ function configDataProductDetail(productRows) {
     });
 }
 
-async function check_info_product(product_id, quantity_sold) {
-    const product = await queryHelper.queryRaw(`
+async function check_info_product(product) {
+    const result_query = await queryHelper.queryRaw(`
         SELECT 
             p.name, p.selling_price, p.status, COALESCE(SUM(w.stock), 0) AS total_quantity
         FROM product p
         LEFT JOIN warehouse_inventory w ON p.id = w.product_id
-        WHERE p.id = ${product_id}
+        WHERE p.id = ${product.id}
         GROUP BY p.id, p.selling_price, p.status
     `);
+    const product_actual = result_query[0];
     let errors = [];
     let fieldErrors = [];
     // Không tồn tại sản phẩm
@@ -134,55 +135,71 @@ async function check_info_product(product_id, quantity_sold) {
         fieldErrors.push('id')
     }
 
-    if (product.name !== product_check.name) {
+    if (product.name !== product_actual.name) {
+        console.log(product.name, product_actual.name)
         errors.push(ERROR_CODES.PRODUCT_CHANGED_NAME)
         fieldErrors.push('name')
     }
     
     // Sản phẩm bị ẩn
-    if (product.is_hide) {
+    if (product_actual.is_hide) {
         errors.push(ERROR_CODES.PRODUCT_IS_HIDE)
         fieldErrors.push('is_hide')
     }
 
     // Sản phẩm ngừng bán hoặc hết hàng
-    if (product.status < PRODUCT.ACTIVE) {
+    if (product_actual.status < PRODUCT.ACTIVE) {
         errors.push(ERROR_CODES.PRODUCT_NON_ACTIVE)
         fieldErrors.push('status')
     }
 
     // Sản phẩm có giá khác so với giá thực tế
-    if (product.selling_price !== product_check.selling_price) {
+    if (product.price !== product_actual.selling_price) {
         errors.push(ERROR_CODES.PRODUCT_SELLING_PRICE_NOT_MATCH)
         fieldErrors.push('selling_price')
     }
 
     // Sản phẩm được mua với số lượng lớn hơn số lượng tồn kho
-    if (quantity_sold > product.total_quantity) {
+    console.log("SS:", product.quantity > product_actual.total_quantity)
+    if (product.quantity > product_actual.total_quantity) {
         errors.push(ERROR_CODES.PRODUCT_NOT_ENOUGH_STOCK)
-        fieldErrors.push('quantity_sold')
+        fieldErrors.push('quantity')
     }
 
-    if (errors) {
-        
-        return get_error_response(errors, STATUS_CODE.NOT_ACCEPTABLE, fieldErrors)
+    if (errors.length > 0) {
+        return get_error_response(errors, STATUS_CODE.NOT_ACCEPTABLE, null, fieldErrors)
     }
     
     return null;
 }
 
 async function check_list_info_product(list_product) {
-    let errors = [];
-    list_product.map((product) => {
-        const result_check = check_info_product(product.id, product.quantity_sold);
-
-        if (result_check) {
-            return errors.push(result_check);
+    `
+    [
+        {
+            "product_id": 1,
+            "errors": [{code: 1017, message: "Sản phẩm không tồn tại"}]    
         }
-    })
+    ]
+    `
+    let errors = [];
+    // Sử dụng Promise.all để đợi tất cả các check hoàn thành
+    await Promise.all(list_product.map(async (product) => {
+        const result_check = await check_info_product(product);
+        if (result_check && result_check.status_code !== STATUS_CODE.OK) {
+            errors.push({
+                product_id: product.id,
+                product_name: product.name,
+                errors: result_check.errors
+            });
+        }
+    }));
 
     if (errors.length > 0) {
-        return get_error_response(errors, STATUS_CODE.NOT_ACCEPTABLE, errors.map((error) => error.fieldErrors).flat())
+        return {
+            status_code: STATUS_CODE.BAD_REQUEST,
+            data_errors: errors
+        }
     }
     return null;
 }

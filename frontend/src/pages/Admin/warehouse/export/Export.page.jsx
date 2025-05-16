@@ -7,6 +7,8 @@ import { OrderSelectionCard } from "@/components/common/warehouse/export/OrderSe
 import { OrderList } from "@/components/common/warehouse/export/OrderList"
 import { ConfirmationDialog } from "@/components/common/warehouse/ConfirmationDialog"
 import { ExportHeader } from "@/components/common/warehouse/export/ExportHeader"
+import Swal from "sweetalert2"
+import axiosPublic from "@/apis/clients/public.client"
 
 export default function CreateExportWarehousePage() {
     const router = useNavigate()
@@ -106,9 +108,24 @@ export default function CreateExportWarehousePage() {
 
             // API call would go here
             console.log("Submitting data:", dataToSubmit)
+            
+            const response = await axiosPublic.post("/export-warehouse", { data: dataToSubmit })
 
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1500))
+            if (response.status_code === 200) {
+                Swal.fire({
+                    title: "Thành công",
+                    text: "Phiếu xuất kho đã được tạo thành công",
+                    icon: "success",
+                })
+                
+                console.log('result:', response)
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: response.errors[0].message,
+                    icon: "error",
+                })
+            }
 
             // Success - redirect to list page
             // router.push("/warehouse/export")

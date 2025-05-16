@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BasicInfoForm } from "@/components/common/warehouse/import/BasicInfoForm"
 import { ProductsTab } from "@/components/common/warehouse/import/ProductTabs"
 import { ConfirmationDialog } from "@/components/common/warehouse/ConfirmationDialog"
+import axiosPublic from "@/apis/clients/public.client"
+import Swal from "sweetalert2"
 
 export default function CreateImportWarehousePage() {
     const router = useNavigate()
@@ -185,14 +187,23 @@ export default function CreateImportWarehousePage() {
                     })),
                 })),
             }
-            // API call would go here
-            console.log("Submitting data:", importWarehouseData)
+            
+            const response = await axiosPublic.post("/import-warehouse", { data: importWarehouseData })
+            console.log("Response:", response)
 
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1500))
-
-            // Success - redirect to list page
-            router.push("/warehouse/import")
+            if (response.status_code === 200) {
+                Swal.fire({
+                    title: "Thành công",
+                    text: "Phiếu nhập kho đã được tạo thành công",
+                    icon: "success",
+                })
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: response,
+                    icon: "error",
+                })
+            }
         } catch (error) {
             console.error("Error submitting form:", error)
         } finally {

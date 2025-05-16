@@ -105,3 +105,7 @@ export const updateSelected = (id, selected) => ({
     type: CART_ACTIONS.UPDATE_SELECTED,
     payload: { id, selected },
 });
+
+export const removeSelected = () => ({
+    type: CART_ACTIONS.REMOVE_SELECTED,
+});
