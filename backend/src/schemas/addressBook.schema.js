@@ -6,6 +6,18 @@ const BaseAddressBookSchema = z.object({
         customer_id: z.string({
             message: `[${ERROR_CODES.ADDRESS_BOOK_CUSTOMER_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_CUSTOMER_ID_REQUIRED]}`,
         }),
+        receiver_name: z.string({
+            message: `[${ERROR_CODES.ADDRESS_BOOK_RECEIVER_NAME_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_RECEIVER_NAME_REQUIRED]}`,
+        }).max(255, {
+            message: `[${ERROR_CODES.ADDRESS_BOOK_RECEIVER_NAME_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_RECEIVER_NAME_MAX_LENGTH]}`,
+        }),
+        phone: z.string({
+            message: `[${ERROR_CODES.ADDRESS_BOOK_PHONE_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_PHONE_REQUIRED]}`,
+        }).max(10, {
+            message: `[${ERROR_CODES.ADDRESS_BOOK_PHONE_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_PHONE_MAX_LENGTH]}`,
+        }).regex(/^[0-9]+$/, {
+            message: `[${ERROR_CODES.ADDRESS_BOOK_PHONE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_PHONE_INVALID]}`,
+        }),
         district: z.string()
             .max(500, {
                 message: `[${ERROR_CODES.ADDRESS_BOOK_DISTRICT_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_DISTRICT_MAX_LENGTH]}`,

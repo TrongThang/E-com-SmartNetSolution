@@ -53,6 +53,8 @@ model account {
 model address_book {
   id          Int       @id
   customer_id String?   @db.VarChar(32)
+  receiver_name String?   @db.VarChar(255)
+  phone         String?   @db.VarChar(10)
   district    String?   @db.VarChar(500)
   city        String?   @db.VarChar(500)
   ward        String?   @db.VarChar(500)
@@ -760,7 +762,6 @@ model production_batches {
   device_templates                                device_templates?     @relation(fields: [template_id], references: [template_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_1")
   account_production_batches_created_byToaccount  account?              @relation("production_batches_created_byToaccount", fields: [created_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_2")
   account_production_batches_approved_byToaccount account?              @relation("production_batches_approved_byToaccount", fields: [approved_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_3")
-
 
   @@id([batch_id, production_batch_id])
   @@index([approved_by], map: "approved_by")

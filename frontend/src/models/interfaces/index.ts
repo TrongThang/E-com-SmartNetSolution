@@ -164,3 +164,38 @@ export interface IContact {
     title: string;
     content: string;
 }
+export interface ICustomer {
+    id: string;
+    surname: string;
+    lastname: string;
+    image: string;
+    phone: string;
+    email: string;
+    email_verified: string;
+    birthdate: string;
+    gender: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface IAddressBook {
+    id: number;
+    city: string;
+    district: string;
+    ward: string;
+    street: string;
+    detail: string;
+    is_default: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ILiked {
+    id: string;
+    name: string;
+    image: string;
+    selling_price: number;
+    description: string;
+    created_at: string;
+    updated_at: string;
+}

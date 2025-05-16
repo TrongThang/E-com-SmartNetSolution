@@ -2,6 +2,7 @@ const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { executeSelectData } = require('../helpers/sql_query')
 const { get_error_response } = require('../helpers/response.helper');
 const { PrismaClient } = require('@prisma/client');
+const { number } = require('zod');
 
 const prisma = new PrismaClient();
 
@@ -26,6 +27,8 @@ function configDataAddressBook(dbResults) {
     // Chuyển đổi danh sách địa chỉ
     const address_books = dbResults.map(record => ({
         id: record.id,
+        receiver_name: record.receiver_name,
+        phone: record.phone,
         district: record.district,
         city: record.city,
         ward: record.ward,
@@ -45,7 +48,7 @@ function configDataAddressBook(dbResults) {
 
 const getAddressBookService = async (id) => {
     // Các cột cần lấy từ address_book và customer
-    let get_attr = `city, district, ward, street, detail, is_default, customer.id as customer_id, customer.lastname as customer_name, customer.surname as customer_surname, customer.phone as customer_phone, customer.email as customer_email`
+    let get_attr = `address_book.receiver_name, address_book.phone, city, district, ward, street, detail, is_default, customer.id as customer_id, customer.lastname as customer_name, customer.surname as customer_surname, customer.phone as customer_phone, customer.email as customer_email`
 
     let get_table = `address_book`
 
@@ -77,7 +80,45 @@ const getAddressBookService = async (id) => {
     }
 }
 
-const createAddressBookService = async (customer_id, district, city, ward, street, detail, is_default) => {
+const getDetailAddressBookService = async (id) => {
+    try {
+        // Chuyển đổi id từ chuỗi sang số nguyên
+        const addressId = Number(id);
+        
+        if (isNaN(addressId)) {
+            return get_error_response(
+                errors=ERROR_CODES.ADDRESS_BOOK_ID_REQUIRED,
+                status_code=STATUS_CODE.BAD_REQUEST,
+                data="Invalid address ID format"
+            );
+        }
+
+        const addressBook = await prisma.address_book.findUnique({
+            where: { id: addressId }
+        });
+
+        if (!addressBook) {
+            return get_error_response(
+                errors=ERROR_CODES.ADDRESS_BOOK_NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            addressBook
+        );
+    } catch (error) {
+        console.error('Error in getAddressBookDetailService:', error);
+        return get_error_response(
+            errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
+const createAddressBookService = async (customer_id, receiver_name, phone, district, city, ward, street, detail, is_default) => {
     try {
         // Chuyển đổi is_default sang kiểu boolean
         const isDefaultBoolean = is_default === "true" || is_default === true;
@@ -99,6 +140,8 @@ const createAddressBookService = async (customer_id, district, city, ward, stree
         const addressBook = await prisma.address_book.create({
             data: {
                 customer_id,
+                receiver_name,
+                phone,
                 district,
                 city,
                 ward,
@@ -125,9 +168,8 @@ const createAddressBookService = async (customer_id, district, city, ward, stree
     }
 }
 
-const updateAddressBookService = async (customer_id, id, district, city, ward, street, detail, is_default) => {
+const updateAddressBookService = async (customer_id, id, receiver_name, phone, district, city, ward, street, detail, is_default) => {
     try {
-        // Chuyển đổi id từ chuỗi sang số nguyên
         const addressId = parseInt(id);
 
         if (isNaN(addressId)) {
@@ -138,51 +180,93 @@ const updateAddressBookService = async (customer_id, id, district, city, ward, s
             );
         }
 
-        // Chuyển đổi is_default sang kiểu boolean
-        const isDefaultBoolean = is_default === "true" || is_default === true;
-
-        // Nếu đang đặt làm địa chỉ mặc định, cập nhật các địa chỉ khác thành không mặc định
-        if (isDefaultBoolean) {
-            await prisma.address_book.updateMany({
-                where: {
-                    customer_id: customer_id,
-                    id: { not: addressId },
-                    deleted_at: null
-                },
-                data: {
-                    is_default: false,
-                    updated_at: new Date()
-                }
-            });
-        }
-
-        const addressBook = await prisma.address_book.update({
+        // Kiểm tra địa chỉ tồn tại
+        const existingAddress = await prisma.address_book.findFirst({
             where: {
                 id: addressId,
-                customer_id: customer_id
-            },
-            data: {
-                district,
-                city,
-                ward,
-                street,
-                detail,
-                is_default: isDefaultBoolean,
-                updated_at: new Date()
+                customer_id: customer_id,
+                deleted_at: null
             }
         });
 
-        return get_error_response(
-            errors = ERROR_CODES.SUCCESS,
-            status_code = STATUS_CODE.OK,
-            data = addressBook
-        );
-    }
-    catch (error) {
+        if (!existingAddress) {
+            return get_error_response(
+                errors=ERROR_CODES.NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND,
+                data="Address not found or was deleted"
+            );
+        }
+
+        const isDefaultBoolean = is_default === "true" || is_default === true;
+
+        if (isDefaultBoolean) {
+            try {
+                await prisma.address_book.updateMany({
+                    where: {
+                        customer_id: customer_id,
+                        id: { not: addressId },
+                        deleted_at: null
+                    },
+                    data: {
+                        is_default: false,
+                        updated_at: new Date()
+                    }
+                });
+            } catch (error) {
+                console.error('Error updating other addresses:', error);
+                return get_error_response(
+                    errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+                    status_code=STATUS_CODE.INTERNAL_SERVER_ERROR,
+                    data="Failed to update other addresses"
+                );
+            }
+        }
+
+        try {
+            const addressBook = await prisma.address_book.update({
+                where: { 
+                    id: addressId,
+                    customer_id: customer_id,
+                    deleted_at: null
+                },
+                data: { 
+                    district, 
+                    city, 
+                    ward, 
+                    street, 
+                    detail, 
+                    receiver_name,
+                    phone,
+                    is_default: isDefaultBoolean,
+                    updated_at: new Date()
+                }
+            });
+
+            return get_error_response(
+                errors=ERROR_CODES.SUCCESS,
+                status_code=STATUS_CODE.OK,
+                data=addressBook
+            );
+        } catch (error) {
+            console.error('Error updating address:', error);
+            if (error.code === 'P2025') {
+                return get_error_response(
+                    errors=ERROR_CODES.NOT_FOUND,
+                    status_code=STATUS_CODE.NOT_FOUND,
+                    data="Address not found"
+                );
+            }
+            return get_error_response(
+                errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+                status_code=STATUS_CODE.INTERNAL_SERVER_ERROR,
+                data="Failed to update address"
+            );
+        }
+    } catch (error) {
         console.error('Error in updateAddressBookService:', error);
         return get_error_response(
-            errors = ERROR_CODES.INTERNAL_SERVER_ERROR,
-            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
+            errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
 }
@@ -252,6 +336,7 @@ const deleteAddressBookService = async (customer_id, id) => {
 
 module.exports = {
     getAddressBookService,
+    getDetailAddressBookService,
     createAddressBookService,
     updateAddressBookService,
     deleteAddressBookService

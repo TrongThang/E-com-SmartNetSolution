@@ -1,4 +1,4 @@
-const { getOrdersForAdministrator, createOrder } = require("../services/order.service");
+const { getOrdersForAdministrator, getOrdersForCustomer, createOrder } = require("../services/order.service");
 const { PrismaClient } = require('@prisma/client');
 
 class OrderController {
@@ -16,6 +16,15 @@ class OrderController {
             sort,
             order
         );
+
+        res.status(result.status_code).json(result);
+    }
+
+    async getOrdersForCustomer(req, res) {
+        const { customer_id } = req.params;
+        const { filter, logic, limit, sort, order } = req.query;
+
+        const result = await getOrdersForCustomer(customer_id, filter, logic, limit, sort, order);
 
         res.status(result.status_code).json(result);
     }

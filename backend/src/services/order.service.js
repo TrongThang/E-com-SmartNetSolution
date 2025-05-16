@@ -112,6 +112,74 @@ async function createOrder(orderData) {
             return get_error_response(ERROR_CODES.EMPLOYEE_SALER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
         }
     }
+}
+
+async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
+    let get_attr = `
+        order.id, 
+        order.total_money,
+        order.prepaid,
+        order.remaining,
+        order.discount,
+        order.vat,
+        order.total_money,
+        order.amount,
+        order.payment_method,
+        order.payment_account,
+        order.phone,
+        order.platform_order,
+        order.note,
+        order.status,
+        order.created_at,
+        order.updated_at,
+        order.deleted_at,
+        `;
+        // order_detail.product_id,
+        // product.name as product_name,
+        // order_detail.quantity_sold as quantity,
+        // order_detail.sale_price as price
+
+    let get_table = `\`order\``;
+    // let query_join = `
+    //     LEFT JOIN order_detail ON order.id = order_detail.order_id
+    //     LEFT JOIN product ON order_detail.product_id = product.id
+    // `;
+
+    let filter = `[{"field":"customer_id","condition":"=","value":"${customer_id}"}]`
+
+    try {
+        const orders = await executeSelectData({
+            table: get_table,
+            // queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: filters,
+            configData: configOrderData
+        })
+        
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            orders
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+
+
+
+async function createOrder(shipping, payment) {
+    
+    const checkProduct = order.products.map((item) => { check_list_info_product(item.products) })
+    if(checkProduct) {
+        return get_error_response(ERROR_CODES.PRODUCT_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+    }
 
     // 3. Kiểm tra thông tin shipper (nếu có)
     if (order.shipper_id) {
@@ -313,4 +381,5 @@ async function createOrderDetail(orderId, product) {
 module.exports = {
     createOrder,
     getOrdersForAdministrator,
+    getOrdersForCustomer,
 }
