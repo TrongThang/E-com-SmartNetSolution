@@ -74,7 +74,7 @@ const orders = [
     id: "ORD-123458",
     date: "05/07/2023",
     total: "2.150.000 đ",
-    status: "Đang xử lý",
+    status: "Chờ xác nhận",
     items: 4,
     statusIcon: Clock,
     statusColor: "text-yellow-500",
@@ -235,13 +235,15 @@ export default function OrdersPage() {
         <CardTitle>Đơn hàng của tôi</CardTitle>
         <CardDescription>Quản lý và theo dõi tất cả đơn hàng của bạn</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-7">
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="all">Tất cả</TabsTrigger>
-            <TabsTrigger value="processing">Đang xử lý</TabsTrigger>
-            <TabsTrigger value="shipping">Đang giao</TabsTrigger>
-            <TabsTrigger value="completed">Đã giao</TabsTrigger>
+            <TabsTrigger value="pending">Chờ xác nhận</TabsTrigger>
+            <TabsTrigger value="preparing">Chuẩn bị hàng</TabsTrigger>
+            <TabsTrigger value="shipping">Đang giao hàng</TabsTrigger>
+            <TabsTrigger value="delivered">Đã giao</TabsTrigger>
+            <TabsTrigger value="completed">Hoàn thành</TabsTrigger>
             <TabsTrigger value="canceled">Đã hủy</TabsTrigger>
           </TabsList>
 
@@ -253,10 +255,10 @@ export default function OrdersPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="processing" className="pt-4">
+          <TabsContent value="pending" className="pt-4">
             <div className="space-y-4">
               {orders
-                .filter((order) => order.status === "Đang xử lý")
+                .filter((order) => order.status === "Chờ xác nhận")
                 .map((order) => (
                   <OrderItem key={order.id} order={order} />
                 ))}

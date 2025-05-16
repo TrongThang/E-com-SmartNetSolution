@@ -27,6 +27,8 @@ function configDataAddressBook(dbResults) {
     // Chuyển đổi danh sách địa chỉ
     const address_books = dbResults.map(record => ({
         id: record.id,
+        receiver_name: record.receiver_name,
+        phone: record.phone,
         district: record.district,
         city: record.city,
         ward: record.ward,
@@ -46,8 +48,8 @@ function configDataAddressBook(dbResults) {
 
 const getAddressBookService = async (id) => {
     // Các cột cần lấy từ address_book và customer
-    let get_attr = `city, district, ward, street, receiver_name, phone, detail, is_default`
-    
+    let get_attr = `address_book.receiver_name, address_book.phone, city, district, ward, street, detail, is_default, customer.id as customer_id, customer.lastname as customer_name, customer.surname as customer_surname, customer.phone as customer_phone, customer.email as customer_email`
+
     let get_table = `address_book`
 
     let query_join = `LEFT JOIN customer ON address_book.customer_id = customer.id`
@@ -65,9 +67,9 @@ const getAddressBookService = async (id) => {
         })
 
         return get_error_response(
-            ERROR_CODES.SUCCESS, 
-            STATUS_CODE.OK, 
-            addressBooks
+            errors = ERROR_CODES.SUCCESS,
+            status_code = STATUS_CODE.OK,
+            data = addressBooks
         );
     } catch (error) {
         console.error('Error in getAddressBookService:', error);

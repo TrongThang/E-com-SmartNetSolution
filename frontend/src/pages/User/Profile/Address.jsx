@@ -39,7 +39,7 @@ export default function AddressesPage() {
     try {
       const res = await addressBookApi.getById("CUST0001");
       if (res.status_code === 200) {
-        setAddresses(res?.data?.data || []);
+        setAddresses(res?.data?.data?.address_books || []);
       } else {
         setError("Không thể tải địa chỉ");
       }
