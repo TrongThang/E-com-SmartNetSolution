@@ -5,7 +5,7 @@ const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
 const { prisma, isExistId } = require("../helpers/query.helper");
 
-const { get_error_response } = require("../helpers/response.helper.helper");
+const { get_error_response } = require("../helpers/response.helper");
 
 async function createImportWarehouse(importWarehouse) {
     const employee = await prisma.employee.findFirst({
