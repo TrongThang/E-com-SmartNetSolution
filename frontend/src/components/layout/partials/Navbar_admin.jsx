@@ -15,6 +15,11 @@ import {
   ChevronDown,
   LayoutDashboard,
   UserCog,
+  PencilRuler,
+  Warehouse,
+  CalendarClock,
+  Image,
+  MessageSquare
 } from "lucide-react"
 
 import {
@@ -120,6 +125,46 @@ function Navbar_admin() {
                         <a href="/orders">
                           <ShoppingCart className="size-4" />
                           <span>Đơn Hàng</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/units">
+                          <PencilRuler className="size-4" />
+                          <span>Đơn Vị Tính</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/warehouses">
+                          <Warehouse className="size-4" />
+                          <span>Kho Hàng</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/warranty-times">
+                          <CalendarClock className="size-4" />
+                          <span>Thời Gian Bảo Hành</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/slideshows">
+                          <Image className="size-4" />
+                          <span>Slideshow</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/contacts">
+                          <MessageSquare className="size-4" />
+                          <span>Quản Lý Liên Hệ</span>
                         </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

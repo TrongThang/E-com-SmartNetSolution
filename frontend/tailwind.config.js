@@ -20,7 +20,6 @@ module.exports = {
         },
         extend: {
             colors: {
-<<<<<<< HEAD
                 primary: 'var(--primary, #2563eb)',
                 'primary-hover': 'var(--primary-hover, #1d4ed8)',
                 secondary: 'var(--secondary, #e02424)',
@@ -38,8 +37,7 @@ module.exports = {
                     'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
                     border: 'hsl(var(--sidebar-border))',
                     ring: 'hsl(var(--sidebar-ring))',
-                  },
-=======
+                },
                 border: "hsl(var(--border))",
                 input: "hsl(var(--input))",
                 ring: "hsl(var(--ring))",
@@ -104,7 +102,6 @@ module.exports = {
             animation: {
                 "accordion-down": "accordion-down 0.2s ease-out",
                 "accordion-up": "accordion-up 0.2s ease-out",
->>>>>>> 8a36140121868a233e2b3e9631afaeb870e35647
             },
         },
     },

@@ -42,7 +42,7 @@ const getWarehouseDetailService = async (id) => {
         ]);
         const get_attr = `
             product.id, product.name, product.slug, product.image, product.selling_price, product.status, 
-            detail_import.quantity, detail_import.amount, detail_import.import_price, detail_import.sale_price
+            detail_import.quantity, detail_import.amount, detail_import.import_price
         `;
         const get_table = "product";
         const query_join = `

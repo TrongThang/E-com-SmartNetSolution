@@ -30,7 +30,8 @@ function generateVerificationOTPCode() {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Tạo số ngẫu nhiên từ 100000 đến 999999
 }
 
-function generateImportID (importNumber) {
+function generateImportID(importNumber, import_date) {
+    const currentYear = new Date(import_date).getFullYear();
     // Tạo số hoá đơn mới
     // Format: NK + Năm + Số thứ tự (4 chữ số)
     // Ví dụ: NK-2024-0001, NK-2024-0002,...
@@ -39,6 +40,15 @@ function generateImportID (importNumber) {
     return newImportNumber;
 };
 
+function generateOrderID(orderNumber) {
+    const currentYear = new Date().getFullYear();
+    return `DH-${currentYear}-${String(orderNumber).padStart(4, '0')}`;
+}
+
+function generateExportNumber(exportNumber) {
+    const currentYear = new Date().getFullYear();
+    return `XK-${currentYear}-${String(exportNumber).padStart(6, '0')}`;
+}
 
 module.exports = {
     generateAccountId,
@@ -46,4 +56,6 @@ module.exports = {
     generateEmployeeId,
     generateVerificationOTPCode,
     generateImportID,
+    generateOrderID,
+    generateExportNumber
 } 

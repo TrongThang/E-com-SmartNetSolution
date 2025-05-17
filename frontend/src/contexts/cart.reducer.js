@@ -121,6 +121,11 @@ export const cartReducer = (state, action) => {
                     item.id === action.payload.id ? { ...item, selected: action.payload.selected } : item
                 ),
             };
+        case CART_ACTIONS.REMOVE_SELECTED:
+            return {
+                ...state,
+                items: state.items.filter(item => !item.selected),
+            };
         default:
             return state;
     }

@@ -1,4 +1,6 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
+const { generateOrderID } = require("../helpers/generate.helper");
+const { getOrderNumber } = require("../helpers/import.warehouse.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
 const { prisma, isExistId } = require("../helpers/query.helper");
@@ -89,6 +91,89 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     }
 }
 
+async function createOrder(orderData) {
+    const { shipping, payment, order, products } = orderData;
+
+    // 1. Kiểm tra thông tin sản phẩm
+    const checkProduct = await check_list_info_product(products);
+    if (checkProduct) return checkProduct;
+
+    // 2. Kiểm tra thông tin saler (nếu có)
+    if (order.saler_id) {
+        const checkSaler = await prisma.account.findFirst({
+            where: {
+                employee_id: order.saler_id,
+                role_id: "SALER",
+                is_active: true,
+                deleted_at: null
+            }
+        });
+        if (!checkSaler) {
+            return get_error_response(ERROR_CODES.EMPLOYEE_SALER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+        }
+    }
+}
+
+async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
+    let get_attr = `
+        order.id, 
+        order.total_money,
+        order.prepaid,
+        order.remaining,
+        order.discount,
+        order.vat,
+        order.total_money,
+        order.amount,
+        order.payment_method,
+        order.payment_account,
+        order.phone,
+        order.platform_order,
+        order.note,
+        order.status,
+        order.created_at,
+        order.updated_at,
+        order.deleted_at,
+        `;
+        // order_detail.product_id,
+        // product.name as product_name,
+        // order_detail.quantity_sold as quantity,
+        // order_detail.sale_price as price
+
+    let get_table = `\`order\``;
+    // let query_join = `
+    //     LEFT JOIN order_detail ON order.id = order_detail.order_id
+    //     LEFT JOIN product ON order_detail.product_id = product.id
+    // `;
+
+    let filter = `[{"field":"customer_id","condition":"=","value":"${customer_id}"}]`
+
+    try {
+        const orders = await executeSelectData({
+            table: get_table,
+            // queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: filters,
+            configData: configOrderData
+        })
+        
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            orders
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+
+
+
 async function createOrder(shipping, payment) {
     
     const checkProduct = order.products.map((item) => { check_list_info_product(item.products) })
@@ -96,149 +181,205 @@ async function createOrder(shipping, payment) {
         return get_error_response(ERROR_CODES.PRODUCT_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
+    // 3. Kiểm tra thông tin shipper (nếu có)
     if (order.shipper_id) {
         const checkShipper = await prisma.account.findFirst({
             where: {
-                employee_id: order.shiper_id,
+                employee_id: order.shipper_id,
                 role_id: "SHIPPER",
+                is_active: true,
+                deleted_at: null
             }
-        })
+        });
         if (!checkShipper) {
             return get_error_response(ERROR_CODES.EMPLOYEE_SHIPPER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
         }
     }
 
-    const saler = await prisma.account.findFirst({
-        where: {
-            employee_id: order.saler_id,
-            role_id: "SALER",
-        }
-    })
-
-    if (!saler) {
-        return get_error_response(ERROR_CODES.EMPLOYEE_SALER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
-    }
-
+    // 4. Kiểm tra thông tin khách hàng
     const customer = await prisma.account.findFirst({
         where: {
-            customer_id: order.customer_id
+            customer_id: order.customer_id.toString(),
+            deleted_at: null
         }
-    })
-
+    });
     if (!customer) {
         return get_error_response(ERROR_CODES.CUSTOMER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
-    const check_number_in_order = check_info_number_in_order(order);
-    if (check_number_in_order) {
-        return check_number_in_order;
-    }
+    // 5. Kiểm tra số tiền trong đơn hàng
+    const check_number_in_order = validateOrderNumbers(order);
+    if (check_number_in_order) return check_number_in_order;
 
-    const newOrder = await prisma.order.create({
-        data: {
-            customer_id: order.customer_id,
-            saler_id: order.saler_id,
-            shipper_id: order.shipper_id,
-            export_date: order.export_date,
-            total_import_money: order.total_import_money,
-            discount: order.discount,
-            vat: order.vat,
-            total_money: order.total_money,
-            amount: order.amount,
-            prepaid: order.prepaid,
-            remaining: order.remaining,
-            address: order.address,
-            payment_method: order.payment_method,
-            payment_account: order.payment_account,
-            phone: order.phone,
-            name_recipient: order.name_recipient,
-            platform_order: order.platform_order,
-            note: order.note,
-            status: order.status,
-        }
-    })
+    // 6. Tính toán lại tổng tiền và số lượng
+    const shippingFee = shipping.shippingMethod === 'standard' ? 30000 : 50000;
+    const orderTotals = calculateOrderTotals(products, order.discount, order.vat, shippingFee);
 
-    let invoiceTotalMoney  = 0
-    let amount             = 0
-    
-    for (const detailOrder of order.products) {
-        const detailOrderResult = await addOrderDetail(newOrder.id, detailOrder)
-
-        if (detailOrderResult instanceof Object == false)
-            return detailOrderResult
-
-        invoiceTotalMoney  += detailOrderResult.totalMoney
-        amount             += detailOrderResult.totalAmount
-    } 
-
-    if (invoiceTotalMoney != order.totalMoney) {
+    // 7. Kiểm tra tính nhất quán của dữ liệu
+    if (orderTotals.totalMoney !== order.total_money) {
         return get_error_response(ERROR_CODES.ORDER_TOTAL_MONEY_NOT_SAME, STATUS_CODE.BAD_REQUEST);
     }
-
-    if (amount != order.amount) {
+    if (orderTotals.amount !== order.amount) {
         return get_error_response(ERROR_CODES.ORDER_AMOUNT_NOT_SAME, STATUS_CODE.BAD_REQUEST);
     }
 
-    return get_error_response(ERROR_CODES.ORDER_SUCCESS)
+    // 8. Tạo địa chỉ đơn hàng
+    const fullAddress = shipping.address + ', ' + shipping?.ward + ', ' + shipping?.district + ', ' + shipping?.city;
+
+    // 9. Sinh orderNumber và order_id
+    const result_order_number = await getOrderNumber(new Date());
+    const orderNumber = Number(result_order_number) + 1;
+    const order_id = generateOrderID(orderNumber);
+
+    // 10. Transaction: tạo đơn hàng và chi tiết đơn hàng
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            // Tạo đơn hàng
+            const newOrder = await tx.order.create({
+                data: {
+                    id: order_id,
+                    order_number: orderNumber,
+                    customer_id: order.customer_id,
+                    saler_id: order.saler_id || null,
+                    shipper_id: order.shipper_id || null,
+                    export_date: order.export_date || new Date(),
+                    total_import_money: orderTotals.totalImportMoney,
+                    discount: order.discount || 0,
+                    vat: order.vat || 0,
+                    total_money: orderTotals.totalMoney,
+                    shipping_fee: shippingFee,
+                    amount: orderTotals.amount,
+                    prepaid: payment.prepaid || 0,
+                    remaining: payment.remaining || orderTotals.totalMoney,
+                    address: fullAddress,
+                    payment_method: payment.payment_method,
+                    payment_account: payment.payment_account || null,
+                    phone: shipping.phone,
+                    name_recipient: shipping.name_recipient,
+                    platform_order: order.platform_order || 'WEB',
+                    note: order.note || '',
+                    status: order.status || 0,
+                }
+            });
+
+            // Tạo chi tiết đơn hàng
+            for (const product of products) {
+                const totalMoney = product.selling_price * product.quantity_sold;
+                const discountAmount = (totalMoney * (product.discount || 0)) / 100;
+                const finalAmount = totalMoney - discountAmount;
+
+                await tx.order_detail.create({
+                    data: {
+                        order_id: newOrder.id,
+                        product_id: product.id,
+                        unit: product.unit,
+                        sale_price: product.price,
+                        discount: product.discount || 0,
+                        quantity_sold: product.quantity,
+                        amount: product.price * product.quantity * (1 - product.discount / 100),
+                        is_gift: product.is_gift || false
+                    }
+                });
+            }
+
+            // Trả về kết quả thành công
+            return {
+                error_code: ERROR_CODES.SUCCESS,
+                status_code: STATUS_CODE.OK,
+                data: {
+                    order_id: newOrder.id,
+                    total_money: newOrder.total_money,
+                    status: newOrder.status,
+                    created_at: newOrder.created_at
+                }
+            };
+        });
+
+        return result;
+    } catch (error) {
+        console.error('Error in transaction:', error);
+        return get_error_response(ERROR_CODES.ORDER_CREATE_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
+    }
 }
 
-const check_info_number_in_order = (order) => {
+// Hàm validate các trường số
+function validateOrderNumbers(order) {
     const fields = [
-        { value: order.total_import_money, error: ERROR_CODES.TOTAL_IMPORT_MONEY_NOT_NUMBER },
-        { value: order.total_money,        error: ERROR_CODES.ORDER_TOTAL_MONEY_INVALID },
-        { value: order.amount,             error: ERROR_CODES.ORDER_AMOUNT_INVALID },
-        { value: order.prepaid,            error: ERROR_CODES.ORDER_PREPAID_INVALID },
-        { value: order.discount,           error: ERROR_CODES.ORDER_DISCOUNT_INVALID },
-        { value: order.vat,                error: ERROR_CODES.ORDER_VAT_INVALID },
+        { value: order.total_money, error: ERROR_CODES.ORDER_TOTAL_MONEY_INVALID },
+        { value: order.amount, error: ERROR_CODES.ORDER_AMOUNT_INVALID },
+        { value: order.discount, error: ERROR_CODES.ORDER_DISCOUNT_INVALID },
+        { value: order.vat, error: ERROR_CODES.ORDER_VAT_INVALID }
     ];
 
     for (const field of fields) {
-        const error = validateNumber(field.value);
-        if (error) {
-            return get_error_response(field.error, STATUS_CODE.BAD_REQUEST);
+        if (field.value !== undefined && field.value !== null) {
+            const error = validateNumber(field.value);
+            if (error) {
+                return get_error_response(field.error, STATUS_CODE.BAD_REQUEST);
+            }
         }
     }
     
-    return;
+    return null;
 }
 
-async function addOrderDetail(order_id, detailOrder) {
-    // Kiểm tra sản phẩm
-    const error = await check_list_info_product([detailOrder])
+// Hàm tính toán tổng tiền và số lượng
+function calculateOrderTotals(products, discount = 0, vat = 0, shippingFee = 0) {
+    let totalImportMoney = 0;
+    let totalMoney = 0;
+    let totalAmount = 0;
 
-    if (error) return error
-
-    const totalMoney = detailOrder.selling_price * detailOrder.quantity_sold;
-
-    const total = {
-        selling_price: detailOrder.selling_price,
-        quantity_sold: detailOrder.quantity_sold,
-        totalMoney: totalMoney,
-        totalAmount: totalMoney * (1 - detailOrder.discount / 100),
+    for (const product of products) {
+        const productTotal = product.price * product.quantity;
+        totalMoney += productTotal;
+        totalImportMoney += (product.import_price || 0) * product.quantity;
     }
-    
-    const detailOrderNew = await prisma.order_detail.create({
-        data: {
-            order_id: order_id,
-            product_id: detailOrder.product_id,
-            unit: detailOrder.unit,
-            sale_price: detailOrder.selling_price,
-            discount: detailOrder.discount,
-            quantity_sold: detailOrder.quantity_sold,
-            amount: total.totalAmount,
-            is_gift: detailOrder.is_gift,
-        }
-    })
 
-    if (!detailOrderNew) {
-        return get_error_response(ERROR_CODES.ORDER_DETAIL_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
+    // Áp dụng giảm giá
+    const discountAmount = (totalMoney * discount) / 100;
+    totalAmount = totalMoney - discountAmount;
+
+    // Áp dụng VAT
+    if (vat > 0) {
+        totalAmount = totalAmount * (1 + vat / 100);
     }
-    
-    return total;
+
+    return {
+        totalImportMoney,
+        totalMoney,
+        amount: totalAmount + shippingFee
+    };
 }
 
+// Hàm tạo chi tiết đơn hàng
+async function createOrderDetail(orderId, product) {
+    try {
+        const totalMoney = product.selling_price * product.quantity_sold;
+        const discountAmount = (totalMoney * (product.discount || 0)) / 100;
+        const finalAmount = totalMoney - discountAmount;
+
+        const orderDetail = await prisma.order_detail.create({
+            data: {
+                order_id: orderId,
+                product_id: product.product_id,
+                unit: product.unit,
+                sale_price: product.selling_price,
+                discount: product.discount || 0,
+                quantity_sold: product.quantity_sold,
+                amount: finalAmount,
+                is_gift: product.is_gift || false
+            }
+        });
+
+        return orderDetail;
+    } catch (error) {
+        console.error('Error creating order detail:', error);
+        return null;
+    }
+}
 
 module.exports = {
     createOrder,
     getOrdersForAdministrator,
+    getOrdersForCustomer,
 }

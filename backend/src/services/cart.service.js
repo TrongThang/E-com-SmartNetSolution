@@ -1,6 +1,6 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
 const { prisma, isExistId } = require("../helpers/query.helper");
-const { get_error_response, get_success_response } = require("../helpers/response.helper");
+const { get_error_response, get_success_response } = require("../helpers/response.helper.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const logger = require("../utils/logger");
 

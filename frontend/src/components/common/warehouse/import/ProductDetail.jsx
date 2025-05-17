@@ -22,16 +22,15 @@ export function ProductDetails({
             </div>
 
             {/* Serial numbers section */}
-            {product.requires_serial && (
-                <div className="space-y-4 mb-4">
-                    <SerialNumberInput
-                        productId={product.id}
-                        serialNumbers={product.serial_numbers || []}
-                        quantity={product.quantity}
-                        onSerialNumbersChange={(serialNumbers) => onUpdateSerialNumbers(product.id, serialNumbers)}
-                    />
-                </div>
-            )}
+            <div className="space-y-4 mb-4">
+                <SerialNumberInput
+                    productId={product.id}
+                    serialNumbers={product.serial_numbers || []}
+                    quantity={product.quantity}
+                    onSerialNumbersChange={(serialNumbers) => onUpdateSerialNumbers(product.id, serialNumbers)}
+                />
+            </div>
+            
 
             <div className="mt-4">
                 <Label htmlFor={`note-${product.id}`}>Ghi chú</Label>
