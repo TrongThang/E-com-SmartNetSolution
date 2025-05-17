@@ -85,7 +85,7 @@ export default function HomePage() {
                 Xem tất cả <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
-              <CategoryGrid categories={categories} columns={5}/>
+            <CategoryGrid categories={categories} columns={5} />
           </div>
         </section>
 

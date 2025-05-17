@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ChevronDown, ChevronRight, MoreVertical, Plus, Search, Folder } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import categoryApi from "@/apis/modules/categories.api.ts";
+import { useNavigate } from "react-router-dom";
 import ActionsColumn from "@/components/common/table/ActionsColumn"
 import { Button } from "@/components/ui/button"
 
@@ -16,7 +17,7 @@ export default function CategoryManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("info");
     const [filteredCategories, setFilteredCategories] = useState([]);
-
+    const navigate = useNavigate();
 
     const fetchCategories = async () => {
         try {
@@ -69,7 +70,7 @@ export default function CategoryManagement() {
     };
 
     const handleAddCategory = () => {
-        // Xử lý thêm danh mục
+        navigate("/admin/categories/create");
     };
 
     const handleEditCategory = (category) => {
@@ -127,10 +128,9 @@ export default function CategoryManagement() {
                 </div>
             ));
     };
-
     return (
         <div className="max-w-7xl">
-            <h1 className="text-xl font-semibold mb-6">Quản lý danh mục</h1>
+            <h1 className="text-2xl font-bold mb-6">Quản lý danh mục</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div className="border rounded-md shadow-sm">

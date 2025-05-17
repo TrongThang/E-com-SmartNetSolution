@@ -16,6 +16,7 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
   const [attributes, setAttributes] = useState([])
   const [groupName, setGroupName] = useState("")
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (attributeGroup) {
@@ -82,6 +83,7 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
     if (!validateForm()) {
       return;
     }
+    setLoading(true);
 
     const data = {
       name: groupName,
@@ -104,6 +106,7 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
 
       if (res.status_code === 200) {
         Swal.fire("Thành công", attributeGroup ? "Cập nhật thành công" : "Tạo mới thành công", "success");
+        setLoading(false);
         onClose();
       } else {
         // Xử lý lỗi chi tiết từ backend
@@ -122,6 +125,7 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
               }
             }
           });
+          setLoading(false);
         }
         setErrors(prev => ({ ...prev, ...newErrors }));
         Swal.fire({
@@ -153,9 +157,10 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
         title: "Lỗi",
         html: errorMsg
       });
+      setLoading(false);
     }
   };
- 
+
 
 
   if (!isOpen) return null
@@ -272,19 +277,22 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
                                 <p className="text-red-500 text-xs mt-1">{errors[`attribute_${attr.id}_name`]}</p>
                               )}
                             </td>
-                            <td className="p-3 bg-white">
+                            <td className="p-3">
                               <Select
                                 value={attr.datatype}
                                 onValueChange={(value) => updateAttribute(attr.id, "dataType", value)}
                               >
-                                <SelectTrigger className="h-9 w-full">
-                                  <SelectValue placeholder="Chọn kiểu dữ liệu" />
+                                <SelectTrigger className="h-9 w-full ">
+                                  <SelectValue placeholder="Chọn kiểu dữ liệu" 
+                                  />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-white ">
                                   {dataTypeOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem 
+                                    className="hover:cursor-pointer hover:bg-gray-100"
+                                    key={option.value} value={option.value}>
                                       {option.label}
-                                    </SelectItem>
+                                    </SelectItem >
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -355,7 +363,12 @@ const AttributeModal = ({ isOpen, onClose, attributeGroup }) => {
             onClick={handleSubmit}
             className="px-6 bg-black text-white hover:opacity-70 flex items-center gap-2"
           >
-            {attributeGroup ? "Cập nhật" : "Thêm mới"}
+            {loading ? (attributeGroup ? 
+              "Đang cập nhật..." : 
+              "Đang thêm...") : 
+              (attributeGroup ? 
+              "Cập nhật" : 
+              "Thêm mới")}
           </Button>
         </div>
       </div>

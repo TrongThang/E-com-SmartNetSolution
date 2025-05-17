@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-const CategoryModal = ({ isOpen, onClose, category, categories }) => {
+const AddCategoryPage = ({ isOpen, onClose, category, categories }) => {
     const [formData, setFormData] = useState({
         name: "",
         slug: "",
@@ -143,4 +143,4 @@ const CategoryModal = ({ isOpen, onClose, category, categories }) => {
     );
 };
 
-export default CategoryModal; 
+export default AddCategoryPage; 

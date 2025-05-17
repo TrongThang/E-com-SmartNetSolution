@@ -277,7 +277,8 @@ const updateAttributeGroupService = async (id, name, attributes) => {
         // Cập nhật tên nhóm thuộc tính
         await prisma.attribute_group.update({
             where: { id: parseInt(id) },
-            data: { name: name }
+            data: { name: name, 
+                updated_at: getVietnamTimeNow() }
         });
 
         // Lấy danh sách thuộc tính hiện có

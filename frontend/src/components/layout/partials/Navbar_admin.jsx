@@ -38,7 +38,7 @@ function Navbar_admin() {
   return (
     <SidebarProvider>
       <Sidebar className="bg-[#1F2937] text-white">
-        <SidebarHeader className="py-3 pe-9 pb-5">
+        <SidebarHeader className="py-3 pe-12 pb-5">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
@@ -48,7 +48,6 @@ function Navbar_admin() {
                     <span className="text-xs opacity-70">Admin Portal</span>
                   </div>
                 </div>
-
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -144,14 +143,6 @@ function Navbar_admin() {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
-                        <a href="/admin/attribute-groups">
-                          <FolderTree className="size-4" />
-                          <span>Tất Cả Danh Mục</span>
-                        </a>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
                         <a href="/categories/products">
                           <ShoppingBag className="size-4" />
                           <span>Danh Mục Sản Phẩm</span>
@@ -180,6 +171,31 @@ function Navbar_admin() {
             </Collapsible>
           </SidebarGroup>
 
+          {/* Danh Mục */}
+          <SidebarGroup>
+            <Collapsible defaultOpen className="group/collapsible w-full">
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                  Thuộc tính
+                  <ChevronDown className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/attribute-groups">
+                          <FolderTree className="size-4" />
+                          <span>Nhóm thuộc tính</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
           {/* Cài Đặt */}
           <SidebarGroup>
             <Collapsible className="group/collapsible w-full">

@@ -16,6 +16,7 @@ import SearchPage from '@/pages/user/Search.page.jsx';
 import { createBrowserRouter } from 'react-router-dom';
 import ProfilePage from '@/pages/profileManager/profile';
 import EmployeeManagerPage from '@/pages/employeeManager';
+import AddCategoryPage from '@/pages/categoryManager/AddCategory';
 // import ShopLayout from '../layouts/ShopLayout';
 // import AdminDashboard from '../pages/admin/Dashboard';
 // import AdminProducts from '../pages/admin/Products';
@@ -101,6 +102,10 @@ export const router = createBrowserRouter([
       {
         path: 'categories',
         element: <CategoriesPage />,
+      },
+      {
+        path: 'categories/create',
+        element: <AddCategoryPage />,
       },
       {
         path: 'attribute-groups',
