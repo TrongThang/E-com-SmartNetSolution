@@ -47,6 +47,7 @@ const WarehouseTable = ({ warehouses, onEdit, onDelete }) => {
         <GenericTable
             data={warehouses}
             columns={columns}
+            rowsPerPage={5}
         />
     );
 };

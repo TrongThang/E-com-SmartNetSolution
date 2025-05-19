@@ -20,7 +20,8 @@ import {
   CalendarClock,
   Image,
   MessageSquareMore,
-  MessageSquareDiff
+  MessageSquareDiff,
+  Newspaper
 } from "lucide-react"
 
 import {
@@ -177,8 +178,15 @@ function Navbar_admin() {
                           <span>Quản Lý Đánh Giá</span>
                           </a>
                       </SidebarMenuButton>
-                    </SidebarMenuItem> 
-                    
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/blogs">
+                          <Newspaper className="size-4" />
+                          <span>Quản Lý Bài Viết</span>
+                          </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </CollapsibleContent>

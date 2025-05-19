@@ -42,6 +42,7 @@ const UnitTable = ({ units, onEdit, onDelete }) => {
         <GenericTable
             data={units}
             columns={columns}
+            rowsPerPage={5}
         />
     );
 };

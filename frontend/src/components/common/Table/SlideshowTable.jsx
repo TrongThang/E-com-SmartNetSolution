@@ -68,6 +68,7 @@ const SlideshowTable = ({ slideshows, onEdit, onDelete }) => {
         <GenericTable
             data={slideshows}
             columns={columns}
+            rowsPerPage={5}
         />
     );
 };

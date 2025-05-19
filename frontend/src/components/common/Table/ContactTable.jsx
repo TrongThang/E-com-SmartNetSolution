@@ -79,6 +79,7 @@ const ContactTable = ({ contacts, onEdit, onDelete }) => {
         <GenericTable
             data={contacts}
             columns={columns}
+            rowsPerPage={5}
         />
     );
 };

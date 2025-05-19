@@ -47,6 +47,7 @@ const WarrantyTimeTable = ({ warrantyTimes, onEdit, onDelete }) => {
         <GenericTable
             data={warrantyTimes}
             columns={columns}
+            rowsPerPage={5}
         />
     );
 };

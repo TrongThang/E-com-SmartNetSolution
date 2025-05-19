@@ -29,6 +29,9 @@ import EditSlideshow from '@/pages/slideshowManager/EditSlideshow';
 import ContactManagerPage from '@/pages/contactManager';
 import ContactEdit from '@/pages/contactManager/EditContact';
 import ReviewManagerPage from '@/pages/reviewManager';
+import BlogManagerPage from '@/pages/blogManager';
+import AddBlog from '@/pages/blogManager/AddBlog';
+import EditBlog from '@/pages/blogManager/EditBlog';
 
 export const router = createBrowserRouter([
   {
@@ -150,6 +153,19 @@ export const router = createBrowserRouter([
         path: 'reviews',
         element: <ReviewManagerPage />,
       },
+      {
+        path: 'blogs',
+        element: <BlogManagerPage />,
+      },
+      {
+        path: 'blogs/add',
+        element: <AddBlog />,
+      },
+      {
+        path: 'blogs/edit/:id',
+        element: <EditBlog />,
+      },
+        
     ],
   },
 ]);

@@ -62,7 +62,7 @@ const ReviewTable = ({ reviews, onView, onDelete }) => {
         <GenericTable
             data={reviews}
             columns={columns}
-            rowsPerPage={10}
+            rowsPerPage={5}
         />
     );
 };
