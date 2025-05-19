@@ -31,7 +31,7 @@ const reviewApi = {
     },
     async delete(id: number | string): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.delete(reviewEndpoints.common + "/" + id);
+            return await axiosPrivate.delete(reviewPublic.common + "/" + id);
         } catch (error) {
             throw error;
         }
@@ -54,6 +54,13 @@ const reviewApi = {
             return await axiosPublic.get(`${reviewPublic.common}`, {
                 params: { filter: JSON.stringify([filter]), }
             });
+        } catch (error) {
+            throw error;
+        }
+    },
+    async detail(id: number | string): Promise<IApiResponse<IReview>> {
+        try {
+            return await axiosPrivate.get(`${reviewPublic.common}/${id}`);
         } catch (error) {
             throw error;
         }

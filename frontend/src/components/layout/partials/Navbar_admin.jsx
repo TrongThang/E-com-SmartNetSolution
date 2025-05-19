@@ -19,7 +19,8 @@ import {
   Warehouse,
   CalendarClock,
   Image,
-  MessageSquare
+  MessageSquareMore,
+  MessageSquareDiff
 } from "lucide-react"
 
 import {
@@ -164,11 +165,20 @@ function Navbar_admin() {
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
                         <a href="/admin/contacts">
-                          <MessageSquare className="size-4" />
+                          <MessageSquareMore className="size-4" />
                           <span>Quản Lý Liên Hệ</span>
                         </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/reviews">
+                          <MessageSquareDiff className="size-4" />
+                          <span>Quản Lý Đánh Giá</span>
+                          </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem> 
+                    
                   </SidebarMenu>
                 </SidebarGroupContent>
               </CollapsibleContent>

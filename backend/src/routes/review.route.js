@@ -11,7 +11,7 @@ const asyncHandler = (fn) => {
 };
 
 // Lấy danh sách review
-router.get('/', asyncHandler(reviewController.getReview));
+router.get('/', asyncHandler(reviewController.getReviews));
 
 // Tạo review mới
 router.post('/', validateMiddleware(createReviewSchema), asyncHandler(reviewController.createReview));
@@ -24,5 +24,8 @@ router.delete('/:id', validateMiddleware(deleteReviewSchema), asyncHandler(revie
 
 // Lấy chi tiết review theo id
 router.get('/:id', asyncHandler(reviewController.getReviewDetail));
+
+// Lấy review theo product_id
+router.get('/product/:product_id', asyncHandler(reviewController.getReviewByProductId));
 
 module.exports = router;
