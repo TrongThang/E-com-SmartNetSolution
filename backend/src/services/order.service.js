@@ -89,7 +89,7 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     }
 }
 
-async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
+async function getOrdersForCustomer(customer_id, filter, logic, limit, sort, order) {
     let get_attr = `
         order.id, 
         order.total_money,
@@ -105,9 +105,7 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
         order.platform_order,
         order.note,
         order.status,
-        order.created_at,
-        order.updated_at,
-        order.deleted_at,
+        order.address
         `;
         // order_detail.product_id,
         // product.name as product_name,
@@ -128,7 +126,7 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
             // queryJoin: query_join,
             strGetColumn: get_attr,
             limit: limit,
-            filter: filters,
+            filter: filter,
             configData: configOrderData
         })
         
@@ -145,9 +143,6 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
         );
     }
 }
-
-
-
 
 async function createOrder(shipping, payment) {
     

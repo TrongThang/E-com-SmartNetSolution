@@ -12,7 +12,7 @@ const orders = [
     id: "ORD-123456",
     date: "15/07/2023",
     total: "1.250.000 đ",
-    status: "Đã giao hàng",
+    status: "Đã hoàn thành",
     items: 3,
     statusIcon: CheckCircle,
     statusColor: "text-green-500",
@@ -183,6 +183,7 @@ export default function OrdersPage() {
               </>
             )}
           </Button>
+          <Button className="ml-3" size="sm" >Hủy đơn</Button>
         </div>
 
         {/* Chi tiết đơn hàng - hiển thị khi được mở rộng */}
