@@ -30,11 +30,11 @@ class OrderController {
     }
 
     async createOrder(req, res) {
-        const { shipping, payment } = req.body;
-
-        const result = await createOrder(shipping, payment);
+        const result = await createOrder(req.body);
         
-        res.status(result.status_code).json(result);
+        console.log("result", result)
+        const response = res.status(result.status_code).json(result);
+        return response;
     }
 }
 

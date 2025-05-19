@@ -274,6 +274,29 @@ const updateAttributeGroupService = async (id, name, attributes) => {
             );
         }
 
+        // Cập nhật tên nhóm thuộc tính
+        await prisma.attribute_group.update({
+            where: { id: parseInt(id) },
+            data: { name: name }
+        });
+
+        // Lấy danh sách thuộc tính hiện có
+        const existingAttributes = await prisma.attribute.findMany({
+            where: { group_attribute_id: parseInt(id) }
+        });
+
+        // Xác định các thuộc tính cần xóa
+        let attributesToDelete = [];
+        if (!attributes || attributes.length === 0) {
+            // Nếu mảng rỗng, xóa hết thuộc tính cũ
+            attributesToDelete = existingAttributes.map(attr => attr.id);
+        } else {
+            // Nếu còn thuộc tính, chỉ xóa những cái không còn trong mảng mới
+            attributesToDelete = existingAttributes
+                .filter(existingAttr => !attributes.some(attr => Number(attr.id) === Number(existingAttr.id)))
+                .map(attr => attr.id);
+        }
+
         // Kiểm tra trùng tên thuộc tính trong cùng nhóm
         if (attributes && attributes.length > 0) {
             const attributeNames = attributes.map(attr => attr.name);
@@ -305,29 +328,15 @@ const updateAttributeGroupService = async (id, name, attributes) => {
             }
         }
 
+        // Phân loại thuộc tính cần cập nhật và tạo mới
+        let attributesToUpdate = [];
+        let attributesToCreate = [];
         if (attributes && attributes.length > 0) {
-            // Lấy danh sách thuộc tính hiện có
-            const existingAttributes = await prisma.attribute.findMany({
-                where: { group_attribute_id: parseInt(id) }
-            });
-
-            // Tạo map để theo dõi thuộc tính cần cập nhật
-            const existingAttributeMap = new Map(existingAttributes.map(attr => [attr.name, attr]));
-
-            // Tạo mảng để lưu các thuộc tính cần xóa
-            const attributesToDelete = [];
-            // Tạo mảng để lưu các thuộc tính cần cập nhật
-            const attributesToUpdate = [];
-            // Tạo mảng để lưu các thuộc tính cần tạo mới
-            const attributesToCreate = [];
-
-            // Phân loại các thuộc tính
+            const existingAttributeMap = new Map(existingAttributes.map(attr => [attr.id, attr]));
             for (const attr of attributes) {
-                const existingAttr = existingAttributeMap.get(attr.name);
-                if (existingAttr) {
-                    // Thuộc tính đã tồn tại, cần cập nhật
+                if (attr.id && existingAttributeMap.has(Number(attr.id))) {
                     attributesToUpdate.push({
-                        where: { id: existingAttr.id },
+                        where: { id: Number(attr.id) },
                         data: {
                             name: attr.name,
                             datatype: attr.datatype,
@@ -337,7 +346,6 @@ const updateAttributeGroupService = async (id, name, attributes) => {
                         }
                     });
                 } else {
-                    // Thuộc tính mới, cần tạo
                     attributesToCreate.push({
                         name: attr.name,
                         datatype: attr.datatype,
@@ -348,55 +356,44 @@ const updateAttributeGroupService = async (id, name, attributes) => {
                     });
                 }
             }
+        }
 
-            // Xác định các thuộc tính cần xóa (có trong DB nhưng không có trong input)
-            for (const existingAttr of existingAttributes) {
-                if (!attributes.some(attr => attr.name === existingAttr.name)) {
-                    attributesToDelete.push(existingAttr.id);
-                }
+        // Thực hiện transaction
+        await prisma.$transaction(async (tx) => {
+            // Xóa mềm các thuộc tính không còn sử dụng
+            if (attributesToDelete.length > 0) {
+                await tx.attribute.updateMany({
+                    where: { id: { in: attributesToDelete } },
+                    data: { deleted_at: getVietnamTimeNow() }
+                });
             }
 
-            // Thực hiện các thao tác trong transaction
-            await prisma.$transaction(async (tx) => {
-                // Xóa các thuộc tính không còn sử dụng
-                if (attributesToDelete.length > 0) {
-                    await tx.attribute.deleteMany({
-                        where: { id: { in: attributesToDelete } }
-                    });
-                }
+            // Cập nhật các thuộc tính hiện có
+            for (const update of attributesToUpdate) {
+                await tx.attribute.update(update);
+            }
 
-                // Cập nhật các thuộc tính hiện có
-                for (const update of attributesToUpdate) {
-                    await tx.attribute.update(update);
-                }
+            // Tạo các thuộc tính mới
+            if (attributesToCreate.length > 0) {
+                await tx.attribute.createMany({
+                    data: attributesToCreate
+                });
+            }
+        });
 
-                // Tạo các thuộc tính mới
-                if (attributesToCreate.length > 0) {
-                    await tx.attribute.createMany({
-                        data: attributesToCreate
-                    });
+        const groupWithAttributes = await prisma.attribute_group.findUnique({
+            where: { id: parseInt(id) },
+            include: {
+                attribute: {
+                    where: { deleted_at: null }
                 }
-            });
+            }
+        });
 
-            const groupWithAttributes = await prisma.attribute_group.findUnique({
-                where: { id: parseInt(id) },
-                include: {
-                    attribute: {
-                        where: { deleted_at: null }
-                    }
-                }
-            });
-
-            return get_error_response(
-                ERROR_CODES.SUCCESS,
-                STATUS_CODE.OK,
-                groupWithAttributes
-            );
-        }
         return get_error_response(
             ERROR_CODES.SUCCESS,
             STATUS_CODE.OK,
-            attributeGroup
+            groupWithAttributes
         );
     } catch (error) {
         console.error('Error in updateAttributeGroup:', error);

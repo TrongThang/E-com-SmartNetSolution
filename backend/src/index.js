@@ -11,12 +11,14 @@ const port = process.env.PORT || 8081;
 // Định nghĩa định dạng tùy chỉnh cho morgan
 morgan.token('body', (req) => JSON.stringify(req.body));
 morgan.token('query', (req) => JSON.stringify(req.query));
+morgan.token('time', (req, res) => {
+    const time = new Date().toLocaleString();
+    return `${time}`;
+});
 app.use(
     morgan(
-        '🚀 :method :url :status :response-time ms | ' +
-        'Headers: :req[header] | ' +
-        'Query: :query | ' +
-        'Body: :body'
+        'Time: :time | ' +
+        '🚀 :method :url :status :response-time ms'
     )
 );
 

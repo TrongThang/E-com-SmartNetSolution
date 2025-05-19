@@ -6,7 +6,7 @@ const { executeSelectData } = require('../helpers/sql_query');
 const prisma = new PrismaClient();
 
 const getBlogService = async (filter, limit, sort, order) => {
-    let get_attr = `blog.id, blog.id, blog.title, blog.author, blog.content, blog.image, blog.score, blog.is_hide,
+    let get_attr = `blog.id, blog.id, blog.title, blog.author, blog.content,blog.content_normal, blog.image, blog.score, blog.is_hide,
         categories.name as category_name,
         product.name as product_name,
         employee.surname as author_surname,
@@ -41,18 +41,30 @@ const getBlogService = async (filter, limit, sort, order) => {
                 author_lastname: undefined
             }));
 
-            return get_error_response(
-                errors=ERROR_CODES.SUCCESS, 
-                status_code=STATUS_CODE.OK, 
-                data=transformedBlogs
-            );
+            return {
+                ...get_error_response(
+                    errors=ERROR_CODES.SUCCESS, 
+                    status_code=STATUS_CODE.OK, 
+                    data=transformedBlogs
+                ),
+                total: result.total,
+                page: result.page,
+                limit: result.limit,
+                total_page: result.total_page
+            };
         }
 
-        return get_error_response(
-            errors=ERROR_CODES.SUCCESS, 
-            status_code=STATUS_CODE.OK, 
-            data=[]
-        );
+        return {
+            ...get_error_response(
+                errors=ERROR_CODES.SUCCESS, 
+                status_code=STATUS_CODE.OK, 
+                data=[]
+            ),
+            total: 0,
+            page: 1,
+            limit: limit,
+            total_page: 0
+        };
     } catch (error) {
         console.error('Lỗi trong getBlogService:', error);
         return get_error_response(
@@ -184,7 +196,7 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
                 score: Score,
                 is_hide: isHideBoolean,
                 created_at: new Date(),
-                updated_at: new Date()
+                updated_at: new Date(),
             }
         });
 
@@ -196,6 +208,7 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
     } catch (error) {
         console.error('Error in createBlogService:', error);
         return get_error_response(
+           
             errors=ERROR_CODES.BLOG_CREATE_FAILED, 
             status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
         );

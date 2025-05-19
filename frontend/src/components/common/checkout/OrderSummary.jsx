@@ -1,13 +1,8 @@
-import { Minus, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/utils/format"
-import { useCart } from "@/contexts/CartContext"
 
-export function OrderSummary() {
-    const { getItemSelected } = useCart()
-    const cartItems = getItemSelected()
+export function OrderSummary({ cartItems }) {
 
     return (
         <Card className="mb-6">

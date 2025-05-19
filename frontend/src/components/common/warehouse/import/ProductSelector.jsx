@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, Plus, Barcode, Scan } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import axiosPublic from "@/apis/clients/public.client"
+import { formatCurrency } from "@/utils/format"
 // import { BarcodeScanner } from "@/components/common/warehouse/BarcodeScanner"
 
 // Sample data for products
@@ -20,8 +22,6 @@ const sampleProducts = [
         category: "Laptop",
         price: 25000000,
         image: "/placeholder.svg?height=80&width=80",
-        requires_serial: true,
-        barcode: "8938505420427",
     },
     {
         id: 2,
@@ -30,8 +30,6 @@ const sampleProducts = [
         category: "Màn hình",
         price: 5000000,
         image: "/placeholder.svg?height=80&width=80",
-        requires_serial: true,
-        barcode: "8938505420434",
     },
     {
         id: 3,
@@ -40,8 +38,6 @@ const sampleProducts = [
         category: "Bàn phím",
         price: 2000000,
         image: "/placeholder.svg?height=80&width=80",
-        requires_serial: false,
-        barcode: "8938505420441",
     },
     {
         id: 4,
@@ -50,8 +46,6 @@ const sampleProducts = [
         category: "Chuột",
         price: 500000,
         image: "/placeholder.svg?height=80&width=80",
-        requires_serial: false,
-        barcode: "8938505420458",
     },
     {
         id: 5,
@@ -60,59 +54,49 @@ const sampleProducts = [
         category: "Tai nghe",
         price: 3000000,
         image: "/placeholder.svg?height=80&width=80",
-        requires_serial: true,
-        barcode: "8938505420465",
     },
 ]
 
 export function ProductSelector({ open, onOpenChange, onProductSelect }) {
     const [searchTerm, setSearchTerm] = useState("")
-    const [barcodeInput, setBarcodeInput] = useState("")
     const [activeTab, setActiveTab] = useState("all")
-    const [isScanning, setIsScanning] = useState(false)
+    const [products, setProducts] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setLoading(true)
+                const response = await axiosPublic.get('/product')
+                console.log("response", response.data.data)
+                if (response.status_code === 200) {
+                    setProducts(response.data.data)
+                } else {
+                    setError('Failed to fetch products')
+                }
+            } catch (err) {
+                setError(err.message)
+            } finally {
+                setLoading(false)
+            }
+        }
+    
+        if (open) {
+            fetchProducts()
+        }
+    }, [open])
 
     // Filter products based on search term and category
-    const filteredProducts = sampleProducts.filter(
+    const filteredProducts = products.filter(
         (product) =>
-            (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                product.barcode.includes(searchTerm)) &&
-            (activeTab === "all" || product.category.toLowerCase() === activeTab.toLowerCase()),
+            (product.name.toLowerCase().includes(searchTerm.toLowerCase())
+                ) &&
+            (activeTab === "all" || product.categories.toLowerCase() === activeTab.toLowerCase()),
     )
 
-    // Find product by barcode
-    const findProductByBarcode = (barcode) => {
-        return sampleProducts.find((product) => product.barcode === barcode)
-    }
-
-    // Handle product search by barcode
-    const handleProductSearchByBarcode = () => {
-        if (!barcodeInput.trim()) return
-
-        const product = findProductByBarcode(barcodeInput)
-        if (product) {
-            onProductSelect(product)
-            setBarcodeInput("")
-            onOpenChange(false)
-        } else {
-            alert("Không tìm thấy sản phẩm với mã vạch này!")
-        }
-    }
-
-    // Handle scan result
-    const handleScanResult = (result) => {
-        const product = findProductByBarcode(result)
-        if (product) {
-            onProductSelect(product)
-            setIsScanning(false)
-            onOpenChange(false)
-        } else {
-            alert("Không tìm thấy sản phẩm với mã vạch này!")
-        }
-    }
-
     // Get unique categories
-    const categories = ["all", ...new Set(sampleProducts.map((product) => product.category.toLowerCase()))]
+    const categories = ["all", ...new Set(products.map((product) => product.categories.toLowerCase()))]
 
     return (
         <>
@@ -133,28 +117,6 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    placeholder="Nhập mã vạch"
-                                    value={barcodeInput}
-                                    onChange={(e) => setBarcodeInput(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault()
-                                            handleProductSearchByBarcode()
-                                        }
-                                    }}
-                                />
-                                <Button onClick={handleProductSearchByBarcode}>
-                                    <Barcode className="h-4 w-4 mr-1" />
-                                    Tìm
-                                </Button>
-                                <Button variant="outline" onClick={() => setIsScanning(true)}>
-                                    <Scan className="h-4 w-4 mr-1" />
-                                    Quét
-                                </Button>
                             </div>
                         </div>
 
@@ -194,18 +156,11 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
                                             <div className="flex-1">
                                                 <h4 className="font-medium line-clamp-2">{product.name}</h4>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <Badge variant="outline">{product.code}</Badge>
                                                     <Badge variant="secondary" className="capitalize">
-                                                        {product.category}
+                                                        {product.categories}
                                                     </Badge>
                                                 </div>
-                                                <p className="mt-1 font-medium">{product.price.toLocaleString()} VNĐ</p>
-                                                {product.barcode && (
-                                                    <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                                                        <Barcode className="h-3 w-3" />
-                                                        {product.barcode}
-                                                    </div>
-                                                )}
+                                                <p className="mt-1 font-medium">{formatCurrency(product.selling_price)} VNĐ</p>
                                             </div>
                                             <Button size="sm" className="flex-shrink-0">
                                                 <Plus className="h-4 w-4" />

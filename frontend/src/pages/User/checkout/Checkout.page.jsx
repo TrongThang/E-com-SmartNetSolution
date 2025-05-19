@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { CreditCard, Truck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -13,16 +12,20 @@ import { ShippingForm } from "@/components/common/checkout/ShippingForm"
 import { PaymentForm } from "@/components/common/checkout/PaymentForm"
 import { CheckoutSummary } from "@/components/common/checkout/CheckoutSummary"
 import { CheckoutSteps } from "@/components/common/checkout/CheckoutSteps"
-import axios from "axios"
+import CheckoutSuccess from "@/pages/User/checkout/success/CheckoutSuccess"
 import { useCart } from "@/contexts/CartContext"
-
+import Swal from "sweetalert2"
+import axiosPublic from "@/apis/clients/public.client"
 export default function CheckoutPage() {
-    const navigate = useNavigate()
+    const { getItemSelected, removeSelected } = useCart()
+    const products = getItemSelected()
+
     const [currentStep, setCurrentStep] = useState("shipping")
     const [shippingData, setShippingData] = useState(null)
     const [paymentData, setPaymentData] = useState(null)
-    
+    const [isSuccess, setIsSuccess] = useState(false)
     const handleNextStep = (nextStep) => setCurrentStep(nextStep)
+    const [resultOrder, setResultOrder] = useState(null)
 
     // Nhận dữ liệu từ ShippingForm
     const handleShippingComplete = (data) => {
@@ -38,29 +41,119 @@ export default function CheckoutPage() {
 
     const handleCompleteCheckout = async () => {
         try {
+            const cartTotal = products.reduce((total, item) => total + item.price * item.quantity, 0)
+            const shippingFee = shippingData?.shippingMethod === 'standard' ? 30000 : 50000
+
             const payload = {
                 shipping: shippingData,
                 payment: paymentData,
-                // Có thể bổ sung order info, cart info, v.v.
+                products: products,
+                order: {
+                    customer_id: "CUST5QL4N3FV51NLUY895SCRHZFV",
+                    export_date: new Date(),
+                    total_money: cartTotal,
+                    discount: 0,
+                    vat: 0,
+                    amount: cartTotal + shippingFee,
+                    status: 0, // PENDING
+                }
             }
+            
+            const res = await axiosPublic.post("/order/checkout", payload)
 
-            console.log("shippingData:", payload.shipping)
-            console.log("paymentData:", payload.payment)
-            const res = await axios.post("http://localhost:8081/api/order/checkout", payload)
-
-            if (res.data.status_code === 200) {
-                navigate("/checkout/success")
+            if (res.status_code === 200) {
+                removeSelected()
+                setIsSuccess(true)
+                setResultOrder(res.data)
+                console.log("res.data:", res.data)
             } else {
-                alert("Có lỗi khi thanh toán!")
+                if (res.errors &&res?.errors.length === 1) {
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Có lỗi xảy ra!',
+                        text: res.errors[0].message,
+                    })
+                }
+
+                const errorList = res.data_errors.map(productError => 
+                    `<div class="mb-4 rounded-lg border border-red-100 bg-red-50 p-4">
+                        <div class="mb-2 flex items-center gap-2 text-red-800">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            <span class="font-semibold">${productError.product_name}</span>
+                        </div>
+                        <div class="space-y-2">
+                            ${productError.errors.map(error => 
+                                `<div class="flex items-center gap-2 text-sm text-red-600">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>${error.message}</span>
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>`
+                ).join('') || 'Có lỗi xảy ra';
+            
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Có lỗi xảy ra!',
+                    html: `
+                        <div class="max-h-[60vh] overflow-y-auto px-1">
+                            ${errorList}
+                        </div>
+                    `,
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    },
+                    customClass: {
+                        popup: '!rounded-lg !p-6',
+                        title: '!text-xl !font-semibold !text-gray-800',
+                        confirmButton: '!bg-red-600 hover:!bg-red-700 !text-white !font-medium !px-6 !py-2.5 !rounded-lg !transition-colors',
+                        closeButton: '!text-gray-400 hover:!text-gray-600',
+                        container: '!font-sans'
+                    },
+                    confirmButtonText: 'Đóng',
+                    confirmButtonColor: '#dc2626', // red-600
+                    showCloseButton: true,
+                    focusConfirm: false,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
+                    allowEnterKey: true,
+                    stopKeydownPropagation: true,
+                })
             }
         } catch (err) {
-            alert("Có lỗi khi gửi dữ liệu thanh toán!")
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: "Có lỗi khi gửi dữ liệu thanh toán! " + err,
+                confirmButtonText: 'Đóng',
+                confirmButtonColor: '#3085d6',
+                // Thêm các tùy chỉnh khác
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                },
+                customClass: {
+                    confirmButton: 'btn btn-danger'
+                }
+            });
         }
     }   
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8 text-center">Thanh Toán</h1>
+        isSuccess ? (
+            <CheckoutSuccess resultOrder={resultOrder} shipping={shippingData} payment={paymentData} />
+        ) : (
+            <div className="container mx-auto px-4 py-8">
+                <h1 className="text-3xl font-bold mb-8 text-center">Thanh Toán</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
@@ -125,10 +218,10 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="lg:col-span-1">
-                    <OrderSummary />
+                    <OrderSummary cartItems={products} />
                     <CheckoutSummary shippingFee={shippingData?.shippingMethod === 'standard' ? 30000 : 50000} />
                 </div>
             </div>
-        </div>
+        </div>)
     )
 }
