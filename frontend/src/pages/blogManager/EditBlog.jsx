@@ -59,10 +59,11 @@ const EditBlog = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+        if ((name === "title" || name === "content") && value.length === 1 && value[0] === " ") return;
         if (name === "author") {
             setForm(prev => ({
                 ...prev,
-                [name]: value // string
+                [name]: value
             }));
         } else if (["category_id", "product_id"].includes(name)) {
             setForm(prev => ({
@@ -94,8 +95,12 @@ const EditBlog = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.content || form.content.trim() === "<p></p>") {
-            Swal.fire({ icon: "warning", title: "Lỗi!", text: "Nội dung chi tiết không được bỏ trống!" });
+        if (!form.content_normal || form.content_normal.trim() === "<p></p>" || !form.content_normal.replace(/<[^>]+>/g, '').trim()) {
+            Swal.fire({ icon: "warning", title: "Lỗi!", text: "Nội dung chi tiết không được để trống!" });
+            return;
+        }
+        if (!form.image) {
+            Swal.fire({ icon: "warning", title: "Lỗi!", text: "Vui lòng chọn hình ảnh cho bài viết!" });
             return;
         }
         setLoading(true);
@@ -158,6 +163,7 @@ const EditBlog = () => {
                                 name="category_id"
                                 value={form.category_id}
                                 onChange={handleChange}
+                                required
                             >
                                 <option value="">-- Chọn danh mục --</option>
                                 {categories.map(c => (
@@ -172,6 +178,7 @@ const EditBlog = () => {
                                 name="product_id"
                                 value={form.product_id}
                                 onChange={handleChange}
+                                required
                             >
                                 <option value="">-- Chọn sản phẩm --</option>
                                 {products.map(p => (
@@ -181,7 +188,7 @@ const EditBlog = () => {
                         </div>
                         <div className="mb-2 flex items-center">
                             <label className="w-40 block">Nội dung ngắn:</label>
-                            <Input className="flex-1" name="content" value={form.content} onChange={handleChange} />
+                            <Input className="flex-1" name="content" value={form.content} onChange={handleChange} required />
                         </div>
                         <div className="mb-2">
                             <label className="block mb-1">Nội dung chi tiết:</label>
@@ -200,6 +207,7 @@ const EditBlog = () => {
                                 }}
                                 value={form.content_normal}
                                 onEditorChange={(newValue) => setForm(prev => ({ ...prev, content_normal: newValue }))}
+                                required
                             />
                         </div>
                     </div>
@@ -228,7 +236,7 @@ const EditBlog = () => {
                 </div>
                 <div className="flex justify-end gap-2 mt-4">
                     <Button type="button" variant="outline" className="px-6 hover:opacity-70" onClick={() => navigate("/admin/blogs")}>Hủy</Button>
-                    <Button type="submit" className="px-6 bg-black text-white hover:opacity-70 flex items-center gap-2" disabled={loading || !form.content || form.content.trim() === "<p></p>"}>
+                    <Button type="submit" className="px-6 bg-black text-white hover:opacity-70 flex items-center gap-2" disabled={loading}>
                         {loading ? "Đang lưu..." : "Lưu"}
                     </Button>
                 </div>
