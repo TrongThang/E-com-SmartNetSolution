@@ -84,8 +84,6 @@ export default function AddressesPage() {
         ...formData,
         is_default: formData.is_default ? true : false
       };
-      console.log("Update:", updateData);
-
 
       const res = await addressBookApi.edit(updateData);
       console.log("Update response:", res);

@@ -115,7 +115,7 @@ function Navbar_admin() {
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
-                        <a href="/products">
+                        <a href="/admin/products">
                           <Package className="size-4" />
                           <span>Sản Phẩm</span>
                         </a>

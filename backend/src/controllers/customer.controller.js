@@ -24,7 +24,7 @@ class CustomerController {
     }
 
     async createCustomer(req, res) {
-        const { surname, lastname, image, phone, email, gender, birthdate } = req.body;
+        const { surname, lastname, image, phone, email, gender, birthdate, username, role } = req.body;
 
         const response = await createCustomerService({
             surname,
@@ -33,7 +33,9 @@ class CustomerController {
             phone,
             email,
             gender,
-            birthdate
+            birthdate,
+            username,
+            role
         });
 
         return res.status(response.status_code).json(response);

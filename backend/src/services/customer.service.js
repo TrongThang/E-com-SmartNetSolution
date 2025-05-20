@@ -2,7 +2,9 @@ const { PrismaClient } = require('@prisma/client');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
-const { generateCustomerId } = require('../helpers/generate.helper');
+const { generateCustomerId, generateAccountId } = require('../helpers/generate.helper');
+const { getVietnamTimeNow } = require('../helpers/time.helper');
+const { hashPassword } = require('../helpers/auth.helper');
 
 const prisma = new PrismaClient();
 
@@ -86,9 +88,41 @@ async function getCustomerDetailService(id) {
     }
 }
 
-async function createCustomerService({ surname, lastname, image, phone, email, gender, birthdate }) {
+async function createCustomerService({ surname, lastname, image, phone, email, gender, birthdate, username, role }) {
     try {
         const id = generateCustomerId();
+
+        const emailExists = await prisma.customer.findFirst({
+            where: { email: email },
+        });
+        if (emailExists) {
+            return get_error_response(
+                ERROR_CODES.CUSTOMER_EMAIL_EXISTED,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
+
+        // Kiểm tra số điện thoại có tồn tại hay không
+        const phoneExists = await prisma.customer.findFirst({
+            where: { phone: phone },
+        });
+        if (phoneExists) {
+            return get_error_response(
+                ERROR_CODES.CUSTOMER_PHONE_EXISTED,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
+
+        // Kiểm tra username có tồn tại hay không
+        const usernameExists = await prisma.account.findFirst({
+            where: { username: username },
+        });
+        if (usernameExists) {
+            return get_error_response(
+                ERROR_CODES.ACCOUNT_USERNAME_ALREADY_EXISTS,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
         
         // Chuyển đổi gender thành boolean hoặc null
         const genderValue = gender === undefined ? null : (gender === "true" || gender === true);
@@ -103,12 +137,44 @@ async function createCustomerService({ surname, lastname, image, phone, email, g
                 email: email || null,
                 gender: genderValue,
                 birthdate: birthdate ? new Date(birthdate) : null,
-                created_at: new Date(),
-                updated_at: new Date(),
-                deleted_at: null,
+                created_at: getVietnamTimeNow(),
                 email_verified: false
             }
         });
+        
+        if (customer) {
+            const account_id = generateAccountId();
+            const hashedPassword = await hashPassword("91092004"); // Mật khẩu mặc định cho tài khoản mới
+
+            // Tạo tài khoản cho khách hàng mới
+            const accountCustomer = await prisma.account.create({
+                data: {
+                    account_id: account_id,
+                    username: username,
+                    password: hashedPassword,
+                    role: {
+                        connect: { id: role } // Kết nối tài khoản với role
+                    },
+                    customer: {
+                        connect: { id: customer.id } // Kết nối tài khoản với khách hàng
+                    },
+                    status: 1, // 1 là hoạt động, 0 là không hoạt động
+                    is_new: true, // true là tài khoản mới, false là tài khoản cũ
+                    is_locked: false, // false là chưa bị khóa, true là đã bị khóa
+                    created_at: getVietnamTimeNow()
+                }
+            });
+
+            // Trả về thông tin khách hàng và tài khoản
+            return get_error_response(
+                ERROR_CODES.SUCCESS,
+                STATUS_CODE.OK,
+                {
+                    customer, // Thông tin khách hàng
+                    account: accountCustomer // Thông tin tài khoản
+                }
+            );
+        }
 
         return get_error_response(
             errors=ERROR_CODES.SUCCESS,

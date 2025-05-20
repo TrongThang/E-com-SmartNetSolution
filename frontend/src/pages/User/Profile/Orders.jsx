@@ -1,138 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Package, Eye, Truck, CheckCircle, AlertCircle, Clock, ChevronUp } from "lucide-react"
+import orderApi from "@/apis/modules/order.api.ts"
+import { SSF } from "xlsx"
+import { toast } from "sonner"
 
-// Dữ liệu mẫu cho đơn hàng
-const orders = [
-  {
-    id: "ORD-123456",
-    date: "15/07/2023",
-    total: "1.250.000 đ",
-    status: "Đã hoàn thành",
-    items: 3,
-    statusIcon: CheckCircle,
-    statusColor: "text-green-500",
-    products: [
-      {
-        id: 1,
-        name: "iPhone 14 Pro",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "28.990.000 đ",
-        quantity: 1,
-        total: "28.990.000 đ",
-      },
-      {
-        id: 2,
-        name: "Ốp lưng iPhone 14 Pro",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "500.000 đ",
-        quantity: 2,
-        total: "1.000.000 đ",
-      },
-      {
-        id: 3,
-        name: "Cáp sạc Lightning",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "250.000 đ",
-        quantity: 1,
-        total: "250.000 đ",
-      },
-    ],
-  },
-  {
-    id: "ORD-123457",
-    date: "10/07/2023",
-    total: "850.000 đ",
-    status: "Đang giao hàng",
-    items: 2,
-    statusIcon: Truck,
-    statusColor: "text-blue-500",
-    products: [
-      {
-        id: 4,
-        name: "Tai nghe Bluetooth",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "550.000 đ",
-        quantity: 1,
-        total: "550.000 đ",
-      },
-      {
-        id: 5,
-        name: "Sạc dự phòng 10000mAh",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "300.000 đ",
-        quantity: 1,
-        total: "300.000 đ",
-      },
-    ],
-  },
-  {
-    id: "ORD-123458",
-    date: "05/07/2023",
-    total: "2.150.000 đ",
-    status: "Chờ xác nhận",
-    items: 4,
-    statusIcon: Clock,
-    statusColor: "text-yellow-500",
-    products: [
-      {
-        id: 6,
-        name: "Laptop Sleeve 13 inch",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "450.000 đ",
-        quantity: 1,
-        total: "450.000 đ",
-      },
-      {
-        id: 7,
-        name: "Bàn phím không dây",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "750.000 đ",
-        quantity: 1,
-        total: "750.000 đ",
-      },
-      {
-        id: 8,
-        name: "Chuột không dây",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "350.000 đ",
-        quantity: 1,
-        total: "350.000 đ",
-      },
-      {
-        id: 9,
-        name: "Đế tản nhiệt laptop",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "600.000 đ",
-        quantity: 1,
-        total: "600.000 đ",
-      },
-    ],
-  },
-  {
-    id: "ORD-123459",
-    date: "01/07/2023",
-    total: "750.000 đ",
-    status: "Đã hủy",
-    items: 1,
-    statusIcon: AlertCircle,
-    statusColor: "text-red-500",
-    products: [
-      {
-        id: 10,
-        name: "Tai nghe chụp tai",
-        image: "/placeholder.svg?height=80&width=80",
-        price: "750.000 đ",
-        quantity: 1,
-        total: "750.000 đ",
-      },
-    ],
-  },
-]
 
 export default function OrdersPage() {
   // State để theo dõi đơn hàng nào đang được mở rộng
@@ -146,6 +22,90 @@ export default function OrdersPage() {
     }))
   }
 
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 0:
+        return { statusIcon: Clock, statusColor: "text-yellow-500", status: "Chờ xác nhận" }
+      case 1:
+        return { statusIcon: Package, statusColor: "text-muted-foreground", status: "Chuẩn bị hàng" }
+      case 2:
+        return { statusIcon: Truck, statusColor: "text-blue-500", status: "Đang giao hàng" }
+      case 3:
+        return { statusIcon: Truck, statusColor: "text-blue-500", status: "Đang giao hàng" }
+      case 4:
+        return { statusIcon: CheckCircle, statusColor: "text-green-500", status: "Hoàn thành" }
+      case -1:
+        return { statusIcon: AlertCircle, statusColor: "text-red-500", status: "Đã hủy" }
+    }
+  }
+
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await orderApi.getById("CUST0001");
+      if (res.status_code === 200) {
+        const dataWithStatus = res.data.data.map(order => ({
+          ...order,
+          ...getStatusInfo(order.status)
+        }));
+        setOrders(dataWithStatus);
+      }
+      else {
+        setError("Không thể tải đơn hàng");
+      }
+    } catch (err) {
+      setError("Đã xảy ra lỗi khi tải đơn hàng");
+      console.error("Failed to fetch orders", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const confirmCancel = async (id, order_id) => {
+    toast(() => (
+      <div className="flex flex-col gap-2">
+        <p>Bạn có chắc chắn muốn hủy đơn hàng có mã <strong>{order_id}</strong> không?</p>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => toast.dismiss()}
+          >
+            Không
+          </Button>
+          <Button
+            size="sm"
+            onClick={async () => {
+              toast.dismiss()
+              try {
+                const res = await orderApi.canceled({ order_id: id });
+                if (res.status_code === 200) {
+                  toast.success("Hủy đơn hàng thành công");
+                  await fetchData();
+                } else {
+                  toast.error("Không thể hủy đơn hàng");
+                }
+              } catch (err) {
+                toast.error("Đã xảy ra lỗi khi hủy đơn hàng");
+                console.error("Failed to cancel order", err);
+              }
+            }}
+          >
+            Có, hủy ngay
+          </Button>
+        </div>
+      </div>
+    ));
+  };
+  
+
   // Component để hiển thị một đơn hàng
   const OrderItem = ({ order }) => {
     const StatusIcon = order.statusIcon
@@ -155,14 +115,21 @@ export default function OrdersPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Package className="h-4 w-4" />
-              <span className="font-medium">{order.id}</span>
+              <span className="font-medium">{order.order_id}</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              Ngày đặt: {order.date} | {order.items} sản phẩm
+              Ngày đặt: {new Date(order.created_at).toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })} | {order.count_product} sản phẩm
             </div>
           </div>
           <div className="flex flex-col items-start gap-2 md:items-end">
-            <div className="text-lg font-bold">{order.total}</div>
+            <div className="text-lg font-bold">
+              {Number(order.total_money).toLocaleString('vi-VN')}đ
+            </div>
+
             <div className={`flex items-center gap-1 ${order.statusColor}`}>
               <StatusIcon className="h-4 w-4" />
               <span className="text-sm font-medium">{order.status}</span>
@@ -183,7 +150,9 @@ export default function OrdersPage() {
               </>
             )}
           </Button>
-          <Button className="ml-3" size="sm" >Hủy đơn</Button>
+          {(order.status === "Chờ xác nhận" || order.status === "Chuẩn bị hàng") && (
+            <Button className="ml-3" size="sm" onClick={() => confirmCancel(order.id, order.order_id)}>Hủy đơn</Button>
+          )}
         </div>
 
         {/* Chi tiết đơn hàng - hiển thị khi được mở rộng */}
@@ -191,7 +160,7 @@ export default function OrdersPage() {
           <div className="mt-4 rounded-md border bg-muted/20 p-4">
             <h3 className="mb-3 font-medium">Chi tiết đơn hàng</h3>
             <div className="space-y-3">
-              {order.products.map((product) => (
+              {order.details.map((product) => (
                 <div
                   key={product.id}
                   className="flex flex-col rounded-md border bg-background p-3 sm:flex-row sm:items-center"
@@ -199,16 +168,16 @@ export default function OrdersPage() {
                   <div className="flex flex-1 items-center gap-3">
                     <div className="relative h-16 w-16 overflow-hidden rounded-md">
                       <img
-                        src={product.image || "/placeholder.svg"}
-                        alt={product.name}
+                        src={product.image.startsWith("data:") ? product.image : `data:image/jpeg;base64,${product.image}`}
+                        alt={product.product_name}
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     </div>
                     <div>
-                      <h4 className="font-medium">{product.name}</h4>
-                      <p className="text-sm text-muted-foreground">Đơn giá: {product.price}</p>
+                      <h4 className="font-medium">{product.product_name}</h4>
+                      <p className="text-sm text-muted-foreground">Đơn giá: {Number(product.price).toLocaleString('vi-VN')}đ</p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-4 sm:mt-0 sm:justify-end">
@@ -218,7 +187,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground">Thành tiền</p>
-                      <p className="font-medium">{product.total}</p>
+                      <p className="font-medium">{Number(product.price * product.quantity).toLocaleString('vi-VN')}đ</p>
                     </div>
                   </div>
                 </div>
@@ -231,50 +200,52 @@ export default function OrdersPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Đơn hàng của tôi</CardTitle>
-        <CardDescription>Quản lý và theo dõi tất cả đơn hàng của bạn</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-7">
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="all">Tất cả</TabsTrigger>
-            <TabsTrigger value="pending">Chờ xác nhận</TabsTrigger>
-            <TabsTrigger value="preparing">Chuẩn bị hàng</TabsTrigger>
-            <TabsTrigger value="shipping">Đang giao hàng</TabsTrigger>
-            <TabsTrigger value="delivered">Đã giao</TabsTrigger>
-            <TabsTrigger value="completed">Hoàn thành</TabsTrigger>
-            <TabsTrigger value="canceled">Đã hủy</TabsTrigger>
-          </TabsList>
+    <>
+    {(loading && !error) && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Đơn hàng của tôi</CardTitle>
+          <CardDescription>Quản lý và theo dõi tất cả đơn hàng của bạn</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-7">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-7">
+              <TabsTrigger value="all">Tất cả</TabsTrigger>
+              <TabsTrigger value="pending">Chờ xác nhận</TabsTrigger>
+              <TabsTrigger value="preparing">Chuẩn bị hàng</TabsTrigger>
+              <TabsTrigger value="shipping">Đang giao hàng</TabsTrigger>
+              <TabsTrigger value="delivered">Đã giao</TabsTrigger>
+              <TabsTrigger value="completed">Hoàn thành</TabsTrigger>
+              <TabsTrigger value="canceled">Đã hủy</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="all" className="pt-4">
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <OrderItem key={order.id} order={order} />
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="pending" className="pt-4">
-            <div className="space-y-4">
-              {orders
-                .filter((order) => order.status === "Chờ xác nhận")
-                .map((order) => (
+            <TabsContent value="all" className="pt-4">
+              <div className="space-y-4">
+                {orders.map((order) => (
                   <OrderItem key={order.id} order={order} />
                 ))}
-            </div>
-          </TabsContent>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="shipping" className="pt-4">
-            <div className="space-y-4">
-              {orders
-                .filter((order) => order.status === "Đang giao hàng")
-                .map((order) => (
-                  <OrderItem key={order.id} order={order} />
-                ))}
-            </div>
-          </TabsContent>
+            <TabsContent value="pending" className="pt-4">
+              <div className="space-y-4">
+                {orders
+                  .filter((order) => order.status === "Chờ xác nhận")
+                  .map((order) => (
+                    <OrderItem key={order.id} order={order} />
+                  ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="shipping" className="pt-4">
+              <div className="space-y-4">
+                {orders
+                  .filter((order) => order.status === "Đang giao hàng")
+                  .map((order) => (
+                    <OrderItem key={order.id} order={order} />
+                  ))}
+              </div>
+            </TabsContent>
 
             <TabsContent value="completed" className="pt-4">
               <div className="space-y-4">
@@ -295,8 +266,10 @@ export default function OrdersPage() {
                   ))}
               </div>
             </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+          </Tabs>
+        </CardContent>
+      </Card>
+    )}
+    </>
   )
 }

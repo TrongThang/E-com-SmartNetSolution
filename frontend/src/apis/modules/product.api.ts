@@ -28,8 +28,8 @@ const productApi = {
         filters?: FilterSearch[];
         order?: ESortOrderValue;
     }): Promise<IApiResponse<IProduct[]>> {
-        return axiosPrivate.get(productEndpoints.common, {
-            params: { ...params, filters: JSON.stringify(params.filters) },
+        return axiosPrivate.get(productPublic.common, {
+            params: params ? { ...params, filters: params.filters ? JSON.stringify(params.filters) : undefined } : undefined,
         });
     },
     async add(data: any): Promise<IApiResponse> {

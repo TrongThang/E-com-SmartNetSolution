@@ -5,15 +5,25 @@ import ProductDetailPage from "@/pages/User/ProductDetail.page";
 import CartPage from "@/pages/User/Cart.page";
 import CheckoutPage from "@/pages/User/checkout/Checkout.page";
 import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
-import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/Create";
+import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
+import ProfileLayout from "@/components/layout/ProfileLayout";
+import ProfileInfo from "@/pages/User/Profile/Info";
 import { createBrowserRouter } from "react-router-dom";
+import OrdersPage from "@/pages/User/Profile/Orders";
+import LikedPage from "@/pages/User/Profile/Liked";
+import AddressesPage from "@/pages/User/Profile/Address";
+import AdminLayout from "@/components/layout/AdminLayout";
+import SlideshowManagerPage from "@/pages/slideshowManager";
+import ProductManagerPage from "@/pages/productManager";
+import AddProductPage from "@/pages/productManager/AddProduct";
+import EditProductPage from "@/pages/productManager/EditProduct";
 
 
 export const router = createBrowserRouter([
   {
-    // path: '/admin',
-    // element: <AdminLayout />,
-    // children: [
+    path: '/admin/',
+    element: <AdminLayout />,
+    children: [
     //   {
     //     index: true, 
     //     element: <AdminDashboard />,
@@ -26,7 +36,23 @@ export const router = createBrowserRouter([
     //     path: 'orders',
     //     element: <AdminOrders />,
     //   },
-    // ],
+    {
+        path: 'slideshows',
+        element:<SlideshowManagerPage />
+    },
+    {
+        path: 'products/',
+        element:<ProductManagerPage />,
+    },
+    {
+        path: 'products/add',
+        element: <AddProductPage />
+    },
+    {
+        path: 'products/edit',
+        element: <EditProductPage />
+    }
+    ],
   },
   {
     path: '/',
@@ -59,8 +85,34 @@ export const router = createBrowserRouter([
           {
             path: 'checkout',
             element: <CheckoutPage />,
-          }
+          },
         ],
+      },
+      {
+        path: 'profile/',
+        element: <ProfileLayout />,
+        children: [
+            {
+                path: 'info',
+                element: <ProfileInfo />
+            },
+            {
+                path: 'orders',
+                element: <OrdersPage />
+            },
+            {
+                path: 'liked',
+                element: <LikedPage />
+            },
+            {
+                path: 'addresses',
+                element: <AddressesPage />
+            },
+            {
+                path: 'change-password',
+                element: <h1>Thay đổi mật khẩu</h1>
+            }
+        ]
       },
       {
         path: '/warehouse/export/create',
