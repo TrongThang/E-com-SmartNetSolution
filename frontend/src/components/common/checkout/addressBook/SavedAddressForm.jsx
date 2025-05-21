@@ -5,9 +5,10 @@ import { User, Phone } from "lucide-react"
 
 export function SavedAddressForm({ form, addressData, selectedAddress }) {
     // Định dạng địa chỉ để hiển thị trong dropdown
-    const formatAddressForSelect = (customer, address) => {
-        return `${customer.name} | ${customer.phone} | ${customer.email} | ${address.detail}, ${address.ward}, ${address.district}, ${address.city}`
+    const formatAddressForSelect = (address) => {
+        return `${address.receiver_name} | ${address.phone} | ${address.detail}, ${address.ward}, ${address.district}, ${address.city}`
     }
+    console.log('selectedAddress', selectedAddress)
     return (
         <div className="space-y-4">
             <FormField
@@ -23,7 +24,7 @@ export function SavedAddressForm({ form, addressData, selectedAddress }) {
                                         placeholder="Chọn địa chỉ"
                                     >
                                         {selectedAddress
-                                            ? formatAddressForSelect(addressData.customer, selectedAddress)
+                                            ? formatAddressForSelect(selectedAddress)
                                             : "Chọn địa chỉ"}
                                     </SelectValue>
                                 </SelectTrigger>
@@ -31,7 +32,7 @@ export function SavedAddressForm({ form, addressData, selectedAddress }) {
                             <SelectContent>
                                 {addressData.address_books.map((address) => (
                                     <SelectItem key={address.id} value={address.id}>
-                                        {formatAddressForSelect(addressData.customer, address)}
+                                        {formatAddressForSelect(address)}
                                         {address.is_default === 1 && " (Mặc định)"}
                                     </SelectItem>
                                 ))}
@@ -49,14 +50,14 @@ export function SavedAddressForm({ form, addressData, selectedAddress }) {
                             <div className="flex items-center gap-2 border-b pb-2">
                                 <User className="h-5 w-5 text-muted-foreground" />
                                 <div>
-                                    <p className="font-medium text-lg">{addressData.customer?.name}</p>
+                                    <p className="font-medium text-lg">{selectedAddress?.receiver_name}</p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-2 border-b pb-2">
                                 <Phone className="h-5 w-5 text-muted-foreground" />
                                 <div>
-                                    <p className="font-medium">{addressData.customer?.phone}</p>
+                                    <p className="font-medium">{selectedAddress?.phone}</p>
                                 </div>
                             </div>
 

@@ -24,7 +24,7 @@ function generateAccountId(input = Date.now()) {
 
 const generateCustomerId = (input = Date.now()) => generatePrefixedUUID("CUST", input);
 const generateEmployeeId = (input = Date.now()) => generatePrefixedUUID("EMPL", input);
-
+const generateExportSocketQRId = (input = Date.now()) => generatePrefixedUUID("EXP-CONN", input);
 
 function generateVerificationOTPCode() {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Tạo số ngẫu nhiên từ 100000 đến 999999
@@ -57,5 +57,6 @@ module.exports = {
     generateVerificationOTPCode,
     generateImportID,
     generateOrderID,
-    generateExportNumber
+    generateExportNumber,
+    generateExportSocketQRId
 } 

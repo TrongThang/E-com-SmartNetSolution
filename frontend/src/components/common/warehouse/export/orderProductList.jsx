@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Scan, QrCode, X, Plus } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -17,13 +17,18 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import QRCode from "react-qr-code";
+import QRCode from "react-qr-code"
+import { generateConnectionCode, verifyConnection, connectSocket } from "@/utils/socketQR"
+import { toast } from "sonner"
 
 export function OrderProductList({ order, onBatchDetailUpdate }) {
     const [isShowQR, setIsShowQR] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [manualInputs, setManualInputs] = useState([])
     const [isManualInputOpen, setIsManualInputOpen] = useState(false)
+    const [connectionData, setConnectionData] = useState(null)
+    const [isConnecting, setIsConnecting] = useState(false)
+    const socketRef = useRef(null)
 
     // Tổng số lượng và đã quét
     const totalProductsQuantity = order.products.reduce((total, product) => total + product.quantity, 0)
@@ -31,6 +36,66 @@ export function OrderProductList({ order, onBatchDetailUpdate }) {
         (total, product) => total + product.batch_product_details.length,
         0,
     )
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const setup = async () => {
+            setIsConnecting(true);
+            try {
+                // 1. Tạo room và render QR code
+                const result = await generateConnectionCode(order.customer_id);
+                if (result && isMounted) {
+                    setConnectionData(result);
+
+                    // 2. FE cũng xác thực để lấy token
+                    const token = await verifyConnection(order.customer_id, result.roomCode, result.password);
+                    if (token) {
+                        // 3. FE kết nối socket với token
+                        const socket = connectSocket(token, result.roomCode);
+                        socketRef.current = socket;
+
+                        socket.on('connect', () => {
+                            toast.success('FE đã kết nối socket');
+                        });
+
+                        socket.on('server_message', (data) => {
+                            // Xử lý dữ liệu từ mobile gửi lên
+                            console.log('Dữ liệu từ mobile:', data);
+                            toast.success('Nhận dữ liệu từ mobile!');
+                            // Ví dụ: cập nhật sản phẩm
+                            onBatchDetailUpdate(data.product_id, data.batch_product_details);
+                        });
+
+                        socket.on('disconnect', () => {
+                            toast.info('Socket đã ngắt kết nối');
+                        });
+                    } else {
+                        toast.error('Không xác thực được để kết nối socket');
+                    }
+                } else {
+                    setConnectionData(null);
+                }
+            } catch (error) {
+                toast.error('Không thể tạo kết nối');
+                setIsShowQR(false);
+            } finally {
+                setIsConnecting(false);
+            }
+        };
+
+        if (isShowQR) {
+            setup();
+        }
+
+        return () => {
+            if (socketRef.current && typeof socketRef.current.disconnect === 'function') {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            setConnectionData(null);
+        };
+    }, [isShowQR, order.customer_id]);
 
     // Xử lý khi chọn sản phẩm để nhập thủ công
     const handleManualInput = (product) => {
@@ -52,18 +117,12 @@ export function OrderProductList({ order, onBatchDetailUpdate }) {
     const handleManualSubmit = () => {
         if (!selectedProduct) return
 
-        // Kiểm tra xem có input nào trống không
-        // if (manualInputs.some(input => !input.trim())) {
-        //     alert("Vui lòng nhập đầy đủ các mã barcode!")
-        //     return
-        // }
-
         // Kiểm tra trùng lặp
         const hasDuplicates = manualInputs.some((input, index) => 
             manualInputs.indexOf(input) !== index
         )
         if (hasDuplicates) {
-            alert("Có mã barcode bị trùng lặp!")
+            toast.error("Có mã barcode bị trùng lặp!");
             return
         }
 
@@ -73,7 +132,7 @@ export function OrderProductList({ order, onBatchDetailUpdate }) {
             existingBarcodes.includes(input)
         )
         if (hasExistingDuplicates) {
-            alert("Có mã barcode đã tồn tại trong danh sách!")
+            toast.error("Có mã barcode đã tồn tại trong danh sách!");
             return
         }
 
@@ -97,12 +156,14 @@ export function OrderProductList({ order, onBatchDetailUpdate }) {
         setIsManualInputOpen(false)
         setSelectedProduct(null)
         setManualInputs([])
+        toast.success('Đã thêm mã barcode mới');
     }
 
     // Xoá barcode khỏi sản phẩm
     const handleRemoveBarcode = (product, serial_number) => {
         const newBatch = product.batch_product_details.filter(detail => detail.serial_number !== serial_number)
         onBatchDetailUpdate(product.id, newBatch)
+        toast.success('Đã xóa mã barcode');
     }
 
     return (
@@ -122,20 +183,29 @@ export function OrderProductList({ order, onBatchDetailUpdate }) {
                         <div className="flex justify-end">
                             <Button
                                 onClick={() => setIsShowQR(true)}
-                                disabled={totalScannedItems >= totalProductsQuantity}
+                                disabled={totalScannedItems >= totalProductsQuantity || isConnecting}
                                 className="w-full sm:w-auto"
                             >
                                 <Scan className="h-4 w-4 mr-2" />
-                                Quét bằng điện thoại
+                                {isConnecting ? 'Đang kết nối...' : 'Quét bằng điện thoại'}
                             </Button>
                         </div>
-                        {isShowQR && (
+                        {isShowQR && connectionData && (
                             <div className="flex flex-col items-center mt-4">
                                 <div className="text-xs text-muted-foreground mt-2 flex flex-col items-center">
                                     Quét mã này bằng ứng dụng điện thoại để kết nối và quét barcode
-                                    <QRCode value="https://example.com" className="mt-2"/>
+                                    <QRCode 
+                                        value={JSON.stringify(connectionData)} 
+                                        className="mt-2"
+                                    />
                                 </div>
-                                <Button size="sm" className="mt-2" onClick={() => setIsShowQR(false)}>
+                                <Button 
+                                    size="sm" 
+                                    className="mt-2" 
+                                    onClick={() => {
+                                        setIsShowQR(false);
+                                    }}
+                                >
                                     Đóng
                                 </Button>
                             </div>

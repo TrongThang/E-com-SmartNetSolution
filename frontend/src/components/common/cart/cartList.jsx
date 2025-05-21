@@ -3,10 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import CartItem from "./cartItem";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
-import { clearSelected, selectAll } from "@/contexts/cart.actions";
 
 export default function CartList() {
-    const { state, clearCart } = useCart(); // Thay đổi ở đây
+    const { state, clearSelected, selectAll } = useCart(); // Thay đổi ở đây
     const [searchParams, setSearchParams] = useSearchParams();
     const currentPage = Number(searchParams.get("page")) || 1;
     const [itemsPerPage] = useState(5);
@@ -55,10 +54,10 @@ export default function CartList() {
                 <Button
                     variant="destructive"
                     size="sm"
-                    onClick={clearCart}
+                    onClick={clearSelected}
                 >
                     <i className="fa-solid fa-trash mr-2"></i>
-                    Xóa tất cả
+                    Xóa đã chọn
                 </Button>
             </div>
 

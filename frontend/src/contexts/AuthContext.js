@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-
+import axiosPublic from '@/apis/clients/public.client';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -33,7 +33,8 @@ export const AuthProvider = ({ children }) => {
                 if (decoded.exp * 1000 > Date.now()) {
                     // fetchUserInfo(decoded);
                     setIsAuthenticated(true);
-                    console.log(decoded)
+                    setUser(decoded);
+                    console.log('decoded', decoded)
                 } else {
                     // Token hết hạn
                     localStorage.removeItem('authToken');
@@ -48,14 +49,14 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/login', {
+            const response = await axiosPublic.post('auth/login', {
                 username,
                 password,
                 type: "CUSTOMER"
             });
 
-            if (response.data.status_code === 200) {
-                const token = response.data.data.accessToken;
+            if (response.status_code === 200) {
+                const token = response.data.accessToken;
                 localStorage.setItem('authToken', token);
                 console.log('token', token);
                 const decoded = jwtDecode(token);

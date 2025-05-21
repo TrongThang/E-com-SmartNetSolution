@@ -6,21 +6,16 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format";
 import axios from "axios";
 import Swal from 'sweetalert2';
+import { useAuth } from "@/contexts/AuthContext";
+import axiosPublic from "@/apis/clients/public.client";
 
 export default function PaymentSummary() {
     const navigate = useNavigate();
-    const { state, totalItems, totalAmount } = useCart(); // Thay đổi ở đây
-    const [idCustomer, setIdCustomer] = useState(() => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            const decoded = jwtDecode(token);
-            return decoded.idPerson;
-        }
-        return null;
-    });
+    const { state, totalItems, totalAmount, getItemSelected } = useCart(); // Thay đổi ở đây
+    const { user } = useAuth();
 
     const checkCheckout = async () => {
-        if (!idCustomer) {
+        if (!user) {
             await Swal.fire({
                 title: 'Thông báo',
                 text: 'Bạn cần đăng nhập để thanh toán giỏ hàng!',
@@ -30,28 +25,15 @@ export default function PaymentSummary() {
             return;
         }
 
-        const filteredCart = state.items.filter(item => // Thay đổi ở đây
-            item.status && item.stock >= item.quantity && item.quantity !== 0
-        );
-
-        if (filteredCart.length <= 0) {
-            await Swal.fire({
-                title: 'Thông báo',
-                text: 'Không còn sản phẩm nào trong giỏ hàng có thể đáp ứng điều kiện đặt hàng!',
-                icon: 'error',
-                confirmButtonText: 'Xác nhận',
-            });
-            return;
-        }
-
         try {
-            const response = await axios.post('http://localhost:8081/api/device/check-list', {
-                products: state.items // Thay đổi ở đây
+            console.log(getItemSelected())
+            const response = await axiosPublic.post('product/check-list-info', {
+                products: getItemSelected() // Thay đổi ở đây
             });
 
-            if (response.data.errorCode === 0) {
+            if (response.status_code === 200) {
                 navigate("/checkout");
-            } else if (response.data.errorCode === 3) {
+            } else {
                 const { nameDevice, stockDeviceRemaining, quantityInitial } = response.data;
                 
                 const result = await Swal.fire({

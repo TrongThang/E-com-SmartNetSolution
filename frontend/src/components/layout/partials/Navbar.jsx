@@ -24,9 +24,7 @@ export default function Navbar() {
 
     const fetchCategories = async () => {
         try {
-            console.log("Đang fetch categories...")
             const res = await categoryApi.list({})
-            console.log("Response:", res)
             if (res.status_code == 200) {
                 // Giả sử API trả về danh mục phẳng, chúng ta cần chuyển đổi thành cấu trúc cây
                 const categoriesData = res.data?.categories || []
@@ -39,9 +37,11 @@ export default function Navbar() {
     }
 
     const handleSearch = () => {
+        let param = ""
         if (searchValue.trim()) {
-            navigate(`/search?keyword=${encodeURIComponent(searchValue.trim())}`);
+            param = `keyword=${encodeURIComponent(searchValue.trim())}`
         }
+        navigate(`/search?${param}`);
     };
     // Hàm xây dựng cây danh mục từ danh sách phẳng
     const buildCategoryTree = (categories) => {
@@ -206,20 +206,20 @@ export default function Navbar() {
                         <Link
                             to="/cart"
                             className="relative flex items-center h-10 px-3 rounded-full border 
-                            border-slate-200 hover:border-blue-200 hover:bg-blue-50 transition-colors"
+                                border-slate-200 hover:border-blue-200 hover:bg-blue-50 transition-colors w-[9vw]"
                         >
-                            <ShoppingCart className="h-5 w-5 text-slate-600" />
-                            <span className="ml-2 font-medium text-sm text-blue-500 hidden sm:inline">
-                                {formatCurrency(totalAmount)}
-                            </span>
                             {totalItems > 0 && (
                                 <span
-                                    className="absolute top-2 right-2 bg-red-500 text-white 
-                                text-xs rounded-full flex items-center justify-center"
+                                    className="absolute top-1 left-[1.5vw] w-4 h-4 bg-red-500 text-white 
+                                        text-xs font-bold rounded-full flex items-center justify-center shadow"
                                 >
                                     {totalItems}
                                 </span>
                             )}
+                            <ShoppingCart className="h-5 w-5 text-slate-600" />
+                            <span className="ml-2 font-medium text-sm text-blue-500 hidden sm:inline">
+                                {formatCurrency(totalAmount)}
+                            </span>
                         </Link>
 
                         {/* User Authentication */}

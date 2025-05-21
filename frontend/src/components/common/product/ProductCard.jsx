@@ -6,6 +6,7 @@ import { formatCurrency } from "@/utils/format";
 export function ProductCard({ product }) {
     const { id, image, name, selling_price, slug, description, total_review, categories, average_rating, sold } = product;
     return (
+        <Link to={`/products/${id}`}>
         <Card className="h-full overflow-hidden border border-gray-200 transition-all duration-300 hover:scale-105 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100">
             <div className="relative aspect-square overflow-hidden bg-gray-100 p-4 max-h-[15vh]">
                 <img
@@ -36,6 +37,7 @@ export function ProductCard({ product }) {
                     <Link to={`/products/${id}`}>Chi tiết</Link>
                 </Button>
             </CardFooter>
-        </Card>
+            </Card>
+        </Link>
     );
 }

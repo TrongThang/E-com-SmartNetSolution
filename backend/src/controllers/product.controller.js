@@ -11,7 +11,7 @@ const {
 } = require('../services/product.service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
-const { check_info_product } = require('../helpers/product.helper');
+const { check_info_product, check_list_info_product } = require('../helpers/product.helper');
 
 class ProductController {
     constructor() {
@@ -46,12 +46,19 @@ class ProductController {
     }
     
 
-    async checkInfoProduct(req, res) {
-        const { product } = req.body;
+    async checkListInfoProduct(req, res) {
+        const { products } = req.body;
         
-        const response = await check_info_product(product)
+        const response = await check_list_info_product(products)
 
-        return res.status(response.status_code).json(response);
+        if (response) {
+            return response
+        }
+
+        return res.status(STATUS_CODE.OK).json({
+            status_code: STATUS_CODE.OK,
+            message: 'Sản phẩm đã được kiểm tra thành công!'
+        });
     }
 }
 

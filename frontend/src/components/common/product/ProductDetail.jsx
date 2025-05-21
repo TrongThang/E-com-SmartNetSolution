@@ -9,7 +9,7 @@ import { useCart } from "@/contexts/CartContext"
 export default function ProductDetails({ device }) {
     const { addToCart } = useCart();
     const [selectedImage, setSelectedImage] = useState(
-        { id: "main", url: device.image || device.image[0] || "/placeholder.svg", alt: "Main image" }
+        { id: "main", url: device.image || "/placeholder.svg", alt: "Main image" }
     );
     const [isLiked, setIsLiked] = useState(false)
     const [quantity, setQuantity] = useState(1)

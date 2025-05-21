@@ -1,12 +1,12 @@
 const express = require('express');
+const http = require('http');
 require('dotenv').config();
 const morgan = require('morgan'); // Thêm morgan để ghi log
 const configServer = require('./config/server');
 const connection = require('./config/database');
-
+const { initializeSocket } = require('./services/socketQR.service');
 const app = express();
 const port = process.env.PORT || 8081;
-
 
 // Định nghĩa định dạng tùy chỉnh cho morgan
 morgan.token('body', (req) => JSON.stringify(req.body));
@@ -34,7 +34,14 @@ app.get('/', (req, res) => {
     });
 });
 
-app.listen(port, () => {
+// **Tạo http.Server từ app**
+const server = http.createServer(app);
+
+// **Khởi tạo socket.io trên server này**
+const io = initializeSocket(server);
+
+// **Lắng nghe trên server**
+server.listen(port, () => {
     console.log(`Server running http://localhost:${port}`);
 });
 

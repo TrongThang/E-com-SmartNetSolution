@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { useState } from "react"
-import { ChevronRight, Star } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import ProductGrid from "@/components/common/product/ProductGrid.jsx"

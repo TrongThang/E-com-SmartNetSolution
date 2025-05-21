@@ -32,35 +32,25 @@ export const router = createBrowserRouter([
     path: '/',
     element: <DefaultLayout />,
     children: [
-      // {
-      //   index: true,
-      //   element: <Home />,
-      // },
       {
         path: '/',
         element: <HomePage />,
-        children: [
-          // {
-          //   index: true,
-          //   element: <Home />,
-          // },
-          {
-            path: 'search',
-            element: <SearchPage />,
-          },
-          {
-            path: 'products/:id',
-            element: <ProductDetailPage />,
-          },
-          {
-            path: 'cart',
-            element: <CartPage />,
-          },
-          {
-            path: 'checkout',
-            element: <CheckoutPage />,
-          }
-        ],
+      },
+      {
+        path: 'search',
+        element: <SearchPage />,
+      },
+      {
+        path: 'products/:id',
+        element: <ProductDetailPage />,
+      },
+      {
+        path: 'cart',
+        element: <CartPage />,
+      },
+      {
+        path: 'checkout',
+        element: <CheckoutPage />,
       },
       {
         path: '/warehouse/export/create',

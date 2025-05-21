@@ -171,7 +171,7 @@ export default function CreateExportWarehousePage() {
     const { totalProducts, totalScanned } = getTotalStats()
 
     return (
-        <div className="container mx-auto py-6">
+        <div className="container mx-auto p-4">
             <ExportHeader 
                 orders={formData.orders}
                 totalProducts={totalProducts}

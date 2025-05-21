@@ -134,9 +134,13 @@ export default function CreateImportWarehousePage() {
             ...prev,
             products: prev.products.map((product) => {
                 if (product.id === productId) {
+                    // Hỗ trợ cả callback và mảng
+                    const newSerials = typeof serialNumbers === 'function'
+                        ? serialNumbers(product.serial_numbers || [])
+                        : serialNumbers;
                     return {
                         ...product,
-                        serial_numbers: serialNumbers,
+                        serial_numbers: Array.isArray(newSerials) ? newSerials : [],
                     }
                 }
                 return product
@@ -246,7 +250,7 @@ export default function CreateImportWarehousePage() {
     const { totalProducts, totalItems, totalSerialNumbers } = getTotalStats()
 
     return (
-        <div className="container mx-auto py-6">
+        <div className="container mx-auto p-4">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-3xl font-bold">Tạo Phiếu Nhập Kho</h1>
