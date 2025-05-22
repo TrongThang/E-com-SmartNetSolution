@@ -24,7 +24,7 @@ class CustomerController {
     }
 
     async createCustomer(req, res) {
-        const { surname, lastname, image, phone, email, gender, birthdate, username, role } = req.body;
+        const { surname, lastname, image, phone, email, gender, birthdate, username, status } = req.body;
 
         const response = await createCustomerService({
             surname,
@@ -35,23 +35,26 @@ class CustomerController {
             gender,
             birthdate,
             username,
-            role
+            status
         });
 
         return res.status(response.status_code).json(response);
     }
 
     async updateCustomer(req, res) {
-        const { id, surname, lastname, phone, email, gender, birthdate } = req.body;
+        const { id, account_id, surname, lastname, image, phone, email, gender, birthdate, status } = req.body;
 
         const response = await updateCustomerService({
             id,
+            account_id,
             surname,
             lastname,
+            image,
             phone,
             email,
             gender,
-            birthdate
+            birthdate,
+            status
         });
 
         return res.status(response.status_code).json(response);

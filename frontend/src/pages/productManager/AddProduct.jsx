@@ -19,10 +19,9 @@ const AddProductPage = () => {
         slug: "",
         price: "",
         description: "",
-        warranty: "12 tháng",
         image: null,
         hidden: false,
-        status: "Hoạt động",
+        status: "1",
         fullDescription: "",
         specifications: [
             { name: "Trọng lượng", value: "1.5 kg" },
@@ -162,7 +161,7 @@ const AddProductPage = () => {
                                 />
                             </div>
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label htmlFor="warranty">Thời gian bảo hành:</Label>
                                 <Select value={product.warranty} onValueChange={(value) => setProduct({ ...product, warranty: value })}>
                                     <SelectTrigger id="warranty" className="bg-muted w-[250px]">
@@ -175,7 +174,7 @@ const AddProductPage = () => {
                                         <SelectItem value="36 tháng">36 tháng</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
+                            </div> */}
 
                             <div className="space-y-2">
                                 <Label htmlFor="image">Ảnh thiết bị:</Label>
@@ -224,9 +223,12 @@ const AddProductPage = () => {
                                             <SelectValue placeholder="Chọn trạng thái" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Hoạt động">Hoạt động</SelectItem>
-                                            <SelectItem value="Ngừng kinh doanh">Ngừng kinh doanh</SelectItem>
-                                            <SelectItem value="Hết hàng">Hết hàng</SelectItem>
+                                            <SelectItem value="1">Hoạt động</SelectItem>
+                                            <SelectItem value="-1">Ngừng bán</SelectItem>
+                                            <SelectItem value="0">Hết hàng</SelectItem>
+                                            <SelectItem value="2">Giảm giá</SelectItem>
+                                            <SelectItem value="3">Nổi bật</SelectItem>
+                                            <SelectItem value="4">Sản phẩm mới</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

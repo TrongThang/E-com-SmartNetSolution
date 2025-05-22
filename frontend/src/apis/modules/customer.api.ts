@@ -16,7 +16,7 @@ const customerApi = {
         order?: ESortOrderValue;
     }): Promise<IApiResponse<ICustomer[]>> {
         return axiosPrivate.get(customerEndpoints.common, {
-            params: { ...params, filters: JSON.stringify(params.filters) },
+            params: params ? { ...params, filters: params.filters ? JSON.stringify(params.filters) : undefined } : undefined,
         });
     },
     async add(data: any): Promise<IApiResponse> {
@@ -29,6 +29,13 @@ const customerApi = {
     async delete(id: number | string): Promise<IApiResponse> {
         try {
             return await axiosPrivate.delete(customerEndpoints.common + "/" + id);
+        } catch (error) {
+            throw error;
+        }
+    },
+    async editAdmin(data: any): Promise<IApiResponse> {
+        try {
+            return await axiosPrivate.put(customerEndpoints.common, data);
         } catch (error) {
             throw error;
         }

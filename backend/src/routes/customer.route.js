@@ -10,11 +10,12 @@ const asyncHandler = (fn) => {
     }
 }
 
-customerRouter.get('/', asyncHandler(getCustomers));
+customerRouter.get('/admin', asyncHandler(getCustomers));
 customerRouter.get('/:id', asyncHandler(getCustomerDetail));
-customerRouter.post('/', validateMiddleware(CreateCustomerSchema), asyncHandler(createCustomer));
+customerRouter.post('/admin', validateMiddleware(CreateCustomerSchema), asyncHandler(createCustomer));
+customerRouter.put('/admin', validateMiddleware(UpdateCustomerSchema), asyncHandler(updateCustomer));
 customerRouter.put('/', validateMiddleware(UpdateCustomerSchema), asyncHandler(updateCustomer));
-customerRouter.delete('/:id', validateMiddleware(DeleteCustomerSchema), asyncHandler(deleteCustomer));
+customerRouter.delete('/admin/:id', validateMiddleware(DeleteCustomerSchema), asyncHandler(deleteCustomer));
 
 module.exports = customerRouter;
 

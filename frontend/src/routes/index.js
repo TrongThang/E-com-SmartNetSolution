@@ -17,6 +17,10 @@ import SlideshowManagerPage from "@/pages/slideshowManager";
 import ProductManagerPage from "@/pages/productManager";
 import AddProductPage from "@/pages/productManager/AddProduct";
 import EditProductPage from "@/pages/productManager/EditProduct";
+import AddSlideshowPage from "@/pages/slideshowManager/AddSlideshow";
+import UserManagerPage from "@/pages/userManager";
+import AddUserPage from "@/pages/userManager/AddUser";
+import EditUserPage from "@/pages/userManager/EditUser";
 
 
 export const router = createBrowserRouter([
@@ -40,6 +44,22 @@ export const router = createBrowserRouter([
         path: 'slideshows',
         element:<SlideshowManagerPage />
     },
+    {
+        path: 'slideshows/add',
+        element:<AddSlideshowPage />
+    },
+    {
+        path: 'users',
+        element:<UserManagerPage />,
+    },
+    {
+        path: 'users/add',
+        element:<AddUserPage />,
+    },
+    {
+      path: 'users/edit/:id',
+      element:<EditUserPage />,
+  },
     {
         path: 'products/',
         element:<ProductManagerPage />,

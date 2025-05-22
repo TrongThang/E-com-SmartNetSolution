@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 
 async function getCustomersService(filter, limit, sort, order) {
     try {
-        let get_attr = `surname, lastname, phone, email, gender, birthdate, created_at, updated_at, deleted_at`
+        let get_attr = `surname, lastname, image, phone, email, gender, birthdate, email_verified, created_at, updated_at, deleted_at`
         
         let get_table = `customer`
 
@@ -56,7 +56,16 @@ async function getCustomersService(filter, limit, sort, order) {
 async function getCustomerDetailService(id) {
     try {
         const customer = await prisma.customer.findUnique({
-            where: { id }
+            where: { id },
+            include: {
+                account: {
+                    select: {
+                        account_id: true,
+                        username: true,
+                        status: true
+                    }
+                }
+            }
         });
 
         if (!customer) {
@@ -88,7 +97,7 @@ async function getCustomerDetailService(id) {
     }
 }
 
-async function createCustomerService({ surname, lastname, image, phone, email, gender, birthdate, username, role }) {
+async function createCustomerService({ surname, lastname, image, phone, email, gender, birthdate, username, status }) {
     try {
         const id = generateCustomerId();
 
@@ -138,6 +147,7 @@ async function createCustomerService({ surname, lastname, image, phone, email, g
                 gender: genderValue,
                 birthdate: birthdate ? new Date(birthdate) : null,
                 created_at: getVietnamTimeNow(),
+                updated_at: getVietnamTimeNow(),
                 email_verified: false
             }
         });
@@ -153,12 +163,12 @@ async function createCustomerService({ surname, lastname, image, phone, email, g
                     username: username,
                     password: hashedPassword,
                     role: {
-                        connect: { id: role } // Kết nối tài khoản với role
+                        connect: { id: "role003" } // Kết nối tài khoản với role
                     },
                     customer: {
                         connect: { id: customer.id } // Kết nối tài khoản với khách hàng
                     },
-                    status: 1, // 1 là hoạt động, 0 là không hoạt động
+                    status: Number(status), // 1 là hoạt động, 0 là không hoạt động
                     is_new: true, // true là tài khoản mới, false là tài khoản cũ
                     is_locked: false, // false là chưa bị khóa, true là đã bị khóa
                     created_at: getVietnamTimeNow()
@@ -190,7 +200,7 @@ async function createCustomerService({ surname, lastname, image, phone, email, g
     }
 }
 
-async function updateCustomerService({ id, surname, lastname, image, phone, email, gender, birthdate }) {
+async function updateCustomerService({ id, account_id, surname, lastname, image, phone, email, gender, birthdate, status }) {
     try {
         // Kiểm tra customer có tồn tại không
         const existingCustomer = await prisma.customer.findUnique({
@@ -218,7 +228,15 @@ async function updateCustomerService({ id, surname, lastname, image, phone, emai
                 email: email || null,
                 gender: genderValue,
                 birthdate: birthdate ? new Date(birthdate) : null,
-                updated_at: new Date()
+                updated_at: new Date(),
+                account: {
+                    updateMany: {
+                        where: { account_id: account_id },
+                        data: {
+                          status: 0
+                        }
+                      }
+                  }
             }
         });
 
