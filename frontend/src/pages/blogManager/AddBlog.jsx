@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Swal from "sweetalert2";
 import { Editor } from '@tinymce/tinymce-react';
+import ImageCropper from "@/components/common/ImageCropper";
 
 const AddBlog = () => {
     const [form, setForm] = useState({
@@ -24,6 +25,8 @@ const AddBlog = () => {
     const [products, setProducts] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [showCropModal, setShowCropModal] = useState(false);
+    const [tempImage, setTempImage] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -63,9 +66,15 @@ const AddBlog = () => {
         if (!file) return;
         const reader = new FileReader();
         reader.onloadend = () => {
-            setForm(prev => ({ ...prev, image: reader.result }));
+            setTempImage(reader.result);
+            setShowCropModal(true);
         };
         reader.readAsDataURL(file);
+    };
+
+    const handleCropComplete = (croppedImage) => {
+        setForm(prev => ({ ...prev, image: croppedImage }));
+        setShowCropModal(false);
     };
 
     const handleSubmit = async (e) => {
@@ -215,6 +224,21 @@ const AddBlog = () => {
                     </Button>
                 </div>
             </form>
+
+            {/* Modal cắt ảnh */}
+            {showCropModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4">
+                        <div className="p-6">
+                            <ImageCropper
+                                image={tempImage}
+                                onCropComplete={handleCropComplete}
+                                aspectRatio={16 / 9}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input.jsx";
 import { Label } from "@/components/ui/label.jsx";
 import { Switch } from "@/components/ui/switch.jsx";
 import Swal from 'sweetalert2';
+import ImageCropper from "@/components/common/ImageCropper";
 
 const EditSlideshowPage = () => {
     const { id } = useParams();
@@ -17,6 +18,8 @@ const EditSlideshowPage = () => {
     });
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
+    const [showCropModal, setShowCropModal] = useState(false);
+    const [tempImage, setTempImage] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -66,43 +69,16 @@ const EditSlideshowPage = () => {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                // Compress image before setting state
-                const img = new Image();
-                img.src = reader.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1200;
-                    const MAX_HEIGHT = 800;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Convert to JPEG with 0.8 quality
-                    const compressedImage = canvas.toDataURL('image/jpeg', 0.8);
-                    setFormData(prev => ({
-                        ...prev,
-                        image: compressedImage
-                    }));
-                };
+                setTempImage(reader.result);
+                setShowCropModal(true);
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const handleCropComplete = (croppedImage) => {
+        setFormData(prev => ({ ...prev, image: croppedImage }));
+        setShowCropModal(false);
     };
 
     const handleStatusChange = (checked) => {
@@ -251,6 +227,21 @@ const EditSlideshowPage = () => {
                     </Button>
                 </div>
             </form>
+
+            {/* Modal cắt ảnh */}
+            {showCropModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4">
+                        <div className="p-6">
+                            <ImageCropper
+                                image={tempImage}
+                                onCropComplete={handleCropComplete}
+                                aspectRatio={16 / 5}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
