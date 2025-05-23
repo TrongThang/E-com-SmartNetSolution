@@ -115,14 +115,14 @@ async function createOrder(orderData) {
 }
 
 async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
-    let get_attr = `
-        order.id, 
+    const get_attr = `
+        order.id,
+        order.order_id,
         order.total_money,
         order.prepaid,
         order.remaining,
         order.discount,
         order.vat,
-        order.total_money,
         order.amount,
         order.payment_method,
         order.payment_account,
@@ -130,37 +130,85 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
         order.platform_order,
         order.note,
         order.status,
-        order.created_at,
-        order.updated_at,
-        order.deleted_at,
-        `;
-        // order_detail.product_id,
-        // product.name as product_name,
-        // order_detail.quantity_sold as quantity,
-        // order_detail.sale_price as price
+        order.address,
+        order.name_recipient,
+        order_detail.product_id,
+        product.name as product_name,
+        product.image,
+        order_detail.quantity_sold as quantity,
+        order_detail.sale_price as price
+    `;
 
-    let get_table = `\`order\``;
-    // let query_join = `
-    //     LEFT JOIN order_detail ON order.id = order_detail.order_id
-    //     LEFT JOIN product ON order_detail.product_id = product.id
-    // `;
+    const get_table = '`order`';
+    const query_join = `
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN product ON order_detail.product_id = product.id
+    `;
 
-    let filter = `[{"field":"customer_id","condition":"=","value":"${customer_id}"}]`
+    const filter = `[{"field":"customer_id","condition":"=","value":"${customer_id}"}]`;
 
     try {
-        const orders = await executeSelectData({
+        const result = await executeSelectData({
             table: get_table,
-            // queryJoin: query_join,
+            queryJoin: query_join,
             strGetColumn: get_attr,
             limit: limit,
-            filter: filters,
-            configData: configOrderData
-        })
-        
+            filter: filter,
+            logic: logic,
+            sort: sort,
+            order: order
+        });
+
+        // Group lại order theo id
+        const groupedOrders = Object.values(
+            result.data.reduce((acc, row) => {
+                if (!acc[row.id]) {
+                    acc[row.id] = {
+                        id: row.id,
+                        order_id: row.order_id,
+                        total_money: row.total_money,
+                        prepaid: row.prepaid,
+                        remaining: row.remaining,
+                        discount: row.discount,
+                        vat: row.vat,
+                        amount: row.amount,
+                        payment_method: row.payment_method,
+                        payment_account: row.payment_account,
+                        phone: row.phone,
+                        platform_order: row.platform_order,
+                        note: row.note,
+                        status: row.status,
+                        address: row.address,
+                        created_at: row.created_at,
+                        updated_at: row.updated_at,
+                        deleted_at: row.deleted_at,
+                        details: []
+                    };
+                }
+
+                if (row.product_id) {
+                    acc[row.id].details.push({
+                        product_id: row.product_id,
+                        product_name: row.product_name,
+                        image: row.image,
+                        quantity: row.quantity,
+                        price: row.price
+                    });
+
+                    acc[row.id].count_product = (acc[row.id].count_product || 0) + 1;
+                }
+
+                return acc;
+            }, {})
+        );
+
         return get_error_response(
             ERROR_CODES.SUCCESS,
             STATUS_CODE.OK,
-            orders
+            {
+                data: groupedOrders,
+                total_page: result.total_page
+            }
         );
     } catch (error) {
         console.error('Lỗi:', error);
@@ -170,8 +218,6 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
         );
     }
 }
-
-
 
 
 async function createOrder(shipping, payment) {
@@ -378,8 +424,50 @@ async function createOrderDetail(orderId, product) {
     }
 }
 
+async function cancelOrderService(order_id) {
+    try {
+        const orderId = Number(order_id)
+        const order = await prisma.order.findUnique({
+            where: { id: orderId }
+        });
+
+        if (!order) {
+            return get_error_response(
+                errors=ERROR_CODES.ORDER_NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (order.status === -1) {
+            return get_error_response(
+                errors=ERROR_CODES.ORDER_ALREADY_CANCELLED,
+                status_code=STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.update({
+            where: { id: orderId },
+            data: {
+                status: -1
+            }
+        });
+
+        return get_error_response(
+            errors=ERROR_CODES.SUCCESS,
+            status_code=STATUS_CODE.OK
+        );
+    } catch (error) {
+        console.log('Cancel order error:', error);
+        return get_error_response(
+            errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
 module.exports = {
     createOrder,
     getOrdersForAdministrator,
     getOrdersForCustomer,
+    cancelOrderService
 }

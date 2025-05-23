@@ -4,10 +4,10 @@ const { get_error_response } = require('../helpers/response.helper');
 const { PrismaClient, sql } = require('@prisma/client');
 const { convertToSlug, removeTagHtml } = require('../helpers/extension.helper');
 const { executeSelectData } = require('../helpers/sql_query')
-const { configDataProductDetail, diffAttributeSets } = require('../helpers/product.helper')
+const { configDataProductDetail, diffAttributeSets, configDataProduct } = require('../helpers/product.helper')
 
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 // 0: Sản phẩm ngừng bán
 // >= 1: Sản phẩm đang bán
 // 1: Sản phẩm bán
@@ -16,15 +16,39 @@ const prisma = new PrismaClient();
 // 4: Sản phẩm mới
 // Nếu không nhập limit thì mặc định là lấy hết
 const getProductService = async (filters, logic, limit, sort, order, role, type) => {
-    // product.name, slug, description, description_normal, image, selling_price, category_id, views, status, unit_id 
-    let get_attr = `product.name, product.slug, product.description, product.image, selling_price, views, status,
-    product.category_id, categories.name as categories, COALESCE(sold.sold, 0) AS sold, COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, COALESCE(review.avg_rating, 0) AS average_rating,
-    COALESCE(CAST(total_reviews_today.total_reviews_today AS CHAR), 0) AS total_reviews_today`
+    let get_attr = `product.id, product.name, product.slug, product.description, product.image, selling_price, views, status,
+    product.category_id, categories.name as categories, 
+    COALESCE(sold.sold, 0) AS sold, 
+    COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, 
+    COALESCE(review.avg_rating, 0) AS average_rating,
+    COALESCE(
+        CONCAT(
+            '[', 
+            GROUP_CONCAT(
+                DISTINCT CONCAT(
+                    '{',
+                    '"id":', attribute.id, ',',
+                    '"name":"', attribute.name, '",',
+                    '"attribute_group_id":', COALESCE(attribute_group.id, 'null'), ',',
+                    '"attribute_group":"', COALESCE(attribute_group.name, ''), '",',
+                    '"value":"', 
+                    (
+                        SELECT GROUP_CONCAT(DISTINCT ap.value SEPARATOR ',') 
+                        FROM attribute_product ap 
+                        WHERE ap.product_id = product.id 
+                        AND ap.attribute_id = attribute.id
+                    ), 
+                    '"',
+                    '}'
+                )
+            ), 
+            ']'
+        ), 
+        '[]'
+    ) AS attributes_json`;
 
-    let get_table = `product`
-    let query_join = `LEFT JOIN categories ON product.category_id = categories.category_id`
-
-    query_join += `
+    let get_table = `product`;
+    let query_join = `LEFT JOIN categories ON product.category_id = categories.category_id
         LEFT JOIN (
             SELECT product_id, AVG(rating) AS avg_rating, COUNT(id) AS total_review
             FROM review_product
@@ -49,31 +73,58 @@ const getProductService = async (filters, logic, limit, sort, order, role, type)
             AND created_at >= CURDATE()
             GROUP BY product_id
         ) total_reviews_today ON product.id = total_reviews_today.product_id
-    `
-    // }
+        LEFT JOIN attribute_product ON attribute_product.product_id = product.id
+        LEFT JOIN attribute ON attribute.id = attribute_product.attribute_id
+        LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id
+    `; // Đảm bảo join với attribute_group
 
     try {
-        const products = await executeSelectData({ table: get_table, queryJoin: query_join, strGetColumn: get_attr, limit: limit, filter: filters, logic: logic, sort: sort, order: order })
-        return get_error_response(errors = ERROR_CODES.SUCCESS, status_code = STATUS_CODE.OK, data = products);
+        console.log('Limit:', limit, 'Filters:', filters, 'Logic:', logic);
+
+        const products = await executeSelectData({ 
+            table: get_table, 
+            queryJoin: query_join, 
+            strGetColumn: get_attr, 
+            limit: limit || 10, // Đặt mặc định limit là 10
+            filter: filters, 
+            logic: logic, 
+            sort: sort, 
+            order: order,
+            configData: configDataProduct // Sử dụng configData
+        });
+
+        console.log('Products raw:', products);
+
+        // Không cần map thêm vì configDataProductDetail đã xử lý
+        const formattedProducts = products.data || [];
+
+        return get_error_response(
+            errors=ERROR_CODES.SUCCESS,
+            status_code=STATUS_CODE.OK,
+            data={ 
+                data: formattedProducts, 
+                total_page: products.total_page || 1 
+            }
+        );
     } catch (error) {
-        console.error('Lỗi:', error)
+        console.error('Lỗi:', error);
         return get_error_response(
             ERROR_CODES.INTERNAL_SERVER_ERROR,
-            STATUS_CODE.OK,
-        )
+            STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
     }
 };
 
 const getProductDetailService = async (id, role = null, type = null) => {
     const product = await prisma.product.findUnique({
         where: { id: id }
-    })
+    });
 
     if (!product) {
         return get_error_response(
             errors = ERROR_CODES.PRODUCT_NOT_FOUND,
             status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
-        )
+        );
     }
 
     const filter = JSON.stringify([
@@ -82,16 +133,39 @@ const getProductDetailService = async (id, role = null, type = null) => {
             condition: "contains",
             value: id
         }
-    ])
+    ]);
+
+    // Sử dụng GROUP_CONCAT để gộp attributes thành chuỗi JSON
     let get_attr = `product.name, product.slug, product.description, description_normal, product.image, selling_price, views, status, product.is_hide,
         product.category_id, categories.name as categories, unit_id, unit.name as unit_name,
-        attribute.id as attribute_id, attribute.name as attribute, attribute_group.id as attribute_group_id, attribute_group.name as attribute_group, attribute_product.value as attribute_value
-    `
-    let get_table = `product`
+        COALESCE(
+            CONCAT(
+                '[', 
+                GROUP_CONCAT(
+                    DISTINCT CONCAT(
+                        '{',
+                        '"attribute_id":', attribute.id, ',',
+                        '"attribute":"', attribute.name, '",',
+                        '"attribute_group_id":', COALESCE(attribute_group.id, 'null'), ',',
+                        '"attribute_group":"', COALESCE(attribute_group.name, ''), '",',
+                        '"attribute_value":"', attribute_product.value, '"',
+                        '}'
+                    )
+                ), 
+                ']'
+            ), 
+            '[]'
+        ) AS attributes_json,
+        COALESCE(review.avg_rating, 0) AS average_rating, 
+        COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, 
+        COALESCE(CAST(liked.total_liked AS CHAR), '0') AS total_liked, 
+        COALESCE(inventory.stock, 0) AS stock, 
+        COALESCE(sold.sold, 0) AS sold`;
+
+    let get_table = `product`;
     let query_join = `
         LEFT JOIN categories ON product.category_id = categories.category_id
         LEFT JOIN unit ON product.unit_id = unit.id
-        -- LEFT JOIN warranty_time ON product.warranty_time_id = warranty_time.id
         LEFT JOIN attribute_product ON product.id = attribute_product.product_id
         LEFT JOIN attribute ON attribute_product.attribute_id = attribute.id
         LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id
@@ -119,8 +193,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
             FROM order_detail
             GROUP BY product_id
         ) sold ON product.id = sold.product_id
-    `
-    //ADD filter liked by updated_at -> a month
+    `;
 
     const products = await executeSelectData({
         table: get_table, queryJoin: query_join, strGetColumn: get_attr, filter: filter, configData: configDataProductDetail,
@@ -129,9 +202,11 @@ const getProductDetailService = async (id, role = null, type = null) => {
     const images = await prisma.image_product.findMany({
         where: { product_id: id },
         select: {
-            id: true, product_id: true, image: true
+            id: true,
+            product_id: true,
+            image: true
         }
-    })
+    });
 
     products.data[0].images = images;
 

@@ -199,3 +199,27 @@ export interface ILiked {
     created_at: string;
     updated_at: string;
 }
+
+export interface IOrder {
+    id: string;
+    order_id: string;
+    total_money: number;
+    prepaid: number;
+    remaining: number;
+    discount: number;
+    vat: number;
+    amount: number;
+    payment_method: string;
+    payment_account: string;
+    phone: string;
+    platform_order: string;
+    note: string;
+    status: number;
+    address: string;
+    product_id: number;
+    product_name: string;
+    quantity: number;
+    price: number;
+    created_at: string;
+    updated_at: string;
+}

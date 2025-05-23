@@ -81,7 +81,7 @@ export default function LikedPage() {
                       </div>
                       <div className="mt-2 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold">{item.selling_price} đ</span>
+                          <span className="font-bold">{Number(item.selling_price).toLocaleString('vi-VN')}đ</span>
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm">

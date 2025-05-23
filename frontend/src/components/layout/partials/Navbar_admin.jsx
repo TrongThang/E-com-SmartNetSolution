@@ -109,7 +109,7 @@ function Navbar_admin() {
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
-                        <a href="/users">
+                        <a href="/admin/users">
                           <Users className="size-4" />
                           <span>Người Dùng</span>
                         </a>
@@ -117,7 +117,7 @@ function Navbar_admin() {
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
-                        <a href="/products">
+                        <a href="/admin/products">
                           <Package className="size-4" />
                           <span>Sản Phẩm</span>
                         </a>
