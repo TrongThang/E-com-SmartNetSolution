@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import blogApi from "@/apis/modules/blog.api.ts";
 import categoryApi from "@/apis/modules/categories.api.ts";
 import productApi from "@/apis/modules/product.api.ts";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import Swal from "sweetalert2";
 import { Editor } from '@tinymce/tinymce-react';
 import ImageCropper from "@/components/common/ImageCropper";
+import { Upload, ArrowLeft } from "lucide-react";
 
 const AddBlog = () => {
     const [form, setForm] = useState({
@@ -113,6 +114,14 @@ const AddBlog = () => {
 
     return (
         <div className="p-8">
+            <div className="flex items-center justify-between mb-4">
+                <Button variant="ghost" size="xl" asChild className="gap-1">
+                    <Link to="/admin/blogs">
+                        <ArrowLeft className="h-4 w-4" />
+                        Trở về
+                    </Link>
+                </Button>
+            </div>
             <h2 className="text-xl font-bold mb-4">Thêm bài viết mới</h2>
             <form onSubmit={handleSubmit}>
                 <div className="flex">
@@ -176,17 +185,23 @@ const AddBlog = () => {
                         <div className="mb-2">
                             <label className="block mb-1">Nội dung chi tiết:</label>
                             <Editor
-                                apiKey='0nubcibo2309ceuid0afingqvggqyaqjeve4yl82ls7xagug'
+                                tinymceScriptSrc={process.env.PUBLIC_URL + '/tinymce/tinymce.min.js'}
                                 init={{
                                     height: 320,
                                     menubar: false,
                                     plugins: [
-                                        'advlist autolink lists link image charmap print preview anchor',
-                                        'searchreplace visualblocks code fullscreen',
-                                        'insertdatetime media table paste code help wordcount'
+                                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
                                     ],
-                                    toolbar:
-                                        'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
+                                    toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify |  outdent indent | removeformat |link | help',
+
+                                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                                    skin_url: '/tinymce/skins/ui/oxide',
+                                    content_css: '/tinymce/skins/content/default/content.css',
+                                    language: 'vi',
+                                    language_url: '/tinymce/langs/vi.js',
+                                    base_url: '/tinymce'
                                 }}
                                 value={form.content_normal}
                                 onEditorChange={(newValue) => setForm(prev => ({ ...prev, content_normal: newValue }))}
@@ -197,15 +212,31 @@ const AddBlog = () => {
                     {/* Right: Image + Status */}
                     <div className="w-72 ml-8 flex flex-col items-center">
                         <label className="block mb-1">Hình ảnh:</label>
-                        <div className="w-40 h-40 border flex items-center justify-center mb-2 bg-gray-100">
+                        <div
+                            className="relative flex h-[150px] w-[150px] cursor-pointer flex-col items-center justify-center rounded-md border bg-muted"
+                            onClick={() => document.getElementById("image-upload").click()}
+                        >
                             {form.image ? (
-                                <img src={form.image} alt="preview" className="object-cover w-full h-full" />
+                                <img
+                                    src={form.image}
+                                    alt="Preview"
+                                    className="h-full w-full rounded-md object-contain"
+                                />
                             ) : (
-                                <span className="text-gray-400">Upload ảnh</span>
+                                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                    <Upload className="mb-2 h-10 w-10" />
+                                    <span className="text-center text-sm">Upload ảnh</span>
+                                </div>
                             )}
+                            <input
+                                id="image-upload"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="hidden"
+                            />
                         </div>
-                        <input type="file" accept="image/*" className="mb-2" onChange={handleImageChange} />
-                        <label className="block mb-1">Trạng thái:</label>
+                        <label className="block mb-1 mt-4">Trạng thái:</label>
                         <select
                             className="w-full border rounded px-2 py-1"
                             name="is_hide"

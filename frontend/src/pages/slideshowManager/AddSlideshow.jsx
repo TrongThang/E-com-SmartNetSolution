@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label.jsx";
 import { Switch } from "@/components/ui/switch.jsx";
 import Swal from 'sweetalert2';
 import ImageCropper from "@/components/common/ImageCropper";
+import { Upload } from "lucide-react";
 
 const AddSlideshowPage = () => {
     const [formData, setFormData] = useState({
@@ -131,28 +132,38 @@ const AddSlideshowPage = () => {
                         />
                     </div>
 
-                    <div className="col-span-2 flex flex-col gap-2">
+                    <div className="col-span-2">
                         <Label htmlFor="image">Hình ảnh<span className="text-red-500">*</span> :</Label>
-                        <span className="text-xs text-gray-400">Upload ảnh</span>
                     </div>
-                    <div className="col-span-4 flex flex-col gap-2">
-                        <Input
-                            id="image"
-                            name="image"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            required
-                        />
-                        {formData.image && (
-                            <div className="mt-2">
-                                <img
-                                    src={formData.image}
-                                    alt="Preview"
-                                    className="w-32 h-32 object-contain border rounded bg-gray-100"
-                                />
+                    <div className="col-span-10">
+                        <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-center">
+                                <div
+                                    className="relative flex h-[150px] w-[150px] cursor-pointer flex-col items-center justify-center rounded-md border bg-muted"
+                                    onClick={() => document.getElementById("image-upload").click()}
+                                >
+                                    {formData.image ? (
+                                        <img
+                                            src={formData.image}
+                                            alt="Preview"
+                                            className="h-full w-full rounded-md object-contain"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                            <Upload className="mb-2 h-10 w-10" />
+                                            <span className="text-center text-sm">Upload ảnh</span>
+                                        </div>
+                                    )}
+                                    <input
+                                        id="image-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                    />
+                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                     <div className="col-span-2 flex items-center">
                         <Label htmlFor="status">Trạng thái:</Label>

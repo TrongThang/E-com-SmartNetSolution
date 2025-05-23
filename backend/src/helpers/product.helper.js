@@ -88,6 +88,7 @@ function configDataProductDetail(productRows) {
                 average_rating: row.average_rating,
                 total_liked: row.total_liked,
                 total_review: row.total_review,
+                total_reviews_today: row.total_reviews_today,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
                 deleted_at: row.deleted_at,
@@ -140,7 +141,7 @@ async function check_info_product(product) {
         errors.push(ERROR_CODES.PRODUCT_CHANGED_NAME)
         fieldErrors.push('name')
     }
-    
+
     // Sản phẩm bị ẩn
     if (product_actual.is_hide) {
         errors.push(ERROR_CODES.PRODUCT_IS_HIDE)
@@ -169,7 +170,7 @@ async function check_info_product(product) {
     if (errors.length > 0) {
         return get_error_response(errors, STATUS_CODE.NOT_ACCEPTABLE, null, fieldErrors)
     }
-    
+
     return null;
 }
 

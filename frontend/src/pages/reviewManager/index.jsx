@@ -19,7 +19,7 @@ const ReviewManagerPage = () => {
         {
             key: "id",
             label: "ID",
-            sortName: "id"
+            
         },
         {
             key: "name",
@@ -36,6 +36,11 @@ const ReviewManagerPage = () => {
             label: "Đánh giá trung bình",
             sortName: "average_rating",
             render: (row) => `${row.average_rating || 0}/5`
+        },
+        {
+            key: "total_reviews_today",
+            label: "Số đánh giá hôm nay",
+            sortName: "total_reviews_today"
         },
         {
             key: "actions",

@@ -18,7 +18,8 @@ const prisma = new PrismaClient();
 const getProductService = async (filters, logic, limit, sort, order, role, type) => {
     // product.name, slug, description, description_normal, image, selling_price, category_id, views, status, unit_id 
     let get_attr = `product.name, product.slug, product.description, product.image, selling_price, views, status,
-    product.category_id, categories.name as categories, COALESCE(sold.sold, 0) AS sold, COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, COALESCE(review.avg_rating, 0) AS average_rating`
+    product.category_id, categories.name as categories, COALESCE(sold.sold, 0) AS sold, COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, COALESCE(review.avg_rating, 0) AS average_rating,
+    COALESCE(CAST(total_reviews_today.total_reviews_today AS CHAR), 0) AS total_reviews_today`
 
     let get_table = `product`
     let query_join = `LEFT JOIN categories ON product.category_id = categories.category_id`
@@ -39,6 +40,15 @@ const getProductService = async (filters, logic, limit, sort, order, role, type)
             FROM order_detail
             GROUP BY product_id
         ) sold ON product.id = sold.product_id
+        LEFT JOIN (
+            SELECT
+                product_id,
+                COUNT(id) as total_reviews_today
+            FROM review_product
+            WHERE deleted_at IS NULL
+            AND created_at >= CURDATE()
+            GROUP BY product_id
+        ) total_reviews_today ON product.id = total_reviews_today.product_id
     `
     // }
 
@@ -88,7 +98,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
     `
 
     get_attr += `, COALESCE(review.avg_rating, 0) AS average_rating, COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, COALESCE(CAST(liked.total_liked AS CHAR), '0') AS total_liked, COALESCE(inventory.stock, 0) AS stock, COALESCE(sold.sold, 0) AS sold`
-    query_join =  query_join + `
+    query_join = query_join + `
         LEFT JOIN (
             SELECT product_id, CAST(AVG(rating) AS DECIMAL(5,2)) AS avg_rating, COUNT(id) AS total_review
             FROM review_product
@@ -115,7 +125,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
     const products = await executeSelectData({
         table: get_table, queryJoin: query_join, strGetColumn: get_attr, filter: filter, configData: configDataProductDetail,
     })
-    
+
     const images = await prisma.image_product.findMany({
         where: { product_id: id },
         select: {
@@ -125,7 +135,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
 
     products.data[0].images = images;
 
-    return get_error_response(errorCode=ERROR_CODES.SUCCESS, status_code=STATUS_CODE.OK, data = products); 
+    return get_error_response(errorCode = ERROR_CODES.SUCCESS, status_code = STATUS_CODE.OK, data = products);
 }
 
 const checkBeforeProduct = async (category_id, unit_id, warrenty_time_id) => {
