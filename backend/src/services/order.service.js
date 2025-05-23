@@ -91,29 +91,6 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     }
 }
 
-async function createOrder(orderData) {
-    const { shipping, payment, order, products } = orderData;
-
-    // 1. Kiểm tra thông tin sản phẩm
-    const checkProduct = await check_list_info_product(products);
-    if (checkProduct) return checkProduct;
-
-    // 2. Kiểm tra thông tin saler (nếu có)
-    if (order.saler_id) {
-        const checkSaler = await prisma.account.findFirst({
-            where: {
-                employee_id: order.saler_id,
-                role_id: "SALER",
-                is_active: true,
-                deleted_at: null
-            }
-        });
-        if (!checkSaler) {
-            return get_error_response(ERROR_CODES.EMPLOYEE_SALER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
-        }
-    }
-}
-
 async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
     const get_attr = `
         order.id,
@@ -219,14 +196,28 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
     }
 }
 
+async function createOrder(orderData) {
+    const { shipping, payment, order, products } = orderData;
 
-async function createOrder(shipping, payment) {
-    
-    const checkProduct = order.products.map((item) => { check_list_info_product(item.products) })
-    if(checkProduct) {
-        return get_error_response(ERROR_CODES.PRODUCT_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+    // 1. Kiểm tra thông tin sản phẩm
+    const checkProduct = await check_list_info_product(products);
+    if (checkProduct) return checkProduct;
+
+    // 2. Kiểm tra thông tin saler (nếu có)
+    if (order.saler_id) {
+        const checkSaler = await prisma.account.findFirst({
+            where: {
+                employee_id: order.saler_id,
+                role_id: "SALER",
+                is_active: true,
+                deleted_at: null
+            }
+        });
+        if (!checkSaler) {
+            return get_error_response(ERROR_CODES.EMPLOYEE_SALER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+        }
     }
-
+    
     // 3. Kiểm tra thông tin shipper (nếu có)
     if (order.shipper_id) {
         const checkShipper = await prisma.account.findFirst({

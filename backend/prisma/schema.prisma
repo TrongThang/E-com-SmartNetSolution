@@ -285,7 +285,7 @@ model customer {
 model detail_export {
   batch_code           String                 @id @db.VarChar(50)
   export_id            Int
-  order_id             Int?
+  order_id             String?                @db.VarChar(50)
   product_id           Int
   quantity             Int?
   note                 String?                @db.VarChar(500)

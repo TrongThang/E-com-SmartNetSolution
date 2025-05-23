@@ -413,6 +413,7 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.PRODUCT_NOT_ENOUGH_STOCK]: "Số lượng thiết bị không đủ",
     [ERROR_CODES.PRODUCT_IS_HIDE]: "Thiết bị đang ẩn",
     [ERROR_CODES.PRODUCT_STATUS_INVALID]: "Trạng thái thiết bị không hợp lệ",
+    [ERROR_CODES.PRODUCT_CHANGED_NAME]: "Tên sản phẩm có sự thay đổi",
 
 
     // ATTRIBUTE

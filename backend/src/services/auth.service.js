@@ -166,7 +166,31 @@ const register = async ({ username, password, confirm_password, surname, lastnam
 	return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, account);
 }
 
+/*
+	Luồng chạy đổi mật khẩu
+	Người dùng gửi yêu cầu đổi mật khẩu -> (username và email)
+	Đưa vào hàm checkAccountEmail kiểm tra đúng hay không -> trả về thông tin account
+	Nếu đúng -> gửi bắt đầu gửi OTP bằng account_id vừa nhận được khi call api check
+	Người dùng nhập OTP vừa được gửi qua mail
+	Call APi verify OTP
+	Nếu đúng thì bắt đầu Đổi mật khẩu
+*/
+const ChangedPasswordAccount = async (payload) => {
+	const { username, newPassword, confirmPassword } = payload
+
+	// Kiểm tra username đưa vào có tồn tại hay không
+
+	// Kiểm tra newPassword và confirmPassword có giông nhau hay không
+
+	// Mã hoá password
+
+	// Cập nhật vào db
+
+	// return
+}
+
 module.exports = {
     loginAPI, register_service: register,
-    refreshTokenAPI,
+	refreshTokenAPI,
+	ChangedPasswordAccount
 }

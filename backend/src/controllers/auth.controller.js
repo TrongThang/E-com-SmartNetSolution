@@ -2,7 +2,8 @@ const { PrismaClient } = require('@prisma/client');
 const {
     loginAPI,
     refreshTokenAPI,
-    register_service
+    register_service,
+    ChangedPasswordAccount
 } = require('../services/auth.service');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -43,6 +44,12 @@ class AuthController {
         return res.status(response.status_code).json(response);
     }
 
+    async changedPassword(req, res) {
+        const response = await ChangedPasswordAccount(req.body)
+
+        return res.status(response.status_code).json(response)
+    }
+
     async getMe(req, res) {
         try {
             const user = await this.prisma.user.findUnique({
@@ -64,9 +71,7 @@ class AuthController {
     }
 
     async sendOtpEmail(req, res) {
-        const { account_id, email } = req.body;
-
-        const response = await notificationService.sendOtpEmail(account_id, email);
+        const response = await notificationService.sendOtpEmail(req.body);
         
         return res.status(response.status_code).json(response);
     }

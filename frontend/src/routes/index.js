@@ -34,6 +34,15 @@ import ReviewManagerPage from '@/pages/reviewManager';
 import BlogManagerPage from '@/pages/blogManager';
 import AddBlog from '@/pages/blogManager/AddBlog';
 import EditBlog from '@/pages/blogManager/EditBlog';
+import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/Create";
+import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
+import UserManagerPage from "@/pages/userManager";
+import AddUserPage from "@/pages/userManager/AddUser";
+import EditUserPage from "@/pages/userManager/EditUser";
+import ProductManagerPage from "@/pages/productManager";
+import AddProductPage from "@/pages/productManager/AddProduct";
+import EditProductPage from "@/pages/productManager/EditProduct";
+import EmployeeManagerPage from "@/pages/employeeManager";
 
 export const router = createBrowserRouter([
   {
@@ -191,7 +200,42 @@ export const router = createBrowserRouter([
         path: 'blogs/edit/:id',
         element: <EditBlog />,
       },
-        
+      {
+        path: 'warehouse/import/create',
+          element: <CreateImportWarehousePage />
+      },
+      {
+          path: 'warehouse/export/create',
+          element: <CreateExportWarehousePage />
+      },
+      {
+        path: 'users',
+        element: <UserManagerPage />,
+      },
+      {
+        path: 'employees',
+        element: <EmployeeManagerPage />,
+      },
+      {
+        path: 'users/add',
+        element: <AddUserPage />,
+      },
+      {
+        path: 'users/edit/:id',
+        element: <EditUserPage />,
+      },
+      {
+        path: 'products/',
+        element: <ProductManagerPage />,
+      },
+      {
+        path: 'products/add',
+        element: <AddProductPage />
+      },
+      {
+        path: 'products/edit/:id',
+        element: <EditProductPage />
+      }
     ],
   },
 ]);

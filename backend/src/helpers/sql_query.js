@@ -143,7 +143,7 @@ async function executeSelectData({
         FROM ${table}
         ${queryJoin || ''}
         WHERE ${whereCondition}
-        GROUP BY ${table}.${idColumn}
+        -- GROUP BY ${table}.${idColumn}
         ${buildSort}
     `;
     console.log('queryPrimary:', queryPrimary)
