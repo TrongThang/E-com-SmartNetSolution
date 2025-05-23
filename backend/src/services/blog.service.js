@@ -11,7 +11,7 @@ const getBlogService = async (filter, limit, sort, order) => {
         product.name as product_name,
         employee.surname as author_surname,
         employee.lastname as author_lastname, blog.created_at, blog.updated_at, blog.deleted_at`
-    
+
     let get_table = `blog`
     let query_join = `
         LEFT JOIN categories ON blog.category_id = categories.category_id
@@ -20,21 +20,21 @@ const getBlogService = async (filter, limit, sort, order) => {
     `
 
     try {
-        const result = await executeSelectData({ 
-            table: get_table, 
-            queryJoin: query_join, 
-            strGetColumn: get_attr, 
-            limit: limit, 
-            filter: filter, 
-            sort: sort, 
-            order: order 
+        const result = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: filter,
+            sort: sort,
+            order: order
         });
 
         if (result && result.data) {
             // Chuyển đổi kết quả để thêm tên đầy đủ của nhân viên
             const transformedBlogs = result.data.map(blog => ({
                 ...blog,
-                author: blog.author_surname && blog.author_lastname 
+                author: blog.author_surname && blog.author_lastname
                     ? `${blog.author_surname} ${blog.author_lastname}`
                     : blog.author, // Giữ nguyên mã nếu không có tên
                 author_surname: undefined,
@@ -43,9 +43,9 @@ const getBlogService = async (filter, limit, sort, order) => {
 
             return {
                 ...get_error_response(
-                    errors=ERROR_CODES.SUCCESS, 
-                    status_code=STATUS_CODE.OK, 
-                    data=transformedBlogs
+                    errors = ERROR_CODES.SUCCESS,
+                    status_code = STATUS_CODE.OK,
+                    data = transformedBlogs
                 ),
                 total: result.total,
                 page: result.page,
@@ -56,9 +56,9 @@ const getBlogService = async (filter, limit, sort, order) => {
 
         return {
             ...get_error_response(
-                errors=ERROR_CODES.SUCCESS, 
-                status_code=STATUS_CODE.OK, 
-                data=[]
+                errors = ERROR_CODES.SUCCESS,
+                status_code = STATUS_CODE.OK,
+                data = []
             ),
             total: 0,
             page: 1,
@@ -68,8 +68,8 @@ const getBlogService = async (filter, limit, sort, order) => {
     } catch (error) {
         console.error('Lỗi trong getBlogService:', error);
         return get_error_response(
-            errors=ERROR_CODES.INTERNAL_SERVER_ERROR, 
-            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+            errors = ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
 };
@@ -84,12 +84,12 @@ const getBlogDetailService = async (id) => {
             }
         ]);
 
-        let get_attr = `blog.id, blog.id, blog.title, blog.author, blog.content, blog.content_normal, blog.image, blog.score, blog.is_hide,
-            categories.name as category_name,
-            product.name as product_name,
-            employee.surname as author_surname,
-            employee.lastname as author_lastname, blog.created_at, blog.updated_at, blog.deleted_at`
-        
+        let get_attr = `blog.id, blog.title, blog.author, blog.category_id, blog.product_id, blog.content, blog.content_normal, blog.image, blog.score, blog.is_hide,
+        categories.name as category_name,
+        product.name as product_name, 
+        employee.id as author_id,
+        employee.surname as author_surname,
+        employee.lastname as author_lastname, blog.created_at, blog.updated_at, blog.deleted_at`
         let get_table = `blog`
         let query_join = `
             LEFT JOIN categories ON blog.category_id = categories.category_id
@@ -97,24 +97,24 @@ const getBlogDetailService = async (id) => {
             LEFT JOIN employee ON blog.author = employee.id
         `
 
-        const result = await executeSelectData({ 
-            table: get_table, 
-            queryJoin: query_join, 
-            strGetColumn: get_attr, 
-            filter: filter 
+        const result = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            filter: filter
         });
 
         if (!result || !result.data || result.data.length === 0) {
             return get_error_response(
-                errors=ERROR_CODES.BLOG_NOT_FOUND,
-                status_code=STATUS_CODE.NOT_FOUND
+                errors = ERROR_CODES.BLOG_NOT_FOUND,
+                status_code = STATUS_CODE.NOT_FOUND
             );
         }
 
         // Chuyển đổi kết quả để thêm tên đầy đủ của nhân viên
         const transformedBlog = {
             ...result.data[0],
-            author: result.data[0].author_surname && result.data[0].author_lastname 
+            author: result.data[0].author_surname && result.data[0].author_lastname
                 ? `${result.data[0].author_surname} ${result.data[0].author_lastname}`
                 : result.data[0].author, // Giữ nguyên mã nếu không có tên
             author_surname: undefined,
@@ -122,15 +122,15 @@ const getBlogDetailService = async (id) => {
         };
 
         return get_error_response(
-            errors=ERROR_CODES.SUCCESS, 
-            status_code=STATUS_CODE.OK, 
-            data=transformedBlog
+            errors = ERROR_CODES.SUCCESS,
+            status_code = STATUS_CODE.OK,
+            data = transformedBlog
         );
     } catch (error) {
         console.error('Lỗi trong getBlogDetailService:', error);
         return get_error_response(
-            errors=ERROR_CODES.INTERNAL_SERVER_ERROR, 
-            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+            errors = ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
 };
@@ -148,9 +148,9 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
         if (categoryId) {
             if (isNaN(categoryId)) {
                 return get_error_response(
-                    errors=ERROR_CODES.BAD_REQUEST,
-                    status_code=STATUS_CODE.BAD_REQUEST,
-                    data="Invalid category ID format"
+                    errors = ERROR_CODES.BAD_REQUEST,
+                    status_code = STATUS_CODE.BAD_REQUEST,
+                    data = "Invalid category ID format"
                 );
             }
             const category = await prisma.categories.findUnique({
@@ -158,8 +158,8 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
             });
             if (!category) {
                 return get_error_response(
-                    errors=ERROR_CODES.CATEGORY_NOT_FOUND,
-                    status_code=STATUS_CODE.BAD_REQUEST
+                    errors = ERROR_CODES.CATEGORY_NOT_FOUND,
+                    status_code = STATUS_CODE.BAD_REQUEST
                 );
             }
         }
@@ -168,9 +168,9 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
         if (productId) {
             if (isNaN(productId)) {
                 return get_error_response(
-                    errors=ERROR_CODES.BAD_REQUEST,
-                    status_code=STATUS_CODE.BAD_REQUEST,
-                    data="Invalid product ID format"
+                    errors = ERROR_CODES.BAD_REQUEST,
+                    status_code = STATUS_CODE.BAD_REQUEST,
+                    data = "Invalid product ID format"
                 );
             }
             const product = await prisma.product.findUnique({
@@ -178,8 +178,8 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
             });
             if (!product) {
                 return get_error_response(
-                    errors=ERROR_CODES.PRODUCT_NOT_FOUND,
-                    status_code=STATUS_CODE.BAD_REQUEST
+                    errors = ERROR_CODES.PRODUCT_NOT_FOUND,
+                    status_code = STATUS_CODE.BAD_REQUEST
                 );
             }
         }
@@ -201,16 +201,16 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
         });
 
         return get_error_response(
-            errors=ERROR_CODES.SUCCESS, 
-            status_code=STATUS_CODE.OK, 
-            data=blog
+            errors = ERROR_CODES.SUCCESS,
+            status_code = STATUS_CODE.OK,
+            data = blog
         );
     } catch (error) {
         console.error('Error in createBlogService:', error);
         return get_error_response(
-           
-            errors=ERROR_CODES.BLOG_CREATE_FAILED, 
-            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+
+            errors = ERROR_CODES.BLOG_CREATE_FAILED,
+            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
 };
@@ -223,8 +223,8 @@ const updateBlogService = async ({ id, category_id, product_id, title, author, c
 
         if (!existingBlog) {
             return get_error_response(
-                errors=ERROR_CODES.BLOG_NOT_FOUND,
-                status_code=STATUS_CODE.NOT_FOUND
+                errors = ERROR_CODES.BLOG_NOT_FOUND,
+                status_code = STATUS_CODE.NOT_FOUND
             );
         }
 
@@ -235,8 +235,8 @@ const updateBlogService = async ({ id, category_id, product_id, title, author, c
             });
             if (!category) {
                 return get_error_response(
-                    errors=ERROR_CODES.CATEGORY_NOT_FOUND,
-                    status_code=STATUS_CODE.BAD_REQUEST
+                    errors = ERROR_CODES.CATEGORY_NOT_FOUND,
+                    status_code = STATUS_CODE.BAD_REQUEST
                 );
             }
         }
@@ -248,8 +248,8 @@ const updateBlogService = async ({ id, category_id, product_id, title, author, c
             });
             if (!product) {
                 return get_error_response(
-                    errors=ERROR_CODES.PRODUCT_NOT_FOUND,
-                    status_code=STATUS_CODE.BAD_REQUEST
+                    errors = ERROR_CODES.PRODUCT_NOT_FOUND,
+                    status_code = STATUS_CODE.BAD_REQUEST
                 );
             }
         }
@@ -271,15 +271,15 @@ const updateBlogService = async ({ id, category_id, product_id, title, author, c
         });
 
         return get_error_response(
-            errors=ERROR_CODES.SUCCESS, 
-            status_code=STATUS_CODE.OK, 
-            data=blog
+            errors = ERROR_CODES.SUCCESS,
+            status_code = STATUS_CODE.OK,
+            data = blog
         );
     } catch (error) {
         console.error('Error in updateBlogService:', error);
         return get_error_response(
-            errors=ERROR_CODES.BLOG_UPDATED_FAILED, 
-            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+            errors = ERROR_CODES.BLOG_UPDATED_FAILED,
+            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
 };
@@ -292,8 +292,8 @@ const deleteBlogService = async (id) => {
 
         if (!blog) {
             return get_error_response(
-                errors=ERROR_CODES.BLOG_NOT_FOUND,
-                status_code=STATUS_CODE.NOT_FOUND
+                errors = ERROR_CODES.BLOG_NOT_FOUND,
+                status_code = STATUS_CODE.NOT_FOUND
             );
         }
 
@@ -306,14 +306,14 @@ const deleteBlogService = async (id) => {
         });
 
         return get_error_response(
-            errors=ERROR_CODES.BLOG_SUCCESS, 
-            status_code=STATUS_CODE.OK
+            errors = ERROR_CODES.BLOG_SUCCESS,
+            status_code = STATUS_CODE.OK
         );
     } catch (error) {
         console.error('Error in deleteBlogService:', error);
         return get_error_response(
-            errors=ERROR_CODES.BLOG_DELETED_FAILED, 
-            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+            errors = ERROR_CODES.BLOG_DELETED_FAILED,
+            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
 };

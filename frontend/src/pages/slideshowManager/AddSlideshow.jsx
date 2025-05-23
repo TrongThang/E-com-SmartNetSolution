@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input.jsx";
 import { Label } from "@/components/ui/label.jsx";
 import { Switch } from "@/components/ui/switch.jsx";
 import Swal from 'sweetalert2';
+import ImageCropper from "@/components/common/ImageCropper";
+import { Upload } from "lucide-react";
 
 const AddSlideshowPage = () => {
     const [formData, setFormData] = useState({
@@ -15,6 +17,8 @@ const AddSlideshowPage = () => {
         status: true
     });
     const [loading, setLoading] = useState(false);
+    const [showCropModal, setShowCropModal] = useState(false);
+    const [tempImage, setTempImage] = useState(null);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -30,43 +34,16 @@ const AddSlideshowPage = () => {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                // Compress image before setting state
-                const img = new Image();
-                img.src = reader.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1200;
-                    const MAX_HEIGHT = 800;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Convert to JPEG with 0.8 quality
-                    const compressedImage = canvas.toDataURL('image/jpeg', 0.8);
-                    setFormData(prev => ({
-                        ...prev,
-                        image: compressedImage
-                    }));
-                };
+                setTempImage(reader.result);
+                setShowCropModal(true);
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const handleCropComplete = (croppedImage) => {
+        setFormData(prev => ({ ...prev, image: croppedImage }));
+        setShowCropModal(false);
     };
 
     const handleStatusChange = (checked) => {
@@ -155,28 +132,38 @@ const AddSlideshowPage = () => {
                         />
                     </div>
 
-                    <div className="col-span-2 flex flex-col gap-2">
+                    <div className="col-span-2">
                         <Label htmlFor="image">Hình ảnh<span className="text-red-500">*</span> :</Label>
-                        <span className="text-xs text-gray-400">Upload ảnh</span>
                     </div>
-                    <div className="col-span-4 flex flex-col gap-2">
-                        <Input
-                            id="image"
-                            name="image"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            required
-                        />
-                        {formData.image && (
-                            <div className="mt-2">
-                                <img
-                                    src={formData.image}
-                                    alt="Preview"
-                                    className="w-32 h-32 object-contain border rounded bg-gray-100"
-                                />
+                    <div className="col-span-10">
+                        <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-center">
+                                <div
+                                    className="relative flex h-[150px] w-[150px] cursor-pointer flex-col items-center justify-center rounded-md border bg-muted"
+                                    onClick={() => document.getElementById("image-upload").click()}
+                                >
+                                    {formData.image ? (
+                                        <img
+                                            src={formData.image}
+                                            alt="Preview"
+                                            className="h-full w-full rounded-md object-contain"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                            <Upload className="mb-2 h-10 w-10" />
+                                            <span className="text-center text-sm">Upload ảnh</span>
+                                        </div>
+                                    )}
+                                    <input
+                                        id="image-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                    />
+                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                     <div className="col-span-2 flex items-center">
                         <Label htmlFor="status">Trạng thái:</Label>
@@ -211,6 +198,21 @@ const AddSlideshowPage = () => {
                     </Button>
                 </div>
             </form>
+
+            {/* Modal cắt ảnh */}
+            {showCropModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4">
+                        <div className="p-6">
+                            <ImageCropper
+                                image={tempImage}
+                                onCropComplete={handleCropComplete}
+                                aspectRatio={16 / 5}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

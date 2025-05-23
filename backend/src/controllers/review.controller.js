@@ -5,43 +5,52 @@ const { getReviewService,
     createReviewService,
     updateReviewService,
     deleteReviewService,
-    getReviewDetailService
+    getReviewDetailService,
+    getReviewByProductIdService
 } = require('../services/review.service');
 
-class ReviewController { 
-    
-    async getReviews (req, res)  {
+class ReviewController {
+
+    async getReviews(req, res) {
         const { filter, limit, sort, order, page } = req.query;
-        
+
         const result = await getReviewService(filter, limit, sort, order, page);
         res.status(result.status_code).json(result);
     };
 
-    async createReview (req, res){
+    async createReview(req, res) {
         const { customer_id, product_id, comment, image, rating } = req.body;
         const result = await createReviewService({ customer_id, product_id, comment, image, rating });
         res.status(result.status_code).json(result);
     };
 
-    async updateReview (req, res) {
+    async updateReview(req, res) {
         const { id, customer_id, comment, image, rating } = req.body;
         const result = await updateReviewService({ id, customer_id, comment, image, rating });
         res.status(result.status_code).json(result);
     };
-    
+
     // Xóa review
-    async deleteReview (req, res) {
+    async deleteReview(req, res) {
         const { id } = req.params;
         const result = await deleteReviewService(Number(id));
         res.status(result.status_code).json(result);
     };
-    
+
     // Lấy chi tiết review
-    async getReviewDetail (req, res) {
+    async getReviewDetail(req, res) {
         const { id } = req.params;
         const result = await getReviewDetailService(Number(id));
         res.status(result.status_code).json(result);
     };
+
+    // Lấy review theo product_id
+    async getReviewByProductId(req, res) {
+        const { product_id } = req.params;
+        const { filter, limit, sort, order, page } = req.query;
+        const result = await getReviewByProductIdService(product_id, filter, limit, sort, order, page);
+        res.status(result.status_code).json(result);
+    }
 }
 
 module.exports = new ReviewController();

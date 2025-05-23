@@ -147,10 +147,64 @@ const getReviewDetailService = async (id) => {
     }
 };
 
+// Lấy review theo product_id
+const getReviewByProductIdService = async (product_id, filter, limit, sort, order, page = 1) => {
+    let get_attr = `
+        review_product.id, review_product.customer_id, review_product.product_id, 
+        review_product.comment, review_product.image, review_product.rating, 
+        review_product.response, review_product.note,
+        customer.surname, customer.lastname, customer.image as customer_image
+    `;
+    let get_table = "review_product";
+    let query_join = `
+        LEFT JOIN customer ON review_product.customer_id = customer.id
+    `;
+
+    // Tạo filter theo product_id
+    const productFilter = JSON.stringify([
+        {
+            field: "review_product.product_id",
+            condition: "=",
+            value: Number(product_id)
+        },
+        {
+            field: "review_product.deleted_at",
+            condition: "is",
+            value: null
+        }
+    ]);
+
+    // Merge với filter từ request nếu có
+    const finalFilter = filter ? {
+        logic: 'AND',
+        filters: [
+            JSON.parse(productFilter),
+            typeof filter === 'string' ? JSON.parse(filter) : filter
+        ]
+    } : productFilter;
+
+    try {
+        const reviews = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit,
+            filter: finalFilter,
+            sort,
+            order,
+            page
+        });
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, reviews);
+    } catch (error) {
+        return get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
+    }
+};
+
 module.exports = {
     getReviewService,
     createReviewService,
     updateReviewService,
     deleteReviewService,
-    getReviewDetailService
+    getReviewDetailService,
+    getReviewByProductIdService
 };

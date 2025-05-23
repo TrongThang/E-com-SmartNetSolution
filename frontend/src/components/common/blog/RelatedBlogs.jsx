@@ -6,7 +6,7 @@ export default function RelatedBlogs({ blogs }) {
     if (!blogs || blogs.length === 0) return null;
 
     return (
-        <div className="w-[35%] sticky top-[40px] self-start">
+        <div className="w-[35%] sticky top-[60px] self-start">
             <h2 className="text-xl font-bold mb-4">Bài viết khác bạn có thể muốn xem:</h2>
             <div className="space-y-4">
                 {blogs.map((blog) => (
