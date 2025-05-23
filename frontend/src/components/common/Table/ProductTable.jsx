@@ -41,14 +41,6 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
             label: "Danh mục",
         },
         {
-            key: "total_review",
-            label: "Tổng đánh giá",
-        },
-        {
-            key: "average_rating",
-            label: "Trung bình sao",
-        },
-        {
             key: "status",
             label: "Trạng thái",
             render: (row) => (
