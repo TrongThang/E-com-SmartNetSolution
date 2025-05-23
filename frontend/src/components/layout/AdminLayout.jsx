@@ -4,11 +4,11 @@ import { Outlet } from "react-router-dom";
 const AdminLayout = () => {
   return (
     <div className="flex min-h-screen">
-      <div className="w-full fixed top-0 left-0">
+      <div className="w-full fixed top-0 left-0 z-50">
         <Topbar />
       </div>
-      <div>
-      <Navbar_admin />
+      <div className="z-40">
+        <Navbar_admin />
       </div>
       <div className="flex-1 flex flex-col">
         {/* chỉnh sửa giao diện bên trong */}
