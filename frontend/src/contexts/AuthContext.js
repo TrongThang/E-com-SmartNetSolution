@@ -59,10 +59,10 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('authToken', token);
                 console.log('token', token);
                 const decoded = jwtDecode(token);
-                console.log('decoded', decoded);    
+                console.log('decoded', decoded);
                 setUser(decoded);
                 setIsAuthenticated(true);
-                return { success: true };   
+                return { success: true };
             } else {
                 return {
                     success: false,
@@ -105,13 +105,54 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
     };
 
+    const sendOtp = async (account_id, email) => {
+        try {
+            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { account_id, email });
+            if (response.data.status_code === 200) {
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.data.message || 'Gửi OTP thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Send OTP error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi gửi OTP'
+            };
+        }
+    };
+    const verifyOtp = async (email, otp) => {
+        try {
+            const response = await axios.post('http://localhost:8081/api/auth/verify-otp', { email, otp });
+            if (response.data.status_code === 200) {
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.data.message || 'Xác thực OTP thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Verify OTP error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi xác thực OTP'
+            };
+        }
+    }
+
     const value = {
         user,
         isAuthenticated,
         loading,
         login,
         register,
-        logout
+        logout,
+        sendOtp,
+        verifyOtp
     };
 
     return (

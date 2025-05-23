@@ -19,7 +19,8 @@ class NotificationService {
         this.prisma = new PrismaClient();
     }
 
-    async checkAccountEmail (account_id, email) {
+    async checkAccountEmail(account_id, email) {
+
         const account = await this.prisma.account.findUnique({
             where: { account_id: account_id },
             select: {
@@ -35,22 +36,22 @@ class NotificationService {
                 },
             },
         });
-        
+
         if (!account) {
             return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
         }
-        
+
         if (account.customer.email !== email) {
             return get_error_response(ERROR_CODES.ACCOUNT_EMAIL_NOT_MATCH, STATUS_CODE.BAD_REQUEST);
         }
-    
+
         if (account.customer.email_verified) {
             return get_error_response(ERROR_CODES.ACCOUNT_EMAIL_IS_VERIFIED, STATUS_CODE.BAD_REQUEST);
         }
-    
+
         return account;
     }
-    
+
     async sendOtpEmail(account_id, email) {
         const result_check = await this.checkAccountEmail(account_id, email);
 
@@ -58,14 +59,14 @@ class NotificationService {
             return result_check; // Trả về lỗi nếu có
         }
         const account = result_check;
-        
+
         try {
             let otp = generateVerificationOTPCode(); // Tạo mã OTP mới
             const expirationTime = addVietnamMinutes(10); // Thời gian hết hạn là 10 phút sau
 
             account.verification_code = otp; // Cập nhật mã OTP vào tài khoản
             account.verification_expiry = expirationTime; // Cập nhật thời gian hết hạn mã OTP
-            
+
             await this.prisma.account.update({
                 where: { account_id: account_id },
                 data: {
@@ -91,7 +92,6 @@ class NotificationService {
             console.error("Lỗi gửi email:", error);
             return get_error_response(ERROR_CODES.EMAIL_SEND_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
         }
-        
     }
 
     async verifyOtpEmail(account_id, email, otp) {
@@ -112,7 +112,7 @@ class NotificationService {
         if (getVietnamTimeNow() > account.verification_expiry) {
             return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_CODE_EXPIRED, STATUS_CODE.BAD_REQUEST);
         }
-        
+
         try {
             // Cập nhật bảng account
             await this.prisma.account.update({
@@ -130,7 +130,7 @@ class NotificationService {
                     email_verified: true,
                 },
             });
-            
+
             return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, { message: "Xác minh thành công" });
         } catch (error) {
             console.error("Lỗi xác minh OTP:", error);
