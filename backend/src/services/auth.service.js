@@ -21,19 +21,18 @@ async function getUserAdminInfo(account_id) {
 	return user;
 }
 
-async function loginAPI (username, password, type = "CUSTOMER", remember_me = null) {
+async function loginAPI (username, password, type = null, remember_me = null) {
 	try {
-		include_clause = type === 'CUSTOMER' ? { customer: true } : { employee: true };
+		include_clause = type === null ? { employee: true } : { customer: true };
 
 		const user = await prisma.account.findFirst({
 			where: {
 				username: username,
-				role_id: type,
 				// report: { equals: 0 }
 			}
 		})
 		
-		if( verifyPassword(password, user.password) === false) {
+		if(await verifyPassword(password, user.password) === false) {
 			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
 		}
 

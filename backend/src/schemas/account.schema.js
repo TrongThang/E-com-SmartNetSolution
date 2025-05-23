@@ -33,9 +33,6 @@ const loginSchema = z.object({
         password: z.string().min(1, {
             message: `[${ERROR_CODES.ACCOUNT_PASSWORD_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_PASSWORD_REQUIRED]}`,
         }),
-        type: z.enum(['CUSTOMER', 'EMPLOYEE'], {
-            message: `[${ERROR_CODES.ACCOUNT_TYPE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_TYPE_INVALID]}`,
-        }),
         remember_me: z.boolean({
             invalid_type_error: {
                 message: `[${ERROR_CODES.ACCOUNT_REMEMBER_ME_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_REMEMBER_ME_INVALID]}`,
