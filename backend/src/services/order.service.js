@@ -131,6 +131,7 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
         order.note,
         order.status,
         order.address,
+        order.name_recipient,
         order_detail.product_id,
         product.name as product_name,
         product.image,

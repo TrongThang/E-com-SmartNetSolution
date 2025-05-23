@@ -22,14 +22,17 @@ const UserTable = ({ users, onEdit, onDelete }) => {
         {
             key: "fullname",
             label: "Tên người dùng",
+            sortName: "fullname",
         },
         {
             key: "email",
             label: "Email",
+            sortName: "fullname",
         },
         {
             key: "phone",
             label: "Số điện thoại",
+            sortName: "fullname",
         },
         {
             key: "gender",

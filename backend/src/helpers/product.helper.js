@@ -38,7 +38,93 @@ function diffAttributeSets(request, in_db) {
     return { toAdd, toUpdate, toDelete };
 }
 
-function groupAttributesByGroup(attributeRows) {
+function configDataProduct(productRows) {
+    const productsById = {};
+    productRows.forEach((row) => {
+        const productId = row.ID || row.id; // Đảm bảo lấy đúng productId
+        if (!productsById[productId]) {
+            productsById[productId] = {
+                id: row.id,
+                name: row.name,
+                slug: row.slug,
+                description: row.description,
+                selling_price: row.selling_price,
+                sold: row.sold,
+                views: row.views,
+                status: row.status,
+                category_id: row.category_id,
+                categories: row.categories,
+                average_rating: row.average_rating,
+                total_review: row.total_review,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
+                deleted_at: row.deleted_at,
+                attributes: row.attributes_json && typeof row.attributes_json === 'string' ? JSON.parse(row.attributes_json) : [],
+                reviews: [],
+                images: [],
+                image: row.image,
+            };
+        }
+    });
+
+    return Object.values(productsById).map((product) => {
+        console.log("product",product)
+        const attributeGroups = groupAttributesByGroup(product.attributes);
+        const { attributes, ...productData } = product;
+        return {
+            ...productData,
+            specifications: attributeGroups,
+        };
+    });
+}
+
+// Hàm groupAttributesByGroup (giả định bạn có hàm này)
+function groupAttributesByGroup(attributes) {
+    const groups = {};
+    attributes.forEach(attr => {
+        const groupId = attr.attribute_group_id || 'default'; // Giả định, cần điều chỉnh dựa trên dữ liệu thực tế
+        if (!groups[groupId]) {
+            groups[groupId] = {
+                attribute_group: attr.attribute_group || 'Default Group',
+                attributes: []
+            };
+        }
+        groups[groupId].attributes.push({
+            id: attr.id,
+            name: attr.name,
+            value: attr.value
+        });
+    });
+    return Object.values(groups);
+}
+
+function groupAttributesByGroupDetail(attributeRows) {
+    const result = {};
+
+    attributeRows.forEach((item) => {
+        if (item.attribute_group_id) {
+            const groupId = item.attribute_group_id;
+            const groupName = item.attribute_group || 'Unknown Group';
+            if (!result[groupId]) {
+                result[groupId] = {
+                    id: groupId,
+                    name: groupName,
+                    attributes: [],
+                };
+            }
+            result[groupId].attributes.push({
+                id: item.attribute_id,
+                name: item.attribute || 'Unknown Attribute',
+                value: item.attribute_value || null,
+            });
+        }
+    });
+
+    // Trả về danh sách các nhóm thuộc tính
+    return Object.values(result);
+}
+
+function groupAttributesByGroupDetail(attributeRows) {
     const result = {};
 
     attributeRows.forEach((item) => {
@@ -67,7 +153,7 @@ function groupAttributesByGroup(attributeRows) {
 function configDataProductDetail(productRows) {
     const productsById = {};
     productRows.forEach((row) => {
-        const productId = row.ID;
+        const productId = row.ID || row.id; // Đảm bảo lấy đúng productId
         if (!productsById[productId]) {
             productsById[productId] = {
                 id: row.id,
@@ -91,24 +177,16 @@ function configDataProductDetail(productRows) {
                 created_at: row.created_at,
                 updated_at: row.updated_at,
                 deleted_at: row.deleted_at,
-                attributes: [],
+                attributes: row.attributes_json && typeof row.attributes_json === 'string' ? JSON.parse(row.attributes_json) : [],
                 reviews: [],
                 images: [],
                 image: row.image,
             };
         }
-        if (row.attribute_id || row.attribute_group_id) {
-            productsById[productId].attributes.push({
-                attribute_id: row.attribute_id,
-                attribute: row.attribute,
-                attribute_group_id: row.attribute_group_id,
-                attribute_group: row.attribute_group,
-                attribute_value: row.attribute_value,
-            });
-        }
+        // Không cần push thêm vì attributes_json đã chứa toàn bộ
     });
     return Object.values(productsById).map((product) => {
-        const attributeGroups = groupAttributesByGroup(product.attributes);
+        const attributeGroups = groupAttributesByGroupDetail(product.attributes);
         const { attributes, ...productData } = product;
         return {
             ...productData,
@@ -205,5 +283,5 @@ async function check_list_info_product(list_product) {
 }
 
 module.exports = {
-    diffAttributeSets, configDataProductDetail, check_info_product, check_list_info_product
+    diffAttributeSets, configDataProductDetail, check_info_product, check_list_info_product, configDataProduct
 }

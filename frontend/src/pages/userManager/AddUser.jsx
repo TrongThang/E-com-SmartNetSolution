@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Upload } from "lucide-react"
 import Swal from 'sweetalert2';
 import customerApi from "@/apis/modules/customer.api.ts"
+import { data } from "autoprefixer"
 
 const AddUserPage = () => {
   const navigate = useNavigate()
@@ -79,6 +80,7 @@ const AddUserPage = () => {
         gender: customer.gender,
         status: customer.status
       };
+      console.log("dataSubmut", dataToSubmit)
       const res = await customerApi.add(dataToSubmit);
       if (res.error && res.error !== 0) {
         Swal.fire({
