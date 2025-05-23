@@ -35,7 +35,7 @@ export function SortOptions({ onSortChange }) {
                 <SelectTrigger id="sort-select" className="w-[180px]">
                     <SelectValue placeholder="Mặc định" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                     <SelectItem value="default">Mặc định</SelectItem>
                     <SelectItem value="product.selling_price-asc">Giá tăng dần</SelectItem>
                     <SelectItem value="product.selling_price-desc">Giá giảm dần</SelectItem>

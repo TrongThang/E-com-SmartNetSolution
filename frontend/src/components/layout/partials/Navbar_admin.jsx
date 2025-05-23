@@ -41,11 +41,41 @@ import {
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
+
+// CSS cho thanh cuộn tùy chỉnh
+const scrollbarStyles = `
+  /* Tùy chỉnh thanh cuộn cho sidebar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  }
+`
 function Navbar_admin() {
   return (
     <SidebarProvider>
-      <Sidebar className="bg-[#1F2937] text-white">
-        <SidebarHeader className="py-3 pe-9 pb-5">
+      <Sidebar className="bg-[#1F2937] text-white ">
+        <SidebarHeader className="py-3 pe-18 pb-5">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
@@ -55,7 +85,6 @@ function Navbar_admin() {
                     <span className="text-xs opacity-70">Admin Portal</span>
                   </div>
                 </div>
-
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -207,14 +236,6 @@ function Navbar_admin() {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
-                        <a href="/admin/attribute-groups">
-                          <FolderTree className="size-4" />
-                          <span>Tất Cả Danh Mục</span>
-                        </a>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
                         <a href="/categories/products">
                           <ShoppingBag className="size-4" />
                           <span>Danh Mục Sản Phẩm</span>
@@ -243,6 +264,31 @@ function Navbar_admin() {
             </Collapsible>
           </SidebarGroup>
 
+          {/* Danh Mục */}
+          <SidebarGroup>
+            <Collapsible defaultOpen className="group/collapsible w-full">
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                  Thuộc tính
+                  <ChevronDown className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <a href="/admin/attribute-groups">
+                          <FolderTree className="size-4" />
+                          <span>Nhóm thuộc tính</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
           {/* Cài Đặt */}
           <SidebarGroup>
             <Collapsible className="group/collapsible w-full">

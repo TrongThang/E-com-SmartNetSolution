@@ -4,8 +4,6 @@ import SearchPage from "@/pages/User/Search.page";
 import ProductDetailPage from "@/pages/User/ProductDetail.page";
 import CartPage from "@/pages/User/Cart.page";
 import CheckoutPage from "@/pages/User/checkout/Checkout.page";
-import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
-import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import ProfileInfo from "@/pages/User/Profile/Info";
 import { createBrowserRouter } from "react-router-dom";
@@ -89,8 +87,8 @@ export const router = createBrowserRouter([
         ]
       },
       {
-        path: '/warehouse/export/create',
-        element: <CreateExportWarehousePage />,
+        path: 'search',
+        element: <SearchPage />,
       },
       {
         path: 'products/:id',

@@ -277,7 +277,10 @@ const updateAttributeGroupService = async (id, name, attributes) => {
         // Cập nhật tên nhóm thuộc tính
         await prisma.attribute_group.update({
             where: { id: parseInt(id) },
-            data: { name: name }
+            data: {
+                name: name,
+                updated_at: getVietnamTimeNow()
+            }
         });
 
         // Lấy danh sách thuộc tính hiện có
@@ -409,6 +412,19 @@ const updateAttributeGroupService = async (id, name, attributes) => {
 
 const toggleDeleteRestoreAttributeGroupService = async (id, isRestore = false) => {
     try {
+        const attribute_Category = await prisma.attribute_category.findFirst({
+            where: {
+                attribute_id: parseInt(id)
+            }
+        });
+        if (attribute_Category) {
+            return get_error_response(
+                ERROR_CODES.ATTRIBUTE_GROUP_HAS_ATTRIBUTE,
+                STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+
         const attributeGroup = await prisma.attribute_group.findFirst({
             where: { id: parseInt(id) }
         });

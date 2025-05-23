@@ -18,6 +18,9 @@ const categoryApi = {
             params: { ...params, filters: JSON.stringify(params.filters) },
         });
     },
+    async getById(id: number): Promise<IApiResponse<ICategories>> {
+        return axiosPrivate.get(`${categoryEndpoints.list}/${id}`);
+    },
     async add(data: any): Promise<IApiResponse> {
         try {
             return await axiosPrivate.post(categoryEndpoints.list, data);
@@ -34,7 +37,14 @@ const categoryApi = {
     },
     async delete(id: number): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.delete(`${categoryEndpoints.list}/${id}`);
+            return await axiosPrivate.patch(`${categoryEndpoints.list}/${id}/softDelete`);
+        } catch (error) {
+            throw error;
+        }
+    },
+    async restore(id: number): Promise<IApiResponse> {
+        try {
+            return await axiosPrivate.patch(`${categoryEndpoints.list}/${id}/restore`);
         } catch (error) {
             throw error;
         }

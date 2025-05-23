@@ -1,12 +1,30 @@
+const { PrismaClient } = require('@prisma/client')
+const prisma = new PrismaClient()
+
 async function isDescendant(childId, parentId) {
-    let current = await prisma.categories.findUnique({ where: { category_id: parentId } });
-    while (current && current.parent_id) {
-        if (current.parent_id === childId) {
-            return true; // Gây vòng lặp
+    try {
+        let current = await prisma.categories.findUnique({ 
+            where: { category_id: parentId } 
+        });
+        
+        if (!current) {
+            console.error(`Category with ID ${parentId} not found`);
+            return false;
         }
-        current = await prisma.categories.findUnique({ where: { category_id: current.parent_id } });
+
+        while (current && current.parent_id) {
+            if (current.parent_id === childId) {
+                return true;
+            }
+            current = await prisma.categories.findUnique({ 
+                where: { category_id: current.parent_id } 
+            });
+        }
+        return false;
+    } catch (error) {
+        console.error('Error in isDescendant:', error);
+        throw error;
     }
-    return false;
 }
 
 module.exports = {

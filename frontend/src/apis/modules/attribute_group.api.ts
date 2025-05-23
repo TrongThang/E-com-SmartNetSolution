@@ -33,7 +33,7 @@ const attributeGroupApi = {
     async deleted(
         id: number
     ): Promise<IApiResponse<IAttributeGroup>> {
-        return axiosPrivate.delete(`${categoryEndpoints.list}/${id}`);
+        return axiosPrivate.patch(`${categoryEndpoints.list}/${id}`);
     }
 };
 export default attributeGroupApi; 

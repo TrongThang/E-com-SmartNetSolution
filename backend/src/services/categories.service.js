@@ -143,12 +143,12 @@ const getCategoriesDetailService = async (id) => {
             );
         }
 
-        // Build SQL query to get category with attributes
+        // Build SQL query to get category with attributes  
         let get_attr = `categories.category_id, categories.name, categories.slug, categories.description, 
         categories.parent_id, categories.image, categories.is_hide, 
         categories.created_at, categories.updated_at, categories.deleted_at,
         attribute_group.id as group_id, attribute_group.name as group_name, 
-        attribute.id as attribute_id, attribute.name as attribute_name`;
+        attribute.id as attribute_id, attribute.name as attribute_name, attribute.datatype as attribute_type, attribute.required as attribute_required`;
 
         let get_table = `categories`;
         let query_join = `LEFT JOIN attribute_category ON categories.category_id = attribute_category.category_id
@@ -194,7 +194,9 @@ const getCategoriesDetailService = async (id) => {
                 }
                 attributeGroups.get(item.group_id).attributes.push({
                     attribute_id: item.attribute_id,
-                    attribute_name: item.attribute_name
+                    attribute_name: item.attribute_name,
+                    attribute_type: item.attribute_type,
+                    attribute_required: item.attribute_required
                 });
             }
         });
@@ -310,6 +312,15 @@ const createCategoriesService = async ({ name, description, image, parent_id, at
                 }
             }
         });
+        const existedIds = existedAttr.map(attr => attr.id);
+        const notExistIds = attribute_id.filter(id => !existedIds.includes(parseInt(id)));
+        if (notExistIds.length > 0) {
+            return get_error_response(
+                ERROR_CODES.ATTRIBUTE_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
+
         if (existedAttr.length !== attribute_id.length) {
             return get_error_response(
                 ERROR_CODES.ATTRIBUTE_INVALID_INPUT,
@@ -384,7 +395,21 @@ const updateCategoriesService = async ({ id, name, description, image, is_hide, 
                 NOT: { category_id: parseInt(id) }
             }
         });
-
+        const existedAttr = await prisma.attribute.findMany({
+            where: {
+                id: {
+                    in: attribute_id.map(id => parseInt(id))
+                }
+            }
+        });
+        const existedIds = existedAttr.map(attr => attr.id);
+        const notExistIds = attribute_id.filter(id => !existedIds.includes(parseInt(id)));
+        if (notExistIds.length > 0) {
+            return get_error_response(
+                ERROR_CODES.ATTRIBUTE_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
         if (existed) {
             return get_error_response(
                 ERROR_CODES.CATEGORY_NAME_EXISTED,
@@ -422,11 +447,19 @@ const updateCategoriesService = async ({ id, name, description, image, is_hide, 
                     STATUS_CODE.BAD_REQUEST,
                 );
             }
-            const loop = await isDescendant(parseInt(id), parseInt(parent_id));
-            if (loop) {
+            try {
+                const loop = await isDescendant(parseInt(id), parseInt(parent_id));
+                if (loop) {
+                    return get_error_response(
+                        ERROR_CODES.CATEGORY_PARENT_LOOP,
+                        STATUS_CODE.BAD_REQUEST,
+                    );
+                }
+            } catch (error) {
+                console.error('Error checking category hierarchy:', error);
                 return get_error_response(
-                    ERROR_CODES.CATEGORY_PARENT_LOOP,
-                    STATUS_CODE.BAD_REQUEST,
+                    ERROR_CODES.INTERNAL_SERVER_ERROR,
+                    STATUS_CODE.INTERNAL_SERVER_ERROR,
                 );
             }
         }
