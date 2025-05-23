@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { RefreshCw } from "lucide-react"
+import { RefreshCw, ChevronRight } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { formatCurrency } from "@/utils/format"
 
@@ -18,6 +18,7 @@ export function SearchFilters({
     priceRange,
 }) {
     const [sliderValue, setSliderValue] = useState([priceRange.min, priceRange.max]);
+    const [expandedCategories, setExpandedCategories] = useState([]);
 
     // Khi thay đổi slider
     const handleSliderChange = (value) => {
@@ -32,15 +33,7 @@ export function SearchFilters({
 
     // Nếu priceRange thay đổi từ ngoài, cập nhật lại slider
     useEffect(() => {
-        // Nếu sliderValue không hợp lệ với min/max mới, reset về [min, max]
-        if (
-            sliderValue[0] < priceRange.min ||
-            sliderValue[1] > priceRange.max ||
-            sliderValue[0] > sliderValue[1]
-        ) {
-            setSliderValue([priceRange.min, priceRange.max]);
-            onPriceChange(priceRange.min, priceRange.max);
-        }
+        setSliderValue([priceRange.min, priceRange.max]);
     }, [priceRange.min, priceRange.max]);
 
     // Handle category checkbox change
@@ -54,12 +47,66 @@ export function SearchFilters({
         onCategoryChange(newSelectedCategories);
     }
 
+    // Toggle category expansion
+    const toggleCategory = (categoryId) => {
+        setExpandedCategories(prev =>
+            prev.includes(categoryId)
+                ? prev.filter(id => id !== categoryId)
+                : [...prev, categoryId]
+        );
+    }       
+
     // Handle reset button click
     const handleReset = () => {
+        // Reset slider value
         setSliderValue([0, 20000000]);
+        // Reset price range
         onPriceChange(0, 20000000);
+        // Reset categories
+        onCategoryChange([]);
+        // Reset expanded categories
+        setExpandedCategories([]);
+        // Call parent reset handler
         onReset();
     }
+
+    // Render category tree recursively
+    const renderCategories = (categoryList) => {
+        return categoryList.map((category) => (
+            <div key={category.category_id} className="space-y-2">
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                        id={`category-${category.category_id}`}
+                        checked={selectedCategories.includes(category.category_id)}
+                        onCheckedChange={(checked) => handleCheckCategory(category.category_id, checked)}
+                    />
+                    <Label
+                        htmlFor={`category-${category.category_id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1"
+                    >
+                        {category.name}
+                    </Label>
+                    {category.children && category.children.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => toggleCategory(category.category_id)}
+                            className="p-1 hover:bg-gray-100 rounded-md"
+                        >
+                            <ChevronRight
+                                className={`h-4 w-4 transition-transform ${expandedCategories.includes(category.category_id) ? 'rotate-90' : ''
+                                    }`}
+                            />
+                        </button>
+                    )}
+                </div>
+                {category.children && category.children.length > 0 && expandedCategories.includes(category.category_id) && (
+                    <div className="ml-4 space-y-2">
+                        {renderCategories(category.children)}
+                    </div>
+                )}
+            </div>
+        ));
+    };
 
     return (
         <div className="space-y-6">
@@ -72,21 +119,7 @@ export function SearchFilters({
                         {categories.length === 0 && (
                             <div className="text-gray-400 text-sm">Không có danh mục phù hợp</div>
                         )}
-                        {categories.map((category) => (
-                            <div key={category.id} className="flex items-center space-x-2">
-                                <Checkbox
-                                    id={`category-${category.id}`}
-                                    checked={selectedCategories.includes(category.id)}
-                                    onCheckedChange={(checked) => handleCheckCategory(category.id, checked)}
-                                />
-                                <Label
-                                    htmlFor={`category-${category.id}`}
-                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                    {category.name}
-                                </Label>
-                            </div>
-                        ))}
+                        {renderCategories(categories)}
                     </div>
                 </CardContent>
             </Card>
@@ -97,28 +130,28 @@ export function SearchFilters({
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>{sliderValue[0].toLocaleString()} đ</span>
-                            <span>{sliderValue[1].toLocaleString()} đ</span>
-                        </div>
-                        <div className="px-2">
-                            <Slider
-                                min={0}
-                                max={20000000}
-                                step={50000}
-                                value={sliderValue} // [min, max]
-                                onValueChange={handleSliderChange}
-                                onValueCommit={handleSliderCommit}
-                                className="w-full"
-                            // Không cần prop range nếu bạn đã truyền value là mảng 2 phần tử
-                            />
+                        <Slider
+                            value={sliderValue}
+                            min={0}
+                            max={20000000}
+                            step={100000}
+                            onValueChange={handleSliderChange}
+                            onValueCommit={handleSliderCommit}
+                        />
+                        <div className="flex justify-between text-sm text-gray-500">
+                            <span>{formatCurrency(sliderValue[0])}</span>
+                            <span>{formatCurrency(sliderValue[1])}</span>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Button variant="outline" className="w-full" onClick={handleReset}>
-                <RefreshCw className="mr-2 h-4 w-4" />
+            <Button
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={handleReset}
+            >
+                <RefreshCw className="h-4 w-4" />
                 Thiết lập lại
             </Button>
         </div>

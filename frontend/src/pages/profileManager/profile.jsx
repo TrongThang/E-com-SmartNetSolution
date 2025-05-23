@@ -70,10 +70,6 @@ export default function ProfilePage() {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="profile">Thông tin cá nhân</TabsTrigger>
-          </TabsList>
-
           <TabsContent value="profile" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Avatar và thông tin cơ bản */}

@@ -39,11 +39,41 @@ import {
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
+
+// CSS cho thanh cuộn tùy chỉnh
+const scrollbarStyles = `
+  /* Tùy chỉnh thanh cuộn cho sidebar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  }
+`
 function Navbar_admin() {
   return (
     <SidebarProvider>
-      <Sidebar className="bg-[#1F2937] text-white">
-        <SidebarHeader className="py-3 pe-12 pb-5">
+      <Sidebar className="bg-[#1F2937] text-white ">
+        <SidebarHeader className="py-3 pe-18 pb-5">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>

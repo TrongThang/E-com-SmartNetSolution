@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,27 +10,127 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, X, Upload, Info, Settings, AlertCircle } from "lucide-react"
 import AttributeSelector from "@/pages/categoryManager/SelectorAttribute"
-import { useNavigate } from "react-router-dom"
-import Swal from "sweetalert2"
+import { useNavigate, useParams } from "react-router-dom"
 import categoryApi from "@/apis/modules/categories.api.ts"
 import ParentCategorySelect from "./SearchCategoryParent"
+import Swal from "sweetalert2"
 
-export default function AddCategoryPage() {
+const ImageUpload = ({ image, currentImage, onChange, onError }) => {
+  return (
+    <div className="mt-1 border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors">
+      <input
+        type="file"
+        id="image"
+        accept="image/*"
+        onChange={onChange}
+        className="hidden"
+      />
+      <label htmlFor="image" className="cursor-pointer">
+        <div className="w-full h-40 mx-auto bg-gray-100 rounded-md flex items-center justify-center">
+          {image ? (
+            <img
+              src={image}
+              alt="Preview"
+              className="max-h-full max-w-full object-contain"
+              onError={onError}
+            />
+          ) : currentImage ? (
+            <img
+              src={currentImage}
+              alt="Current"
+              className="max-h-full max-w-full object-contain"
+              onError={onError}
+            />
+          ) : (
+            <Upload className="h-8 w-8 text-gray-400" />
+          )}
+        </div>
+        <span className="block mt-2 text-sm text-gray-600">Nhấp để tải lên hoặc kéo thả</span>
+        <span className="block mt-1 text-xs text-gray-500">PNG, JPG hoặc GIF (tối đa 2MB)</span>
+      </label>
+    </div>
+  )
+}
+
+export default function EditCategoryPage() {
+  const { id } = useParams()
   const navigate = useNavigate()
   const [selectedAttributes, setSelectedAttributes] = useState([])
   const [isAttributeSelectorOpen, setIsAttributeSelectorOpen] = useState(false)
   const [isActive, setIsActive] = useState(true)
-  const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [imageError, setImageError] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
     description: "",
     parent_id: null,
     image: null,
+    current_image: null,
     status: true,
-    attributes: []
+    attribute_groups: []
   })
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      try {
+        const res = await categoryApi.getById(id)
+        if (res.status_code === 200) {
+          const category = res.data
+          const normalizedImage = category.image
+            ? category.image.startsWith("data:image")
+              ? category.image
+              : category.image.startsWith("http")
+                ? category.image
+                : `data:image/jpeg;base64,${category.image}`
+            : null
+
+          // Flatten attribute_groups into selectedAttributes array with group info
+          const flattenedAttributes = category.attribute_groups.flatMap(group =>
+            group.attributes.map(attr => ({
+              id: attr.attribute_id,
+              name: attr.attribute_name,
+              group: group.group_name,
+              type: attr.attribute_type,
+              required: attr.attribute_required,
+              is_hide: false,  // Adjust if API provides is_hide status
+            }))
+          )
+
+          setFormData({
+            name: category.name,
+            slug: category.slug,
+            description: category.description || "",
+            parent_id: category.parent_id,
+            image: null,
+            current_image: normalizedImage,
+            status: !category.is_hide,
+            attribute_groups: category.attribute_groups || []
+          })
+          setSelectedAttributes(flattenedAttributes)
+          setIsActive(!category.is_hide)
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi",
+            text: res.message || "Có lỗi xảy ra khi tải thông tin danh mục",
+            confirmButtonText: "Đóng",
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching category:", error)
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi tải thông tin danh mục",
+          confirmButtonText: "Đóng",
+        })
+      }
+    }
+
+    fetchCategory()
+  }, [id])
 
   const validateForm = () => {
     const newErrors = {}
@@ -42,7 +142,9 @@ export default function AddCategoryPage() {
     if (!formData.description.trim()) {
       newErrors.description = "Mô tả không được để trống"
     }
-    if (!formData.image) {
+
+    // Check if either image or current_image is present
+    if (!formData.image && !formData.current_image) {
       newErrors.image = "Hình ảnh không được để trống"
     }
 
@@ -77,7 +179,6 @@ export default function AddCategoryPage() {
   const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
-
     if (file.size > 2 * 1024 * 1024) {
       Swal.fire({
         icon: "error",
@@ -91,14 +192,7 @@ export default function AddCategoryPage() {
     const reader = new FileReader()
     reader.onloadend = () => {
       setFormData(prev => ({ ...prev, image: reader.result }))
-    }
-    reader.onerror = () => {
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi",
-        text: "Có lỗi xảy ra khi đọc tệp hình ảnh",
-        confirmButtonText: "Đóng",
-      })
+      setImageError(false)
     }
     reader.readAsDataURL(file)
   }
@@ -107,68 +201,36 @@ export default function AddCategoryPage() {
     setSelectedAttributes(attributes)
     setFormData(prev => ({
       ...prev,
-      attributes: attributes.map(attr => attr.id)
+      attribute_groups: attributes.reduce((acc, attr) => {
+        const group = acc.find(g => g.group_name === attr.group) || { group_name: attr.group, attributes: [] }
+        if (!acc.includes(group)) acc.push(group)
+        group.attributes.push({ attribute_id: attr.id, attribute_name: attr.name })
+        return acc
+      }, [])
     }))
   }
 
   const removeAttribute = (id) => {
-    const attributeToRemove = selectedAttributes.find(attr => attr.id === id)
-    if (!attributeToRemove) {
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi",
-        text: "Không tìm thấy thuộc tính để xóa",
-        confirmButtonText: "Đóng",
-      })
-      return
-    }
-
-    Swal.fire({
-      icon: "warning",
-      title: "Xác nhận xóa",
-      text: `Bạn có chắc chắn muốn xóa thuộc tính "${attributeToRemove.name}"?`,
-      showCancelButton: true,
-      confirmButtonText: "Xóa",
-      cancelButtonText: "Hủy",
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        try {
-          const newAttributes = selectedAttributes.filter((attr) => attr.id !== id)
-          setSelectedAttributes(newAttributes)
-          setFormData(prev => ({
-            ...prev,
-            attributes: newAttributes.map(attr => attr.id)
-          }))
-
-          Swal.fire({
-            icon: "success",
-            title: "Thành công",
-            text: `Đã xóa thuộc tính "${attributeToRemove.name}"`,
-            confirmButtonText: "OK",
-            timer: 2000,
-          })
-        } catch (error) {
-          console.error("Error removing attribute:", error)
-          Swal.fire({
-            icon: "error",
-            title: "Lỗi",
-            text: "Có lỗi xảy ra khi xóa thuộc tính. Vui lòng thử lại.",
-            confirmButtonText: "Đóng",
-          })
-        }
-      }
-    })
+    const newAttributes = selectedAttributes.filter(attr => attr.id !== id)
+    setSelectedAttributes(newAttributes)
+    setFormData(prev => ({
+      ...prev,
+      attribute_groups: newAttributes.reduce((acc, attr) => {
+        const group = acc.find(g => g.group_name === attr.group) || { group_name: attr.group, attributes: [] }
+        if (!acc.includes(group)) acc.push(group)
+        group.attributes.push({ attribute_id: attr.id, attribute_name: attr.name })
+        return acc
+      }, [])
+    }))
   }
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return
-    }
-
     try {
       setLoading(true)
+
+      if (!validateForm()) {
+        return
+      }
 
       const requestData = {
         name: formData.name,
@@ -182,15 +244,19 @@ export default function AddCategoryPage() {
       if (formData.image && typeof formData.image === "string") {
         requestData.image = formData.image.split(',')[1] || ""
       } else {
-        requestData.image = ""
+        requestData.image = formData.current_image && !imageError
+          ? formData.current_image.startsWith("data:image")
+            ? formData.current_image.split(',')[1]
+            : formData.current_image
+          : ""
       }
 
-      const res = await categoryApi.add(requestData)
+      const res = await categoryApi.edit(id, requestData)
       if (res.status_code === 200) {
         Swal.fire({
           icon: "success",
           title: "Thành công",
-          text: "Thêm danh mục thành công",
+          text: "Chỉnh sửa danh mục thành công",
           confirmButtonText: "OK",
         }).then(() => {
           navigate("/admin/categories")
@@ -242,7 +308,7 @@ export default function AddCategoryPage() {
     <div className="container max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">Thêm danh mục</h1>
+          <h1 className="text-2xl font-bold">Chỉnh sửa danh mục</h1>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
@@ -338,12 +404,11 @@ export default function AddCategoryPage() {
                   <div>
                     <ParentCategorySelect
                       value={formData.parent_id}
-                      onChange={(value) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          parent_id: value === "none" ? null : parseInt(value),
-                        }))
-                      }
+                      onChange={(value) => setFormData(prev => ({
+                        ...prev,
+                        parent_id: value === "none" ? null : parseInt(value)
+                      }))}
+                      currentId={id}
                     />
                   </div>
                 </div>
@@ -359,34 +424,12 @@ export default function AddCategoryPage() {
                         {errors.image}
                       </p>
                     )}
-                    <div className="mt-1 border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors">
-                      <input
-                        type="file"
-                        id="image"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                      <label htmlFor="image" className="cursor-pointer">
-                        <div className="w-full h-40 mx-auto bg-gray-100 rounded-md flex items-center justify-center">
-                          {formData.image ? (
-                            <img
-                              src={formData.image}
-                              alt="Preview"
-                              className="max-h-full max-w-full object-contain"
-                            />
-                          ) : (
-                            <Upload className="h-8 w-8 text-gray-400" />
-                          )}
-                        </div>
-                        <span className="block mt-2 text-sm text-gray-600">
-                          Nhấp để tải lên hoặc kéo thả
-                        </span>
-                        <span className="block mt-1 text-xs text-gray-500">
-                          PNG, JPG hoặc GIF (tối đa 2MB)
-                        </span>
-                      </label>
-                    </div>
+                    <ImageUpload
+                      image={formData.image}
+                      currentImage={formData.current_image}
+                      onChange={handleImageChange}
+                      onError={() => setImageError(true)}
+                    />
                   </div>
 
                   <div className="flex items-center justify-between mt-4 p-4 bg-blue-50 rounded-md">
@@ -399,7 +442,7 @@ export default function AddCategoryPage() {
                       value={isActive ? "1" : "0"}
                       onValueChange={(value) => {
                         setIsActive(value === "1")
-                        setFormData((prev) => ({ ...prev, status: value === "1" }))
+                        setFormData(prev => ({ ...prev, status: value === "1" }))
                       }}
                     >
                       <SelectTrigger className="w-[180px]">
@@ -438,19 +481,13 @@ export default function AddCategoryPage() {
                         <CardHeader className="bg-gray-50 py-3">
                           <CardTitle className="text-sm font-medium">{group}</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4">
+                        <CardContent className="px-4 py-4">
                           <div className="space-y-2">
                             {attrs.map((attr) => (
-                              <div
-                                key={attr.id}
-                                className="flex items-center justify-between border rounded-md p-3"
-                              >
+                              <div key={attr.id} className="flex items-center justify-between border rounded-md p-3">
                                 <div>
                                   <p className="font-medium">{attr.name}</p>
-                                  <p className="text-xs text-gray-500">
-                                    {attr.type}
-                                    {attr.required ? " - Bắt buộc" : ""}
-                                  </p>
+                                  <p className="text-xs text-gray-500">{attr.type || "N/A"}{attr.required ? " - Bắt buộc" : ""}</p>
                                 </div>
                                 <Button
                                   variant="ghost"
@@ -487,7 +524,7 @@ export default function AddCategoryPage() {
         open={isAttributeSelectorOpen}
         onOpenChange={setIsAttributeSelectorOpen}
         onSave={handleSaveAttributes}
-        initialSelected={selectedAttributes.map((attr) => attr.id)}
+        initialSelected={selectedAttributes.map(attr => attr.id)}
       />
     </div>
   )

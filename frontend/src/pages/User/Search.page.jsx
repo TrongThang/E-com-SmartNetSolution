@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import productApi from "@/apis/modules/product.api.ts"
+import categoryApi from "@/apis/modules/categories.api.ts"
 import { SearchFilters } from "@/components/common/search/SearchFilters"
 import { SortOptions } from "@/components/common/search/SortOptions"
 import ProductGrid from "@/components/common/product/ProductGrid"
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button"
 export default function SearchPage() {
     const [searchParams] = useSearchParams()
     const keyword = searchParams.get("keyword") || ""
-    const categoryId = searchParams.get("category") || ""
+    const categoryParam = searchParams.get("category") || ""
     const [products, setProducts] = useState([])
     const [totalPage, setTotalPage] = useState(1)
     const [page, setPage] = useState(1)
@@ -20,162 +21,218 @@ export default function SearchPage() {
     const [priceRange, setPriceRange] = useState({ min: 0, max: 20000000 })
     const [sort, setSort] = useState({ field: "", order: "" })
     const [filterCategories, setFilterCategories] = useState([])
+    const [allCategories, setAllCategories] = useState([])
     const [showMobileFilters, setShowMobileFilters] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const navigate = useNavigate()
 
-
-    // Khởi tạo selectedCategories từ URL parameter
-    useEffect(() => {
-        if (categoryId) {
-            setSelectedCategories([parseInt(categoryId)]);
-        }
-    }, [categoryId]);
-    // Chỉ cập nhật filterCategories khi keyword hoặc filter thay đổi
-    useEffect(() => {
-        const fetchFilterCategories = async () => {
-            setIsLoading(true)
-            let data = []
-            if (keyword.trim()) {
-                // Có keyword: lấy sản phẩm theo keyword
-                const filters = [
-                    {
-                        logic: "OR",
-                        filters: [
-                            { field: "product.name", condition: "contains", value: keyword.trim() },
-                            { field: "product.description_normal", condition: "contains", value: keyword.trim() },
-                        ],
-                    },
-                ]
-                const params = { page: 1, limit: 1000, filters, logic: "OR" }
-                const res = await productApi.search(params)
-                data = res.data?.data || []
-            } else {
-                // Không có keyword: lấy tất cả sản phẩm
-                const params = { page: 1, limit: 1000 }
-                const res = await productApi.search(params)
-                data = res.data?.data || []
-            }
-            // Lấy unique categories từ data
-            const uniqueCategories = []
-            const categoryIds = new Set()
-            data.forEach((item) => {
-                if (item.category_id && !categoryIds.has(item.category_id)) {
-                    categoryIds.add(item.category_id)
-                    uniqueCategories.push({
-                        id: item.category_id,
-                        name: item.categories,
-                    })
-                }
-            })
-            setFilterCategories(uniqueCategories)
-            setIsLoading(false)
-        }
-        fetchFilterCategories()
-    }, [keyword, selectedCategories, priceRange])
-
     // Build filters cho API lấy sản phẩm
     const buildFilters = () => {
-        const keywordFilters = [
-            { field: "product.name", condition: "contains", value: keyword.trim() },
-            { field: "product.description_normal", condition: "contains", value: keyword.trim() },
-        ]
-        const otherFilters = []
-        if (selectedCategories.length > 0) {
-            otherFilters.push({
-                field: "product.category_id",
-                condition: "in",
-                value: selectedCategories,
-            })
-        }
-        if (priceRange.min) {
-            otherFilters.push({
-                field: "product.selling_price",
-                condition: ">=",
-                value: priceRange.min,
-            })
-        }
-        if (priceRange.max && priceRange.max < 100000000) {
-            otherFilters.push({
-                field: "product.selling_price",
-                condition: "<=",
-                value: priceRange.max,
-            })
-        }
+        const filters = [];
 
-        // Nếu chỉ có keyword, trả về mảng filter đơn giản (logic OR)
-        if (keyword.trim() && otherFilters.length === 0) {
-            return {
-                logic: "OR",
-                filters: keywordFilters,
-            }
-        }
-
-        // Nếu có thêm filter khác, trả về group filter (logic AND, trong đó có group OR cho keyword)
-        const filters = []
-
-        if (categoryId) {
-            filters.push({
-                field: "product.category_id",
-                condition: "=",
-                value: parseInt(categoryId)
-            })
-        }
-
+        // Thêm filter cho keyword nếu có
         if (keyword.trim()) {
             filters.push({
                 logic: "OR",
-                filters: keywordFilters,
-            })
+                filters: [
+                    { field: "product.name", condition: "contains", value: keyword.trim() },
+                    { field: "product.description_normal", condition: "contains", value: keyword.trim() }
+                ]
+            });
         }
-        filters.push(...otherFilters)
 
+        // Thêm filter cho danh mục nếu có
+        if (selectedCategories.length > 0) {
+            // Hàm đệ quy để lấy tất cả ID danh mục con (mọi cấp)
+            const getAllChildIds = (categoryId, categories) => {
+                let ids = [categoryId];
+                const children = categories.filter(cat => cat.parent_id === categoryId);
+                for (const child of children) {
+                    ids = ids.concat(getAllChildIds(child.category_id, categories));
+                }
+                return ids;
+            };
+
+            let allCategoryIds = [];
+            selectedCategories.forEach(id => {
+                allCategoryIds = allCategoryIds.concat(getAllChildIds(id, allCategories));
+            });
+            allCategoryIds = [...new Set(allCategoryIds)]; // loại bỏ trùng lặp
+            filters.push({
+                field: "product.category_id",
+                condition: "in",
+                value: allCategoryIds
+            });
+        }
+
+        // Thêm filter cho giá nếu có
+        if (priceRange.min > 0) {
+            filters.push({
+                field: "product.selling_price",
+                condition: ">=",
+                value: priceRange.min
+            });
+        }
+        if (priceRange.max && priceRange.max < 100000000) {
+            filters.push({
+                field: "product.selling_price",
+                condition: "<=",
+                value: priceRange.max
+            });
+        }
+
+        // Nếu không có filter nào, trả về null để lấy tất cả sản phẩm
+        if (filters.length === 0) {
+            return null;
+        }
+
+        // Nếu chỉ có một filter, trả về filter đó
+        if (filters.length === 1) {
+            return filters[0];
+        }
+
+        // Nếu có nhiều filter, kết hợp chúng với logic AND
         return {
             logic: "AND",
-            filters,
+            filters
+        };
+    };
+
+    // Khởi tạo selectedCategories từ URL parameter (và reset page về 1 khi đổi filter)
+    useEffect(() => {
+        if (categoryParam) {
+            try {
+                const categories = categoryParam.split(',').map(id => parseInt(id));
+                if (JSON.stringify(categories) !== JSON.stringify(selectedCategories)) {
+                    setSelectedCategories(categories);
+                }
+            } catch (error) {
+                console.error("Error parsing category parameters:", error);
+                setSelectedCategories([]);
+            }
+        } else {
+            setSelectedCategories([]);
         }
-    }
+        setPage(1);
+    }, [categoryParam]);
 
     // Lấy sản phẩm theo các điều kiện filter hiện tại
     useEffect(() => {
         const fetchProducts = async () => {
-            setIsLoading(true)
-            const filterGroup = buildFilters()
-            const params = {
-                page,
-                limit: 12,
-                filters: filterGroup,
-                sort: sort.field,
-                order: sort.order,
+            setIsLoading(true);
+            try {
+                const filterGroup = buildFilters();
+                const params = {
+                    page,
+                    limit: 12,
+                    ...(filterGroup && { filters: filterGroup }),
+                    ...(sort.field && { sort: sort.field }),
+                    ...(sort.order && { order: sort.order })
+                };
+                const res = await productApi.search(params);
+                if (res.status_code === 200) {
+                    setProducts(res.data?.data || []);
+                    setTotalPage(res.data?.total_page || 1);
+                } else {
+                    setProducts([]);
+                    setTotalPage(1);
+                }
+            } catch (error) {
+                console.error("Error fetching products:", error);
+                setProducts([]);
+                setTotalPage(1);
+            } finally {
+                setIsLoading(false);
             }
-            const res = await productApi.search(params)
-            setProducts(res.data?.data || [])
-            setTotalPage(res.data?.total_page || 1)
-            setIsLoading(false)
-        }
-        fetchProducts()
-    }, [page, selectedCategories, priceRange, sort, keyword])
+        };
+        fetchProducts();
+    }, [page, categoryParam, priceRange, sort, keyword]);
+
+    // Lấy danh mục từ API
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await categoryApi.list({});
+                if (res.status_code === 200) {
+                    const categoriesData = res.data?.categories || [];
+                    setAllCategories(categoriesData);
+                    // Xây dựng cấu trúc cây danh mục
+                    const categoryMap = {};
+                    categoriesData.forEach(category => {
+                        categoryMap[category.category_id] = {
+                            ...category,
+                            children: []
+                        };
+                    });
+
+                    // Thêm danh mục con vào danh mục cha
+                    categoriesData.forEach(category => {
+                        if (category.parent_id && categoryMap[category.parent_id]) {
+                            categoryMap[category.parent_id].children.push(categoryMap[category.category_id]);
+                        }
+                    });
+
+                    // Lọc ra các danh mục gốc
+                    const rootCategories = categoriesData.filter(category =>
+                        !category.parent_id || !categoryMap[category.parent_id]
+                    );
+
+                    setFilterCategories(rootCategories);
+                }
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     // Xử lý filter/sort
-    const handleCategoryChange = (categories) => setSelectedCategories(categories)
-    const handlePriceChange = (min, max) => setPriceRange({ min, max })
-    const handleSortChange = (sortValue) => {
-        if (sortValue === "default") setSort({ field: "", order: "" })
-        else {
-            const [field, order] = sortValue.split("-")
-            setSort({ field, order })
-        }
-    }
-    const handleReset = () => {
-        setSelectedCategories([])
-        setPriceRange({ min: 0, max: 20000000 })
-        setSort({ field: "", order: "" })
-        setPage(1)
+    const handleCategoryChange = (categories) => {
+        const newSearchParams = new URLSearchParams(searchParams);
+        // Xóa tất cả các parameters hiện tại ngoại trừ keyword
+        Array.from(newSearchParams.keys()).forEach(key => {
+            if (key !== 'keyword') {
+                newSearchParams.delete(key);
+            }
+        });
 
-        if (categoryId) {
-            navigate('/search')
+        // Thêm lại category nếu có
+        if (categories.length > 0) {
+            newSearchParams.set('category', categories.join(','));
         }
-    }
+
+        // Navigate với parameters mới
+        navigate(`/search?${newSearchParams.toString()}`);
+    };
+
+    const handlePriceChange = (min, max) => {
+        setPriceRange({ min, max });
+    };
+
+    const handleSortChange = (sortValue) => {
+        if (sortValue === "default") {
+            setSort({ field: "", order: "" });
+        } else {
+            const [field, order] = sortValue.split("-");
+            setSort({ field, order });
+        }
+    };
+
+    const handleReset = () => {
+        // Reset all states
+        setSelectedCategories([]);
+        setPriceRange({ min: 0, max: 20000000 });
+        setSort({ field: "", order: "" });
+        setPage(1);
+
+        // Reset URL completely - remove all parameters
+        navigate('/search');
+
+        // Close mobile filters if open
+        if (showMobileFilters) {
+            setShowMobileFilters(false);
+        }
+    };
 
     // Đếm số lượng filter đang áp dụng
     const activeFilterCount = () => {
@@ -228,9 +285,7 @@ export default function SearchPage() {
                                         <SlidersHorizontal className="h-5 w-5 mr-2" />
                                         Bộ lọc
                                     </h3>
-                                    <Button variant="ghost" size="icon" onClick={() => setShowMobileFilters(false)}>
-                                        <X className="h-5 w-5" />
-                                    </Button>
+
                                 </div>
                                 <SearchFilters
                                     categories={filterCategories}
@@ -267,16 +322,6 @@ export default function SearchPage() {
                                     <SlidersHorizontal className="h-5 w-5 mr-2" />
                                     Bộ lọc
                                 </h3>
-                                {activeFilterCount() > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handleReset}
-                                        className="text-blue-500 hover:text-blue-700 text-xs"
-                                    >
-                                        Đặt lại
-                                    </Button>
-                                )}
                             </div>
                             <SearchFilters
                                 categories={filterCategories}
@@ -306,12 +351,13 @@ export default function SearchPage() {
                                     <div className="hidden md:flex items-center gap-2 flex-wrap">
                                         <span className="text-sm text-gray-500">Danh mục:</span>
                                         {selectedCategories.map((catId) => {
-                                            const category = filterCategories.find((c) => c.id === catId)
+                                            const category = filterCategories.find((c) => c.category_id === catId)
                                             return category ? (
                                                 <span
                                                     key={catId}
                                                     className="inline-flex items-center bg-blue-50 text-blue-700 text-xs rounded-full px-3 py-1"
                                                 >
+
                                                     {category.name}
                                                     <button
                                                         className="ml-1 text-blue-500 hover:text-blue-700"
@@ -349,7 +395,6 @@ export default function SearchPage() {
                                         Không tìm thấy sản phẩm phù hợp với tiêu chí tìm kiếm của bạn. Vui lòng thử lại với từ khóa khác
                                         hoặc điều chỉnh bộ lọc.
                                     </p>
-                                    <Button onClick={handleReset}>Đặt lại bộ lọc</Button>
                                 </div>
                             </div>
                         )}

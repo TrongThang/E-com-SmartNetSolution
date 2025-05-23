@@ -24,11 +24,10 @@ export default function Navbar() {
 
   const fetchCategories = async () => {
     try {
-      console.log("Đang fetch categories...")
+      console.log("Fetching categories...")
       const res = await categoryApi.list({})
-      console.log("Response:", res)
-      if (res.status_code == 200) {
-        // Giả sử API trả về danh mục phẳng, chúng ta cần chuyển đổi thành cấu trúc cây
+      console.log("Category API response:", res)
+      if (res.status_code === 200) {
         const categoriesData = res.data?.categories || []
         const nestedCategories = buildCategoryTree(categoriesData)
         setCategories(nestedCategories)
@@ -41,30 +40,25 @@ export default function Navbar() {
   const handleSearch = () => {
     if (searchValue.trim()) {
       navigate(`/search?keyword=${encodeURIComponent(searchValue.trim())}`)
+      setIsMobileMenuOpen(false) // Close mobile menu after search
     }
   }
-  // Hàm xây dựng cây danh mục từ danh sách phẳng
+
   const buildCategoryTree = (categories) => {
     const categoryMap = {}
     const rootCategories = []
 
-    // Tạo map các danh mục theo ID
     categories.forEach((category) => {
       categoryMap[category.category_id] = {
         ...category,
-        children: category.children || [] // Giữ lại children có sẵn nếu có
+        children: category.children || []
       }
     })
 
-    // Xây dựng cây
     categories.forEach((category) => {
-      if (category.parent_id) {
-        // Nếu có parent_id, thêm vào danh sách con của parent
-        if (categoryMap[category.parent_id]) {
-          categoryMap[category.parent_id].children.push(categoryMap[category.category_id])
-        }
+      if (category.parent_id && categoryMap[category.parent_id]) {
+        categoryMap[category.parent_id].children.push(categoryMap[category.category_id])
       } else {
-        // Nếu không có parent_id, đây là danh mục gốc
         rootCategories.push(categoryMap[category.category_id])
       }
     })
@@ -74,34 +68,23 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true)
-      } else {
-        setIsScrolled(false)
-      }
+      setIsScrolled(window.scrollY > 10)
     }
     window.addEventListener("scroll", handleScroll)
-
     fetchCategories()
-
-    console.log("Categories:", categories)
-
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "py-4 bg-white/95 backdrop-blur-sm"
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "py-4 bg-white/95 backdrop-blur-sm"}`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <Link to="/" className="flex items-center">
             <span className="text-xl font-bold text-blue-500">INQ Shop</span>
           </Link>
-        
-          {/* Desktop Navigation */}
+
           <nav className="hidden md:flex items-center space-x-10">
             <Link to="/" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
               Trang chủ
@@ -109,7 +92,7 @@ export default function Navbar() {
             </Link>
             <div className="relative group">
               <Link
-                to="/categories"
+                to="#"
                 className="text-sm font-medium hover:text-blue-500 transition-colors flex items-center gap-1 py-2"
               >
                 Danh mục
@@ -117,30 +100,18 @@ export default function Navbar() {
               </Link>
               <div className="absolute top-full left-0 bg-white shadow-xl rounded-lg hidden group-hover:block transition-all z-50 w-[800px] max-w-[90vw]">
                 <div className="flex">
-                  {/* Categories sidebar - improved with better hover states */}
                   <div className="w-1/3 bg-blue-50/70 max-h-[450px] overflow-y-auto">
                     {Array.isArray(categories) && categories.length > 0 ? (
                       categories.map((category, index) => (
                         <div
                           key={category.category_id}
-                          className={`category-item transition-all duration-200 ${index === 0 ? "bg-blue-100 text-blue-700 border-r-4 border-blue-500" : ""
-                            }`}
+                          className={`category-item transition-all duration-200 ${index === 0 ? "bg-blue-100 text-blue-700 border-r-4 border-blue-500" : ""}`}
                           data-category-id={category.category_id}
                           onMouseEnter={(e) => {
-                            // Highlight active category
                             document
                               .querySelectorAll(".category-item")
-                              .forEach((item) =>
-                                item.classList.remove("bg-blue-100", "text-blue-700", "border-r-4", "border-blue-500"),
-                              )
-                            e.currentTarget.classList.add(
-                              "bg-blue-100",
-                              "text-blue-700",
-                              "border-r-4",
-                              "border-blue-500",
-                            )
-
-                            // Show corresponding subcategories
+                              .forEach((item) => item.classList.remove("bg-blue-100", "text-blue-700", "border-r-4", "border-blue-500"))
+                            e.currentTarget.classList.add("bg-blue-100", "text-blue-700", "border-r-4", "border-blue-500")
                             document
                               .querySelectorAll(".subcategory-panel")
                               .forEach((panel) => panel.classList.add("hidden"))
@@ -152,6 +123,7 @@ export default function Navbar() {
                           <Link
                             to={`/search?category=${category.category_id}`}
                             className="flex items-center justify-between px-4 py-3 text-sm w-full transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
                           >
                             <span className="font-medium">{category.name}</span>
                             {category.children && category.children.length > 0 && (
@@ -164,8 +136,6 @@ export default function Navbar() {
                       <span className="block px-4 py-3 text-sm text-slate-500">Không có danh mục</span>
                     )}
                   </div>
-
-                  {/* Subcategories content - improved layout and organization */}
                   <div className="w-2/3 p-4 max-h-[450px] overflow-y-auto">
                     {Array.isArray(categories) && categories.length > 0
                       ? categories.map((category, index) => (
@@ -178,6 +148,7 @@ export default function Navbar() {
                             <Link
                               to={`/search?category=${category.category_id}`}
                               className="text-blue-600 font-medium text-base hover:text-blue-700 flex items-center"
+                              onClick={() => setIsMobileMenuOpen(false)}
                             >
                               {category.name}
                               <ChevronDown className="h-4 w-4 ml-1 -rotate-90" />
@@ -186,7 +157,6 @@ export default function Navbar() {
                               {category.description || `Khám phá tất cả sản phẩm trong danh mục ${category.name}`}
                             </p>
                           </div>
-
                           {category.children && category.children.length > 0 ? (
                             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                               {category.children.map((subCategory) => (
@@ -194,13 +164,13 @@ export default function Navbar() {
                                   <Link
                                     to={`/search?category=${subCategory.category_id}`}
                                     className="text-sm font-medium text-gray-800 hover:text-blue-600 block mb-2 flex items-center"
+                                    onClick={() => setIsMobileMenuOpen(false)}
                                   >
                                     {subCategory.name}
                                     {subCategory.children && subCategory.children.length > 0 && (
                                       <ChevronDown className="h-3 w-3 ml-1 opacity-70 -rotate-90" />
                                     )}
                                   </Link>
-
                                   {subCategory.children && subCategory.children.length > 0 && (
                                     <ul className="space-y-1 border-l-2 border-gray-100 pl-2">
                                       {subCategory.children.slice(0, 4).map((thirdLevelCategory) => (
@@ -208,6 +178,7 @@ export default function Navbar() {
                                           <Link
                                             to={`/search?category=${thirdLevelCategory.category_id}`}
                                             className="text-xs text-gray-600 hover:text-blue-600 block py-1"
+                                            onClick={() => setIsMobileMenuOpen(false)}
                                           >
                                             {thirdLevelCategory.name}
                                           </Link>
@@ -218,6 +189,7 @@ export default function Navbar() {
                                           <Link
                                             to={`/search?category=${subCategory.category_id}`}
                                             className="text-xs text-blue-500 hover:text-blue-700 block py-1"
+                                            onClick={() => setIsMobileMenuOpen(false)}
                                           >
                                             + {subCategory.children.length - 4} danh mục khác
                                           </Link>
@@ -236,8 +208,6 @@ export default function Navbar() {
                       : null}
                   </div>
                 </div>
-
-                {/* Improved footer with featured categories */}
                 <div className="bg-gray-50 p-3 border-t border-gray-100">
                   <div className="flex justify-between items-center">
                     <div className="flex gap-2">
@@ -249,6 +219,7 @@ export default function Navbar() {
                               key={category.category_id}
                               to={`/search?category=${category.category_id}`}
                               className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                              onClick={() => setIsMobileMenuOpen(false)}
                             >
                               {category.name}
                             </Link>
@@ -264,23 +235,17 @@ export default function Navbar() {
                 </div>
               </div>
             </div>
-
             <Link to="/blog" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
               Tin Tức
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            <Link
-              to="/contact"
-              className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2"
-            >
+            <Link to="/contact" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
               Liên hệ
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </nav>
 
-          {/* Right side actions */}
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Search */}
             <div className="hidden md:flex items-center relative">
               <Input
                 className="w-full border rounded-md p-2 pl-8 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -300,28 +265,20 @@ export default function Navbar() {
                 <Search className="h-4 w-4" />
               </Button>
             </div>
-
-            {/* Cart */}
             <Link
               to="/cart"
-              className="relative flex items-center h-10 px-3 rounded-full border 
-                            border-slate-200 hover:border-blue-200 hover:bg-blue-50 transition-colors"
+              className="relative flex items-center h-10 px-3 rounded-full border border-slate-200 hover:border-blue-200 hover:bg-blue-50 transition-colors"
             >
               <ShoppingCart className="h-5 w-5 text-slate-600" />
               <span className="ml-2 font-medium text-sm text-blue-500 hidden sm:inline">
                 {formatCurrency(totalAmount)}
               </span>
               {totalItems > 0 && (
-                <span
-                  className="absolute top-2 right-2 bg-red-500 text-white 
-                                text-xs rounded-full flex items-center justify-center"
-                >
+                <span className="absolute top-2 right-2 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
             </Link>
-
-            {/* User Authentication */}
             {isAuthenticated ? (
               <div className="relative group">
                 <Button
@@ -359,8 +316,6 @@ export default function Navbar() {
                 Đăng nhập
               </Button>
             )}
-
-            {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="icon"
@@ -372,18 +327,28 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Search - shown below header on mobile */}
         <div className="mt-2 md:hidden">
           <div className="relative">
             <Input
               className="w-full border-slate-200 rounded-full pl-10 pr-4 py-2 focus-visible:ring-blue-500 text-sm"
               placeholder="Tìm kiếm sản phẩm..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch()
+              }}
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Button
+              type="button"
+              size="icon"
+              className="absolute right-0 top-1/2 -translate-y-1/2 h-8 rounded-l-none"
+              onClick={handleSearch}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden mt-2 bg-white rounded-lg shadow-lg p-4 border border-slate-100 animate-in fade-in duration-200">
             <nav className="flex flex-col space-y-3">
@@ -464,8 +429,6 @@ export default function Navbar() {
           </div>
         )}
       </div>
-
-      {/* Login Modal */}
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </header>
   )

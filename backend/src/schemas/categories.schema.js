@@ -26,8 +26,10 @@ const updateCategoriesSchema = createCategoriesSchema.extend({
         id: z.coerce.number()
     }),
     body: z.object({
-        name: z.string().min(1, {
-            message: `[${ERROR_CODES.CATEGORY_NAME_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CATEGORY_NAME_REQUIRED]}`,
+        name: z.string().min(3, {
+            message: `[${ERROR_CODES.CATEGORY_NAME_MIN_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.CATEGORY_NAME_MIN_LENGTH]}`,
+        }).max(500, {
+            message: `[${ERROR_CODES.CATEGORY_NAME_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.CATEGORY_NAME_MAX_LENGTH]}`,
         }),
         description: z.string().min(1, {
             message: `[${ERROR_CODES.CATEGORY_DESCRIPTION_MIN_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.CATEGORY_DESCRIPTION_MIN_LENGTH]}`,
