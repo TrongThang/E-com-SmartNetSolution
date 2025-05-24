@@ -178,17 +178,29 @@ function configDataProductDetail(productRows) {
                 created_at: row.created_at,
                 updated_at: row.updated_at,
                 deleted_at: row.deleted_at,
-                attributes: row.attributes_json && typeof row.attributes_json === 'string' ? JSON.parse(row.attributes_json) : [],
+                attributes: [],
                 reviews: [],
                 images: [],
                 image: row.image,
             };
         }
-        // Không cần push thêm vì attributes_json đã chứa toàn bộ
+        
+        if (row.attribute_id || row.attribute_group_id) {
+            productsById[productId].attributes.push({
+                attribute_id: row.attribute_id,
+                attribute: row.attribute,
+                attribute_group_id: row.attribute_group_id,
+                attribute_group: row.attribute_group,
+                attribute_value: row.attribute_value,
+            });
+        }
     });
+
     return Object.values(productsById).map((product) => {
         const attributeGroups = groupAttributesByGroupDetail(product.attributes);
         const { attributes, ...productData } = product;
+
+        console.log('Giá trị:', attributeGroups)
         return {
             ...productData,
             specifications: attributeGroups,

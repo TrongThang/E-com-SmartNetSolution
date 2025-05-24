@@ -19,10 +19,12 @@ class NotificationService {
         this.prisma = new PrismaClient();
     }
 
-    async checkAccountEmail(account_id, email) {
+    async checkAccountEmail(data) {
+        const { account_id, email, username } = data
+        const whereCondition = account_id ? { account_id: account_id } : { username: username }
 
         const account = await this.prisma.account.findUnique({
-            where: { account_id: account_id },
+            where: whereCondition,
             select: {
                 account_id: true,
                 verification_code: true,

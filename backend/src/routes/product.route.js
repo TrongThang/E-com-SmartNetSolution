@@ -1,5 +1,5 @@
 const express = require('express');
-const { getProduct, getProductDetail, checkInfoProduct, createProduct } = require('../controllers/product.controller');
+const { getProduct, getProductDetail, createProduct, checkListInfoProduct } = require('../controllers/product.controller');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const productRouter = express.Router();
 

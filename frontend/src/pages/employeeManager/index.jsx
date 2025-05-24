@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import EmployeeApi from "@/apis/modules/employee.api.ts";
-import EmployeesTable from "@/components/common/table/EmployeeTable";
+import EmployeesTable from "@/components/common/Table/EmployeeTable";
 
 const EmployeeManagerPage = () => {
     const [employees, setEmployees] = useState([]);

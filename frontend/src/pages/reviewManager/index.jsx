@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import reviewApi from "@/apis/modules/review.api.ts";
 import productApi from "@/apis/modules/product.api.ts";
 import ReviewTable from "@/components/common/table/ReviewTable";
@@ -13,7 +12,6 @@ const ReviewManagerPage = () => {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const navigate = useNavigate();
 
     const productColumns = [
         {

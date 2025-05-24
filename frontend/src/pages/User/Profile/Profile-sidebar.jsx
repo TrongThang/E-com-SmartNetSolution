@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Heart, Home, Key, MapPin, Package, User } from "lucide-react"
+import { Heart, Key, MapPin, Package, User } from "lucide-react"
 
 const profileNavItems = [
   {

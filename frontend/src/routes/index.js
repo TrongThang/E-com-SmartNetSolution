@@ -199,6 +199,42 @@ export const router = createBrowserRouter([
         path: "blogs/edit/:id",
         element: <EditBlog />,
       },
+      {
+        path: 'warehouse/import/create',
+          element: <CreateImportWarehousePage />
+      },
+      {
+          path: 'warehouse/export/create',
+          element: <CreateExportWarehousePage />
+      },
+      {
+        path: 'users',
+        element: <UserManagerPage />,
+      },
+      {
+        path: 'employees',
+        element: <EmployeeManagerPage />,
+      },
+      {
+        path: 'users/add',
+        element: <AddUserPage />,
+      },
+      {
+        path: 'users/edit/:id',
+        element: <EditUserPage />,
+      },
+      {
+        path: 'products/',
+        element: <ProductManagerPage />,
+      },
+      {
+        path: 'products/add',
+        element: <AddProductPage />
+      },
+      {
+        path: 'products/edit/:id',
+        element: <EditProductPage />
+      }
     ],
   },
 ]);
