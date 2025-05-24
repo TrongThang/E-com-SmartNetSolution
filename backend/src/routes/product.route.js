@@ -14,7 +14,7 @@ const asyncHandler = (fn) => {
 productRouter.get('/', asyncHandler(getProduct));
 productRouter.get('/detail/:id', asyncHandler(getProductDetail));
 
-productRouter.post('/check-list-info', asyncHandler(checkListInfoProduct));
+// productRouter.post('/check-list-info', asyncHandler(checkListInfoProduct));
 productRouter.post('/', validateMiddleware(), asyncHandler(createProduct));
 productRouter.put('/', validateMiddleware(), asyncHandler());
 productRouter.delete('/', validateMiddleware(), asyncHandler());

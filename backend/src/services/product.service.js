@@ -79,13 +79,12 @@ const getProductService = async (filters, logic, limit, sort, order, role, type)
     `; // Đảm bảo join với attribute_group
 
     try {
-        console.log('Limit:', limit, 'Filters:', filters, 'Logic:', logic);
 
         const products = await executeSelectData({ 
             table: get_table, 
             queryJoin: query_join, 
             strGetColumn: get_attr, 
-            limit: limit || 10, // Đặt mặc định limit là 10
+            limit: limit, // Đặt mặc định limit là 10
             filter: filters, 
             logic: logic, 
             sort: sort, 
@@ -103,7 +102,6 @@ const getProductService = async (filters, logic, limit, sort, order, role, type)
             status_code=STATUS_CODE.OK,
             data={ 
                 data: formattedProducts, 
-                total_page: products.total_page || 1 
             }
         );
     } catch (error) {
