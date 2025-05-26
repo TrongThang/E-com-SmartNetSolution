@@ -45,6 +45,15 @@ class ProductController {
         return res.status(response.status_code).json(response);
     }
     
+    async updateProduct(req, res) {
+        const { name, description, description_normal, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes } = req.body;
+
+        const response = await updateProductService({
+            name, description, description_normal, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes
+        })
+
+        return res.status(response.status_code).json(response);
+    }
 
     async checkListInfoProduct(req, res) {
         const { products } = req.body;

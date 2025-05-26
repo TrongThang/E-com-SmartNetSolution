@@ -34,7 +34,7 @@ import ReviewManagerPage from '@/pages/reviewManager';
 import BlogManagerPage from '@/pages/blogManager';
 import AddBlog from '@/pages/blogManager/AddBlog';
 import EditBlog from '@/pages/blogManager/EditBlog';
-import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/Create";
+import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
 import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
 import UserManagerPage from "@/pages/userManager";
 import AddUserPage from "@/pages/userManager/AddUser";

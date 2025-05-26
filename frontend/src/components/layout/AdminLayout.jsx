@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 const AdminLayout = () => {
   return (
     <div className="flex min-h-screen">
-      <div className="w-full fixed top-0 left-0 z-50">
+      <div className="w-full fixed top-0 left-0 z-30">
         <Topbar />
       </div>
       <div className="z-40">

@@ -163,7 +163,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
 }
 
 const checkBeforeProduct = async (category_id, unit_id, warrenty_time_id) => {
-    const category = await prisma.category.findUnique({
+    const category = await prisma.categories.findUnique({
         where: {
             id: category_id
         }
@@ -191,21 +191,22 @@ const checkBeforeProduct = async (category_id, unit_id, warrenty_time_id) => {
         )
     }
 
-    if (warrenty_time_id) {
-        const warrenty_time = await prisma.warrenty_time.findUnique({
-            where: {
-                id: warrenty_time_id
-            }
-        })
+    // if (warrenty_time_id) {
+    //     const warrenty_time = await prisma.warrenty_time.findUnique({
+    //         where: {
+    //             id: warrenty_time_id
+    //         }
+    //     })
 
-        if (!warrenty_time) {
-            return get_error_response(
-                ERROR_CODES.WARRANTY_TIME_NOT_FOUND,
-                STATUS_CODE.BAD_REQUEST,
-                null
-            )
-        }
-    }
+    //     if (!warrenty_time) {
+    //         return get_error_response(
+    //             ERROR_CODES.WARRANTY_TIME_NOT_FOUND,
+    //             STATUS_CODE.BAD_REQUEST,
+    //             null
+    //         )
+    //     }
+    // }
+    //Khi nào sử dụng đến thời gian bảo hành thì mở
 }
 
 async function createProductService({ name, description, image, selling_price, category_id, unit_id, warrenty_time_id, is_hide, status, attributes }) {

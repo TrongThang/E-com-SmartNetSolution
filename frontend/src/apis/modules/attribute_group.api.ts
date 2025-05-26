@@ -16,7 +16,7 @@ const attributeGroupApi = {
         order?: ESortOrderValue;
     }): Promise<IApiResponse<IAttributeGroup[]>> {
         return axiosPrivate.get(categoryEndpoints.list, {
-            params: { ...params, filters: JSON.stringify(params.filters) },
+            params: params ? { ...params, filters: params.filters ? JSON.stringify(params.filters) : undefined } : undefined,
         });
     },
     async add(

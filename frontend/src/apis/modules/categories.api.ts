@@ -15,7 +15,7 @@ const categoryApi = {
         order?: ESortOrderValue;
     }): Promise<IApiResponse<ICategories[]>> {
         return axiosPrivate.get(categoryEndpoints.list, {
-            params: { ...params, filters: JSON.stringify(params.filters) },
+            params: params ? { ...params, filters: params.filters ? JSON.stringify(params.filters) : undefined } : undefined,
         });
     },
     async getById(id: number): Promise<IApiResponse<ICategories>> {
