@@ -43,8 +43,18 @@ import ProductManagerPage from "@/pages/productManager";
 import AddProductPage from "@/pages/productManager/AddProduct";
 import EditProductPage from "@/pages/productManager/EditProduct";
 import EmployeeManagerPage from "@/pages/employeeManager";
+import StageExamples from "@/components/common/stage/state-example";
+import TemplateManagement from "@/components/common/_test/template-management";
 
 export const router = createBrowserRouter([
+  {
+    path: '/test-template',
+    element: <TemplateManagement />
+  },
+  {
+    path: '/test-stage',
+    element: <StageExamples />
+  },
   {
     path: '/',
     element: <DefaultLayout />,
