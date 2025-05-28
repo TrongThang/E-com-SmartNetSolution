@@ -34,7 +34,7 @@ import ReviewManagerPage from '@/pages/reviewManager';
 import BlogManagerPage from '@/pages/blogManager';
 import AddBlog from '@/pages/blogManager/AddBlog';
 import EditBlog from '@/pages/blogManager/EditBlog';
-import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/Create";
+import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
 import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
 import UserManagerPage from "@/pages/userManager";
 import AddUserPage from "@/pages/userManager/AddUser";
@@ -45,6 +45,8 @@ import EditProductPage from "@/pages/productManager/EditProduct";
 import EmployeeManagerPage from "@/pages/employeeManager";
 import StageExamples from "@/components/common/stage/state-example";
 import TemplateManagement from "@/components/common/_test/template-management";
+
+import PlanningManagement from "@/pages/planningManager/page";
 
 export const router = createBrowserRouter([
   {
@@ -83,26 +85,26 @@ export const router = createBrowserRouter([
         path: 'profile/',
         element: <ProfileLayout />,
         children: [
-            {
-                path: 'info',
-                element: <ProfileInfo />
-            },
-            {
-                path: 'orders',
-                element: <OrdersPage />
-            },
-            {
-                path: 'liked',
-                element: <LikedPage />
-            },
-            {
-                path: 'addresses',
-                element: <AddressesPage />
-            },
-            {
-                path: 'change-password',
-                element: <h1>Thay đổi mật khẩu</h1>
-            }
+          {
+            path: 'info',
+            element: <ProfileInfo />
+          },
+          {
+            path: 'orders',
+            element: <OrdersPage />
+          },
+          {
+            path: 'liked',
+            element: <LikedPage />
+          },
+          {
+            path: 'addresses',
+            element: <AddressesPage />
+          },
+          {
+            path: 'change-password',
+            element: <h1>Thay đổi mật khẩu</h1>
+          }
         ]
       },
       {
@@ -212,11 +214,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'warehouse/import/create',
-          element: <CreateImportWarehousePage />
+        element: <CreateImportWarehousePage />
       },
       {
-          path: 'warehouse/export/create',
-          element: <CreateExportWarehousePage />
+        path: 'warehouse/export/create',
+        element: <CreateExportWarehousePage />
       },
       {
         path: 'users',
@@ -245,6 +247,14 @@ export const router = createBrowserRouter([
       {
         path: 'products/edit/:id',
         element: <EditProductPage />
+      },
+      {
+        path: 'planning',
+        element: <PlanningManagement />
+      },
+      {
+        path: 'mana-template',
+        element: <TemplateManagement />
       }
     ],
   },
