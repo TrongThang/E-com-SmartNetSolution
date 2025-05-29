@@ -9,7 +9,7 @@ export const useManufacturing = () => {
 
     // Xử lý SSE message
     useEffect(() => {
-        const eventSource = new EventSource(`http://localhost:8888/api/sse/events`);
+        let eventSource = new EventSource(`http://localhost:8888/api/sse/events`);
 
         eventSource.onmessage = (event) => {
             try {
@@ -76,6 +76,7 @@ export const useManufacturing = () => {
             // Thử kết nối lại sau 5 giây
             setTimeout(() => {
                 // Kết nối lại
+                eventSource = new EventSource(`http://localhost:8888/api/sse/events`);
             }, 5000);
         };
 

@@ -14,33 +14,12 @@ export default function StateDetails({
     onNextStage,
     onRejectQC,
     loading = false,
-    onUpdateSerials,
 }) {
     const [isShowModalQcReject, setIsShowModalQcReject] = useState(false)
     const [formData, setFormData] = useState({
         reason: "",
         note: "",
     })
-
-    useEffect(() => {
-        const handleUpdateStage = ({ device_serial, stage: newStage, status, stage_log }) => {
-            onUpdateSerials(device_serial, newStage.toLowerCase(), status.toLowerCase(), stage_log);
-        };
-
-        const handleUpdateStatus = ({ device_serial, stage: currentStage, status, stage_log }) => {
-            onUpdateSerials(device_serial, currentStage.toLowerCase(), status.toLowerCase(), stage_log);
-        };
-
-        sseService.connect();
-
-        sseService.addEventListener('update_stage', handleUpdateStage);
-        sseService.addEventListener('update_status', handleUpdateStatus);
-
-        return () => {
-            sseService.removeEventListener('update_stage', handleUpdateStage);
-            sseService.removeEventListener('update_status', handleUpdateStatus);
-        };
-    }, [onUpdateSerials]);
 
     const stageSerials = serialsByStage[stage.id] || []
     const selectedCount = selectedSerials.length
@@ -150,6 +129,7 @@ export default function StateDetails({
             <StageActions
                 stage={stage}
                 selectedCount={selectedCount}
+                selectedSerials={selectedSerials}
                 onNext={handleNext}
                 onReject={handleReject}
                 loading={loading}

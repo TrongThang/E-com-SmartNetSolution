@@ -32,28 +32,28 @@ const StateTimeline = ({
     })
 
     // Function to handle SSE updates
-    const handleSerialUpdate = (device_serial, newStage, newStatus, stage_log) => {
+    const handleSerialUpdate = (device_serial, newStage, newStatus, stage_logs) => {
         setSerialsByStage(prevSerials => {
             const updatedSerials = { ...prevSerials };
-            
-            // Remove serial from all stages first
+    
+            // Xóa serial khỏi tất cả các stage cũ
             Object.keys(updatedSerials).forEach(stage => {
                 updatedSerials[stage] = updatedSerials[stage].filter(
                     serial => serial.serial !== device_serial
                 );
             });
-
-            // Add serial to the new stage with updated status
+    
+            // Thêm serial vào stage mới với stage_logs mới nhất từ backend
             if (!updatedSerials[newStage]) {
                 updatedSerials[newStage] = [];
             }
-
+    
             const updatedSerial = {
                 serial: device_serial,
                 status: newStatus,
-                stage_logs: [...(updatedSerials[newStage].find(s => s.serial === device_serial)?.stage_logs || []), stage_log]
+                stage_logs: stage_logs // <-- Dùng trực tiếp mảng từ backend
             };
-
+    
             updatedSerials[newStage].push(updatedSerial);
             return updatedSerials;
         });

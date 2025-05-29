@@ -1,16 +1,24 @@
 "use client"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { exportMultipleQRCodesToPDF } from "@/utils/print";
+import { toast } from "sonner";
 
 export default function StageActions({
     stage,
     selectedCount,
+    selectedSerials,
     onNext,
     onReject,
     onCancel,
-    onPrintSerial,
     loading = false,
 }) {
+    const handlePrintSerial = () => {
+        console.log("selectedSerials", selectedSerials);
+        exportMultipleQRCodesToPDF(selectedSerials);
+        toast.success("Đã tạo file PDF thành công");
+    }
+
     const getActionButtons = () => {
         switch (stage.id) {
             case "pending":
@@ -31,7 +39,7 @@ export default function StageActions({
                         <Button variant="destructive" onClick={onCancel} disabled={loading}>
                             Huỷ sản xuất ({selectedCount})
                         </Button>
-                        <Button variant="outline" className="border-yellow-300" onClick={onPrintSerial} disabled={loading}>
+                        <Button variant="outline" className="border-yellow-300" onClick={handlePrintSerial} disabled={loading}>
                             In mã Serial ({selectedCount})
                         </Button>
                         <Button onClick={onNext} className="bg-green-600 hover:bg-green-700" disabled={loading}>
