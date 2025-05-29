@@ -9,7 +9,7 @@ import { AtSign, KeyRound, Loader2, Mail, Lock } from 'lucide-react'
 import axios from "axios"
 
 export default function LoginForm({ onSuccess }) {
-  const { login, sendOtp, verifyOtp } = useAuth()
+  const { login, sendOtp, verifyOtp, loginEmployee } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [loginForm, setLoginForm] = useState({ username: "", password: "" })
@@ -27,7 +27,7 @@ export default function LoginForm({ onSuccess }) {
     e.preventDefault()
     setIsLoading(true)
     try {
-      const result = await login(loginForm.username, loginForm.password)
+      const result = await loginEmployee(loginForm.username, loginForm.password)
       if (result.success) {
         toast.success("Đăng nhập thành công", { description: "Chào mừng bạn quay trở lại!" })
         onSuccess?.()

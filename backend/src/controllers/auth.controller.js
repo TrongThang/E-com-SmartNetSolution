@@ -52,11 +52,32 @@ class AuthController {
 
     async getMe(req, res) {
         try {
+            const token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
             const user = await this.prisma.user.findUnique({
-                where: { id: req.user.id },
+                where: {
+                    id: decoded.id
+                },
+                select: {
+                    account_id: true,
+                    id: true,
+                    username: true,
+                    role: true,
+                },
+                include: {
+                    customer: {
+                        select: {
+                            id: true,
+                            name: true,
+                            phone: true,
+                            email: true,
+                        }
+                    }
+                }
             });
 
-            get_error_response(
+            return get_error_response(
                 ERROR_CODES.SUCCESS,
                 STATUS_CODE.OK,
                 user

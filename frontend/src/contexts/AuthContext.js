@@ -49,12 +49,17 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
-            const response = await axiosPublic.post('auth/login', {
+            // const response = await axiosPublic.post('auth/login', {
+            //     username,
+            //     password,
+            //     type: "CUSTOMER"
+            // });
+
+            const response = await axiosPublic.post('http://localhost:8888/api/auth/employee/login', {
                 username,
                 password,
-                type: "CUSTOMER"
             });
-
+            console.log("response", response)
             if (response.status_code === 200) {
                 const token = response.data.accessToken;
                 localStorage.setItem('authToken', token);
@@ -68,6 +73,37 @@ export const AuthProvider = ({ children }) => {
                 return {
                     success: false,
                     message: response.data.message || 'Đăng nhập thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi đăng nhập'
+            };
+        }
+    };
+
+    const loginEmployee = async (username, password) => {
+        try {
+            const response = await axiosPublic.post('http://localhost:8888/api/auth/employee/login', {
+                username,
+                password,
+            });
+            console.log("response", response)
+            if (response.accessToken) {
+                const token = response.accessToken;
+                localStorage.setItem('authToken', token);
+                
+                const decoded = jwtDecode(token);
+                console.log('decoded', decoded);
+                setUser(decoded);
+                setIsAuthenticated(true);
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.data?.message || 'Đăng nhập thất bại'
                 };
             }
         } catch (error) {
@@ -150,6 +186,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         loading,
         login,
+        loginEmployee,
         register,
         logout,
         sendOtp,
