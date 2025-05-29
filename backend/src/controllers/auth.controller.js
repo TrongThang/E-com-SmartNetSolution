@@ -72,7 +72,7 @@ class AuthController {
 
     async sendOtpEmail(req, res) {
         const response = await notificationService.sendOtpEmail(req.body);
-        
+
         return res.status(response.status_code).json(response);
     }
 
@@ -80,6 +80,20 @@ class AuthController {
         const { account_id, email, otp } = req.body;
 
         const response = await notificationService.verifyOtpEmail(account_id, email, otp);
+
+        return res.status(response.status_code).json(response);
+    }
+    async sendOtpForgotPassword(req, res) {
+        const { email } = req.body;
+
+        const response = await notificationService.sendOtpForgotPassword(email);
+
+        return res.status(response.status_code).json(response);
+    }
+    async verifyOtpForgotPassword(req, res) {
+        const { email, otp } = req.body;
+
+        const response = await notificationService.verifyOtpForgotPassword(email, otp);
 
         return res.status(response.status_code).json(response);
     }

@@ -33,17 +33,21 @@ const AttributeGroupPage = () => {
     };
 
     const handleDelete = async (group) => {
-        if (window.confirm("Bạn có chắc chắn muốn xóa nhóm thuộc tính này?")) {
-            try {
-                const res = await attributeGroupApi.delete(group.group_id);
-                if (res.status_code === 200) {
-                    fetchData(); // Refresh data after deletion
-                }
-            } catch (error) {
-                console.error("Error deleting attribute group:", error);
+        const confirmed = window.confirm("Bạn có chắc chắn muốn xóa nhóm thuộc tính này?");
+        if (!confirmed) return;
+
+        try {
+            const res = await attributeGroupApi.deleted(group.group_id, false); // false: xóa chứ không phải khôi phục
+            if (res.status_code === 200) {
+                fetchData(); // Tải lại dữ liệu sau khi xóa thành công
+            } else {
+                console.error("Xóa thất bại:", res.message || res);
             }
+        } catch (error) {
+            console.error("Lỗi khi xóa nhóm thuộc tính:", error);
         }
     };
+
 
     const handleAdd = () => {
         setSelectedGroup(null);

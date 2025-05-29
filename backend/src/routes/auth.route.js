@@ -1,5 +1,9 @@
 const express = require('express');
-const { login, getMe, register, sendOtpEmail, verifyOtpEmail } = require('../controllers/auth.controller');
+const { login, getMe, register,
+    sendOtpEmail, verifyOtpEmail,
+    sendOtpForgotPassword, verifyOtpForgotPassword,
+    changedPassword
+} = require('../controllers/auth.controller');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const authRouter = express.Router();
 
@@ -11,12 +15,22 @@ const asyncHandler = (fn) => {
     };
 };
 
+// Đăng nhập và đăng ký
 authRouter.post('/login', validateMiddleware(loginSchema), asyncHandler(login));
 authRouter.post('/register', validateMiddleware(registerCustomerSchema), asyncHandler(register));
 
+// Xác minh tài khoản
 authRouter.post('/send-otp', validateMiddleware(sendOtpSchema), asyncHandler(sendOtpEmail));
 authRouter.post('/verify-otp', validateMiddleware(verifyOtpSchema), asyncHandler(verifyOtpEmail));
 
+// quên mật khẩu
+authRouter.post('/forgot-password/send-otp', asyncHandler(sendOtpForgotPassword));
+authRouter.post('/forgot-password/verify-otp', asyncHandler(verifyOtpForgotPassword));
+
+// Đổi mật khẩu
+authRouter.post('/account/change-password', asyncHandler(changedPassword));
+
+// Lấy thông tin tài khoản hiện tại
 authRouter.post('/account/get-me', getMe);
 
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
@@ -9,7 +9,7 @@ import { AtSign, KeyRound, Loader2, Mail, Lock } from 'lucide-react'
 import axios from "axios"
 
 export default function LoginForm({ onSuccess }) {
-  const { login, sendOtp, verifyOtp } = useAuth()
+  const { login, sendOtp, verifyOtp, changePassword } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [loginForm, setLoginForm] = useState({ username: "", password: "" })
@@ -21,6 +21,40 @@ export default function LoginForm({ onSuccess }) {
     newPassword: "",
     confirmPassword: ""
   })
+  const [otpCooldown, setOtpCooldown] = useState(0) // Thời gian chờ (giây)
+  const [lastOtpSentAt, setLastOtpSentAt] = useState(null) // Thời điểm gửi OTP cuối cùng
+
+  // Tính toán lại otpCooldown khi mở modal hoặc thời gian thay đổi
+  useEffect(() => {
+    const calculateCooldown = () => {
+      if (lastOtpSentAt) {
+        const elapsedSeconds = Math.floor((Date.now() - lastOtpSentAt) / 1000)
+        const remainingTime = Math.max(60 - elapsedSeconds, 0)
+        setOtpCooldown(remainingTime)
+      }
+    }
+
+    // Tính toán ngay khi mở modal
+    calculateCooldown()
+
+    // Cập nhật bộ đếm mỗi giây
+    const timer = setInterval(() => {
+      calculateCooldown()
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [lastOtpSentAt, showForgotPassword])
+
+  // Xử lý lỗi API
+  const handleApiError = (error) => {
+    if (error.response && error.response.data?.errors) {
+      error.response.data.errors.forEach(err => {
+        toast.error(`${err.message}`)
+      })
+    } else {
+      toast.error("Đã xảy ra lỗi không xác định")
+    }
+  }
 
   // Xử lý đăng nhập
   const handleLogin = async (e) => {
@@ -34,8 +68,8 @@ export default function LoginForm({ onSuccess }) {
       } else {
         toast.error("Đăng nhập thất bại", { description: result.message })
       }
-    } catch {
-      toast.error("Lỗi", { description: "Có lỗi xảy ra khi đăng nhập" })
+    } catch (error) {
+      handleApiError(error)
     } finally {
       setIsLoading(false)
     }
@@ -44,22 +78,75 @@ export default function LoginForm({ onSuccess }) {
   // Xử lý gửi OTP
   const handleSendOtp = async (e) => {
     e.preventDefault()
-    const result = await sendOtp(forgotPasswordForm.email)
-    if (result.success) {
-      toast.success("Mã OTP đã được gửi đến email của bạn", { description: "Vui lòng kiểm tra email để xác minh." })
+    if (otpCooldown > 0) {
+      toast.info(`Vui lòng chờ ${otpCooldown} giây trước khi gửi lại OTP`)
+      return
+    }
+    setIsLoading(true)
+    try {
+      const result = await sendOtp(forgotPasswordForm.email)
+      if (result.success) {
+        toast.success("Mã OTP đã được gửi đến email của bạn", { description: "Vui lòng kiểm tra email để xác minh." })
+        setLastOtpSentAt(Date.now()) // Lưu thời điểm gửi OTP
+        setOtpCooldown(60) // Đặt lại bộ đếm
+        setForgotPasswordStep("otp")
+      } else {
+        toast.error("Gửi OTP thất bại", { description: result.message })
+      }
+    } catch (error) {
+      handleApiError(error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  // Xử lý xác minh OTP và đặt lại mật khẩu
+  // Xử lý xác minh OTP
   const handleVerifyOtp = async (e) => {
     e.preventDefault()
-    const result = await verifyOtp(forgotPasswordForm.email, forgotPasswordForm.otp)
-    if (result.success) {
-      toast.success("Mật khẩu đã được đặt lại", { description: "Bạn có thể đăng nhập với mật khẩu mới." })
+    setIsLoading(true)
+    try {
+      const result = await verifyOtp(forgotPasswordForm.email, forgotPasswordForm.otp)
+      if (result.success) {
+        toast.success("Xác minh OTP thành công", { description: "Vui lòng nhập mật khẩu mới." })
+        setForgotPasswordStep("newPassword")
+      } else {
+        toast.error("Xác thực OTP thất bại", { description: result.message })
+      }
+    } catch (error) {
+      handleApiError(error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  // Xử lý quay lại bước trước trong quy trình quên mật khẩu
+  // Xử lý đặt lại mật khẩu
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    setIsLoading(true)
+    try {
+      const result = await changePassword(
+        forgotPasswordForm.email,
+        forgotPasswordForm.newPassword,
+        forgotPasswordForm.confirmPassword
+      )
+      if (result.success) {
+        toast.success("Đổi mật khẩu thành công!")
+        setShowForgotPassword(false)
+        setForgotPasswordStep("email")
+        setForgotPasswordForm({ email: "", otp: "", newPassword: "", confirmPassword: "" })
+        setLastOtpSentAt(null)
+        setOtpCooldown(0)
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      handleApiError(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Xử lý quay lại bước trước
   const handleBack = () => {
     if (forgotPasswordStep === "otp") {
       setForgotPasswordStep("email")
@@ -73,7 +160,6 @@ export default function LoginForm({ onSuccess }) {
       {/* Form đăng nhập */}
       <form onSubmit={handleLogin} className="space-y-5">
         <div className="space-y-4">
-          {/* Username input */}
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
               <AtSign size={18} />
@@ -89,8 +175,6 @@ export default function LoginForm({ onSuccess }) {
               onChange={(e) => setLoginForm((prev) => ({ ...prev, username: e.target.value }))}
             />
           </div>
-
-          {/* Password input */}
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
               <KeyRound size={18} />
@@ -107,8 +191,6 @@ export default function LoginForm({ onSuccess }) {
             />
           </div>
         </div>
-
-        {/* Remember me and Forgot password */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -129,8 +211,6 @@ export default function LoginForm({ onSuccess }) {
             Quên mật khẩu?
           </button>
         </div>
-
-        {/* Login button */}
         <Button
           type="submit"
           className="w-full bg-blue-600 py-3 font-medium text-white shadow-md transition-all hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70"
@@ -145,8 +225,6 @@ export default function LoginForm({ onSuccess }) {
             "Đăng nhập"
           )}
         </Button>
-
-        {/* Social login options */}
         <div className="relative mt-2">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
@@ -155,7 +233,6 @@ export default function LoginForm({ onSuccess }) {
             <span className="bg-white px-2 text-gray-500">Hoặc đăng nhập với</span>
           </div>
         </div>
-
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -205,6 +282,7 @@ export default function LoginForm({ onSuccess }) {
                   setShowForgotPassword(false)
                   setForgotPasswordStep("email")
                   setForgotPasswordForm({ email: "", otp: "", newPassword: "", confirmPassword: "" })
+                  // Không reset otpCooldown và lastOtpSentAt để giữ trạng thái đếm ngược
                 }}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,13 +309,15 @@ export default function LoginForm({ onSuccess }) {
                 <Button
                   type="submit"
                   className="w-full bg-blue-600 py-3 font-medium text-white shadow-md transition-all hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70"
-                  disabled={isLoading}
+                  disabled={isLoading || otpCooldown > 0}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">
                       <Loader2 size={18} className="mr-2 animate-spin" />
                       Đang gửi...
                     </span>
+                  ) : otpCooldown > 0 ? (
+                    `Gửi lại sau ${otpCooldown}s`
                   ) : (
                     "Gửi mã OTP"
                   )}
@@ -260,6 +340,36 @@ export default function LoginForm({ onSuccess }) {
                     onChange={(e) => setForgotPasswordForm((prev) => ({ ...prev, otp: e.target.value }))}
                   />
                 </div>
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleBack}
+                    disabled={isLoading}
+                  >
+                    Quay lại
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 py-3 font-medium text-white shadow-md transition-all hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <Loader2 size={18} className="mr-2 animate-spin" />
+                        Đang xử lý...
+                      </span>
+                    ) : (
+                      "Xác minh OTP"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {forgotPasswordStep === "newPassword" && (
+              <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                     <Lock size={18} />
@@ -307,7 +417,7 @@ export default function LoginForm({ onSuccess }) {
                         Đang xử lý...
                       </span>
                     ) : (
-                      "Xác minh và đặt lại"
+                      "Đặt lại mật khẩu"
                     )}
                   </Button>
                 </div>

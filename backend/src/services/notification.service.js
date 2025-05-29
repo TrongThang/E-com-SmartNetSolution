@@ -13,10 +13,62 @@ const mailOptions = (toEmail, verificationCode) => ({
     text: `Mã xác minh của bạn là: ${verificationCode}\nVui lòng sử dụng mã này để xác minh tài khoản. Mã có hiệu lực trong 10 phút.`,
     html: `<p>Mã xác minh của bạn là: <strong>${verificationCode}</strong></p><p>Vui lòng sử dụng mã này để xác minh tài khoản. Mã có hiệu lực trong 10 phút.</p>`,
 });
-
 class NotificationService {
     constructor() {
         this.prisma = new PrismaClient();
+        this.otpStore = new Map();
+    }
+
+    async checkAccountByEmailForResetPassword(email) {
+        const customer = await this.prisma.customer.findUnique({
+            where: { email }
+        });
+        return customer;
+    }
+
+    async sendOtpForgotPassword(email) {
+        const customer = await this.checkAccountByEmailForResetPassword(email);
+        if (!customer) {
+            return { status_code: 404, message: 'Email không tồn tại trong hệ thống.' };
+        }
+
+        const OTP_EXPIRE_MS = 5 * 60 * 1000; // 5 phút
+        const otp = generateVerificationOTPCode();
+        const expiresAt = Date.now() + OTP_EXPIRE_MS;
+
+        // Lưu OTP vào store tạm thời
+        this.otpStore.set(email, { otp, expiresAt });
+
+        try {
+            // Sử dụng mailOptions đã khai báo để gửi mail
+            await transporter.sendMail(mailOptions(email, otp));
+        } catch (error) {
+            console.error("Lỗi gửi mail:", error);
+            return { status_code: 500, message: "Gửi email thất bại. Vui lòng thử lại sau." };
+        }
+
+        console.log(`Gửi OTP ${otp} đến email ${email}`);
+
+        return { status_code: 200, message: 'OTP đã được gửi đến email của bạn.' };
+    }
+
+    async verifyOtpForgotPassword(email, otpInput) {
+        const data = this.otpStore.get(email);
+        if (!data) throw new Error('Không tìm thấy OTP.');
+
+        const { otp: storedOtp, expiresAt } = data;
+
+        if (Date.now() > expiresAt) {
+            this.otpStore.delete(email);
+            throw new Error('OTP đã hết hạn.');
+        }
+
+        if (storedOtp !== otpInput) {
+            throw new Error('OTP không hợp lệ.');
+        }
+
+        this.otpStore.delete(email); // Xóa sau khi dùng
+        return { status_code: 200, message: 'Xác minh OTP thành công. Tiếp tục đặt lại mật khẩu.' };
     }
 
     async checkAccountEmail(data) {
@@ -53,6 +105,7 @@ class NotificationService {
 
         return account;
     }
+
 
     async sendOtpEmail(account_id, email) {
         const result_check = await this.checkAccountEmail(account_id, email);

@@ -336,6 +336,8 @@ const ERROR_CODES = {
     ATTRIBUTE_GROUP_NAME_REQUIRED: 2504,
     ATTRIBUTE_GROUP_NAME_MIN_LENGTH: 2505,
     ATTRIBUTE_GROUP_NAME_MAX_LENGTH: 2506,
+    ATTRIBUTE_USED_IN_CATEGORY_GROUP : 2507,
+
     ACCOUNT_USERNAME_ALREADY_EXISTS: 1620,
 
     //ROLE
@@ -435,6 +437,8 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.ATTRIBUTE_GROUP_NAME_MIN_LENGTH]: "Tên nhóm thuộc tính quá ngắn",
     [ERROR_CODES.ATTRIBUTE_GROUP_NAME_MAX_LENGTH]: "Tên nhóm thuộc tính quá dài",
     [ERROR_CODES.ATTRIBUTE_GROUP_NAME_REQUIRED]: "Tên nhóm thuộc tính là bắt buộc",
+    [ERROR_CODES.ATTRIBUTE_USED_IN_CATEGORY_GROUP]: "Nhóm thuộc tính đang được sử dụng trong danh mục sản phẩm",
+
 
     // CATEGORY
     [ERROR_CODES.CATEGORY_NOT_FOUND]: "Không tìm thấy danh mục",

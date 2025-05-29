@@ -40,6 +40,15 @@ import AddCategoryPage from "@/pages/categoryManager/AddCategory.jsx";
 import EditCategoryPage from "@/pages/categoryManager/EditCategory.jsx";
 
 import { createBrowserRouter } from "react-router-dom";
+import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
+import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
+import UserManagerPage from "@/pages/userManager";
+import ProductManagerPage from "@/pages/productManager";
+import EmployeeManagerPage from "@/pages/employeeManager";
+import AddUserPage from "@/pages/userManager/AddUser";
+import EditUserPage from "@/pages/userManager/EditUser";
+import AddProductPage from "@/pages/productManager/AddProduct";
+import AttributeGroupPage from "@/pages/attribute_groupManager";
 
 
 export const router = createBrowserRouter([
@@ -128,6 +137,10 @@ export const router = createBrowserRouter([
         element: <EditCategoryPage />,
       },
       {
+        path: "attribute-groups",
+        element: <AttributeGroupPage />,
+      },
+      {
         path: "units",
         element: <UnitManagerPage />,
       },
@@ -201,11 +214,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'warehouse/import/create',
-          element: <CreateImportWarehousePage />
+        element: <CreateImportWarehousePage />
       },
       {
-          path: 'warehouse/export/create',
-          element: <CreateExportWarehousePage />
+        path: 'warehouse/export/create',
+        element: <CreateExportWarehousePage />
       },
       {
         path: 'users',
@@ -230,11 +243,12 @@ export const router = createBrowserRouter([
       {
         path: 'products/add',
         element: <AddProductPage />
-      },
-      {
-        path: 'products/edit/:id',
-        element: <EditProductPage />
       }
+      // },
+      // {
+      //   path: 'products/edit/:id',
+      //   element: <EditProductPage />
+      // }
     ],
   },
 ]);

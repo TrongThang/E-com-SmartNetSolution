@@ -26,6 +26,7 @@ export default function SearchPage() {
     const [allCategories, setAllCategories] = useState([])
     const [showMobileFilters, setShowMobileFilters] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState(null)
     const navigate = useNavigate()
 
     // Memoize getAllChildIds to optimize performance
@@ -88,25 +89,22 @@ export default function SearchPage() {
         }
 
         console.log("Filters sent to API:", JSON.stringify(filters, null, 2))
-
         return filters.length === 0 ? null : filters.length === 1 ? filters[0] : { logic: "AND", filters }
     }, [keyword, selectedCategories, priceRange, allCategories])
 
     // Initialize page and selectedCategories from URL
     useEffect(() => {
         console.log("Initializing from URL:", { pageParam, categoryParam })
-        // Handle page parameter
         const parsedPage = parseInt(pageParam)
         const validPage = isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage
         setPage(validPage)
 
-        // Handle category parameter
         if (categoryParam) {
             try {
                 const categories = categoryParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id))
                 setSelectedCategories(categories)
             } catch (error) {
-                console.error("Lỗi khi phân tích tham số danh mục:", error)
+                console.error("Error parsing category parameter:", error)
                 setSelectedCategories([])
             }
         } else {
@@ -142,10 +140,12 @@ export default function SearchPage() {
                     const categoriesData = res.data?.categories || []
                     setAllCategories(categoriesData)
                 } else {
-                    console.error("API danh mục trả về lỗi:", res)
+                    console.error("Category API error:", res)
+                    setError("Không thể tải danh mục")
                 }
             } catch (error) {
-                console.error("Lỗi khi tải danh mục:", error)
+                console.error("Error fetching categories:", error)
+                setError("Không thể tải danh mục")
             }
         }
         fetchCategories()
@@ -155,6 +155,9 @@ export default function SearchPage() {
     useEffect(() => {
         const fetchProducts = async () => {
             setIsLoading(true)
+            setError(null)
+            console.log("Starting fetchProducts for page:", page, "keyword:", keyword)
+
             const categoryMap = {}
             allCategories.forEach(category => {
                 categoryMap[category.category_id] = { ...category, children: [] }
@@ -168,44 +171,52 @@ export default function SearchPage() {
             try {
                 const filterGroup = buildFilters()
                 const params = {
-                    page,
+                    page: page,
                     limit: 12,
                     ...(filterGroup && { filters: filterGroup }),
                     ...(sort.field && { sort: sort.field }),
-                    ...(sort.order && { order: sort.order })
+                    ...(sort.order && { order: sort.order }),
                 }
-                console.log("Fetching products with params:", params)
+                console.log("Fetching products with params:", JSON.stringify(params, null, 2))
                 const res = await productApi.search(params)
+                console.log("API response:", JSON.stringify(res, null, 2))
+
                 if (res.status_code === 200) {
                     const productsData = res.data?.data || []
                     const newTotalPage = res.data?.total_page || 1
+
                     setProducts(productsData)
                     setTotalPage(newTotalPage)
 
-                    // Adjust page if it exceeds totalPage
-                    if (page > newTotalPage) {
+                    if (page > newTotalPage && newTotalPage > 0) {
                         console.log(`Adjusting page from ${page} to ${newTotalPage}`)
                         setPage(newTotalPage)
                     }
 
-                    console.log("Products returned:", productsData)
+                    console.log("Products set:", productsData.map(p => ({ id: p.id, name: p.name })))
+                    console.log("Total pages set:", newTotalPage)
 
-                    const productCategoryIds = [...new Set(productsData.map(p => p.category_id))]
-                    if (keyword.trim() && productCategoryIds.length > 0) {
-                        const relatedCategories = []
-                        productCategoryIds.forEach(id => {
-                            let currentId = id
-                            while (currentId && categoryMap[currentId]) {
-                                if (!relatedCategories.find(cat => cat.category_id === currentId)) {
-                                    relatedCategories.push(categoryMap[currentId])
+                    // Xử lý filterCategories
+                    if (keyword.trim()) {
+                        if (productsData.length > 0) {
+                            const productCategoryIds = [...new Set(productsData.map(p => p.category_id))]
+                            const relatedCategories = []
+                            productCategoryIds.forEach(id => {
+                                let currentId = id
+                                while (currentId && categoryMap[currentId]) {
+                                    if (!relatedCategories.find(cat => cat.category_id === currentId)) {
+                                        relatedCategories.push(categoryMap[currentId])
+                                    }
+                                    currentId = categoryMap[currentId].parent_id
                                 }
-                                currentId = categoryMap[currentId].parent_id
-                            }
-                        })
-                        const rootCategories = relatedCategories.filter(
-                            category => !category.parent_id || !categoryMap[category.parent_id]
-                        )
-                        setFilterCategories(rootCategories)
+                            })
+                            const rootCategories = relatedCategories.filter(
+                                category => !category.parent_id || !categoryMap[category.parent_id]
+                            )
+                            setFilterCategories(rootCategories)
+                        } else {
+                            setFilterCategories([])
+                        }
                     } else {
                         const rootCategories = allCategories.filter(
                             category => !category.parent_id || !categoryMap[category.parent_id]
@@ -213,20 +224,24 @@ export default function SearchPage() {
                         setFilterCategories(rootCategories)
                     }
                 } else {
-                    console.error("API sản phẩm trả về lỗi:", res)
+                    console.error("Product API error:", res)
                     setProducts([])
                     setTotalPage(1)
+                    setError("Không thể tải sản phẩm")
                     setFilterCategories(allCategories.filter(category => !category.parent_id))
                 }
             } catch (error) {
-                console.error("Lỗi khi tải sản phẩm:", error)
+                console.error("Error fetching products:", error)
                 setProducts([])
                 setTotalPage(1)
+                setError("Không thể tải sản phẩm")
                 setFilterCategories(allCategories.filter(category => !category.parent_id))
             } finally {
                 setIsLoading(false)
+                console.log("fetchProducts completed, isLoading:", false)
             }
         }
+
         if (allCategories.length > 0) {
             fetchProducts()
         }
@@ -236,12 +251,14 @@ export default function SearchPage() {
         console.log("Category change:", categories)
         setSelectedCategories(categories)
         setPage(1)
+        setProducts([]) // Clear products when filters change
     }, [])
 
     const handlePriceChange = useCallback((min, max) => {
         console.log("Price change:", { min, max })
         setPriceRange({ min, max })
         setPage(1)
+        setProducts([]) // Clear products when filters change
     }, [])
 
     const handleSortChange = useCallback((sortValue) => {
@@ -253,6 +270,7 @@ export default function SearchPage() {
             setSort({ field, order })
         }
         setPage(1)
+        setProducts([]) // Clear products when sort changes
     }, [])
 
     const handleReset = useCallback(() => {
@@ -261,13 +279,14 @@ export default function SearchPage() {
         setPriceRange({ min: 0, max: 20000000 })
         setSort({ field: "", order: "" })
         setPage(1)
+        setProducts([]) // Clear products when filters are reset
         setShowMobileFilters(false)
     }, [])
 
-    const handlePageChange = useCallback((newPage) => {
-        console.log("Page change:", newPage)
-        if (newPage >= 1 && newPage <= totalPage && newPage !== page) {
-            setPage(newPage)
+    const handlePageChange = useCallback((pageNumber) => {
+        console.log("Page change requested:", pageNumber)
+        if (pageNumber >= 1 && pageNumber <= totalPage && pageNumber !== page) {
+            setPage(pageNumber)
             window.scrollTo({ top: 0, behavior: "smooth" })
         }
     }, [page, totalPage])
@@ -279,10 +298,9 @@ export default function SearchPage() {
         return count
     }
 
-    // Generate page numbers for display with ellipsis
     const getPageNumbers = () => {
         const pageNumbers = []
-        const maxPagesToShow = 5 // Show up to 5 page numbers at a time
+        const maxPagesToShow = 5
         const halfPagesToShow = Math.floor(maxPagesToShow / 2)
 
         let startPage = Math.max(1, page - halfPagesToShow)
@@ -306,6 +324,7 @@ export default function SearchPage() {
             pageNumbers.push(totalPage)
         }
 
+        console.log("Page numbers generated:", pageNumbers)
         return pageNumbers
     }
 
@@ -405,6 +424,8 @@ export default function SearchPage() {
                                 <h3 className="text-lg font-medium text-gray-800">
                                     {isLoading ? (
                                         <span className="animate-pulse">Đang tải...</span>
+                                    ) : error ? (
+                                        <span className="text-red-600">Lỗi: {error}</span>
                                     ) : (
                                         <>
                                             Tìm thấy <span className="text-blue-600 font-bold">{products.length}</span> sản phẩm
@@ -438,7 +459,7 @@ export default function SearchPage() {
 
                         {isLoading ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
-                                {[...Array(6)].map((_, i) => (
+                                {[...Array(12)].map((_, i) => (
                                     <div key={i} className="bg-white rounded-lg shadow-sm p-4 h-80">
                                         <div className="bg-gray-200 h-40 rounded-md mb-4"></div>
                                         <div className="bg-gray-200 h-4 rounded-md mb-2 w-3/4"></div>
@@ -446,6 +467,16 @@ export default function SearchPage() {
                                         <div className="bg-gray-200 h-6 rounded-md w-1/3"></div>
                                     </div>
                                 ))}
+                            </div>
+                        ) : error ? (
+                            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                                <div className="flex flex-col items-center justify-center py-12">
+                                    <Search className="h-16 w-16 text-gray-300 mb-4" />
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Lỗi tải dữ liệu</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto mb-6">
+                                        Đã xảy ra lỗi khi tải sản phẩm. Vui lòng thử lại sau.
+                                    </p>
+                                </div>
                             </div>
                         ) : products.length > 0 ? (
                             <>

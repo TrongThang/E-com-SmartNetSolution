@@ -31,9 +31,11 @@ const attributeGroupApi = {
         return axiosPrivate.put(`${categoryEndpoints.list}/${id}`, data);
     },
     async deleted(
-        id: number
+        id: number,
+        isRestore: boolean = false
     ): Promise<IApiResponse<IAttributeGroup>> {
-        return axiosPrivate.patch(`${categoryEndpoints.list}/${id}`);
+        return axiosPrivate.patch(`${categoryEndpoints.list}/${id}`, {
+            isRestore: isRestore});
     }
 };
 export default attributeGroupApi; 

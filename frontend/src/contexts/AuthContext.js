@@ -106,9 +106,9 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
     };
 
-    const sendOtp = async (account_id, email) => {
+    const sendOtp = async (email) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { account_id, email });
+            const response = await axios.post('http://localhost:8081/api/auth/forgot-password/send-otp', { email });
             if (response.data.status_code === 200) {
                 return { success: true };
             } else {
@@ -125,9 +125,10 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
+
     const verifyOtp = async (email, otp) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/verify-otp', { email, otp });
+            const response = await axios.post('http://localhost:8081/api/auth/forgot-password/verify-otp', { email, otp });
             if (response.data.status_code === 200) {
                 return { success: true };
             } else {
@@ -143,7 +144,34 @@ export const AuthProvider = ({ children }) => {
                 message: error.response?.data?.message || 'Có lỗi xảy ra khi xác thực OTP'
             };
         }
-    }
+    };
+
+    const changePassword = async (email, newPassword, confirmPassword) => {
+        if (newPassword !== confirmPassword) {
+            return {
+                success: false,
+                message: 'Mật khẩu mới và xác nhận mật khẩu không khớp'
+            };
+        }
+
+        try {
+            const response = await axios.post('http://localhost:8081/api/auth/account/change-password', { email, newPassword, confirmPassword });
+            if (response.data.status_code === 200) {
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.data.message || 'Đổi mật khẩu thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Change password error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu'
+            };
+        }
+    };
 
     const value = {
         user,
@@ -153,7 +181,8 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         sendOtp,
-        verifyOtp
+        verifyOtp,
+        changePassword
     };
 
     return (
