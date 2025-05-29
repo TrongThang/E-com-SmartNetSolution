@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
 
     const sendOtp = async (email) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/forgot-password/send-otp', { email });
+            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { email });
             if (response.data.status_code === 200) {
                 return { success: true };
             } else {
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
 
     const verifyOtp = async (email, otp) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/forgot-password/verify-otp', { email, otp });
+            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { email, otp });
             if (response.data.status_code === 200) {
                 return { success: true };
             } else {

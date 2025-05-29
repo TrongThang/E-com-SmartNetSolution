@@ -398,15 +398,6 @@ export default function LoginForm({ onSuccess }) {
                 </div>
                 <div className="flex gap-3">
                   <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleBack}
-                    disabled={isLoading}
-                  >
-                    Quay lại
-                  </Button>
-                  <Button
                     type="submit"
                     className="w-full bg-blue-600 py-3 font-medium text-white shadow-md transition-all hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70"
                     disabled={isLoading}

@@ -83,20 +83,6 @@ class AuthController {
 
         return res.status(response.status_code).json(response);
     }
-    async sendOtpForgotPassword(req, res) {
-        const { email } = req.body;
-
-        const response = await notificationService.sendOtpForgotPassword(email);
-
-        return res.status(response.status_code).json(response);
-    }
-    async verifyOtpForgotPassword(req, res) {
-        const { email, otp } = req.body;
-
-        const response = await notificationService.verifyOtpForgotPassword(email, otp);
-
-        return res.status(response.status_code).json(response);
-    }
 }
 
 module.exports = new AuthController();
