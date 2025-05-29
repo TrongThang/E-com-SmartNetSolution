@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import blogApi from "@/apis/modules/blog.api.ts";
-import BlogTable from "@/components/common/Table/BlogTable";
+import BlogTable from "@/components/common/table/BlogTable";
 import { Button } from "@/components/ui/button";
 import Swal from "sweetalert2";
 

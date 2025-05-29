@@ -49,12 +49,17 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
-            const response = await axiosPublic.post('auth/login', {
+            // const response = await axiosPublic.post('auth/login', {
+            //     username,
+            //     password,
+            //     type: "CUSTOMER"
+            // });
+
+            const response = await axiosPublic.post('http://localhost:8888/api/auth/employee/login', {
                 username,
                 password,
-                type: "CUSTOMER"
             });
-
+            console.log("response", response)
             if (response.status_code === 200) {
                 const token = response.data.accessToken;
                 localStorage.setItem('authToken', token);
@@ -68,6 +73,37 @@ export const AuthProvider = ({ children }) => {
                 return {
                     success: false,
                     message: response.data.message || 'Đăng nhập thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi đăng nhập'
+            };
+        }
+    };
+
+    const loginEmployee = async (username, password) => {
+        try {
+            const response = await axiosPublic.post('http://localhost:8888/api/auth/employee/login', {
+                username,
+                password,
+            });
+            console.log("response", response)
+            if (response.accessToken) {
+                const token = response.accessToken;
+                localStorage.setItem('authToken', token);
+                
+                const decoded = jwtDecode(token);
+                console.log('decoded', decoded);
+                setUser(decoded);
+                setIsAuthenticated(true);
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.data?.message || 'Đăng nhập thất bại'
                 };
             }
         } catch (error) {
@@ -106,9 +142,9 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
     };
 
-    const sendOtp = async (account_id, email) => {
+    const sendOtp = async (email) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { account_id, email });
+            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { email });
             if (response.data.status_code === 200) {
                 return { success: true };
             } else {
@@ -125,9 +161,10 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
+
     const verifyOtp = async (email, otp) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/verify-otp', { email, otp });
+            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { email, otp });
             if (response.data.status_code === 200) {
                 return { success: true };
             } else {
@@ -143,17 +180,46 @@ export const AuthProvider = ({ children }) => {
                 message: error.response?.data?.message || 'Có lỗi xảy ra khi xác thực OTP'
             };
         }
-    }
+    };
+
+    const changePassword = async (email, newPassword, confirmPassword) => {
+        if (newPassword !== confirmPassword) {
+            return {
+                success: false,
+                message: 'Mật khẩu mới và xác nhận mật khẩu không khớp'
+            };
+        }
+
+        try {
+            const response = await axios.post('http://localhost:8081/api/auth/account/change-password', { email, newPassword, confirmPassword });
+            if (response.data.status_code === 200) {
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.data.message || 'Đổi mật khẩu thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Change password error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu'
+            };
+        }
+    };
 
     const value = {
         user,
         isAuthenticated,
         loading,
         login,
+        loginEmployee,
         register,
         logout,
         sendOtp,
-        verifyOtp
+        verifyOtp,
+        changePassword
     };
 
     return (

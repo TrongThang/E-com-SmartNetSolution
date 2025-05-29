@@ -103,7 +103,7 @@ export default function CategoryManagement() {
   }
 
   const handleEditCategory = (category) => {
-    navigate(`/admin/categories/${category.category_id}`)
+    navigate(`/admin/categories/edit/${category.category_id}`)
   }
 
   const handleDeleteCategory = async (category) => {

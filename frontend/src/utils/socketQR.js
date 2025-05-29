@@ -15,10 +15,10 @@ export async function generateConnectionCode(customer_id) {
     }
 }
 
-export async function verifyConnection(customer_id, roomCode, password) {
+export async function verifyConnection(employee_id, roomCode, password) {
     try {
         const response = await axiosPublic.post('socket-qr/verify', {
-            customer_id, roomCode, password
+            employee_id, roomCode, password
         });
         if (response.success) {
             return response.data.token;

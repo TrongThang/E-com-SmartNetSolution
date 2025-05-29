@@ -15,10 +15,17 @@ export default function HomePage() {
   const [categories, setCategories] = useState([])
   const fecthProducts = async () => {
     try {
-      const res = await productApi.search({})
+      const res = await productApi.search({
+        limit: 100
+      })
+
+      console.log("resonse:", res)
       if (res.status_code === 200) {
         const filterFeatured = (res.data?.data || []).filter(item => item.status === 3)
+
+        console.log("filterFeatured:", filterFeatured)
         const filteredNewArrivals = (res.data?.data || []).filter(item => item.status === 4)
+        console.log("filteredNewArrivals:", filteredNewArrivals)
         setFeaturedProducts(filterFeatured)
         setNewArrivals(filteredNewArrivals)
       }
@@ -81,9 +88,6 @@ export default function HomePage() {
           <div className="mx-auto max-w-5xl px-4">
             <div className="mb-8 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-800">Danh mục sản phẩm</h2>
-              <Link to="#" className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700">
-                Xem tất cả <ChevronRight className="ml-1 h-4 w-4" />
-              </Link>
             </div>
             <CategoryGrid categories={categories} columns={5} />
           </div>
@@ -109,9 +113,6 @@ export default function HomePage() {
           <div className="mx-auto max-w-5xl px-4">
             <div className="mb-8 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-800">Thiết bị nổi bật</h2>
-              <Link to="#" className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700">
-                Xem tất cả <ChevronRight className="ml-1 h-4 w-4" />
-              </Link>
             </div>
             <ProductGrid products={featuredProducts} columns={5} />
           </div>
@@ -121,10 +122,7 @@ export default function HomePage() {
         <section className="py-12 bg-blue-50">
           <div className="mx-auto max-w-5xl px-4">
             <div className="mb-8 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-800">Thiết bị nổi bật</h2>
-              <Link to="#" className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700">
-                Xem tất cả <ChevronRight className="ml-1 h-4 w-4" />
-              </Link>
+              <h2 className="text-2xl font-bold text-gray-800">Thiết bị mới</h2>
             </div>
             <ProductGrid products={newArrivals} columns={5} />
           </div>

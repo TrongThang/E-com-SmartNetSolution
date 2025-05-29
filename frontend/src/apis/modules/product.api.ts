@@ -22,6 +22,7 @@ const productApi = {
             params: { ...params, filters: JSON.stringify(params.filters) },
         });
     },
+
     async list(params: {
         page?: number;
         limit?: number;

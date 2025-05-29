@@ -15,7 +15,7 @@ const prisma = new PrismaClient()
 // 3: Sản phẩm nổi bật
 // 4: Sản phẩm mới
 // Nếu không nhập limit thì mặc định là lấy hết
-const getProductService = async (filters, logic, limit, sort, order, role, type) => {
+const getProductService = async (filters, logic, limit, sort, order, role, type, page = 1) => {
     let get_attr = `product.name, product.slug, product.description, product.image, selling_price, views, status,
     product.category_id, categories.name as categories, COALESCE(sold.sold, 0) AS sold, COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, COALESCE(review.avg_rating, 0) AS average_rating,
     COALESCE(CAST(total_reviews_today.total_reviews_today AS CHAR), 0) AS total_reviews_today`
@@ -51,31 +51,32 @@ const getProductService = async (filters, logic, limit, sort, order, role, type)
     `
 
     try {
-        console.log('Limit:', limit, 'Filters:', filters, 'Logic:', logic);
+        console.log('Page:', page, 'Limit:', limit, 'Filters:', filters, 'Logic:', logic, 'Sort:', sort, 'Order:', order);
 
-        const products = await executeSelectData({ 
-            table: get_table, 
-            queryJoin: query_join, 
-            strGetColumn: get_attr, 
-            limit: limit || 10, // Đặt mặc định limit là 10
-            filter: filters, 
-            logic: logic, 
-            sort: sort, 
+        const products = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit || 10,
+            page: page, // Truyền page
+            filter: filters,
+            logic: logic,
+            sort: sort,
             order: order,
-            configData: configDataProduct // Sử dụng configData
+            configData: configDataProduct
         });
 
         console.log('Products raw:', products);
+        console.log('Total page:', products.total_page);
 
-        // Không cần map thêm vì configDataProductDetail đã xử lý
         const formattedProducts = products.data || [];
 
         return get_error_response(
-            errors=ERROR_CODES.SUCCESS,
-            status_code=STATUS_CODE.OK,
-            data={ 
-                data: formattedProducts, 
-                total_page: products.total_page || 1 
+            errors = ERROR_CODES.SUCCESS,
+            status_code = STATUS_CODE.OK,
+            data = {
+                data: formattedProducts,
+                total_page: products.total_page || 1
             }
         );
     } catch (error) {

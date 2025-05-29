@@ -21,7 +21,7 @@ async function getUserAdminInfo(account_id) {
 	return user;
 }
 
-async function loginAPI (username, password, type = null, remember_me = null) {
+async function loginAPI(username, password, type = null, remember_me = null) {
 	try {
 		include_clause = type === null ? { employee: true } : { customer: true };
 
@@ -31,8 +31,8 @@ async function loginAPI (username, password, type = null, remember_me = null) {
 				// report: { equals: 0 }
 			}
 		})
-		
-		if(await verifyPassword(password, user.password) === false) {
+
+		if (await verifyPassword(password, user.password) === false) {
 			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
 		}
 
@@ -72,35 +72,35 @@ async function loginAPI (username, password, type = null, remember_me = null) {
 
 	} catch (jwtError) {
 		console.error('Login error:', jwtError);
-        return get_error_response(
-            ERROR_CODES.INTERNAL_SERVER_ERROR,
-            STATUS_CODE.INTERNAL_SERVER_ERROR,
-            { message: 'Lỗi server', details: jwtError.message }
-        );
+		return get_error_response(
+			ERROR_CODES.INTERNAL_SERVER_ERROR,
+			STATUS_CODE.INTERNAL_SERVER_ERROR,
+			{ message: 'Lỗi server', details: jwtError.message }
+		);
 	}
 }
 
 const refreshTokenAPI = async (req, res) => {
-    try {
-        const { refresh_token } = req.body;
-        
-        const decoded = jwt.verify(refresh_token, process.env.REFRESH_SECRET_KEY || process.env.SECRET_KEY);
-        const newAccessToken = jwt.sign(
-            {
-                user_id: decoded.user_id,
-                username: decoded.username
-            },
-            process.env.SECRET_KEY,
-            { expiresIn: '3h' }
-        );
-		
+	try {
+		const { refresh_token } = req.body;
+
+		const decoded = jwt.verify(refresh_token, process.env.REFRESH_SECRET_KEY || process.env.SECRET_KEY);
+		const newAccessToken = jwt.sign(
+			{
+				user_id: decoded.user_id,
+				username: decoded.username
+			},
+			process.env.SECRET_KEY,
+			{ expiresIn: '3h' }
+		);
+
 		response = {
 			token: newAccessToken
 		}
 
 		return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, response);
-    } catch (jwtError) {
-        if (jwtError.name === 'TokenExpiredError') {
+	} catch (jwtError) {
+		if (jwtError.name === 'TokenExpiredError') {
 			return res.status(401).json({
 				success: false,
 				message: 'Refresh token đã hết hạn',
@@ -115,13 +115,13 @@ const refreshTokenAPI = async (req, res) => {
 		} else {
 			throw new Error('Lỗi xác thực token: ' + jwtError.message);
 		}
-    }
+	}
 };
 
 const register = async ({ username, password, confirm_password, surname, lastname, phone, email, gender }) => {
 	if (password !== confirm_password) {
 		return get_error_response(ERROR_CODES.ACCOUNT_PASSWORD_NOT_MATCH, STATUS_CODE.BAD_REQUEST);
-	}	
+	}
 
 	const checkAccount = await prisma.account.findFirst({
 		where: {
@@ -176,21 +176,38 @@ const register = async ({ username, password, confirm_password, surname, lastnam
 	Nếu đúng thì bắt đầu Đổi mật khẩu
 */
 const ChangedPasswordAccount = async (payload) => {
-	const { username, newPassword, confirmPassword } = payload
+	const { email, newPassword, confirmPassword } = payload;
 
-	// Kiểm tra username đưa vào có tồn tại hay không
+	if (newPassword !== confirmPassword) {
+		return get_error_response(ERROR_CODES.ACCOUNT_PASSWORD_NOT_MATCH, STATUS_CODE.BAD_REQUEST);
+	}
 
-	// Kiểm tra newPassword và confirmPassword có giông nhau hay không
+	const account = await prisma.account.findFirst({
+		where: {
+			customer: { email }
+		},
+		select: {
+			account_id: true
+		}
+	});
 
-	// Mã hoá password
+	if (!account) {
+		return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+	}
 
-	// Cập nhật vào db
+	const hashedPassword = await hashPassword(newPassword);
 
-	// return
-}
+	await prisma.account.update({
+		where: { account_id: account.account_id },
+		data: { password: hashedPassword }
+	});
+
+	return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, null);
+};
+
 
 module.exports = {
-    loginAPI, register_service: register,
+	loginAPI, register_service: register,
 	refreshTokenAPI,
 	ChangedPasswordAccount
 }

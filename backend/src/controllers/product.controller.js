@@ -19,9 +19,9 @@ class ProductController {
     }
 
     async getProduct(req, res) {
-        const { filters, limit, sort, order, logic, role, type } = req.query || {};
-        
-        const response = await getProductService(filters, logic, limit, sort, order, role, type)
+        const { filters, limit, sort, order, logic, role, type, page } = req.query || {};
+
+        const response = await getProductService(filters, logic, limit, sort, order, role, type, page)
 
         return res.status(response.status_code).json(response);
     }
@@ -44,11 +44,11 @@ class ProductController {
 
         return res.status(response.status_code).json(response);
     }
-    
+
 
     async checkListInfoProduct(req, res) {
         const { products } = req.body;
-        
+
         const response = await check_list_info_product(products)
 
         if (response) {
