@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { getStatusColor, getStatusLabel, getStatusIcon, getNextStatusOptions } from "@/components/common/planning/statusUtils"
 
 const statusUpdateSchema = z.object({
-  status: z.enum(["approved", "completed", "relabeling", "fixproduction"]),
+  status: z.enum(["pendingimport", "completed", "relabeling", "fixproduction"]),
   notes: z.string().optional(),
 })
 
@@ -21,7 +21,7 @@ export function StatusUpdateDialog({ isOpen, onClose, onSubmit, batch, isSubmitt
   const form = useForm({
     resolver: zodResolver(statusUpdateSchema),
     defaultValues: {
-      status: "approved",
+      status: "pendingimport",
       notes: "",
     },
   })

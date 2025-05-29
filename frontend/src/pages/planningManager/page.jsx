@@ -157,7 +157,7 @@ const mockPlannings = [
         template_id: 3,
         template_name: "LED Strip RGB V1",
         quantity: 50,
-        status: "approved",
+        status: "pendingimport",
         created_at: "2024-01-15T08:30:00Z",
         updated_at: "2024-01-18T16:45:00Z",
         is_deleted: false,
@@ -264,7 +264,7 @@ export default function ProductionPlanningManagement() {
   const canUpdateBatchStatus = (batch) => {
     return (
       currentUser.role === "manager" &&
-      ["in_progress", "approved", "relabeling", "fixproduction"].includes(batch.status)
+      ["in_progress", "pendingimport", "relabeling", "fixproduction"].includes(batch.status)
     )
   }
 
@@ -562,7 +562,7 @@ export default function ProductionPlanningManagement() {
             <SelectItem value="pending">Chờ duyệt</SelectItem>
             <SelectItem value="rejected">Đã hủy</SelectItem>
             <SelectItem value="in_progress">Đang sản xuất</SelectItem>
-            <SelectItem value="approved">Chờ nhập kho</SelectItem>
+            <SelectItem value="pendingimport">Chờ nhập kho</SelectItem>
             <SelectItem value="completed">Hoàn thành</SelectItem>
             <SelectItem value="fix">Cần xử lý</SelectItem>
           </SelectContent>

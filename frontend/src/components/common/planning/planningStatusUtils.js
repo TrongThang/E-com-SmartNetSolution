@@ -19,11 +19,11 @@ export const calculatePlanningStatus = (batches) => {
     return "fix"
   }
 
-  // Tìm trạng thái chậm nhất (theo thứ tự: pending → in_progress → approved → completed)
+  // Tìm trạng thái chậm nhất (theo thứ tự: pending → in_progress → pendingimport → completed)
   const statusPriority = {
     pending: 1,
     in_progress: 2,
-    approved: 3,
+    pendingimport: 3,
     completed: 4,
     expired: 0,
     cancelled: 0,
@@ -44,7 +44,7 @@ export const getPlanningStatusColor = (status) => {
       return "bg-green-100 text-green-800"
     case "in_progress":
       return "bg-blue-100 text-blue-800"
-    case "approved":
+    case "pendingimport":
       return "bg-purple-100 text-purple-800"
     case "pending":
       return "bg-yellow-100 text-yellow-800"
@@ -65,7 +65,7 @@ export const getPlanningStatusLabel = (status) => {
       return "Đã hủy"
     case "in_progress":
       return "Đang sản xuất"
-    case "approved":
+    case "pendingimport":
       return "Chờ nhập kho"
     case "completed":
       return "Hoàn thành"
@@ -82,7 +82,7 @@ export const getPlanningStatusIcon = (status) => {
       return <CheckCircle className="w-4 h-4" />
     case "in_progress":
       return <Play className="w-4 h-4" />
-    case "approved":
+    case "pendingimport":
       return <Warehouse className="w-4 h-4" />
     case "pending":
       return <Clock className="w-4 h-4" />
@@ -102,7 +102,7 @@ export const getStatusColor = (status) => {
       return "bg-green-100 text-green-800"
     case "in_progress":
       return "bg-blue-100 text-blue-800"
-    case "approved":
+    case "pendingimport":
       return "bg-purple-100 text-purple-800"
     case "pending":
       return "bg-yellow-100 text-yellow-800"
@@ -129,7 +129,7 @@ export const getStatusLabel = (status) => {
       return "Không được duyệt"
     case "in_progress":
       return "Đang sản xuất"
-    case "approved":
+    case "pendingimport":
       return "Chờ nhập kho"
     case "completed":
       return "Hoàn thành"
@@ -152,7 +152,7 @@ export const getStatusIcon = (status) => {
       return <CheckCircle className="w-4 h-4" />
     case "in_progress":
       return <Play className="w-4 h-4" />
-    case "approved":
+    case "pendingimport":
       return <Warehouse className="w-4 h-4" />
     case "pending":
       return <Clock className="w-4 h-4" />
@@ -174,17 +174,17 @@ export const getStatusIcon = (status) => {
 export const getNextStatusOptions = (currentStatus) => {
   switch (currentStatus) {
     case "in_progress":
-      return [{ value: "approved", label: "Chờ nhập kho" }]
-    case "approved":
+      return [{ value: "pendingimport", label: "Chờ nhập kho" }]
+    case "pendingimport":
       return [
         { value: "completed", label: "Hoàn thành" },
         { value: "relabeling", label: "Dán lại nhãn" },
         { value: "fixproduction", label: "Chỉnh sửa sản phẩm" },
       ]
     case "relabeling":
-      return [{ value: "approved", label: "Chờ nhập kho" }]
+      return [{ value: "pendingimport", label: "Chờ nhập kho" }]
     case "fixproduction":
-      return [{ value: "approved", label: "Chờ nhập kho" }]
+      return [{ value: "pendingimport", label: "Chờ nhập kho" }]
     case "pending":
       return [{ value: "cancelled", label: "Hủy lô" }]
     case "completed":
