@@ -93,7 +93,7 @@ class AuthController {
 
     async sendOtpEmail(req, res) {
         const response = await notificationService.sendOtpEmail(req.body);
-        
+
         return res.status(response.status_code).json(response);
     }
 

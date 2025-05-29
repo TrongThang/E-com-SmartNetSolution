@@ -9,27 +9,28 @@ const sendOtpSchema = z.object({
         }),
         account_id: z.string().optional(),
         username: z.string().optional(),
-    }).refine(
-        (data) => data.account_id || data.username,
-        {
-            message: `[CUSTOM_VALIDATION_ERROR] Phải cung cấp ít nhất account_id hoặc username`,
-            path: ['account_id'], // Đặt lỗi ở field nào tùy bạn
-        }
-    ),
+    })
 });
 
 const verifyOtpSchema = z.object({
     body: z.object({
         account_id: z.string().uuid({
             message: `[${ERROR_CODES.ACCOUNT_ID_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_ID_INVALID]}`,
-        }),
+        }).optional(), // Làm account_id tùy chọn
         email: z.string().email({
             message: `[${ERROR_CODES.CUSTOMER_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_EMAIL_INVALID]}`,
         }),
         otp: z.string().regex(/^\d{6}$/, {
             message: `[${ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_VERIFICATION_CODE_INVALID]}`,
         }),
-    }),
+        purpose: z.enum(["activate", "forgot_password"]).optional().default("activate"), // Thêm purpose với giá trị mặc định
+    }).refine(
+        (data) => data.account_id || data.email, // Phải có ít nhất account_id hoặc email
+        {
+            message: `[CUSTOM_VALIDATION_ERROR] Phải cung cấp ít nhất account_id hoặc email`,
+            path: ['account_id'],
+        }
+    ),
 });
 
 const loginSchema = z.object({

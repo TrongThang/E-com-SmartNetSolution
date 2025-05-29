@@ -417,9 +417,9 @@ const toggleDeleteRestoreAttributeGroupService = async (id, isRestore = false) =
                 attribute_id: parseInt(id)
             }
         });
-        if (attribute_Category) {
+        if (!attribute_Category) {
             return get_error_response(
-                ERROR_CODES.ATTRIBUTE_GROUP_HAS_ATTRIBUTE,
+                ERROR_CODES.ATTRIBUTE_USED_IN_CATEGORY_GROUP,
                 STATUS_CODE.BAD_REQUEST
             );
         }

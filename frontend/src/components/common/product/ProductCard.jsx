@@ -18,14 +18,14 @@ export function ProductCard({ product }) {
             </div>
             <CardContent className="p-4">
                 <Link to={`/products/${id}`}>
-                    <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium text-gray-900 hover:text-blue-600">{name}</h3>
+                    <h3 className="line-clamp-2 h-[2.5rem] text-sm font-medium text-gray-900 hover:text-blue-600">{name}</h3>
                 </Link>
                 <p className="mt-1 text-base font-bold text-gray-900">{ formatCurrency(selling_price) }</p>
                 <div className="mt-1 flex items-center gap-1">
                     <StarRating rating={average_rating} />
                     <span className="ml-1 text-xs text-gray-500">({total_review})</span>
                 </div>
-                {description && <p className="mt-2 line-clamp-2 text-xs text-gray-500">{description}</p>}
+                {description && <p className="mt-2 line-clamp-2 h-[2.5rem] text-xs text-gray-500">{description}</p>}
                 <p className="mt-2 text-xs text-gray-500">Đã bán: {sold}</p>
             </CardContent>
             <CardFooter className="p-4 pt-0">
