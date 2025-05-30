@@ -1,8 +1,7 @@
 "use client"
-import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { exportMultipleQRCodesToPDF } from "@/utils/print";
-import { toast } from "sonner";
+import Swal from "sweetalert2";
 
 export default function StageActions({
     stage,
@@ -14,9 +13,16 @@ export default function StageActions({
     loading = false,
 }) {
     const handlePrintSerial = () => {
+        if (selectedSerials.length === 0) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: 'Vui lòng chọn sản phẩm để in mã Serial',
+                icon: 'warning',
+            });
+            return;
+        }
         console.log("selectedSerials", selectedSerials);
         exportMultipleQRCodesToPDF(selectedSerials);
-        toast.success("Đã tạo file PDF thành công");
     }
 
     const getActionButtons = () => {
@@ -24,7 +30,7 @@ export default function StageActions({
             case "pending":
                 return (
                     <>
-                        <Button variant="outline" onClick={onReject} disabled={loading}>
+                        <Button variant="outline" className="border-red-500 bg-red-500 hover:bg-red-300" onClick={onCancel} disabled={loading}>
                             Từ chối ({selectedCount})
                         </Button>
                         <Button onClick={onNext} className="bg-green-600 hover:bg-green-700" disabled={loading}>
@@ -36,15 +42,11 @@ export default function StageActions({
             case "assembly":
                 return (
                     <>
-                        <Button variant="destructive" onClick={onCancel} disabled={loading}>
-                            Huỷ sản xuất ({selectedCount})
-                        </Button>
-                        <Button variant="outline" className="border-yellow-300" onClick={handlePrintSerial} disabled={loading}>
+                        <Button variant="outline"
+                            className="border-blue-500 bg-yellow-300 hover:bg-yellow-300"
+                            onClick={handlePrintSerial} disabled={loading}
+                        >
                             In mã Serial ({selectedCount})
-                        </Button>
-                        <Button onClick={onNext} className="bg-green-600 hover:bg-green-700" disabled={loading}>
-                            Hoàn thành lắp ráp ({selectedCount})
-                            <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                     </>
                 )
@@ -54,10 +56,6 @@ export default function StageActions({
                     <>
                         <Button variant="destructive" onClick={onReject} disabled={loading}>
                             Từ chối ({selectedCount})
-                        </Button>
-                        <Button onClick={onNext} className="bg-green-600 hover:bg-green-700" disabled={loading}>
-                            Hoàn thành kiểm tra ({selectedCount})
-                            <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                     </>
                 )

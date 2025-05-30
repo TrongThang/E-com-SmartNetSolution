@@ -48,7 +48,7 @@ function configDataAddressBook(dbResults) {
 
 const getAddressBookService = async (id) => {
     // Các cột cần lấy từ address_book và customer
-    let get_attr = `address_book.receiver_name, address_book.phone, city, district, ward, street, detail, is_default, customer.id as customer_id, customer.lastname as customer_name, customer.surname as customer_surname, customer.phone as customer_phone, customer.email as customer_email`
+    let get_attr = `address_book.customer_id, address_book.receiver_name, address_book.phone, city, district, ward, street, detail, is_default, customer.id as customer_id, customer.lastname as customer_name, customer.surname as customer_surname, customer.phone as customer_phone, customer.email as customer_email`
 
     let get_table = `address_book`
 

@@ -4,14 +4,14 @@ import Swal from "sweetalert2"
 import SerialTable from "./SerialTable"
 import StageActions from "./StageActions"
 import ModalFormQC from "./ModalFormQC"
-import sseService from "@/services/sse.service"
+import axiosPublic from "@/apis/clients/public.client"
 
-export default function StateDetails({
+export default function StageDetails({
     serialsByStage,
     stage,
     selectedSerials,
     onSelectSerial,
-    onNextStage,
+    onSelectAllSerial,
     onRejectQC,
     loading = false,
 }) {
@@ -24,7 +24,7 @@ export default function StateDetails({
     const stageSerials = serialsByStage[stage.id] || []
     const selectedCount = selectedSerials.length
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (selectedCount === 0) {
             Swal.fire({
                 icon: "warning",
@@ -33,15 +33,65 @@ export default function StateDetails({
             })
             return
         }
-        onNextStage(selectedSerials, stage.id)
+        
+        const response = await axiosPublic.post(`http://localhost:8888/api/production-tracking/approve-production-serial`, {
+            device_serials: selectedSerials,
+        })
+
+        if (response.success) {
+            Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: response.message,
+            })
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: response.message,
+            })
+        }
+    }
+
+    const handleCancel = async () => {
+        if (selectedCount === 0) {
+            Swal.fire({
+                icon: "warning",
+                title: "Chưa chọn serial",
+                text: "Vui lòng chọn ít nhất một serial để tiếp tục",
+            })
+            return
+        }
+        console.log('Xoá: ', selectedSerials)
+        const response = await axiosPublic.patch(`http://localhost:8888/api/production-tracking/cancel-production-serial`, {
+            device_serials: selectedSerials,
+            note: "Từ chối sản xuất",
+        })
+
+        if (response.success) {
+            Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: response.message,
+            })
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: response.message,
+            })
+        }
     }
 
     const handleReject = () => {
         if (stage.id === "qc") {
             setIsShowModalQcReject(true)
         } else {
-            // Handle other rejection logic
-            console.log("Reject for stage:", stage.id)
+            Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: "Không có logic từ chối cho giai đoạn này",
+            })
         }
     }
 
@@ -124,6 +174,7 @@ export default function StateDetails({
                 isCheckable={stage.id !== "completed"}
                 selectedSerials={selectedSerials}
                 onSelectSerial={onSelectSerial}
+                onSelectAllSerial={onSelectAllSerial}
             />
 
             <StageActions
@@ -133,6 +184,7 @@ export default function StateDetails({
                 onNext={handleNext}
                 onReject={handleReject}
                 loading={loading}
+                onCancel={handleCancel}
             />
 
             {isShowModalQcReject && (

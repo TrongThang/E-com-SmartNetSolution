@@ -6,6 +6,7 @@ import StageDetails from "./StageDetails"
 import StageStats from "./StageStats"
 import { useManufacturing } from "@/hooks/useManufacturing"
 import axiosPublic from "@/apis/clients/public.client"
+import { useParams } from "react-router-dom"
 
 const StateTimeline = ({
     stages = [],
@@ -18,9 +19,9 @@ const StateTimeline = ({
     className = "",
     ...props
 }) => {
-    const { serialsByStage, loading, error, fetchSerials, moveSerials, rejectQC, setSerialsByStage } =
+    const { serialsByStage, loading, error, fetchSerials, rejectQC, setSerialsByStage } =
         useManufacturing()
-
+    const { production_batch_id } = useParams()
     const [expandedStages, setExpandedStages] = useState({})
     const [serialsStageSelected, setSerialsStageSelected] = useState({
         pending: [],
@@ -58,6 +59,7 @@ const StateTimeline = ({
             return updatedSerials;
         });
     };
+    
 
     useEffect(() => {
         const fetchProductionTrackingData = async () => {
@@ -75,7 +77,7 @@ const StateTimeline = ({
 
         fetchProductionTrackingData();
     }, []); // Only run once on mount
-
+    
     const sizes = {
         sm: {
             circle: "w-6 h-6",
@@ -116,22 +118,11 @@ const StateTimeline = ({
         })
     }
 
-    const handleNextStage = async (selectedSerials, currentStageId) => {
-        const currentIndex = stages.findIndex((s) => s.id === currentStageId)
-        if (currentIndex === -1 || currentIndex === stages.length - 1) return
-
-        const nextStageId = stages[currentIndex + 1].id
-
-        try {
-            await moveSerials(selectedSerials, nextStageId)
-            // Clear selection after successful move
-            setSerialsStageSelected((prev) => ({
-                ...prev,
-                [currentStageId]: [],
-            }))
-        } catch (error) {
-            console.error("Error moving serials:", error)
-        }
+    const handleSelectAllSerial = (stageId, checked) => {
+        setSerialsStageSelected((prev) => ({
+            ...prev,
+            [stageId]: checked ? serialsByStage[stageId].map((serial) => serial.serial) : [],
+        }))
     }
 
     const handleRejectQC = async (selectedSerials, reason, note) => {
@@ -269,8 +260,8 @@ const StateTimeline = ({
                                     serialsByStage={serialsByStage}
                                     stage={stage}
                                     selectedSerials={serialsStageSelected[stage.id] || []}
+                                    onSelectAllSerial={(checked) => handleSelectAllSerial(stage.id, checked)}
                                     onSelectSerial={(serial) => handleSelectSerial(serial, stage.id)}
-                                    onNextStage={handleNextStage}
                                     onRejectQC={handleRejectQC}
                                     loading={loading}
                                     onUpdateSerials={handleSerialUpdate}

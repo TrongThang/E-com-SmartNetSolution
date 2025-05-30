@@ -41,17 +41,18 @@ import EditCategoryPage from "@/pages/categoryManager/EditCategory.jsx";
 
 import { createBrowserRouter } from "react-router-dom";
 import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
-import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
+import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/create";
 import UserManagerPage from "@/pages/userManager";
 import ProductManagerPage from "@/pages/productManager";
 import EmployeeManagerPage from "@/pages/employeeManager";
 import AddUserPage from "@/pages/userManager/AddUser";
 import EditUserPage from "@/pages/userManager/EditUser";
 import AddProductPage from "@/pages/productManager/AddProduct";
-import EditProductPage from "@/pages/productManager/EditProduct";
-import EmployeeManagerPage from "@/pages/employeeManager";
+// import EditProductPage from "@/pages/productManager/EditProduct";
+// import EmployeeManagerPage from "@/pages/employeeManager";
 import TemplateManagement from "@/components/common/_test/template-management";
 import StatePrimary from "@/components/common/tracking/StatePrimary";
+import AttributeGroupPage from "@/pages/attribute_groupManager";
 
 export const router = createBrowserRouter([
   {

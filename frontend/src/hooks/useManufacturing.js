@@ -1,4 +1,5 @@
 // hooks/useManufacturing.ts
+import axiosPublic from "@/apis/clients/public.client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -85,10 +86,33 @@ export const useManufacturing = () => {
         };
     }, []);
 
+    const rejectQC = async (selectedSerials, reason, note) => {
+        try {
+            const response = await axiosPublic.patch('http://localhost:8888/api/production-tracking/reject-qc', {
+                device_serials: selectedSerials,
+                reason,
+                note,
+            });
+
+            if (response.success) {
+                toast.success('Từ chối sản phẩm thành công', response.message);
+            } else {
+                toast.error('Từ chối sản phẩm thất bại', response.message);
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('Error rejecting QC:', error);
+            throw error;
+        }
+    };
+    
+
     return {
         serialsByStage,
         loading,
         error,
-        setSerialsByStage
+        setSerialsByStage,
+        rejectQC
     };
 };

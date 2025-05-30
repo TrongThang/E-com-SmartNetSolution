@@ -6,7 +6,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
 import { AtSign, KeyRound, Loader2, Mail, Lock } from 'lucide-react'
-import axios from "axios"
 
 export default function LoginForm({ onSuccess }) {
   const { login, sendOtp, verifyOtp, changePassword, loginEmployee } = useAuth()
