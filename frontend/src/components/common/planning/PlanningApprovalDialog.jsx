@@ -36,8 +36,9 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
   })
 
   const handleSubmit = async (data) => {
-    await onSubmit(data)
-    form.reset()
+    const status = data.action === "approve" ? "approved" : "rejected";
+    await onSubmit({ status, notes: data.notes });
+    form.reset();
   }
 
   if (!planning) return null
@@ -124,12 +125,12 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
                       <TableCell className="max-w-xs truncate">{batch.batch_note || "-"}</TableCell>
                     </TableRow>
                   )) || (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-gray-500">
-                        Chưa có lô nào trong kế hoạch này
-                      </TableCell>
-                    </TableRow>
-                  )}
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-gray-500">
+                          Chưa có lô nào trong kế hoạch này
+                        </TableCell>
+                      </TableRow>
+                    )}
                 </TableBody>
               </Table>
             </div>

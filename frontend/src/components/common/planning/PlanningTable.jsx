@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -97,10 +96,17 @@ export function PlanningTable({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-gray-900">{planning.created_by}</TableCell>
-                    <TableCell className="text-sm text-gray-900">{new Date(planning.created_at).toLocaleDateString("vi-VN")}</TableCell>
+                    <TableCell className="text-sm text-gray-900">
+                      {new Date(planning.created_at).toLocaleDateString("vi-VN")}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => onViewPlanningDetails(planning)} className="hover:bg-gray-50">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onViewPlanningDetails(planning)}
+                          className="hover:bg-gray-50"
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
 
@@ -111,7 +117,7 @@ export function PlanningTable({
                             className="bg-green-600 hover:bg-green-700 text-white"
                           >
                             <User className="w-4 h-4 mr-1" />
-                            Duyệt KH
+                            Duyệt Kế Hoạch
                           </Button>
                         )}
                       </div>
@@ -132,21 +138,35 @@ export function PlanningTable({
                                 <Table>
                                   <TableHeader>
                                     <TableRow className="bg-gray-50">
-                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Mã Lô</TableHead>
-                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Template</TableHead>
-                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng</TableHead>
-                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</TableHead>
-                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</TableHead>
-                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</TableHead>
+                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Mã Lô
+                                      </TableHead>
+                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Template
+                                      </TableHead>
+                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Số lượng
+                                      </TableHead>
+                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Trạng thái
+                                      </TableHead>
+                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Ngày tạo
+                                      </TableHead>
+                                      <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Thao tác
+                                      </TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody className="bg-white divide-y divide-gray-200">
-                                    {planning.batches?.map((batch) => (
-                                      <TableRow key={batch.batch_id} className="hover:bg-gray-50">
-                                        <TableCell className="font-medium text-gray-900">{batch.production_batch_id}</TableCell>
+                                    {planning.production_batches?.map((batch) => (
+                                      <TableRow key={batch.production_batch_id} className="hover:bg-gray-50">
+                                        <TableCell className="font-medium text-gray-900">
+                                          {batch.production_batch_id}
+                                        </TableCell>
                                         <TableCell className="text-sm text-gray-900">
                                           <div className="flex flex-col">
-                                            <span>{batch.template_name || batch.template_id}</span>
+                                            <span>{batch.device_templates?.name || batch.template_id}</span>
                                             {batch.firmware_name && (
                                               <span className="text-xs text-gray-500">
                                                 Firmware: {batch.firmware_name} (v{batch.firmware_version})
@@ -165,10 +185,17 @@ export function PlanningTable({
                                             <span className="ml-1">{getStatusLabel(batch.status)}</span>
                                           </Badge>
                                         </TableCell>
-                                        <TableCell className="text-sm text-gray-900">{new Date(batch.created_at).toLocaleDateString("vi-VN")}</TableCell>
+                                        <TableCell className="text-sm text-gray-900">
+                                          {new Date(batch.created_at).toLocaleDateString("vi-VN")}
+                                        </TableCell>
                                         <TableCell>
                                           <div className="flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => onViewBatchDetails(batch)} className="hover:bg-gray-50">
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => onViewBatchDetails(batch)}
+                                              className="hover:bg-gray-50"
+                                            >
                                               <Eye className="w-4 h-4" />
                                             </Button>
                                             {canUpdateBatchStatus(batch) && (
@@ -185,12 +212,12 @@ export function PlanningTable({
                                         </TableCell>
                                       </TableRow>
                                     )) || (
-                                        <TableRow>
-                                          <TableCell colSpan={7} className="text-center text-gray-500 py-4">
-                                            Chưa có lô nào trong kế hoạch này
-                                          </TableCell>
-                                        </TableRow>
-                                      )}
+                                      <TableRow>
+                                        <TableCell colSpan={7} className="text-center text-gray-500 py-4">
+                                          Chưa có lô nào trong kế hoạch này
+                                        </TableCell>
+                                      </TableRow>
+                                    )}
                                   </TableBody>
                                 </Table>
                               </div>

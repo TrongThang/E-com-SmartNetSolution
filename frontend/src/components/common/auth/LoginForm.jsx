@@ -9,7 +9,7 @@ import { AtSign, KeyRound, Loader2, Mail, Lock } from 'lucide-react'
 import axios from "axios"
 
 export default function LoginForm({ onSuccess }) {
-  const { login, sendOtp, verifyOtp } = useAuth()
+  const { login, sendOtp, verifyOtp, loginEmployee } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [loginForm, setLoginForm] = useState({ username: "", password: "" })
@@ -25,17 +25,19 @@ export default function LoginForm({ onSuccess }) {
   // Xử lý đăng nhập
   const handleLogin = async (e) => {
     e.preventDefault()
+    console.log('vafo ddnawg nhap')
     setIsLoading(true)
     try {
-      const result = await login(loginForm.username, loginForm.password)
+      const result = await loginEmployee(loginForm.username, loginForm.password)
       if (result.success) {
         toast.success("Đăng nhập thành công", { description: "Chào mừng bạn quay trở lại!" })
         onSuccess?.()
       } else {
         toast.error("Đăng nhập thất bại", { description: result.message })
       }
-    } catch {
+    } catch (error) {
       toast.error("Lỗi", { description: "Có lỗi xảy ra khi đăng nhập" })
+      console.log(error)
     } finally {
       setIsLoading(false)
     }

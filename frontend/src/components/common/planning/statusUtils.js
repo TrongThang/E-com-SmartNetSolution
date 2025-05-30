@@ -73,7 +73,7 @@ export const getStatusIcon = (status) => {
       return <AlertTriangle className="w-4 h-4" />
     case "cancelled":
       return <XCircle className="w-4 h-4" />
- 
+
     default:
       return <AlertTriangle className="w-4 h-4" />
   }
@@ -83,10 +83,7 @@ export const getStatusIcon = (status) => {
 export const getNextStatusOptions = (currentStatus) => {
   switch (currentStatus) {
     case "in_progress":
-      return [
-        { value: "pendingimport", label: "Chờ nhập kho" },
- 
-      ]
+      return [{ value: "pendingimport", label: "Chờ nhập kho" }]
     case "pendingimport":
       return [
         { value: "completed", label: "Hoàn thành" },

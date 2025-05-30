@@ -10,7 +10,12 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
-import { getStatusColor, getStatusLabel, getStatusIcon, getNextStatusOptions } from "@/components/common/planning/statusUtils"
+import {
+  getStatusColor,
+  getStatusLabel,
+  getStatusIcon,
+  getNextStatusOptions,
+} from "@/components/common/planning/statusUtils"
 
 const statusUpdateSchema = z.object({
   status: z.enum(["pendingimport", "completed", "relabeling", "fixproduction"]),

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -15,36 +15,19 @@ import { PlanningApprovalDialog } from "@/components/common/planning/PlanningApp
 import { StatusUpdateDialog } from "@/components/common/batch/StatusUpdateDialog"
 import { BatchDetailsDialog } from "@/components/common/batch/BatchDetailsDialog"
 import { calculatePlanningStatus } from "@/components/common/planning/planningStatusUtils"
+import PlanPagination from "@/components/common/planning/PlanPagination"
 
-// Mock current user
+// Import API services
+import PlanningApi from "@/apis/modules/planning.api.ts"
+
+// Mock current user - Sẽ được thay thế bằng hệ thống xác thực thực tế
 const currentUser = {
   id: "user001",
   name: "Nguyễn Văn A",
   role: "manager",
 }
 
-// Generate functions
-const generatePlanningId = () => {
-  const timestamp = Date.now().toString(36)
-  const randomString = Math.random().toString(36).substring(2, 8).toUpperCase()
-  return `PLAN${timestamp}${randomString}`
-}
-
-const generateProductionBatchId = () => {
-  const randomString = Math.random().toString(36).substring(2, 8).toUpperCase()
-  return `PROD${randomString}`
-}
-
-const generateDeviceSerials = (quantity, batchId) => {
-  const serials = []
-  for (let i = 1; i <= quantity; i++) {
-    const serial = `${batchId}-${i.toString().padStart(4, "0")}`
-    serials.push(serial)
-  }
-  return serials
-}
-
-// Mock data cho templates (bỏ device_type_id)
+// Mock templates data - có thể tạo TemplateApi riêng nếu cần
 const mockTemplates = [
   {
     template_id: 1,
@@ -71,8 +54,8 @@ const mockTemplates = [
         file_path: "/firmware/camera-ip-wifi-v1.1.bin",
         is_mandatory: false,
         is_approved: true,
-      }
-    ]
+      },
+    ],
   },
   {
     template_id: 2,
@@ -83,6 +66,15 @@ const mockTemplates = [
     is_deleted: false,
     status: "success",
     device_template_note: "Template nâng cao với POE",
+    firmware: [
+      {
+        firmware_id: 1,
+        name: "Camera IP Wifi V1.0",
+        version: "1.0.0",
+        file_path: "/firmware/camera-ip-wifi-v1.0.bin",
+        is_mandatory: true,
+        is_approved: true,
+      },],
   },
   {
     template_id: 3,
@@ -126,103 +118,14 @@ const mockTemplates = [
   },
 ]
 
-// Mock data với Planning structure (bỏ paused status)
-const mockPlannings = [
-  {
-    planning_id: "PLAN001",
-    status: "in_progress",
-    created_by: "user001",
-    created_at: "2024-01-15T08:00:00Z",
-    updated_at: "2024-01-20T14:30:00Z",
-    is_deleted: false,
-    planning_note: "Kế hoạch sản xuất tháng 1 - Đơn hàng khẩn cấp",
-    batches: [
-      {
-        batch_id: 1,
-        planning_id: "PLAN001",
-        production_batch_id: "PRODABC123",
-        template_id: 1,
-        template_name: "Camera IP Wifi V1",
-        quantity: 100,
-        status: "in_progress",
-        created_at: "2024-01-15T08:00:00Z",
-        updated_at: "2024-01-20T14:30:00Z",
-        is_deleted: false,
-        batch_note: "Lô chính của kế hoạch",
-      },
-      {
-        batch_id: 2,
-        planning_id: "PLAN001",
-        production_batch_id: "PRODDEF456",
-        template_id: 3,
-        template_name: "LED Strip RGB V1",
-        quantity: 50,
-        status: "pendingimport",
-        created_at: "2024-01-15T08:30:00Z",
-        updated_at: "2024-01-18T16:45:00Z",
-        is_deleted: false,
-        batch_note: "Lô phụ hỗ trợ",
-      },
-    ],
-  },
-  {
-    planning_id: "PLAN002",
-    status: "fix",
-    created_by: "user002",
-    created_at: "2024-01-20T10:00:00Z",
-    updated_at: "2024-01-22T14:00:00Z",
-    is_deleted: false,
-    planning_note: "Kế hoạch sản xuất LED Module",
-    batches: [
-      {
-        batch_id: 3,
-        planning_id: "PLAN002",
-        production_batch_id: "PRODREL001",
-        template_id: 4,
-        template_name: "LED Bulb Smart V1",
-        quantity: 80,
-        status: "relabeling",
-        created_at: "2024-01-20T10:00:00Z",
-        updated_at: "2024-01-22T14:00:00Z",
-        is_deleted: false,
-        batch_note: "Cần dán lại nhãn do lỗi in ấn",
-      },
-    ],
-  },
-  {
-    planning_id: "PLAN003",
-    status: "pending",
-    created_by: "user003",
-    created_at: "2024-01-28T08:00:00Z",
-    updated_at: "2024-01-28T08:00:00Z",
-    is_deleted: false,
-    planning_note: "Kế hoạch test chức năng mới",
-    batches: [
-      {
-        batch_id: 4,
-        planning_id: "PLAN003",
-        production_batch_id: "PRODTEST123",
-        template_id: 5,
-        template_name: "Temperature Sensor V1",
-        quantity: 10,
-        status: "pending",
-        created_at: "2024-01-28T08:00:00Z",
-        updated_at: "2024-01-28T08:00:00Z",
-        is_deleted: false,
-        batch_note: "Lô test để kiểm tra chức năng duyệt",
-      },
-    ],
-  },
-]
-
-// Cập nhật status cho plannings dựa trên batches
-mockPlannings.forEach((planning) => {
-  planning.status = calculatePlanningStatus(planning.batches)
-})
+const PAGE_SIZE = 6;
 
 export default function ProductionPlanningManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [plannings, setPlannings] = useState([])
+  const [templates, setTemplates] = useState(mockTemplates)
+  const [loading, setLoading] = useState(true)
 
   // Dialog states
   const [isCreatePlanningDialogOpen, setIsCreatePlanningDialogOpen] = useState(false)
@@ -248,15 +151,70 @@ export default function ProductionPlanningManagement() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const filteredPlannings = mockPlannings.filter((planning) => {
+  // Thêm state để lưu tạm thời dữ liệu
+  const [tempBatches, setTempBatches] = useState([]);
+  const [tempPlanning, setTempPlanning] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchPlannings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Chỉ gọi 1 lần khi mount
+
+  const fetchPlannings = async () => {
+    try {
+      setLoading(true)
+      const response = await PlanningApi.getAll()
+      if (response.success && response.data) {
+        const planningsData = Array.isArray(response.data) ? response.data : [response.data]
+        const processedPlannings = planningsData.map(planning => ({
+          ...planning,
+          batches: planning.batches || planning.production_batches || []
+        }))
+        setPlannings(processedPlannings)
+      } else {
+        console.error("Failed to fetch plannings:", response.error)
+        setPlannings([])
+      }
+    } catch (error) {
+      console.error("Error fetching plannings:", error)
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi!",
+        text: "Không thể tải danh sách kế hoạch",
+      })
+      setPlannings([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Tính toán filteredPlannings cho trang hiện tại
+  const filteredPlannings = plannings.filter((planning) => {
     const matchesSearch =
       planning.planning_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      planning.planning_note?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || planning.status.toLowerCase() === statusFilter.toLowerCase()
-    return matchesSearch && matchesStatus && !planning.is_deleted
-  })
+      planning.planning_note?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || planning.status.toLowerCase() === statusFilter.toLowerCase();
+    return matchesSearch && matchesStatus && !planning.is_deleted;
+  });
 
-  // Cập nhật permission functions
+  useEffect(() => {
+    setTotalPage(Math.ceil(filteredPlannings.length / PAGE_SIZE) || 1);
+    if (page > Math.ceil(filteredPlannings.length / PAGE_SIZE)) setPage(1);
+  }, [filteredPlannings.length]);
+
+  const currentPlannings = filteredPlannings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPage) {
+      setPage(newPage);
+    }
+  };
+
+  // Permission functions
   const canApprovePlanning = (planning) => {
     return currentUser.role === "manager" && planning.status === "pending"
   }
@@ -269,250 +227,266 @@ export default function ProductionPlanningManagement() {
   }
 
   const handleCreatePlanning = async (data) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      const planningId = generatePlanningId()
+      const planningData = {
+        planning_note: data.planning_note,
+        batch_count: data.batch_count,
+      };
 
-      const newPlanning = {
-        planning_id: planningId,
-        status: "pending",
-        created_by: currentUser.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_deleted: false,
-        planning_note: data.planning_note || null,
-        batches: [],
-      }
+      setTempPlanning(planningData);
+      setTempBatches([]);
 
-      // Khởi tạo flow tạo batch
       setCurrentBatchCreation({
-        planning: newPlanning,
+        planning: planningData,
         currentBatch: 1,
         totalBatches: data.batch_count,
         createdBatches: [],
-      })
+      });
 
-      setIsCreatePlanningDialogOpen(false)
-      setIsBatchFormDialogOpen(true)
+      setIsCreatePlanningDialogOpen(false);
+      setIsBatchFormDialogOpen(true);
     } catch (error) {
+      console.error("Lỗi khi tạo kế hoạch:", error);
       await Swal.fire({
         icon: "error",
         title: "Lỗi!",
-        text: "Có lỗi xảy ra khi tạo kế hoạch",
+        text: error.message || "Có lỗi xảy ra khi tạo kế hoạch",
         confirmButtonText: "OK",
         confirmButtonColor: "#ef4444",
-      })
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleCreateBatch = async (data) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      const productionBatchId = generateProductionBatchId()
-      const deviceSerials = generateDeviceSerials(data.quantity, productionBatchId)
-
-      // Tìm thông tin template và firmware
-      const template = mockTemplates.find((t) => t.template_id === Number.parseInt(data.template_id))
-      const firmware = template?.firmware?.find(f => f.firmware_id === Number.parseInt(data.firmware_id))
-
-      const newBatch = {
-        batch_id: Date.now() + currentBatchCreation.currentBatch,
-        planning_id: currentBatchCreation.planning.planning_id,
-        production_batch_id: productionBatchId,
-        template_id: Number.parseInt(data.template_id),
-        template_name: template?.name || data.template_id,
-        quantity: data.quantity,
-        status: "pending",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_deleted: false,
-        batch_note: data.batch_note || null,
-        device_serials: deviceSerials,
-        firmware_id: firmware?.firmware_id || null,
-        firmware_name: firmware?.name || null,
-        firmware_version: firmware?.version || null,
+      // Validate dữ liệu đầu vào cơ bản
+      if (!data.template_id || !data.quantity) {
+        throw new Error("Vui lòng điền đầy đủ thông tin Template ID và Số lượng");
       }
 
-      const updatedCreatedBatches = [...currentBatchCreation.createdBatches, newBatch]
+      if (isNaN(data.quantity) || data.quantity <= 0) {
+        throw new Error("Số lượng phải là số dương");
+      }
 
-      if (currentBatchCreation.currentBatch >= currentBatchCreation.totalBatches) {
-        // Hoàn thành tạo tất cả lô
-        const completedPlanning = {
-          ...currentBatchCreation.planning,
-          batches: updatedCreatedBatches,
-          status: calculatePlanningStatus(updatedCreatedBatches),
-        }
+      const batchData = {
+        template_id: Number(data.template_id),
+        quantity: Number(data.quantity),
+        batch_note: data.batch_note || "",
+        firmware_id: data.firmware_id !== "none" && data.firmware_id ? data.firmware_id : "",
+      };
 
-        mockPlannings.unshift(completedPlanning)
+      const updatedTempBatches = [...tempBatches, batchData];
+      setTempBatches(updatedTempBatches);
 
-        await Swal.fire({
-          icon: "success",
-          title: "🎉 Tạo kế hoạch thành công!",
-          html: `
-            <div class="text-left">
-              <p><strong>Mã kế hoạch:</strong> ${completedPlanning.planning_id}</p>
-              <p><strong>Số lô đã tạo:</strong> ${updatedCreatedBatches.length}/${currentBatchCreation.totalBatches}</p>
-              <p><strong>Trạng thái:</strong> ${completedPlanning.status}</p>
-            </div>
-          `,
-          showCancelButton: true,
-          confirmButtonText: "📋 Xem chi tiết",
-          cancelButtonText: "✅ OK",
-          confirmButtonColor: "#3b82f6",
-          cancelButtonColor: "#10b981",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            setSelectedPlanningForDetails(completedPlanning)
-            setIsPlanningDetailsDialogOpen(true)
+      if (currentBatchCreation.currentBatch === currentBatchCreation.totalBatches) {
+        try {
+          // Tạo planning và batches trong một lần gọi API
+          const response = await PlanningApi.createWithBatches({
+            planning: {
+              planning_note: tempPlanning.planning_note,
+              batch_count: updatedTempBatches.length,
+            },
+            batches: updatedTempBatches
+          });
+
+          if (!response.success) {
+            throw new Error(response.error || "Không thể tạo kế hoạch và lô");
           }
-        })
 
-        setIsBatchFormDialogOpen(false)
-        setCurrentBatchCreation({
-          planning: null,
-          currentBatch: 1,
-          totalBatches: 0,
-          createdBatches: [],
-        })
+          // Đóng dialog trước
+          setIsBatchFormDialogOpen(false);
+
+          // Sau đó mới hiển thị Swal
+          await Swal.fire({
+            icon: "success",
+            title: "🎉 Tạo kế hoạch thành công!",
+            html: `
+                <div class="text-left">
+                    <p><strong>Mã kế hoạch:</strong> ${response.data.planning_id}</p>
+                    <p><strong>Số lô đã tạo:</strong> ${updatedTempBatches.length}</p>
+                </div>
+            `,
+            confirmButtonText: "OK",
+            confirmButtonColor: "#22c55e",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+          });
+
+          // Cuối cùng mới reset state và fetch lại data
+          handleCancel();
+          fetchPlannings();
+
+        } catch (error) {
+          console.error("Lỗi:", error);
+          // Đóng dialog trước khi hiển thị Swal
+          setIsBatchFormDialogOpen(false);
+
+          await Swal.fire({
+            icon: "error",
+            title: "Lỗi!",
+            text: "Có lỗi xảy ra khi tạo kế hoạch và lô",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#ef4444",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+          });
+          handleCancel();
+        }
       } else {
-        // Tiếp tục tạo lô tiếp theo
+        // Chuyển sang lô tiếp theo
         setCurrentBatchCreation({
           ...currentBatchCreation,
           currentBatch: currentBatchCreation.currentBatch + 1,
-          createdBatches: updatedCreatedBatches,
-        })
+          createdBatches: updatedTempBatches,
+        });
       }
     } catch (error) {
+      console.error("Lỗi khi tạo lô:", error);
+      // Đóng dialog trước khi hiển thị Swal
+      setIsBatchFormDialogOpen(false);
+
       await Swal.fire({
         icon: "error",
         title: "Lỗi!",
         text: "Có lỗi xảy ra khi tạo lô",
         confirmButtonText: "OK",
         confirmButtonColor: "#ef4444",
-      })
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+      handleCancel();
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setTempBatches([]);
+    setTempPlanning(null);
+    setCurrentBatchCreation({
+      planning: null,
+      currentBatch: 1,
+      totalBatches: 0,
+      createdBatches: [],
+    });
+    setIsBatchFormDialogOpen(false);
+  };
+  const fetchPlanningDetails = async (planningId) => {
+    try {
+      const response = await PlanningApi.getById(planningId)
+
+      if (response.success && response.data) {
+        const planningData = response.data
+
+        // Đảm bảo có trường production_batches
+        const planningWithBatches = {
+          ...planningData,
+          production_batches: planningData.production_batches || []
+        }
+
+        setSelectedPlanningForDetails(planningWithBatches)
+        setIsPlanningDetailsDialogOpen(true)
+      }
+    } catch (error) {
+      console.error("Error fetching planning details:", error)
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi!",
+        text: "Không thể tải chi tiết kế hoạch",
+      })
     }
   }
 
   const handlePlanningApproval = async (data) => {
-    if (!selectedPlanningForApproval) return
-
-    setIsSubmitting(true)
+    if (!selectedPlanningForApproval) return;
+    setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const planningIndex = mockPlannings.findIndex((p) => p.planning_id === selectedPlanningForApproval.planning_id)
-
-      if (planningIndex !== -1) {
-        if (data.action === "approve") {
-          // Phê duyệt: chuyển tất cả lô sang in_progress
-          mockPlannings[planningIndex].batches.forEach((batch) => {
-            if (batch.status === "pending") {
-              batch.status = "in_progress"
-              batch.updated_at = new Date().toISOString()
-            }
-          })
-          mockPlannings[planningIndex].status = "in_progress"
-        } else {
-          // Từ chối: chuyển planning sang rejected và tất cả lô sang cancelled
-          mockPlannings[planningIndex].status = "rejected"
-          mockPlannings[planningIndex].batches.forEach((batch) => {
-            if (batch.status === "pending") {
-              batch.status = "cancelled"
-              batch.updated_at = new Date().toISOString()
-            }
-          })
-        }
-
-        mockPlannings[planningIndex].updated_at = new Date().toISOString()
+      // Gửi đúng format cho API
+      const approvalData = {
+        status: data.status, // đã được chuyển thành 'approved' hoặc 'rejected' từ dialog
+        notes: data.notes,
+      };
+      const response = await PlanningApi.approve(selectedPlanningForApproval.planning_id, approvalData);
+      if (response.success) {
+        setIsPlanningApprovalDialogOpen(false);
+        setSelectedPlanningForApproval(null);
+        await Swal.fire({
+          icon: data.status === "approved" ? "success" : "warning",
+          title: data.status === "approved" ? "Phê duyệt thành công!" : "Đã từ chối!",
+          text: `Kế hoạch ${selectedPlanningForApproval.planning_id} đã được ${data.status === "approved" ? "phê duyệt và bắt đầu sản xuất" : "từ chối và hủy tất cả lô"}`,
+          showConfirmButton: true,
+          confirmButtonText: "OK",
+        });
+        fetchPlannings();
+      } else {
+        throw new Error(response.error || "Không thể phê duyệt kế hoạch");
       }
-
-      await Swal.fire({
-        icon: data.action === "approve" ? "success" : "warning",
-        title: data.action === "approve" ? "Phê duyệt thành công!" : "Đã từ chối!",
-        text: `Kế hoạch ${selectedPlanningForApproval.planning_id} đã được ${data.action === "approve" ? "phê duyệt và bắt đầu sản xuất" : "từ chối và hủy tất cả lô"
-          }`,
-        timer: 2000,
-        showConfirmButton: false,
-      })
-
-      setIsPlanningApprovalDialogOpen(false)
-      setSelectedPlanningForApproval(null)
     } catch (error) {
+      console.error("Error approving planning:", error);
       await Swal.fire({
         icon: "error",
         title: "Lỗi!",
-        text: "Có lỗi xảy ra khi xử lý phê duyệt",
+        text: error.response?.data?.message || error.message || "Có lỗi xảy ra khi xử lý phê duyệt",
         confirmButtonText: "OK",
         confirmButtonColor: "#ef4444",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
   const handleBatchStatusUpdate = async (data) => {
-    if (!selectedBatchForStatusUpdate) return
-
-    setIsSubmitting(true)
+    if (!selectedBatchForStatusUpdate) return;
+    setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Tìm planning chứa batch này
-      const planningIndex = mockPlannings.findIndex((p) =>
-        p.batches.some((b) => b.batch_id === selectedBatchForStatusUpdate.batch_id),
-      )
-
-      if (planningIndex !== -1) {
-        const batchIndex = mockPlannings[planningIndex].batches.findIndex(
-          (b) => b.batch_id === selectedBatchForStatusUpdate.batch_id,
-        )
-
-        if (batchIndex !== -1) {
-          mockPlannings[planningIndex].batches[batchIndex] = {
-            ...mockPlannings[planningIndex].batches[batchIndex],
-            status: data.status,
-            batch_note: data.notes || mockPlannings[planningIndex].batches[batchIndex].batch_note,
-            updated_at: new Date().toISOString(),
-          }
-
-          // Cập nhật status của planning
-          mockPlannings[planningIndex].status = calculatePlanningStatus(mockPlannings[planningIndex].batches)
-          mockPlannings[planningIndex].updated_at = new Date().toISOString()
-        }
+      const updateData = {
+        status: data.status,
+        batch_note: data.notes || selectedBatchForStatusUpdate.batch_note,
+      };
+      const response = await PlanningApi.updateBatchStatus(selectedBatchForStatusUpdate.production_batch_id, updateData);
+      if (response.success) {
+        setIsStatusUpdateDialogOpen(false);
+        setSelectedBatchForStatusUpdate(null);
+        setIsBatchDetailsDialogOpen(false);
+        setTimeout(() => {
+          Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: "Lô đã được cập nhật.",
+            showConfirmButton: true,
+            confirmButtonText: "OK",
+          });
+        }, 100);
+        fetchPlannings();
+      } else {
+        throw new Error(response.error || "Không thể cập nhật trạng thái lô");
       }
-
-      await Swal.fire({
-        icon: "success",
-        title: "Cập nhật thành công!",
-        text: `Lô ${selectedBatchForStatusUpdate.production_batch_id} đã được cập nhật`,
-        timer: 2000,
-        showConfirmButton: false,
-      })
-
-      setIsStatusUpdateDialogOpen(false)
-      setSelectedBatchForStatusUpdate(null)
     } catch (error) {
+      console.error("Error updating batch status:", error);
       await Swal.fire({
         icon: "error",
         title: "Lỗi!",
-        text: "Có lỗi xảy ra khi cập nhật trạng thái",
+        text: error.response?.data?.message || error.message || "Có lỗi xảy ra khi cập nhật trạng thái",
         confirmButtonText: "OK",
         confirmButtonColor: "#ef4444",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
-  const openPlanningDetailsDialog = (planning) => {
-    setSelectedPlanningForDetails(planning)
-    setIsPlanningDetailsDialogOpen(true)
+  const openPlanningDetailsDialog = async (planning) => {
+    try {
+      await fetchPlanningDetails(planning.planning_id)
+    } catch (error) {
+      console.error("Error opening planning details:", error)
+    }
   }
 
   const openBatchDetailsDialog = (batch) => {
@@ -569,17 +543,27 @@ export default function ProductionPlanningManagement() {
         </Select>
       </div>
 
-      <PlanningTable
-        plannings={filteredPlannings}
-        onViewPlanningDetails={openPlanningDetailsDialog}
-        onViewBatchDetails={openBatchDetailsDialog}
-        onApprovePlanning={openPlanningApprovalDialog}
-        onUpdateBatchStatus={openBatchStatusUpdateDialog}
-        canApprovePlanning={canApprovePlanning}
-        canUpdateBatchStatus={canUpdateBatchStatus}
-      />
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium text-gray-900">Đang tải dữ liệu...</h3>
+        </div>
+      ) : (
+        <>
+          <PlanningTable
+            plannings={currentPlannings}
+            onViewPlanningDetails={openPlanningDetailsDialog}
+            onViewBatchDetails={openBatchDetailsDialog}
+            onApprovePlanning={openPlanningApprovalDialog}
+            onUpdateBatchStatus={openBatchStatusUpdateDialog}
+            canApprovePlanning={canApprovePlanning}
+            canUpdateBatchStatus={canUpdateBatchStatus}
+          />
+          <PlanPagination page={page} totalPage={totalPage} onPageChange={handlePageChange} />
+        </>
+      )}
 
-      {filteredPlannings.length === 0 && (
+      {!loading && filteredPlannings.length === 0 && (
         <div className="text-center py-12">
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy kế hoạch sản xuất</h3>
@@ -597,17 +581,9 @@ export default function ProductionPlanningManagement() {
 
       <BatchFormDialog
         isOpen={isBatchFormDialogOpen}
-        onClose={() => {
-          setIsBatchFormDialogOpen(false)
-          setCurrentBatchCreation({
-            planning: null,
-            currentBatch: 1,
-            totalBatches: 0,
-            createdBatches: [],
-          })
-        }}
+        onClose={handleCancel}
         onSubmit={handleCreateBatch}
-        templates={mockTemplates}
+        templates={templates}
         isSubmitting={isSubmitting}
         currentBatch={currentBatchCreation.currentBatch}
         totalBatches={currentBatchCreation.totalBatches}

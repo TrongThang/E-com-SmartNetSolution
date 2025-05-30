@@ -40,17 +40,12 @@ export function BatchFormDialog({
 
   // Get selected template's firmwares
   const selectedTemplateId = form.watch("template_id")
-  const selectedTemplate = templates.find(t => t.template_id.toString() === selectedTemplateId)
+  const selectedTemplate = templates.find((t) => t.template_id.toString() === selectedTemplateId)
   const availableFirmwares = selectedTemplate?.firmware || []
 
   const handleSubmit = async (data) => {
-    // Convert "none" to null for firmware_id
-    const submitData = {
-      ...data,
-      firmware_id: data.firmware_id === "none" ? null : data.firmware_id
-    }
-    await onSubmit(submitData)
-    form.reset()
+    await onSubmit(data);
+    form.reset();
   }
 
   const progress = ((currentBatch - 1) / totalBatches) * 100
@@ -106,9 +101,7 @@ export function BatchFormDialog({
                             <SelectItem key={template.template_id} value={template.template_id.toString()}>
                               <div className="flex flex-col">
                                 <span>{template.name}</span>
-                                {template.device_template_note && (
-                                  <span className="text-xs text-gray-500">{template.device_template_note}</span>
-                                )}
+
                               </div>
                             </SelectItem>
                           ))
@@ -154,9 +147,7 @@ export function BatchFormDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        Chọn firmware cho lô sản xuất này (nếu có)
-                      </FormDescription>
+                      <FormDescription>Chọn firmware cho lô sản xuất này (nếu có)</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -169,15 +160,44 @@ export function BatchFormDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Số lượng *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="100"
-                        {...field}
-                        onChange={(e) => field.onChange(Number.parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormDescription>Số lượng sản phẩm cần sản xuất trong lô này</FormDescription>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (field.value > 1) field.onChange(field.value - 1)
+                        }}
+                        disabled={field.value <= 1}
+                      >
+                        <span>-</span>
+                      </Button>
+                      <div className="flex-1 max-w-32">
+                        <Input
+                          type="number"
+                          value={field.value}
+                          onChange={(e) => {
+                            let value = Number.parseInt(e.target.value) || 1;
+                            if (value < 1) value = 1;
+                            if (value > 10000) value = 10000;
+                            field.onChange(value);
+                          }}
+                          className="text-center"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (field.value < 10000) field.onChange(field.value + 1)
+                        }}
+                        disabled={field.value >= 10000}
+                      >
+                        <span>+</span>
+                      </Button>
+                    </div>
+                    <FormDescription>Số lượng sản phẩm cần sản xuất trong lô này (tối đa 10,000)</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -203,7 +223,7 @@ export function BatchFormDialog({
                   Hủy tất cả
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Đang tạo..." : currentBatch === totalBatches ? "Hoàn thành" : "Lô tiếp theo"}
+                  {isSubmitting ? "Đang xử lý..." : currentBatch === totalBatches ? "Hoàn thành" : "Lưu và tiếp tục"}
                 </Button>
               </div>
             </form>
