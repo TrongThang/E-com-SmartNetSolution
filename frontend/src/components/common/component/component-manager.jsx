@@ -54,7 +54,7 @@ export default function ComponentManager({ components, setComponents, fetchCompo
     
         if (result.isConfirmed) {
             try {
-                const res = await axios.delete(`http://localhost:3000/api/component/${componentId}`); // nhớ truyền đúng ID
+                const res = await axios.delete(`http://localhost:3000/api/component/${componentId}`);
                 if (res.data.success === 200) {
                     Swal.fire({
                         title: "Thành công",

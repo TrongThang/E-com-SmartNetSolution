@@ -1,7 +1,8 @@
-"use client"
-import { useState, useEffect } from "react"
-import { X, Plus, Minus, Search } from "lucide-react"
-import { ComponentFormModal } from "../component/form-component"
+"use client";
+import { useState, useEffect } from "react";
+import { X, Plus, Minus, Search } from "lucide-react";
+import { ComponentFormModal } from "../component/form-component";
+import categoryApi from "@/apis/modules/categories.api.ts";
 
 export default function TemplateForm({ template, components, setComponents, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -11,41 +12,99 @@ export default function TemplateForm({ template, components, setComponents, onSa
     created_by: "Admin",
     components: [],
     quantity_required: 1,
-  })
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showComponentSearch, setShowComponentSearch] = useState(false)
-  const [showComponentForm, setShowComponentForm] = useState(false)
+    production_cost: 0,
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [showComponentSearch, setShowComponentSearch] = useState(false);
+  const [showComponentForm, setShowComponentForm] = useState(false);
   const [componentFormData, setComponentFormData] = useState({
     name: "",
     supplier: "",
     quantity_in_stock: 0,
     unit_cost: 0,
-  })
+  });
 
   useEffect(() => {
     if (template) {
+      let initialDeviceTypeId = template.device_type_id || "";
+      let initialDeviceTypeName = template.device_type_name || "";
+      const matchedCategory = categories.find((cat) => cat.category_id === Number(initialDeviceTypeId));
+      if (matchedCategory && matchedCategory.parentId !== null) {
+        initialDeviceTypeName = matchedCategory.name;
+      } else {
+        initialDeviceTypeId = "";
+        initialDeviceTypeName = "";
+      }
+
+      // Ánh xạ components từ template, bổ sung name và supplier từ prop components
+      const enrichedComponents = (template.components || []).map((comp) => {
+        const fullComponent = components.find((c) => c.component_id === comp.component_id);
+        return {
+          component_id: comp.component_id,
+          quantity_required: comp.quantity_required,
+          name: fullComponent ? fullComponent.name : "Unknown Component",
+          supplier: fullComponent ? fullComponent.supplier : "Unknown Supplier",
+        };
+      });
+
       setFormData({
         name: template.name,
-        device_type_id: template.device_type_id,
-        device_type_name: template.device_type_name,
+        device_type_id: initialDeviceTypeId,
+        device_type_name: initialDeviceTypeName,
         created_by: template.created_by,
-        components: template.components || [],
-      })
+        components: enrichedComponents,
+        production_cost: template.production_cost || 0,
+      });
+    } else {
+      // Nếu không có template, gán danh mục con đầu tiên khi categories sẵn sàng
+      const firstChildCategory = categories.find((cat) => cat.parentId !== null);
+      if (firstChildCategory) {
+        setFormData((prev) => ({
+          ...prev,
+          device_type_id: firstChildCategory.category_id.toString(),
+          device_type_name: firstChildCategory.name,
+        }));
+      }
     }
-  }, [template])
+  }, [template, categories, components]); // Thêm components vào dependency
 
-  const deviceTypes = [
-    { id: 1, name: "Máy lạnh" },
-    { id: 2, name: "Tủ lạnh" },
-    { id: 3, name: "Máy giặt" },
-    { id: 4, name: "Máy rửa bát" },
-  ]
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await categoryApi.list({});
+      if (res.status_code === 200) {
+        const flattenCategories = flattenCategoryTree(res.data?.categories || []);
+        setCategories(flattenCategories);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const flattenCategoryTree = (categories, level = 0, parentId = null) => {
+    let result = [];
+    for (const category of categories) {
+      result.push({
+        ...category,
+        level,
+        parentId,
+      });
+      if (category.children && category.children.length > 0) {
+        result = result.concat(flattenCategoryTree(category.children, level + 1, category.category_id));
+      }
+    }
+    return result;
+  };
 
   const filteredComponents = components.filter(
     (component) =>
       component.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
       !formData.components.some((c) => c.component_id === component.component_id)
-  )
+  );
 
   const addComponent = (component) => {
     setFormData({
@@ -53,21 +112,23 @@ export default function TemplateForm({ template, components, setComponents, onSa
       components: [
         ...formData.components,
         {
-          ...component,
+          component_id: component.component_id,
           quantity_required: 1,
+          name: component.name,
+          supplier: component.supplier,
         },
       ],
-    })
-    setShowComponentSearch(false)
-    setSearchTerm("")
-  }
+    });
+    setShowComponentSearch(false);
+    setSearchTerm("");
+  };
 
   const removeComponent = (componentId) => {
     setFormData({
       ...formData,
       components: formData.components.filter((c) => c.component_id !== componentId),
-    })
-  }
+    });
+  };
 
   const updateComponentQuantity = (componentId, quantity) => {
     setFormData({
@@ -75,41 +136,61 @@ export default function TemplateForm({ template, components, setComponents, onSa
       components: formData.components.map((c) =>
         c.component_id === componentId ? { ...c, quantity_required: Math.max(1, quantity) } : c
       ),
-    })
-  }
+    });
+  };
 
   const handleComponentSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     const newComponent = {
       ...componentFormData,
       component_id: Math.max(...components.map((c) => c.component_id), 0) + 1,
       created_at: new Date().toISOString().split("T")[0],
-    }
-    setComponents([...components, newComponent])
-    setComponentFormData({ name: "", supplier: "", quantity_in_stock: 0, unit_cost: 0 })
-    setShowComponentForm(false)
-    setShowComponentSearch(true)
-  }
+    };
+    setComponents([...components, newComponent]);
+    setComponentFormData({ name: "", supplier: "", quantity_in_stock: 0, unit_cost: 0 });
+    setShowComponentForm(false);
+    setShowComponentSearch(true);
+  };
 
   const resetComponentForm = () => {
-    setComponentFormData({ name: "", supplier: "", quantity_in_stock: 0, unit_cost: 0 })
-    setShowComponentForm(false)
-    setShowComponentSearch(true)
-  }
+    setComponentFormData({ name: "", supplier: "", quantity_in_stock: 0, unit_cost: 0 });
+    setShowComponentForm(false);
+    setShowComponentSearch(true);
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!formData.name || !formData.device_type_id) {
-      alert("Vui lòng điền đầy đủ thông tin")
-      return
+    e.preventDefault();
+
+    // Kiểm tra và gán giá trị mặc định nếu device_type_id là rỗng
+    let deviceTypeId = Number(formData.device_type_id);
+    if (!deviceTypeId || deviceTypeId === 0) {
+      const firstChildCategory = categories.find((cat) => cat.parentId !== null);
+      deviceTypeId = firstChildCategory ? firstChildCategory.category_id : 0;
     }
-    const component_count = formData.components.length
-      ? formData.components.reduce((sum, c) => sum + (Number(c.quantity_required) || 0), 0)
-      : 0
-    console.log("Components:", formData.components, "Component Count:", component_count) // Debug
-    const updatedFormData = { ...formData, status: 2, component_count }
-    onSave(updatedFormData)
-  }
+
+    const payload = {
+      name: formData.name,
+      device_type_id: deviceTypeId,
+      production_cost: formData.production_cost,
+      components: formData.components.map((component) => ({
+        component_id: component.component_id,
+        quantity_required: component.quantity_required,
+      })),
+    };
+
+    console.log("Payload gửi về backend:", payload);
+
+    if (onSave && typeof onSave === "function") {
+      onSave(payload);
+    } else {
+      console.error("onSave is not defined or not a function");
+      alert("Lỗi: Hàm onSave không được định nghĩa. Vui lòng kiểm tra component cha.");
+    }
+  };
+
+  const handleCloseForm = () => {
+    setShowComponentForm(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -121,8 +202,8 @@ export default function TemplateForm({ template, components, setComponents, onSa
           </button>
         </div>
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} id="form" className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Tên Template *</label>
                 <input
@@ -139,23 +220,59 @@ export default function TemplateForm({ template, components, setComponents, onSa
                 <select
                   value={formData.device_type_id}
                   onChange={(e) => {
-                    const selectedType = deviceTypes.find((type) => type.id === Number.parseInt(e.target.value))
-                    setFormData({
-                      ...formData,
-                      device_type_id: e.target.value,
-                      device_type_name: selectedType?.name || "",
-                    })
+                    const value = e.target.value;
+                    const selectedTypeId = Number.parseInt(value);
+                    if (!isNaN(selectedTypeId)) {
+                      const selectedType = categories.find((type) => type.category_id === selectedTypeId);
+                      console.log("selectedType", selectedType);
+                      if (selectedType && selectedType.parentId !== null) {
+                        setFormData({
+                          ...formData,
+                          device_type_id: value,
+                          device_type_name: selectedType.name || "",
+                        });
+                      } else {
+                        console.log("Cannot select parent category");
+                      }
+                    }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-2 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
-                  <option value="">Chọn loại thiết bị</option>
-                  {deviceTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
+                  {categories.map((type) => (
+                    <option
+                      key={type.category_id}
+                      value={type.category_id}
+                      disabled={type.parentId === null}
+                      className={type.parentId === null ? "text-gray-500" : "text-gray-700"}
+                    >
+                      {"--".repeat(type.level)} {type.name}
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Chi phí sản xuất ước lượng *</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={formData.production_cost}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    if (value >= 0 && value <= 100) {
+                      setFormData({ ...formData, production_cost: value });
+                    } else if (value < 0) {
+                      setFormData({ ...formData, production_cost: 0 });
+                    } else if (value > 100) {
+                      setFormData({ ...formData, production_cost: 100 });
+                    }
+                  }}
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent mr-1"
+                  placeholder="Nhập chi phí ước lượng"
+                  required
+                />
+                <span>%</span>
               </div>
             </div>
             <div>
@@ -200,8 +317,8 @@ export default function TemplateForm({ template, components, setComponents, onSa
                         <button
                           type="button"
                           onClick={() => {
-                            setShowComponentSearch(false)
-                            setShowComponentForm(true)
+                            setShowComponentSearch(false);
+                            setShowComponentForm(true);
                           }}
                           className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-green-700"
                         >
@@ -237,14 +354,17 @@ export default function TemplateForm({ template, components, setComponents, onSa
                 setFormData={setComponentFormData}
                 handleSubmit={handleComponentSubmit}
                 resetForm={resetComponentForm}
+                onClose={handleCloseForm}
               />
               <div className="space-y-3">
                 {formData.components.map((component) => (
                   <div key={component.component_id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-center">
                       <div className="flex-1">
-                        <h4 className="font-medium">{component.name}</h4>
-                        <p className="text-sm text-gray-600">Nhà cung cấp: {component.supplier}</p>
+                        <h4 className="font-medium">{component.name || "Unknown Component"}</h4>
+                        <p className="text-sm text-gray-600">
+                          Nhà cung cấp: {component.supplier || "Unknown Supplier"}
+                        </p>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="flex items-center space-x-2">
@@ -292,7 +412,8 @@ export default function TemplateForm({ template, components, setComponents, onSa
             Hủy
           </button>
           <button
-            onClick={handleSubmit}
+            type="submit"
+            form="form"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             {template ? "Cập nhật" : "Tạo Template"}
@@ -300,5 +421,5 @@ export default function TemplateForm({ template, components, setComponents, onSa
         </div>
       </div>
     </div>
-  )
+  );
 }

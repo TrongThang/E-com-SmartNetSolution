@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import FirmwarePage from "@/components/firmware/firmware-manager";
 import { removeVietnameseTones } from "@/utils/format";
 import axios from "axios";
+import Swal from "sweetalert2";
+import categoryApi from "@/apis/modules/categories.api.ts";
 
 export default function TemplateManagement() {
     const [activeTab, setActiveTab] = useState("Templates");
@@ -18,30 +20,132 @@ export default function TemplateManagement() {
 
     const [templates, setTemplates] = useState([]);
     const [components, setComponents] = useState([]);
+    const [categories, setCategories] = useState([]);
 
     const fetchTemplate = async () => {
         try {
             const res = await axios.get('http://localhost:3000/api/device-templates');
+            console.log("Fetched templates:", res.data);
             setTemplates(res.data);
         } catch (error) {
             console.error('Failed to fetch device templates:', error);
+            Swal.fire({
+                title: "Lỗi",
+                text: "Không thể tải danh sách khuôn mẫu. Vui lòng thử lại!",
+                icon: "error",
+            });
         }
-    }
+    };
 
     const fetchComponent = async () => {
         try {
-            // const res = await ComponentApi.list();
             const res = await axios.get('http://localhost:3000/api/component');
+            console.log("Fetched components:", res.data.data);
             setComponents(res.data.data);
         } catch (error) {
             console.error('Failed to fetch component:', error);
+            Swal.fire({
+                title: "Lỗi",
+                text: "Không thể tải danh sách linh kiện. Vui lòng thử lại!",
+                icon: "error",
+            });
         }
-    }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const res = await categoryApi.list({});
+            if (res.status_code === 200) {
+                const flattenCategories = flattenCategoryTree(res.data?.categories || []);
+                setCategories(flattenCategories);
+                console.log("Flattened categories:", flattenCategories); // Debug dữ liệu
+            }
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+            Swal.fire({
+                title: "Lỗi",
+                text: "Không thể tải danh sách danh mục. Vui lòng thử lại!",
+                icon: "error",
+            });
+        }
+    };
+
+    const flattenCategoryTree = (categories, level = 0, parentId = null) => {
+        let result = [];
+        for (const category of categories) {
+            result.push({
+                ...category,
+                level,
+                parentId,
+            });
+            if (category.children && category.children.length > 0) {
+                result = result.concat(flattenCategoryTree(category.children, level + 1, category.category_id));
+            }
+        }
+        return result;
+    };
+
+    const createTemplate = async (dataTemplate) => {
+        try {
+            const res = await axios.post('http://localhost:3000/api/device-templates', dataTemplate);
+            console.log("Create template response:", res);
+            if (res.status === 201) {
+                Swal.fire({
+                    title: "Thành công",
+                    text: "Khuôn mẫu đã được tạo thành công",
+                    icon: "success",
+                });
+                fetchTemplate();
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: res.data.error || "Có lỗi xảy ra khi tạo khuôn mẫu",
+                    icon: "error",
+                });
+            }
+        } catch (error) {
+            console.error('Failed to create template:', error);
+            Swal.fire({
+                title: "Lỗi",
+                text: error.response?.data?.error || "Có lỗi xảy ra khi tạo khuôn mẫu",
+                icon: "error",
+            });
+        }
+    };
+
+    const updateTemplate = async (dataTemplate) => {
+        try {
+            const res = await axios.put(`http://localhost:3000/api/device-templates/${editingTemplate.template_id}`, dataTemplate);
+            console.log("Update template response:", res);
+            if (res.status === 200) {
+                Swal.fire({
+                    title: "Thành công",
+                    text: "Khuôn mẫu đã được cập nhật thành công",
+                    icon: "success",
+                });
+                fetchTemplate();
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: res.data.error || "Có lỗi xảy ra khi cập nhật khuôn mẫu",
+                    icon: "error",
+                });
+            }
+        } catch (error) {
+            console.error('Failed to update template:', error);
+            Swal.fire({
+                title: "Lỗi",
+                text: error.response?.data?.error || "Có lỗi xảy ra khi cập nhật khuôn mẫu",
+                icon: "error",
+            });
+        }
+    };
 
     useEffect(() => {
+        fetchCategories();
         fetchTemplate();
         fetchComponent();
-    },[])
+    }, []);
 
     const handleCreateTemplate = () => {
         setEditingTemplate(null);
@@ -53,29 +157,51 @@ export default function TemplateManagement() {
         setShowTemplateForm(true);
     };
 
-    const handleDeleteTemplate = (templateId) => {
-        if (console.confirm("Bạn có chắc chắn muốn xóa template này?")) {
-            setTemplates(templates.filter((t) => t.template_id !== templateId));
+    const deleteTemplate = async (templateId) => {
+        const result = await Swal.fire({
+            title: 'Bạn có chắc chắn?',
+            text: "Khuôn mẫu sẽ bị xóa khỏi hệ thống!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy',
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await axios.delete(`http://localhost:3000/api/device-templates/${templateId}`);
+                if (res.status === 204) {
+                    Swal.fire({
+                        title: "Thành công",
+                        text: "Khuôn mẫu đã được xóa",
+                        icon: "success",
+                    });
+                    fetchTemplate();
+                } else {
+                    Swal.fire({
+                        title: "Lỗi",
+                        text: res.data.error || "Có lỗi xảy ra khi xóa khuôn mẫu",
+                        icon: "error",
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to delete template:', error);
+                Swal.fire({
+                    title: "Lỗi",
+                    text: error.response?.data?.error || "Có lỗi xảy ra khi xóa khuôn mẫu",
+                    icon: "error",
+                });
+            }
         }
     };
 
     const handleSaveTemplate = (templateData) => {
         if (editingTemplate) {
-            // Update existing template
-            setTemplates(
-                templates.map((t) => (t.template_id === editingTemplate.template_id ? { ...t, ...templateData } : t)),
-            );
+            updateTemplate(templateData);
         } else {
-            // Create new template
-            const newTemplate = {
-                ...templateData,
-                template_id: Math.max(...templates.map((t) => t.template_id)) + 1,
-                created_at: new Date().toISOString().split("T")[0],
-                updated_at: new Date().toISOString().split("T")[0],
-                component_count: templateData.component_count || 0,
-                total_cost: templateData.components?.reduce((sum, c) => sum + c.quantity_required * c.unit_cost, 0) || 0,
-            };
-            setTemplates([...templates, newTemplate]);
+            createTemplate(templateData);
         }
         setShowTemplateForm(false);
         setEditingTemplate(null);
@@ -100,13 +226,23 @@ export default function TemplateManagement() {
         );
     };
 
-    // const filteredTemplates = templates.filter((template) => {
-    //     const matchesSearch = removeVietnameseTones(template.name.toLowerCase()).includes(
-    //         removeVietnameseTones(searchTerm.toLowerCase()),
-    //     );
-    //     const matchesFilter = filterTerm === "all" || template.device_type_name === filterTerm;
-    //     return matchesSearch && matchesFilter;
-    // });
+    // Cải thiện logic tìm kiếm và lọc
+    const filteredTemplates = templates.filter((template) => {
+        const templateName = template.name ? template.name.toLowerCase() : "";
+        const deviceTypeName = template.device_type_name ? template.device_type_name.toLowerCase() : "";
+        const normalizedSearchTerm = removeVietnameseTones(searchTerm.toLowerCase());
+
+        const matchesSearch =
+            removeVietnameseTones(templateName).includes(normalizedSearchTerm) ||
+            removeVietnameseTones(deviceTypeName).includes(normalizedSearchTerm);
+
+        const matchesFilter = filterTerm === "all" || deviceTypeName === filterTerm.toLowerCase();
+
+        return matchesSearch && matchesFilter;
+    });
+
+    // Lấy danh sách danh mục con để hiển thị trong bộ lọc
+    const childCategories = categories.filter((category) => category.parentId !== null);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -184,7 +320,7 @@ export default function TemplateManagement() {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                                 <input
                                     type="text"
-                                    placeholder="Tìm kiếm template..."
+                                    placeholder="Tìm kiếm theo tên hoặc loại thiết bị..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -193,18 +329,21 @@ export default function TemplateManagement() {
                             <select
                                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                 onChange={(e) => setFilterTerm(e.target.value)}
+                                value={filterTerm}
                             >
                                 <option value="all">Tất cả loại thiết bị</option>
-                                <option value="Máy lạnh">Máy lạnh</option>
-                                <option value="Tủ lạnh">Tủ lạnh</option>
-                                <option value="Máy giặt">Máy giặt</option>
+                                {childCategories.map((category) => (
+                                    <option key={category.category_id} value={category.name}>
+                                        {category.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
                         <TemplateList
-                            templates={templates}
+                            templates={filteredTemplates}
                             onEdit={handleEditTemplate}
-                            onDelete={handleDeleteTemplate}
+                            onDelete={deleteTemplate}
                             onChangeStatus={handleChangeStatus}
                             handleCostChange={handleCostChange}
                         />

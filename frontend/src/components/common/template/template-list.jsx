@@ -56,31 +56,31 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Khuôn mẫu
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Loại thiết bị
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Trạng thái
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Người tạo
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ngày tạo
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ngày cập nhật
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Chi phí sản xuất
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Tổng giá ước lượng
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Thao tác
                             </th>
                         </tr>
@@ -94,7 +94,7 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                         }`}
                                     onClick={() => handleTemplateClick(template)}
                                 >
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-2 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-10 w-10">
                                                 <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -107,12 +107,12 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-1 py-4 whitespace-nowrap">
                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             {template.category_name || "N/A"}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    <td className="px-1 py-4 whitespace-nowrap text-sm">
                                         {template.status === "rejected" && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                 Bị từ chối
@@ -134,8 +134,8 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                             </span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{template.created_name || "N/A"}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-1 py-4 whitespace-nowrap text-sm text-gray-900">{template.created_name || "N/A"}</td>
+                                    <td className="px-1 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {template.created_at
                                             ? new Date(template.created_at).toLocaleString('vi-VN', {
                                                 timeZone: 'Asia/Ho_Chi_Minh',
@@ -145,7 +145,7 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                             })
                                             : 'N/A'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-1 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {template.updated_at
                                             ? new Date(template.updated_at).toLocaleString('vi-VN', {
                                                 timeZone: 'Asia/Ho_Chi_Minh',
@@ -155,7 +155,7 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                             })
                                             : 'N/A'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                    <td className="px-1 py-4 whitespace-nowrap text-center text-sm text-gray-900">
                                         <div className="flex items-center justify-center gap-1">
                                             <input
                                                 type="number"
@@ -170,12 +170,12 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                             <span>%</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                                    <td className="px-1 py-4 whitespace-nowrap text-center text-sm text-gray-900">
                                         <div className="flex items-center justify-center gap-1">
                                             {formatCurrency((totalCosts[template.template_id] * (template.production_cost/100 + 1)) || 0)}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td className="px-1 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex items-center justify-center space-x-2">
                                             <button
                                                 onClick={(e) => handleActionClick(e, "edit", template)}
