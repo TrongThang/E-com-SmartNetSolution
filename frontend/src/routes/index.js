@@ -1,3 +1,4 @@
+import { createBrowserRouter } from "react-router-dom";
 import DefaultLayout from "@/components/layout/defaultLayout";
 import HomePage from "@/pages/user/home/Home.page.jsx";
 import SearchPage from "@/pages/user/Search.page.jsx";
@@ -38,30 +39,8 @@ import EditBlog from "@/pages/blogManager/EditBlog";
 import CategoryManagerPage from "@/pages/categoryManager/index.jsx";
 import AddCategoryPage from "@/pages/categoryManager/AddCategory.jsx";
 import EditCategoryPage from "@/pages/categoryManager/EditCategory.jsx";
-
-import BlogListPage from '@/pages/User/BlogList.page';
-import BlogDetailPage from '@/pages/User/BlogDetail.page';
-import ContactPage from '@/pages/User/Contact.page';
-
-import UnitManagerPage from '@/pages/unitManager';
-import AddUnit from '@/pages/unitManager/AddUnit';
-import EditUnit from '@/pages/unitManager/EditUnit';
-import WarehouseManagerPage from '@/pages/warehouseManager';
-import AddWarehouse from '@/pages/warehouseManager/AddWarehouse';
-import EditWarehouse from '@/pages/warehouseManager/EditWarehouse';
-import WarrantyTimeManagerPage from '@/pages/warrantyTimeManager';
-import AddWarrantyTime from '@/pages/warrantyTimeManager/AddWarrantyTime';
-import EditWarrantyTime from '@/pages/warrantyTimeManager/EditWarrantyTime';
-import AddSlideshow from '@/pages/slideshowManager/AddSlideshow';
-import EditSlideshow from '@/pages/slideshowManager/EditSlideshow';
-import ContactManagerPage from '@/pages/contactManager';
-import ContactEdit from '@/pages/contactManager/EditContact';
-import ReviewManagerPage from '@/pages/reviewManager';
-import BlogManagerPage from '@/pages/blogManager';
-import AddBlog from '@/pages/blogManager/AddBlog';
-import EditBlog from '@/pages/blogManager/EditBlog';
 import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
-import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
+import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/create";
 import UserManagerPage from "@/pages/userManager";
 import ProductManagerPage from "@/pages/productManager";
 import EmployeeManagerPage from "@/pages/employeeManager";
@@ -69,15 +48,14 @@ import AddUserPage from "@/pages/userManager/AddUser";
 import EditUserPage from "@/pages/userManager/EditUser";
 import AddProductPage from "@/pages/productManager/AddProduct";
 import EditProductPage from "@/pages/productManager/EditProduct";
-import EmployeeManagerPage from "@/pages/employeeManager";
-import StageExamples from "@/components/common/stage/state-example";
 import TemplateManagement from "@/components/common/template/template-management";
 import NewFirmwarePage from "@/components/firmware/upload-firmware";
 import FirmwareDetailPage from "@/components/firmware/detail-firmware";
 import EditFirmwarePage from "@/components/firmware/edit-firmware";
 import CategoryManagement from "@/pages/categoryManager";
-import AddCategoryPage from "@/pages/categoryManager/AddCategory";
-import EditCategoryPage from "@/pages/categoryManager/EditCategory";
+import StatePrimary from "@/components/common/tracking/StatePrimary";
+import AttributeGroupPage from "@/pages/attribute_groupManager";
+
 
 export const router = createBrowserRouter([
   {
