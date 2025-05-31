@@ -27,96 +27,6 @@ const currentUser = {
   role: "manager",
 }
 
-// Mock templates data - có thể tạo TemplateApi riêng nếu cần
-const mockTemplates = [
-  {
-    template_id: 1,
-    name: "Camera IP Wifi V1",
-    created_by: "user001",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    is_deleted: false,
-    status: "success",
-    device_template_note: "Template cơ bản cho camera IP",
-    firmware: [
-      {
-        firmware_id: 1,
-        name: "Camera IP Wifi V1.0",
-        version: "1.0.0",
-        file_path: "/firmware/camera-ip-wifi-v1.0.bin",
-        is_mandatory: true,
-        is_approved: true,
-      },
-      {
-        firmware_id: 2,
-        name: "Camera IP Wifi V1.1",
-        version: "1.1.0",
-        file_path: "/firmware/camera-ip-wifi-v1.1.bin",
-        is_mandatory: false,
-        is_approved: true,
-      },
-    ],
-  },
-  {
-    template_id: 2,
-    name: "Camera IP POE V2",
-    created_by: "user001",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    is_deleted: false,
-    status: "success",
-    device_template_note: "Template nâng cao với POE",
-    firmware: [
-      {
-        firmware_id: 1,
-        name: "Camera IP Wifi V1.0",
-        version: "1.0.0",
-        file_path: "/firmware/camera-ip-wifi-v1.0.bin",
-        is_mandatory: true,
-        is_approved: true,
-      },],
-  },
-  {
-    template_id: 3,
-    name: "LED Strip RGB V1",
-    created_by: "user002",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    is_deleted: false,
-    status: "success",
-    device_template_note: "Dải LED RGB điều khiển từ xa",
-  },
-  {
-    template_id: 4,
-    name: "LED Bulb Smart V1",
-    created_by: "user002",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    is_deleted: false,
-    status: "success",
-    device_template_note: "Bóng đèn LED thông minh",
-  },
-  {
-    template_id: 5,
-    name: "Temperature Sensor V1",
-    created_by: "user003",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    is_deleted: false,
-    status: "success",
-    device_template_note: "Cảm biến nhiệt độ độ chính xác cao",
-  },
-  {
-    template_id: 6,
-    name: "Camera IP 4K V1",
-    created_by: "user001",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    is_deleted: false,
-    status: "pending",
-    device_template_note: "Template đang chờ duyệt",
-  },
-]
 
 const PAGE_SIZE = 6;
 
@@ -124,7 +34,7 @@ export default function ProductionPlanningManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [plannings, setPlannings] = useState([])
-  const [templates, setTemplates] = useState(mockTemplates)
+  const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true)
 
   // Dialog states
@@ -160,7 +70,9 @@ export default function ProductionPlanningManagement() {
 
   // Fetch data on component mount
   useEffect(() => {
+    console.log("Component mount, gọi fetchPlannings");
     fetchPlannings();
+    fetchTemplates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Chỉ gọi 1 lần khi mount
 
@@ -278,7 +190,7 @@ export default function ProductionPlanningManagement() {
         template_id: Number(data.template_id),
         quantity: Number(data.quantity),
         batch_note: data.batch_note || "",
-        firmware_id: data.firmware_id !== "none" && data.firmware_id ? data.firmware_id : "",
+        firmware_id: data.firmware_id !== "none" && data.firmware_id ? Number(data.firmware_id) : null,
       };
 
       const updatedTempBatches = [...tempBatches, batchData];
@@ -480,6 +392,20 @@ export default function ProductionPlanningManagement() {
       setIsSubmitting(false);
     }
   }
+  const fetchTemplates = async () => {
+    try {
+      const response = await PlanningApi.getAllDeviceTemplates();
+      console.log("API trả về:", response);
+      if (Array.isArray(response)) {
+        setTemplates(response);
+        console.log("Templates sau khi set:", response);
+      } else {
+        setTemplates([]);
+      }
+    } catch (error) {
+      setTemplates([]);
+    }
+  };
 
   const openPlanningDetailsDialog = async (planning) => {
     try {
@@ -511,7 +437,17 @@ export default function ProductionPlanningManagement() {
           <h1 className="text-3xl font-bold">Quản lý Kế hoạch Sản xuất</h1>
           <p className="text-muted-foreground">Tạo và theo dõi các kế hoạch sản xuất với nhiều lô</p>
         </div>
-        <Button onClick={() => setIsCreatePlanningDialogOpen(true)}>
+        <Button onClick={() => {
+          if (templates.length === 0) {
+            Swal.fire({
+              icon: "warning",
+              title: "Không có template khả dụng",
+              text: "Hiện không có template nào đủ điều kiện để tạo kế hoạch",
+            });
+            return;
+          }
+          setIsCreatePlanningDialogOpen(true);
+        }}>
           <Plus className="w-4 h-4 mr-2" />
           Tạo Kế hoạch Mới
         </Button>

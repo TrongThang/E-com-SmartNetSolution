@@ -1,5 +1,3 @@
-"use client"
-
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
@@ -75,7 +73,9 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
 
             <div>
               <Label className="text-gray-600">Ghi chú kế hoạch</Label>
-              <p className="text-sm font-medium mt-1 bg-white p-2 rounded">{planning.planning_note || "Không có ghi chú"}</p>
+              <p className="text-sm font-medium mt-1 bg-white p-2 rounded whitespace-normal break-words">
+                {planning.planning_note || "Không có ghi chú"}
+              </p>
             </div>
           </div>
 
@@ -95,21 +95,41 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
               </TableHeader>
               <TableBody>
                 {planning.production_batches && planning.production_batches.length > 0 ? (
-                  planning.production_batches.map((batch) => (
-                    <TableRow key={batch.production_batch_id}>
-                      <TableCell className="font-medium">{batch.production_batch_id}</TableCell>
-                      <TableCell>{batch.device_templates?.name || `Template ${batch.template_id}`}</TableCell>
-                      <TableCell>{batch.quantity}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(batch.status)}>
-                          {getStatusIcon(batch.status)}
-                          <span className="ml-1">{getStatusLabel(batch.status)}</span>
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(batch.created_at).toLocaleDateString("vi-VN")}</TableCell>
-                      <TableCell className="max-w-xs truncate">{batch.batch_note || "-"}</TableCell>
-                    </TableRow>
-                  ))
+                  planning.production_batches.map((batch) => {
+                    // Tìm firmware dựa trên firmware_id
+                    const firmware = batch.device_templates?.firmware?.find(
+                      f => f.firmware_id === batch.firmware_id
+                    );
+
+                    return (
+                      <TableRow key={batch.production_batch_id}>
+                        <TableCell className="font-medium">{batch.production_batch_id}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="whitespace-normal break-words">
+                              {batch.device_templates?.name || `Template ${batch.template_id}`}
+                            </span>
+                            {firmware && (
+                              <span className="text-xs text-gray-500 whitespace-normal break-words">
+                                Firmware: {firmware.name} (v{firmware.version})
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{batch.quantity}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(batch.status)}>
+                            {getStatusIcon(batch.status)}
+                            <span className="ml-1">{getStatusLabel(batch.status)}</span>
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(batch.created_at).toLocaleDateString("vi-VN")}</TableCell>
+                        <TableCell className="max-w-xs whitespace-normal break-words">
+                          {batch.batch_note || "-"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-gray-500">

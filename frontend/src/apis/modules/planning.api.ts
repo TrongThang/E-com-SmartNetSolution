@@ -10,11 +10,38 @@ const planningEndpoints = {
 }
 
 const PlanningApi = {
-    async getAllDeviceTemplates(): Promise<IApiResponse> {
+    // async getAllDeviceTemplates(): Promise<IApiResponse> {
+    //     try {
+    //         return await axiosPrivate.get(planningEndpoints.devtem)
+    //     } catch (error) {
+    //         throw error
+    //     }
+    // },
+    async getAllDeviceTemplates() {
         try {
-            return await axiosPrivate.get(planningEndpoints.devtem)
+            const response = await axiosPrivate.get(planningEndpoints.devtem);
+            let templates = response;
+            if (!Array.isArray(templates)) {
+                return [];
+            }
+            // Filter lại template hợp lệ
+            const filteredTemplates = templates.filter(template => {
+                const isTemplateValid = template.status === "production" && !template.is_deleted;
+                if (template.firmware && Array.isArray(template.firmware)) {
+                    template.firmware = template.firmware.filter(firmware => {
+                        const isFirmwareValid = firmware.is_approved && !firmware.is_deleted;
+                        const mandatoryFirmware = template.firmware.find(f => f.is_mandatory);
+                        if (mandatoryFirmware) {
+                            return firmware.firmware_id === mandatoryFirmware.firmware_id;
+                        }
+                        return isFirmwareValid;
+                    });
+                }
+                return isTemplateValid;
+            });
+            return filteredTemplates;
         } catch (error) {
-            throw error
+            return [];
         }
     },
 

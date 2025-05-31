@@ -1,22 +1,12 @@
-"use client"
-
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Textarea } from "@/components/ui/textarea"
-import { Progress } from "@/components/ui/progress"
-
-const batchSchema = z.object({
-  template_id: z.string().min(1, "Template là bắt buộc"),
-  quantity: z.number().min(1, "Số lượng phải lớn hơn 0").max(10000, "Số lượng không được quá 10,000"),
-  batch_note: z.string().optional(),
-  firmware_id: z.string().optional(),
-})
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 
 export function BatchFormDialog({
   isOpen,
@@ -29,37 +19,82 @@ export function BatchFormDialog({
   planningNote,
 }) {
   const form = useForm({
-    resolver: zodResolver(batchSchema),
     defaultValues: {
       template_id: "",
       quantity: 1,
       batch_note: "",
-      firmware_id: "none",
+      firmware_id: "",
     },
-  })
+  });
 
-  // Get selected template's firmwares
-  const selectedTemplateId = form.watch("template_id")
-  const selectedTemplate = templates.find((t) => t.template_id.toString() === selectedTemplateId)
-  const availableFirmwares = selectedTemplate?.firmware || []
+  const { setError, clearErrors, handleSubmit } = form;
 
-  const handleSubmit = async (data) => {
-    await onSubmit(data);
+  const selectedTemplateId = form.watch("template_id");
+  const selectedTemplate = templates.find((t) => t.template_id.toString() === selectedTemplateId);
+
+  const availableFirmwares = useMemo(() => {
+    return selectedTemplate?.firmware?.filter(firmware => {
+      return firmware.is_approved && !firmware.is_deleted;
+    }) || [];
+  }, [selectedTemplate]);
+
+  const validateForm = (data) => {
+    let isValid = true;
+    clearErrors();
+
+    if (!data.template_id) {
+      setError("template_id", { message: "Vui lòng chọn template" });
+      isValid = false;
+    }
+
+    if (!data.firmware_id) {
+      setError("firmware_id", { message: "Vui lòng chọn firmware" });
+      isValid = false;
+    } else if (selectedTemplate?.firmware?.length > 0) {
+      const firmwareExists = selectedTemplate.firmware.some(f => f.firmware_id.toString() === data.firmware_id);
+      if (!firmwareExists) {
+        setError("firmware_id", { message: "Firmware không thuộc template này" });
+        isValid = false;
+      }
+    }
+
+    if (!data.quantity || data.quantity < 1) {
+      setError("quantity", { message: "Số lượng phải lớn hơn 0" });
+      isValid = false;
+    } else if (data.quantity > 10000) {
+      setError("quantity", { message: "Số lượng không được quá 10,000" });
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const onFormSubmit = async (data) => {
+    if (!validateForm(data)) return;
+
+    try {
+      await onSubmit(data);
+      form.reset();
+    } catch (error) {
+      setError("root", {
+        type: "manual",
+        message: error.message || "Có lỗi xảy ra khi tạo lô",
+      });
+    }
+  };
+
+  const handleClose = () => {
     form.reset();
-  }
+    onClose();
+  };
 
-  const progress = ((currentBatch - 1) / totalBatches) * 100
-
-  // Chỉ lọc templates đã được duyệt
-  const availableTemplates = templates.filter((template) => template.status === "success")
+  const progress = totalBatches > 0 ? ((currentBatch - 1) / totalBatches) * 100 : 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>
-            Tạo Lô {currentBatch}/{totalBatches}
-          </DialogTitle>
+          <DialogTitle>Tạo Lô {currentBatch}/{totalBatches}</DialogTitle>
           <DialogDescription>
             {planningNote && (
               <div className="mb-2">
@@ -74,85 +109,88 @@ export function BatchFormDialog({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Tiến độ tạo lô</span>
-              <span>
-                {currentBatch - 1}/{totalBatches}
-              </span>
+              <span>{currentBatch - 1}/{totalBatches}</span>
             </div>
             <Progress value={progress} className="w-full" />
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="template_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Template *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn template sản xuất" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availableTemplates.length > 0 ? (
-                          availableTemplates.map((template) => (
-                            <SelectItem key={template.template_id} value={template.template_id.toString()}>
-                              <div className="flex flex-col">
-                                <span>{template.name}</span>
-
-                              </div>
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no-templates" disabled>
-                            Không có template nào khả dụng
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Template sản xuất sẽ sử dụng ({availableTemplates.length} template khả dụng)
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {selectedTemplate && availableFirmwares.length > 0 && (
+            <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="firmware_id"
+                  name="template_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Firmware (Tùy chọn)</FormLabel>
+                      <FormLabel>Template *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Chọn firmware" />
+                            <SelectValue placeholder="Chọn template" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">
-                            <span className="text-gray-500">Không chọn firmware</span>
-                          </SelectItem>
-                          {availableFirmwares.map((firmware) => (
-                            <SelectItem key={firmware.firmware_id} value={firmware.firmware_id.toString()}>
-                              <div className="flex flex-col">
-                                <span>{firmware.name}</span>
-                                <span className="text-xs text-gray-500">Version: {firmware.version}</span>
-                              </div>
+                          {templates.length > 0 ? (
+                            templates.map((template) => (
+                              <SelectItem
+                                key={template.template_id}
+                                value={template.template_id.toString()}
+                              >
+                                {template.name || 'Không có tên'}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-templates" disabled>
+                              Không có template
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
-                      <FormDescription>Chọn firmware cho lô sản xuất này (nếu có)</FormDescription>
-                      <FormMessage />
+                      <FormDescription>Chọn template sản xuất</FormDescription>
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
-              )}
+
+                {selectedTemplate && (
+                  <FormField
+                    control={form.control}
+                    name="firmware_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Firmware *</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={availableFirmwares.length === 0}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={
+                                availableFirmwares.length > 0
+                                  ? "Chọn firmware"
+                                  : "Không có firmware"
+                              } />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableFirmwares.map((firmware) => (
+                              <SelectItem
+                                key={firmware.firmware_id}
+                                value={firmware.firmware_id.toString()}
+                              >
+                                {firmware.name} (v{firmware.version})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>Chọn firmware cho lô sản xuất</FormDescription>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
 
               <FormField
                 control={form.control}
@@ -165,12 +203,10 @@ export function BatchFormDialog({
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          if (field.value > 1) field.onChange(field.value - 1)
-                        }}
+                        onClick={() => field.value > 1 && field.onChange(field.value - 1)}
                         disabled={field.value <= 1}
                       >
-                        <span>-</span>
+                        -
                       </Button>
                       <div className="flex-1 max-w-32">
                         <Input
@@ -178,8 +214,7 @@ export function BatchFormDialog({
                           value={field.value}
                           onChange={(e) => {
                             let value = Number.parseInt(e.target.value) || 1;
-                            if (value < 1) value = 1;
-                            if (value > 10000) value = 10000;
+                            value = Math.max(1, Math.min(10000, value));
                             field.onChange(value);
                           }}
                           className="text-center"
@@ -189,16 +224,14 @@ export function BatchFormDialog({
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          if (field.value < 10000) field.onChange(field.value + 1)
-                        }}
+                        onClick={() => field.value < 10000 && field.onChange(field.value + 1)}
                         disabled={field.value >= 10000}
                       >
-                        <span>+</span>
+                        +
                       </Button>
                     </div>
-                    <FormDescription>Số lượng sản phẩm cần sản xuất trong lô này (tối đa 10,000)</FormDescription>
-                    <FormMessage />
+                    <FormDescription>Số lượng sản phẩm (tối đa 10,000)</FormDescription>
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -208,22 +241,28 @@ export function BatchFormDialog({
                 name="batch_note"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ghi chú lô (Tùy chọn)</FormLabel>
+                    <FormLabel>Ghi chú lô</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Nhập ghi chú về lô sản xuất này..." className="resize-none" {...field} />
+                      <Textarea placeholder="Ghi chú..." className="resize-none" {...field} />
                     </FormControl>
-                    <FormDescription>Thông tin bổ sung về lô sản xuất này</FormDescription>
-                    <FormMessage />
+                    <FormDescription>Thông tin bổ sung về lô sản xuất</FormDescription>
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
 
+              {form.formState.errors.root && (
+                <div className="text-red-500 text-sm">
+                  {form.formState.errors.root.message}
+                </div>
+              )}
+
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-                  Hủy tất cả
+                <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                  Hủy
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Đang xử lý..." : currentBatch === totalBatches ? "Hoàn thành" : "Lưu và tiếp tục"}
+                  {isSubmitting ? "Đang xử lý..." : currentBatch === totalBatches ? "Hoàn thành" : "Tiếp tục"}
                 </Button>
               </div>
             </form>
@@ -231,5 +270,5 @@ export function BatchFormDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

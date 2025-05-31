@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -159,59 +157,68 @@ export function PlanningTable({
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody className="bg-white divide-y divide-gray-200">
-                                    {planning.production_batches?.map((batch) => (
-                                      <TableRow key={batch.production_batch_id} className="hover:bg-gray-50">
-                                        <TableCell className="font-medium text-gray-900">
-                                          {batch.production_batch_id}
-                                        </TableCell>
-                                        <TableCell className="text-sm text-gray-900">
-                                          <div className="flex flex-col">
-                                            <span>{batch.device_templates?.name || batch.template_id}</span>
-                                            {batch.firmware_name && (
-                                              <span className="text-xs text-gray-500">
-                                                Firmware: {batch.firmware_name} (v{batch.firmware_version})
+                                    {planning.production_batches?.map((batch) => {
+                                      // Tìm firmware dựa trên firmware_id
+                                      const firmware = batch.device_templates?.firmware?.find(
+                                        f => f.firmware_id === batch.firmware_id
+                                      );
+
+                                      return (
+                                        <TableRow key={batch.production_batch_id} className="hover:bg-gray-50">
+                                          <TableCell className="font-medium text-gray-900">
+                                            {batch.production_batch_id}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-gray-900">
+                                            <div className="flex flex-col">
+                                              <span className="whitespace-normal break-words">
+                                                {batch.device_templates?.name || batch.template_id}
                                               </span>
-                                            )}
-                                          </div>
-                                        </TableCell>
-                                        <TableCell>
-                                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                            {batch.quantity}
-                                          </span>
-                                        </TableCell>
-                                        <TableCell>
-                                          <Badge className={getStatusColor(batch.status)}>
-                                            {getStatusIcon(batch.status)}
-                                            <span className="ml-1">{getStatusLabel(batch.status)}</span>
-                                          </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-gray-900">
-                                          {new Date(batch.created_at).toLocaleDateString("vi-VN")}
-                                        </TableCell>
-                                        <TableCell>
-                                          <div className="flex gap-2">
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() => onViewBatchDetails(batch)}
-                                              className="hover:bg-gray-50"
-                                            >
-                                              <Eye className="w-4 h-4" />
-                                            </Button>
-                                            {canUpdateBatchStatus(batch) && (
+                                              {firmware && (
+                                                <span className="text-xs text-gray-500 whitespace-normal break-words">
+                                                  Firmware: {firmware.name} (v{firmware.version})
+                                                </span>
+                                              )}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell>
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                              {batch.quantity}
+                                            </span>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Badge className={getStatusColor(batch.status)}>
+                                              {getStatusIcon(batch.status)}
+                                              <span className="ml-1">{getStatusLabel(batch.status)}</span>
+                                            </Badge>
+                                          </TableCell>
+                                          <TableCell className="text-sm text-gray-900">
+                                            {new Date(batch.created_at).toLocaleDateString("vi-VN")}
+                                          </TableCell>
+                                          <TableCell>
+                                            <div className="flex gap-2">
                                               <Button
-                                                size="sm"
                                                 variant="outline"
-                                                onClick={() => onUpdateBatchStatus(batch)}
+                                                size="sm"
+                                                onClick={() => onViewBatchDetails(batch)}
                                                 className="hover:bg-gray-50"
                                               >
-                                                <Settings className="w-4 h-4" />
+                                                <Eye className="w-4 h-4" />
                                               </Button>
-                                            )}
-                                          </div>
-                                        </TableCell>
-                                      </TableRow>
-                                    )) || (
+                                              {canUpdateBatchStatus(batch) && (
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  onClick={() => onUpdateBatchStatus(batch)}
+                                                  className="hover:bg-gray-50"
+                                                >
+                                                  <Settings className="w-4 h-4" />
+                                                </Button>
+                                              )}
+                                            </div>
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    }) || (
                                       <TableRow>
                                         <TableCell colSpan={7} className="text-center text-gray-500 py-4">
                                           Chưa có lô nào trong kế hoạch này

@@ -1,5 +1,3 @@
-"use client"
-
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -92,7 +90,7 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
           {planning.planning_note && (
             <div className="p-4 bg-blue-50 rounded-lg">
               <Label className="text-xs text-blue-600">Ghi chú kế hoạch</Label>
-              <p className="text-sm text-blue-800 mt-1">{planning.planning_note}</p>
+              <p className="text-sm text-blue-800 mt-1 whitespace-normal break-words">{planning.planning_note}</p>
             </div>
           )}
 
@@ -111,26 +109,46 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {planning.batches?.map((batch) => (
-                    <TableRow key={batch.batch_id}>
-                      <TableCell className="font-medium">{batch.production_batch_id}</TableCell>
-                      <TableCell>{batch.template_name || batch.template_id}</TableCell>
-                      <TableCell>{batch.quantity}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(batch.status)}>
-                          {getStatusIcon(batch.status)}
-                          <span className="ml-1">{getStatusLabel(batch.status)}</span>
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">{batch.batch_note || "-"}</TableCell>
-                    </TableRow>
-                  )) || (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-gray-500">
-                          Chưa có lô nào trong kế hoạch này
+                  {planning.batches?.map((batch) => {
+                    // Tìm firmware dựa trên firmware_id
+                    const firmware = batch.device_templates?.firmware?.find(
+                      f => f.firmware_id === batch.firmware_id
+                    );
+
+                    return (
+                      <TableRow key={batch.batch_id}>
+                        <TableCell className="font-medium">{batch.production_batch_id}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="whitespace-normal break-words">
+                              {batch.device_templates?.name || `Template ${batch.template_id}`}
+                            </span>
+                            {firmware && (
+                              <span className="text-xs text-gray-500 whitespace-normal break-words">
+                                Firmware: {firmware.name} (v{firmware.version})
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{batch.quantity}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(batch.status)}>
+                            {getStatusIcon(batch.status)}
+                            <span className="ml-1">{getStatusLabel(batch.status)}</span>
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs whitespace-normal break-words">
+                          {batch.batch_note || "-"}
                         </TableCell>
                       </TableRow>
-                    )}
+                    );
+                  }) || (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-gray-500">
+                        Chưa có lô nào trong kế hoạch này
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -166,7 +184,7 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -186,7 +204,7 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
                       />
                     </FormControl>
                     <FormDescription>Ghi chú này sẽ được lưu lại và hiển thị cho người tạo kế hoạch</FormDescription>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />

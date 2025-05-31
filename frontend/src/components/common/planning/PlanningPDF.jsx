@@ -102,8 +102,6 @@ const styles = StyleSheet.create({
         paddingRight: 20,
     },
     signatureText: {
-
-
         fontSize: 12,
         marginBottom: 10,
         textAlign: 'center',
@@ -138,7 +136,7 @@ const convertStatus = (status, stage) => {
         case 'qc': return 'Giai đoạn kiểm thử';
         case 'cancelled': return 'Đã hủy bỏ';
         default:
-            return status || stage;
+            return status || stage || '-';
     }
 }
 
@@ -152,83 +150,94 @@ const PlanningPDF = ({ planning }) => (
                 <Text style={styles.sectionTitle}>Thông tin Kế hoạch</Text>
                 <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Mã kế hoạch:</Text>
-                    <Text style={styles.infoValue}>{planning.planning_id}</Text>
+                    <Text style={styles.infoValue} wrap>{planning.planning_id}</Text>
                 </View>
                 <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Ghi chú:</Text>
-                    <Text style={styles.infoValue}>{planning.planning_note || '-'}</Text>
+                    <Text style={styles.infoValue} wrap>{planning.planning_note || '-'}</Text>
                 </View>
                 <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Trạng thái:</Text>
-                    <Text style={styles.infoValue}>{convertStatus(planning.status) || planning.status}</Text>
+                    <Text style={styles.infoValue} wrap>{convertStatus(planning.status)}</Text>
                 </View>
                 <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Ngày tạo:</Text>
-                    <Text style={styles.infoValue}>
-                        {planning.created_at ? new Date(planning.created_at).toLocaleDateString() : '-'}
+                    <Text style={styles.infoValue} wrap>
+                        {planning.created_at ? new Date(planning.created_at).toLocaleDateString('vi-VN') : '-'}
                     </Text>
                 </View>
             </View>
 
             {/* Danh sách các lô */}
-            {planning.production_batches?.map((batch, batchIndex) => (
-                <View key={batch.production_batch_id} style={styles.batchBox}>
-                    <Text style alternation={styles.sectionTitle}>Lô {batchIndex + 1}</Text>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Mã lô:</Text>
-                        <Text style={styles.infoValue}>{batch.production_batch_id}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Template:</Text>
-                        <Text style={styles.infoValue}>{batch.device_templates?.name || '-'}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Số lượng:</Text>
-                        <Text style={styles.infoValue}>{batch.quantity}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Ghi chú:</Text>
-                        <Text style={styles.infoValue}>{batch.batch_note || '-'}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Trạng thái:</Text>
-                        <Text style={styles.infoValue}>{convertStatus(batch.status) || batch.status}</Text>
-                    </View>
+            {planning.production_batches?.map((batch, batchIndex) => {
+                // Tìm firmware dựa trên firmware_id
+                const firmware = batch.device_templates?.firmware?.find(
+                    f => f.firmware_id === batch.firmware_id
+                );
 
-                    {/* Danh sách sản phẩm trong lô */}
-                    <Text style={[styles.sectionTitle, { marginTop: 10, fontSize: 13 }]}>Danh sách Sản phẩm</Text>
-                    <View style={styles.productTable}>
-                        <View style={styles.tableHeader}>
-                            <Text style={styles.tableCellSerial}>STT</Text>
-                            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Mã sản phẩm</Text>
-                            <Text style={styles.tableHeaderCell}>Trạng thái</Text>
-                            <Text style={styles.tableHeaderCell}>Giai đoạn</Text>
-                            <Text style={styles.tableHeaderCell}>Ghi chú</Text>
+                return (
+                    <View key={batch.production_batch_id} style={styles.batchBox}>
+                        <Text style={styles.sectionTitle}>Lô {batchIndex + 1}</Text>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Mã lô:</Text>
+                            <Text style={styles.infoValue} wrap>{batch.production_batch_id}</Text>
                         </View>
-                        {batch.production_tracking && batch.production_tracking.length > 0 ? (
-                            batch.production_tracking.map((product, idx) => (
-                                <View key={product.device_serial} style={styles.tableRow}>
-                                    <Text style={styles.tableCellSerial}>{idx + 1}</Text>
-                                    <Text style={[styles.tableCell, { flex: 2 }]}>{product.device_serial}</Text>
-                                    <Text style={styles.tableCell}>{convertStatus(product.status) || product.status}</Text>
-                                    <Text style={styles.tableCell}>{convertStatus(product.stage) || product.stage}</Text>
-                                    <Text style={styles.tableCell}></Text>
-                                </View>
-                            ))
-                        ) : (
-                            <View style={styles.tableRow}>
-                                <Text style={styles.tableCell} colSpan={4}>Không có sản phẩm</Text>
-                            </View>
-                        )}
-                    </View>
-                </View>
-            ))}
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Template:</Text>
+                            <Text style={styles.infoValue} wrap>{batch.device_templates?.name || '-'}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Firmware:</Text>
+                            <Text style={styles.infoValue} wrap>
+                                {firmware ? `${firmware.name} (v${firmware.version})` : '-'}
+                            </Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Số lượng:</Text>
+                            <Text style={styles.infoValue} wrap>{batch.quantity}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Ghi chú:</Text>
+                            <Text style={styles.infoValue} wrap>{batch.batch_note || '-'}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Trạng thái:</Text>
+                            <Text style={styles.infoValue} wrap>{convertStatus(batch.status)}</Text>
+                        </View>
 
-            {/* Phần ký của bộ phận sản xuất - Đặt ở cuối */}
+                        {/* Danh sách sản phẩm trong lô */}
+                        <Text style={[styles.sectionTitle, { marginTop: 10, fontSize: 13 }]}>Danh sách Sản phẩm</Text>
+                        <View style={styles.productTable}>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.tableCellSerial}>STT</Text>
+                                <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Mã sản phẩm</Text>
+                                <Text style={styles.tableHeaderCell}>Trạng thái</Text>
+                                <Text style={styles.tableHeaderCell}>Giai đoạn</Text>
+                                <Text style={styles.tableHeaderCell}>Ghi chú</Text>
+                            </View>
+                            {batch.production_tracking && batch.production_tracking.length > 0 ? (
+                                batch.production_tracking.map((product, idx) => (
+                                    <View key={product.device_serial} style={styles.tableRow}>
+                                        <Text style={styles.tableCellSerial}>{idx + 1}</Text>
+                                        <Text style={[styles.tableCell, { flex: 2 }]} wrap>{product.device_serial}</Text>
+                                        <Text style={styles.tableCell} wrap>{convertStatus(product.status)}</Text>
+                                        <Text style={styles.tableCell} wrap>{convertStatus(product.stage)}</Text>
+                                        <Text style={styles.tableCell} wrap>{product.note || '-'}</Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <View style={styles.tableRow}>
+                                    <Text style={[styles.tableCell, { flex: 5 }]}>Không có sản phẩm</Text>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+                );
+            })}
+
+            {/* Phần ký của bộ phận sản xuất */}
             <View style={styles.signatureSection}>
                 <Text style={styles.signatureText}>........, Ngày ....... Tháng ....... Năm ........</Text>
-
-                {/* Căn giữa nội dung trong vùng ký */}
                 <View style={{ width: 200 }}>
                     <Text style={[styles.signatureText, { fontWeight: 'bold', color: '#0d47a1', textAlign: 'center' }]}>
                         Ký tên bộ phận sản xuất
@@ -238,7 +247,6 @@ const PlanningPDF = ({ planning }) => (
                     </Text>
                 </View>
             </View>
-
         </Page>
     </Document>
 );
