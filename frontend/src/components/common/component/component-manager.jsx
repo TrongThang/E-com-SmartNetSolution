@@ -1,60 +1,36 @@
 "use client"
 import { useState } from "react"
 import { Plus, Edit, Trash2, Package, Search } from "lucide-react"
+import { ComponentFormModal } from "./form-component"
+import { formatDate } from "@/utils/format"
+import Swal from "sweetalert2"
+import axios from "axios"
 
-export default function TemplateManager({ components, setComponents }) {
+export default function ComponentManager({ components, setComponents, fetchComponent }) {
     const [showForm, setShowForm] = useState(false)
     const [editingComponent, setEditingComponent] = useState(null)
+    const [isEdit, setIsEdit] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
-    const [formData, setFormData] = useState({
-        name: "",
-        supplier: "",
-        quantity_in_stock: 0,
-        unit_cost: 0,
-    })
 
     const filteredComponents = components.filter((component) =>
         component.name.toLowerCase().includes(searchTerm.toLowerCase()),
     )
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        if (editingComponent) {
-            setComponents(
-                components.map((c) => (c.component_id === editingComponent.component_id ? { ...c, ...formData } : c)),
-            )
-        } else {
-            const newComponent = {
-                ...formData,
-                component_id: Math.max(...components.map((c) => c.component_id)) + 1,
-                created_at: new Date().toISOString().split("T")[0],
-            }
-            setComponents([...components, newComponent])
-        }
-        resetForm()
-    }
-
-    const resetForm = () => {
-        setFormData({ name: "", supplier: "", quantity_in_stock: 0, unit_cost: 0 })
-        setEditingComponent(null)
-        setShowForm(false)
-    }
-
     const handleEdit = (component) => {
         setEditingComponent(component)
-        setFormData({
-            name: component.name,
-            supplier: component.supplier,
-            quantity_in_stock: component.quantity_in_stock,
-            unit_cost: component.unit_cost,
-        })
+        setIsEdit(true)
         setShowForm(true)
     }
 
-    const handleDelete = (componentId) => {
-        if (alert("Bạn có chắc chắn muốn xóa linh kiện này?")) {
-            setComponents(components.filter((c) => c.component_id !== componentId))
-        }
+    const handleAdd = () => {
+        setEditingComponent(null)
+        setIsEdit(false)
+        setShowForm(true)
+    }
+
+    const handleCloseForm = () => {
+        setShowForm(false)
+        setEditingComponent(null)
     }
 
     const formatCurrency = (amount) => {
@@ -64,16 +40,51 @@ export default function TemplateManager({ components, setComponents }) {
         }).format(amount)
     }
 
+    const deleteComponent = async (componentId) => {
+        const result = await Swal.fire({
+            title: 'Bạn có chắc chắn?',
+            text: "Linh kiện sẽ bị xóa khỏi hệ thống!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy',
+        });
+    
+        if (result.isConfirmed) {
+            try {
+                const res = await axios.delete(`http://localhost:3000/api/component/${componentId}`); // nhớ truyền đúng ID
+                if (res.data.success === 200) {
+                    Swal.fire({
+                        title: "Thành công",
+                        text: "Linh kiện đã được xóa",
+                        icon: "success",
+                    });
+                    fetchComponent();
+                } else {
+                    Swal.fire({
+                        title: "Lỗi",
+                        text: res.error,
+                        icon: "error",
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to delete component:', error);
+            }
+        }
+    }
+    
+
     return (
         <div>
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-xl font-semibold">Quản lý linh kiện</h2>
-                    <p className="text-gray-600">Quản lý kho linh kiện và giá cả</p>
                 </div>
                 <button
-                    onClick={() => setShowForm(true)}
+                    onClick={handleAdd}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700"
                 >
                     <Plus size={20} />
@@ -107,7 +118,10 @@ export default function TemplateManager({ components, setComponents }) {
                                 Nhà cung cấp
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Đơn giá
+                                Trạng thái
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Giá ước lượng
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ngày tạo
@@ -134,10 +148,22 @@ export default function TemplateManager({ components, setComponents }) {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{component.supplier}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {Number(component.status) === 0 && (
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            Hết hàng
+                                        </span>
+                                    )}
+                                    {Number(component.status) === 1 && (
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Còn hàng
+                                        </span>
+                                    )}
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {formatCurrency(component.unit_cost)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{component.created_at}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(component.created_at)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div className="flex items-center justify-end space-x-2">
                                         <button
@@ -145,14 +171,14 @@ export default function TemplateManager({ components, setComponents }) {
                                             className="text-indigo-600 hover:text-indigo-900"
                                             title="Chỉnh sửa"
                                         >
-                                            <Edit size={16} />
+                                            <Edit size={25} />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(component.component_id)}
+                                            onClick={() => deleteComponent(component.component_id)}
                                             className="text-red-600 hover:text-red-900"
                                             title="Xóa"
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash2 size={25} />
                                         </button>
                                     </div>
                                 </td>
@@ -164,60 +190,13 @@ export default function TemplateManager({ components, setComponents }) {
 
             {/* Component Form Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-md w-full">
-                        <div className="p-6">
-                            <h3 className="text-lg font-semibold mb-4">
-                                {editingComponent ? "Chỉnh sửa linh kiện" : "Thêm linh kiện mới"}
-                            </h3>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tên linh kiện</label>
-                                    <input
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nhà cung cấp</label>
-                                    <input
-                                        type="text"
-                                        value={formData.supplier}
-                                        onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Đơn giá (VND)</label>
-                                    <input
-                                        type="number"
-                                        value={formData.unit_cost}
-                                        onChange={(e) => setFormData({ ...formData, unit_cost: Number.parseInt(e.target.value) || 0 })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                        min="0"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex justify-end space-x-3 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={resetForm}
-                                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                                        {editingComponent ? "Cập nhật" : "Thêm"}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <ComponentFormModal
+                    showForm={showForm}
+                    component={editingComponent}
+                    onClose={handleCloseForm}
+                    isEdit={isEdit}
+                    fetchComponent={fetchComponent}
+                />
             )}
         </div>
     )

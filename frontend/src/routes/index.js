@@ -44,7 +44,13 @@ import AddProductPage from "@/pages/productManager/AddProduct";
 import EditProductPage from "@/pages/productManager/EditProduct";
 import EmployeeManagerPage from "@/pages/employeeManager";
 import StageExamples from "@/components/common/stage/state-example";
-import TemplateManagement from "@/components/common/_test/template-management";
+import TemplateManagement from "@/components/common/template/template-management";
+import NewFirmwarePage from "@/components/firmware/upload-firmware";
+import FirmwareDetailPage from "@/components/firmware/detail-firmware";
+import EditFirmwarePage from "@/components/firmware/edit-firmware";
+import CategoryManagement from "@/pages/categoryManager";
+import AddCategoryPage from "@/pages/categoryManager/AddCategory";
+import EditCategoryPage from "@/pages/categoryManager/EditCategory";
 
 export const router = createBrowserRouter([
   {
@@ -211,6 +217,18 @@ export const router = createBrowserRouter([
         element: <EditBlog />,
       },
       {
+        path: 'categories',
+        element: <CategoryManagement />
+      },
+      {
+        path: 'categories/create',
+        element: <AddCategoryPage />
+      },
+      {
+        path: 'categories/create',
+        element: <EditCategoryPage />
+      },
+      {
         path: 'warehouse/import/create',
           element: <CreateImportWarehousePage />
       },
@@ -245,6 +263,22 @@ export const router = createBrowserRouter([
       {
         path: 'products/edit/:id',
         element: <EditProductPage />
+      },
+      {
+        path: 'Manager-template',
+        element: <TemplateManagement />
+      },
+      {
+        path: 'firmware/new',
+        element: <NewFirmwarePage />
+      },
+      {
+        path: 'firmware/:id',
+        element: <FirmwareDetailPage />
+      },
+      {
+        path: 'firmware/edit/:id',
+        element: <EditFirmwarePage />
       }
     ],
   },
