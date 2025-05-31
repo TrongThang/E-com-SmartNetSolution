@@ -90,6 +90,7 @@ async function executeSelectData({
     queryJoin = null,
     configData = null,
 }) {
+    console.log("filter2", filter)
     // Xây dựng WHERE clause
     const buildWhere = filter
         ? buildWhereQuery(filter, table, logic)

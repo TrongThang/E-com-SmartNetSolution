@@ -55,7 +55,7 @@ import EditFirmwarePage from "@/components/firmware/edit-firmware";
 import CategoryManagement from "@/pages/categoryManager";
 import StatePrimary from "@/components/common/tracking/StatePrimary";
 import AttributeGroupPage from "@/pages/attribute_groupManager";
-
+import FirmwarePage from "@/components/firmware/firmware-manager";
 
 export const router = createBrowserRouter([
   {
@@ -289,6 +289,10 @@ export const router = createBrowserRouter([
       {
         path: 'firmware/edit/:id',
         element: <EditFirmwarePage />
+      },
+      {
+        path: 'firmware',
+        element: <FirmwarePage />
       }
       // },
       // {

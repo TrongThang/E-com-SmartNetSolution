@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,65 +20,88 @@ import {
     AlertTriangle,
     Code,
     Eye,
-    Trash2
+    Trash2,
+    Loader2,
+    Pencil
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDate, removeVietnameseTones } from "@/utils/format";
+import axiosPublic from "@/apis/clients/public.client";
+import Swal from "sweetalert2";
 
-// Sample firmware data
-const firmwareData = [
-    {
-        firmware_id: 1,
-        version: "v2.1.0",
-        file_path: "/firmware/camera_v2.1.0.bin",
-        template_id: 1,
-        template_name: "Camera Xiaomi 360°",
-        is_mandatory: true,
-        created_at: "2024-01-15T10:30:00Z",
-        tested_at: "2024-01-16T14:20:00Z",
-        is_approved: true,
-        updated_at: "2024-01-16T15:00:00Z",
-        is_deleted: false,
-        note: "Cập nhật tính năng phát hiện chuyển động",
-        file_size: "2.5 MB",
-        download_count: 156,
-    },
-    {
-        firmware_id: 2,
-        version: "v1.8.5",
-        file_path: "/firmware/light_v1.8.5.bin",
-        template_id: 2,
-        template_name: "Đèn thông minh Philips",
-        is_mandatory: false,
-        created_at: "2024-01-10T09:15:00Z",
-        tested_at: null,
-        is_approved: false,
-        updated_at: "2024-01-10T09:15:00Z",
-        is_deleted: false,
-        note: "Sửa lỗi kết nối WiFi",
-        file_size: "1.2 MB",
-        download_count: 89,
-    },
-    {
-        firmware_id: 3,
-        version: "v3.0.0-beta",
-        file_path: "/firmware/sensor_v3.0.0-beta.bin",
-        template_id: 3,
-        template_name: "Cảm biến nhiệt độ",
-        is_mandatory: false,
-        created_at: "2024-01-20T16:45:00Z",
-        tested_at: "2024-01-21T10:30:00Z",
-        is_approved: false,
-        updated_at: "2024-01-21T11:00:00Z",
-        is_deleted: false,
-        note: "Phiên bản beta - thêm tính năng AI",
-        file_size: "3.1 MB",
-        download_count: 23,
-    },
-];
+// const firmwareData = [
+//     {
+//         firmware_id: 1,
+//         version: "v2.1.0",
+//         file_path: "/firmware/camera_v2.1.0.bin",
+//         template_id: 1,
+//         template_name: "Camera Xiaomi 360°",
+//         is_mandatory: true,
+//         created_at: "2024-01-15T10:30:00Z",
+//         tested_at: "2024-01-16T14:20:00Z",
+//         is_approved: true,
+//         updated_at: "2024-01-16T15:00:00Z",
+//         is_deleted: false,
+//         note: "Cập nhật tính năng phát hiện chuyển động",
+//         file_size: "2.5 MB",
+//         download_count: 156,
+//     },
+//     {
+//         firmware_id: 2,
+//         version: "v1.8.5",
+//         file_path: "/firmware/light_v1.8.5.bin",
+//         template_id: 2,
+//         template_name: "Đèn thông minh Philips",
+//         is_mandatory: false,
+//         created_at: "2024-01-10T09:15:00Z",
+//         tested_at: null,
+//         is_approved: false,
+//         updated_at: "2024-01-10T09:15:00Z",
+//         is_deleted: false,
+//         note: "Sửa lỗi kết nối WiFi",
+//         file_size: "1.2 MB",
+//         download_count: 89,
+//     },
+//     {
+//         firmware_id: 3,
+//         version: "v3.0.0-beta",
+//         file_path: "/firmware/sensor_v3.0.0-beta.bin",
+//         template_id: 3,
+//         template_name: "Cảm biến nhiệt độ",
+//         is_mandatory: false,
+//         created_at: "2024-01-20T16:45:00Z",
+//         tested_at: "2024-01-21T10:30:00Z",
+//         is_approved: false,
+//         updated_at: "2024-01-21T11:00:00Z",
+//         is_deleted: false,
+//         note: "Phiên bản beta - thêm tính năng AI",
+//         file_size: "3.1 MB",
+//         download_count: 23,
+//     },
+// ];
 
 export default function FirmwarePage() {
     const [searchTerm, setSearchTerm] = useState("");
+    const [firmwareData, setFirmwareData] = useState([])
+    const [isLoading, setIsLoading] = useState(false)
+
+    useEffect(() => {
+        const fetchFirmwareData = async () => {
+            try {
+                const response = await axiosPublic.get(`http://localhost:8888/api/firmware`);
+
+                console.log('response', response)
+                if (response.success) {
+                    setFirmwareData(response.data);
+                }
+            } catch (error) {
+                console.error("Error fetching firmware data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchFirmwareData();
+    }, []);
 
     const getStatusBadge = (firmware) => {
         if (!firmware.is_approved && !firmware.tested_at) {
@@ -100,6 +123,45 @@ export default function FirmwarePage() {
         }
         return <Badge variant="secondary">Chưa xác định</Badge>;
     };
+
+    if (isLoading) {
+        console.log('firmwareData', firmwareData)
+        return <div className="flex justify-center items-center h-screen">
+            <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+    }
+
+    const handleDeleteFirmware = async (firmwareId) => {
+        try {
+            Swal.fire({
+                title: 'Bạn có chắc chắn muốn xoá firmware này?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Xoá',
+                cancelButtonText: 'Hủy bỏ'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const response = await axiosPublic.delete(`http://localhost:8888/api/firmware/${firmwareId}`)
+                    console.log('response', response)
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'Thành công',
+                            text: response.message,
+                            icon: 'success'
+                        })
+                    } else {
+                        Swal.fire({
+                            title: 'Lỗi',
+                            text: response.message,
+                            icon: 'error'
+                        })
+                    }
+                }
+            })
+        } catch (error) {
+            console.error("Error deleting firmware:", error);
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -224,15 +286,10 @@ export default function FirmwarePage() {
                                                     <TableCell>
                                                         <div className="flex flex-col">
                                                             <span className="font-medium">{firmware.version}</span>
-                                                            {firmware.version.includes("beta") && (
-                                                                <Badge variant="outline" className="w-fit text-xs mt-1">
-                                                                    BETA
-                                                                </Badge>
-                                                            )}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="font-medium">{firmware.template_name}</div>
+                                                        <div className="font-medium">{firmware?.name}</div>
                                                     </TableCell>
                                                     <TableCell>{getStatusBadge(firmware)}</TableCell>
                                                     <TableCell>
@@ -251,15 +308,22 @@ export default function FirmwarePage() {
                                                     <TableCell className="text-center">
                                                         <div className="flex items-center justify-center gap-2">
                                                             {/* Quick Actions */}
+                                                            <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-yellow-900">
+                                                                <Link to={`/admin/firmware/edit/${firmware.firmware_id}`}>
+                                                                    <Pencil className="h-6 w-6" />
+                                                                </Link>
+                                                            </Button>
                                                             <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-900">
                                                                 <Link to={`/admin/firmware/${firmware.firmware_id}`}>
                                                                     <Eye className="h-6 w-6" />
                                                                 </Link>
                                                             </Button>
-                                                            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-900">
-                                                                <Link to={`/admin/firmware/${firmware.firmware_id}`}>
-                                                                    <Trash2 className="h-6 w-6" />
-                                                                </Link>
+                                                            <Button
+                                                                variant="ghost" size="sm"
+                                                                className="text-red-600 hover:text-red-900"
+                                                                onClick={() => handleDeleteFirmware(firmware.firmware_id)}
+                                                            >
+                                                                <Trash2 className="h-6 w-6" />
                                                             </Button>
                                                         </div>
                                                     </TableCell>

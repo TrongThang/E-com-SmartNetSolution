@@ -9,6 +9,7 @@ class OrderController {
     async getOrdersForAdministrator(req, res) {
         const { filter, logic, limit, sort, order } = req.query;
         
+        console.log("filter", filter)
         const result = await getOrdersForAdministrator(
             filter,
             logic,

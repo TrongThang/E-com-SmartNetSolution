@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,33 +9,58 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle, X, Info, Shield, Clock, Users } from "lucide-react"
+import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle, X, Info, Shield, Clock, Users, Loader2 } from "lucide-react"
+import axiosPublic from "@/apis/clients/public.client"
+import Swal from "sweetalert2"
 
-export default function NewFirmwarePage({ firmwares, setFirmwares }) {
+export default function NewFirmwarePage() {
     const navigate = useNavigate()
     const [formData, setFormData] = useState({
         version: "",
-        template_id: "",
+        name: "",
+        id: "",
         is_mandatory: false,
         note: "",
+    })
+
+    const [error, setError] = useState({
+        version: "",
+        id: "",
+        is_mandatory: "",
+        note: "",
+        file: "",
+        name: "",
     })
 
     const [selectedFile, setSelectedFile] = useState(null)
     const [uploadProgress, setUploadProgress] = useState(0)
     const [isUploading, setIsUploading] = useState(false)
     const [uploadComplete, setUploadComplete] = useState(false)
+    const [deviceTemplates, setDeviceTemplates] = useState([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [textFile, setTextFile] = useState('') //Dùng để đưa nội dung file
 
     // Dữ liệu mẫu cho device templates
-    const deviceTemplates = [
-        { template_id: "1", name: "Camera Xiaomi 360°", devices: 1250, current_version: "v2.1.0" },
-        { template_id: "2", name: "Đèn thông minh Philips", devices: 890, current_version: "v1.8.2" },
-        { template_id: "3", name: "Cảm biến nhiệt độ", devices: 2100, current_version: "v3.0.1" },
-        { template_id: "4", name: "Ổ cắm thông minh", devices: 1560, current_version: "v1.5.0" },
-        { template_id: "5", name: "Chuông cửa thông minh", devices: 340, current_version: "v2.3.1" },
-    ]
+    useEffect(() => {
+        const fetchDeviceTemplates = async () => {
+            try {
+            const response = await axiosPublic.get("http://localhost:8888/api/firmware/latest-version-by-template")
+
+                if (response.success) {
+                    setDeviceTemplates(response.data)
+                }
+            } catch (error) {
+                setIsLoading(false)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchDeviceTemplates()
+    }, [])
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
+
         setFormData((prev) => ({
             ...prev,
             [name]: value,
@@ -43,20 +68,29 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
     }
 
     const handleFileSelect = (e) => {
-        const file = e.target.files?.[0]
+        const file = e.target.files[0]
+        console.log('e.target:',e.target.files[0])
         if (file) {
-            const allowedTypes = [".bin", ".hex", ".fw", ".ino"]
+            const allowedTypes = [".ino", ".cpp", ".txt"]
             const fileExtension = `.${file.name.split(".").pop()?.toLowerCase()}`
 
             if (!allowedTypes.includes(fileExtension)) {
-                alert("Vui lòng chọn file có định dạng .bin, .hex, .ino hoặc .fw")
+                setError({ ...error, file: "Vui lòng chọn file có định dạng .ino, .cpp, .txt" })
                 return
             }
 
             if (file.size > 10 * 1024 * 1024) {
-                alert("File không được vượt quá 10MB")
+                setError({ ...error, file: "File không được vượt quá 10MB" })
                 return
             }
+
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                setTextFile(e.target.result);
+            };
+
+            reader.readAsText(file);
 
             setSelectedFile(file)
         }
@@ -72,49 +106,57 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
         e.preventDefault()
 
         if (!selectedFile) {
-            alert("Vui lòng chọn file firmware!")
+            setError({ ...error, file: "Vui lòng chọn file firmware!" })
             return
         }
 
         if (!formData.version.trim()) {
-            alert("Vui lòng nhập phiên bản!")
+            setError({ ...error, version: "Vui lòng nhập phiên bản!" })
             return
         }
 
-        if (!formData.template_id) {
-            alert("Vui lòng chọn device template!")
+        if (!formData.id) {
+            setError({ ...error, template_id: "Vui lòng chọn device template!" })
             return
         }
 
-        setIsUploading(true)
-        setUploadProgress(0)
+        const newFirmware = {
+            name: formData.name,
+            version: formData.version,
+            template_id: formData.id,
+            is_mandatory: formData.is_mandatory,
+            note: formData.note,
+            file_path: textFile,
+        }
+        try {
+            const response = await axiosPublic.post("http://localhost:8888/api/firmware", newFirmware)
 
-        const uploadInterval = setInterval(() => {
-            setUploadProgress((prev) => {
-                if (prev >= 100) {
-                    clearInterval(uploadInterval)
-                    setIsUploading(false)
-                    setUploadComplete(true)
+            if (response.success) {
+                const result = await Swal.fire({
+                    title: "Thành công",
+                    text: "Firmware đã được upload thành công",
+                    icon: "success",
+                })
 
-                    // Lưu firmware vào state
-                    const newFirmware = {
-                        firmware_id: Math.max(...firmwares.map((f) => Number(f.firmware_id)), 0) + 1,
-                        name: `Firmware ${deviceTemplates.find((t) => t.template_id === formData.template_id)?.name}`,
-                        version: formData.version,
-                        release_date: new Date().toISOString().split("T")[0],
-                        template_id: formData.template_id,
-                        is_mandatory: formData.is_mandatory,
-                        note: formData.note,
-                        status: 2, // Chờ duyệt
-                    }
-                    setFirmwares((prev) => [...prev, newFirmware])
-
-                    setTimeout(() => navigate("/dashboard/firmware"), 2000)
-                    return 100
+                if (result.isConfirmed) {
+                    navigate("/admin/firmware")
                 }
-                return prev + 10
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: response.message,
+                    icon: "error",
+                })
+            }
+        } catch (error) {
+            Swal.fire({
+                title: "Lỗi",
+                text: error,
+                icon: "error",
             })
-        }, 200)
+        }
+        
+
     }
 
     const formatFileSize = (bytes) => {
@@ -125,7 +167,15 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
         return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
     }
 
-    const selectedTemplate = deviceTemplates.find((t) => t.template_id === formData.template_id)
+    const selectedTemplate = deviceTemplates.find((t) => t.id === formData.id)
+
+    if (isLoading) {
+        return (
+            <div className="min-h-[600px] flex items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin" />
+            </div>
+        )
+    }
 
     if (uploadComplete) {
         return (
@@ -181,14 +231,14 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                 <FileText className="h-5 w-5" />
                                 Chọn File Firmware
                             </CardTitle>
-                            <CardDescription>Upload file firmware (.bin, .hex, .fw, .ino) với kích thước tối đa 10MB</CardDescription>
+                            <CardDescription>Upload file firmware (.ino, .cpp) với kích thước tối đa 10MB</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {!selectedFile ? (
                                 <div className="border-2 border-dashed border-muted-foreground/25 rounded-xl p-12 text-center hover:border-muted-foreground/50 transition-all duration-200 hover:bg-muted/20">
                                     <input
                                         type="file"
-                                        accept=".bin,.hex,.fw"
+                                        accept=".ino, .cpp, .txt"
                                         onChange={handleFileSelect}
                                         className="hidden"
                                         id="firmware-file"
@@ -202,6 +252,7 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                             <p className="text-muted-foreground">Kéo thả file vào đây hoặc nhấn để chọn từ máy tính</p>
                                         </div>
                                     </label>
+                                    {error.file && <p className="text-red-500 text-sm">{error.file}</p>}
                                 </div>
                             ) : (
                                 <div className="border rounded-xl p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
@@ -229,6 +280,7 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                             <X className="h-4 w-4" />
                                         </Button>
                                     </div>
+                                    {error.file && <p className="text-red-500 text-sm">{error.file}</p>}
                                 </div>
                             )}
                         </CardContent>
@@ -244,6 +296,22 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="version" className="text-base font-medium">
+                                        Tên firmware *
+                                    </Label>
+                                    <Input
+                                        id="name"
+                                        name="name"
+                                        placeholder="Firmware 1.0.0"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        disabled={isUploading}
+                                        className="h-12"
+                                    />
+                                    <p className="text-sm text-muted-foreground">Ví dụ: 2.1.0, 1.5.3</p>
+                                    {error.name && <p className="text-red-500 text-sm">{error.name}</p>}
+                                </div>
                                 <div className="grid gap-6 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="version" className="text-base font-medium">
@@ -252,13 +320,14 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                         <Input
                                             id="version"
                                             name="version"
-                                            placeholder="v1.0.0"
+                                            placeholder="1.0.0"
                                             value={formData.version}
                                             onChange={handleInputChange}
                                             disabled={isUploading}
                                             className="h-12"
                                         />
-                                        <p className="text-sm text-muted-foreground">Ví dụ: v2.1.0, v1.5.3-beta</p>
+                                        <p className="text-sm text-muted-foreground">Ví dụ: 2.1.0, 1.5.3</p>
+                                        {error.version && <p className="text-red-500 text-sm">{error.version}</p>}
                                     </div>
 
                                     <div className="space-y-2">
@@ -266,14 +335,13 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                             Device Template *
                                         </Label>
                                         <Select
-                                            value={formData.template_id}
+                                            value={formData.id}
                                             onValueChange={(value) => {
-                                                const selectedTemplate = deviceTemplates.find((t) => t.template_id === value);
+                                                const selectedTemplate = deviceTemplates.find((t) => t.id === value);
                                                 if (selectedTemplate) {
                                                     setFormData((prev) => ({
                                                         ...prev,
-                                                        template_id: value,
-                                                        name: selectedTemplate.name,
+                                                        id: value,
                                                     }));
                                                 }
                                             }}
@@ -284,17 +352,18 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {deviceTemplates.map((template) => (
-                                                    <SelectItem key={template.template_id} value={template.template_id}>
+                                                    <SelectItem key={template.id} value={template.id}>
                                                         <div className="flex items-center justify-between w-full">
-                                                            <span>{template.name}</span>
-                                                            <Badge variant="secondary" className="ml-2">
-                                                                {template.devices} thiết bị
+                                                            <span>{template.template_name}</span>
+                                                            <Badge variant="secondary" className="ml-2 bg-blue-500">
+                                                                {template.total_devices} thiết bị
                                                             </Badge>
                                                         </div>
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        {error.template_id && <p className="text-red-500 text-sm">{error.template_id}</p>}
                                     </div>
                                 </div>
                                 {formData.name && (
@@ -338,6 +407,7 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                         rows={4}
                                         className="resize-none"
                                     />
+                                    {error.note && <p className="text-red-500 text-sm">{error.note}</p>}
                                 </div>
 
                                 {isUploading && (
@@ -363,7 +433,7 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                     </Button>
                                     <Button
                                         type="submit"
-                                        disabled={!selectedFile || isUploading || !formData.version.trim() || !formData.template_id}
+                                        disabled={!selectedFile || isUploading || !formData.version.trim() || !formData.id}
                                         size="lg"
                                         className="min-w-[160px]"
                                     >
@@ -396,20 +466,20 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <h4 className="font-semibold">{selectedTemplate.name}</h4>
-                                    <p className="text-sm text-muted-foreground">Template ID: {selectedTemplate.template_id}</p>
+                                    <h4 className="font-semibold">{selectedTemplate.template_name}</h4>
+                                    <p className="text-sm text-muted-foreground">Template ID: {selectedTemplate.id}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-sm text-muted-foreground">Thiết bị</p>
                                         <p className="font-semibold flex items-center gap-1">
                                             <Users className="h-4 w-4" />
-                                            {selectedTemplate.devices.toLocaleString()}
+                                            {selectedTemplate.template_name}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Phiên bản hiện tại</p>
-                                        <Badge variant="outline">{selectedTemplate.current_version}</Badge>
+                                        <Badge variant="outline">{selectedTemplate?.lastest_version}</Badge>
                                     </div>
                                 </div>
                             </CardContent>
@@ -427,10 +497,20 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                             <div>
                                 <h4 className="font-medium mb-2 text-green-600 flex items-center gap-1">
                                     <CheckCircle className="h-4 w-4" />
+                                    Phiên bản
+                                </h4>
+                                <ul className="space-y-1 text-sm text-muted-foreground">
+                                    <li>• Phiên bản phải được đặt theo đúng định dạng: 1.0.0</li>
+                                    <li>• Phiên bản phải là phiên bản mới nhất {selectedTemplate?.lastest_version ?? ""}</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-medium mb-2 text-green-600 flex items-center gap-1">
+                                    <CheckCircle className="h-4 w-4" />
                                     Yêu cầu file
                                 </h4>
                                 <ul className="space-y-1 text-sm text-muted-foreground">
-                                    <li>• Định dạng: .bin, .hex, .fw</li>
+                                    <li>• Định dạng: .ino, .cpp</li>
                                     <li>• Kích thước tối đa: 10MB</li>
                                     <li>• File phải được kiểm tra trước khi upload</li>
                                 </ul>
@@ -442,7 +522,8 @@ export default function NewFirmwarePage({ firmwares, setFirmwares }) {
                                 </h4>
                                 <ul className="space-y-1 text-sm text-muted-foreground">
                                     <li>• Upload → Kiểm tra tự động</li>
-                                    <li>• Admin duyệt → Sẵn sàng triển khai</li>
+                                    <li>• Tester duyệt → Kiểm tra thành công</li>
+                                    <li>• Bộ phận R&D duyệt → Sẵn sàng triển khai</li>
                                     <li>• Firmware bắt buộc tự động cập nhật</li>
                                 </ul>
                             </div>
