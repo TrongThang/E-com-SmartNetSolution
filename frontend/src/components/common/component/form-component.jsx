@@ -27,18 +27,11 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
     const createComponent = async () => {
         try {
             const res = await axios.post('http://localhost:3000/api/component', formData);
-            console.log(res.data)
             if (res.data.success === 201) {
                 Swal.fire({
                     title: "Thành công",
                     text: "Linh kiện đã được tạo thành công",
                     icon: "success",
-                })
-                setFormData({
-                    name: "",
-                    supplier: "",
-                    unit_cost: 0,
-                    status: true,
                 })
                 fetchComponent();
             } else {
@@ -55,7 +48,6 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
 
     const updateComponent = async () => {
         try {
-            console.log(formData)
             const res = await axios.put(`http://localhost:3000/api/component/${component.component_id}`, formData);
             if (res.data.success === 200) {
                 Swal.fire({

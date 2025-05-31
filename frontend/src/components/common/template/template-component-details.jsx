@@ -6,8 +6,8 @@ export default function TemplateComponentDetails({ components, template, onStatu
     const [statusTemplate, setStatusTemplate] = useState(template.status)
 
     const statusOptions = [
-        { value: "Sản xuất" },
-        { value: "Tạm ngưng" },
+        { value: "production", label: "Sản xuất" },
+        { value: "pause", label: "Tạm ngưng" },
     ]
 
     const handleStatusChange = (e) => {
@@ -142,7 +142,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     </tbody>
                     <tfoot className="bg-gray-50">
                         <tr>
-                            <td colSpan="5" className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                            <td colSpan="5" className="px-0 py-3 text-right text-sm font-medium text-gray-900">
                                 Giá sản phẩm ước lượng:
                             </td>
                             <td className="px-6 py-3 text-right text-lg font-bold text-blue-600">{formatCurrency(totalCost)}</td>
@@ -150,7 +150,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     </tfoot>
                 </table>
             </div>
-            {(template.status === "Sản xuất" || template.status === "Tạm ngưng") && (
+            {(template.status === "production" || template.status === "pause") && (
                 <div className="mt-4 flex justify-end space-x-3">
                     <select
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -159,13 +159,13 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     >
                         {statusOptions.map((option) => (
                             <option key={option.value} value={option.value}>
-                                {option.value}
+                                {option.label}
                             </option>
                         ))}
                     </select>
                 </div>
             )}
-            {(template.status === "Chờ duyệt") && (
+            {(template.status === "pending") && (
                 <div className="mt-4 flex justify-end space-x-3">
                     <Button
                         size="sm"
