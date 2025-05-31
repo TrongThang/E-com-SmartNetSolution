@@ -1,48 +1,79 @@
-export default function ModalFormQC({ onSubmit, formData, setFormData, onClose, }) {
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full">
-                <div className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                        Từ chối sản phẩm
-                    </h3>
-                    <form onSubmit={onSubmit} className="space-y-4">
-                        <div className="w-50 h-50">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Mờ serial</label>
-                            <select
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                value={formData.reason}
-                                onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                            >
-                                <option value="">-- Chọn lý do --</option>
-                                <option value="serial_blur">Mờ serial</option>
-                                <option value="product_error">Lỗi sản phẩm</option>
-                                <option value="all_error">Mờ serial và lỗi sản phẩm</option>
-                            </select>
+"use client"
+import { AlertTriangle } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
 
-                            <label className="block text-sm font-medium text-gray-700 mb-1 mt-4">Ghi chú thêm (nếu có)</label>
-                            <textarea
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                value={formData.note}
-                                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                            />
-                        </div>
-                        
-                        <div className="flex justify-end space-x-3 pt-4">
-                            <button
-                                type="button"
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                onClick={onClose}
-                            >
-                                Hủy
-                            </button>
-                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                                Xác nhận
-                            </button>
-                        </div>
-                    </form>
-                </div>
-        </div>
-    </div>
+export default function ModalFormQC({ isOpen, onClose, onSubmit, formData, setFormData, selectedCount}) {
+    const reasons = [
+        { value: "serial_blur", label: "Mờ serial", description: "Serial không rõ ràng, khó đọc" },
+        { value: "product_error", label: "Lỗi sản phẩm", description: "Sản phẩm có lỗi kỹ thuật" },
+        { value: "all_error", label: "Mờ serial và lỗi sản phẩm", description: "Cả hai vấn đề trên" },
+    ]  
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-red-600">
+                        <AlertTriangle className="w-5 h-5" />
+                        Từ chối sản phẩm
+                    </DialogTitle>
+                    <DialogDescription>
+                        Bạn đang từ chối <Badge variant="destructive">{selectedCount}</Badge> sản phẩm. Vui lòng chọn lý do và ghi
+                        chú thêm thông tin.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={onSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="reason" className="text-sm font-medium">
+                            Lý do từ chối <span className="text-red-500">*</span>
+                        </Label>
+                        <Select value={formData.reason} onValueChange={(value) => setFormData({ ...formData, reason: value })}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="-- Chọn lý do từ chối --" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {reasons.map((reason) => (
+                                    <SelectItem key={reason.value} value={reason.value}>
+                                        <div>
+                                            <div className="font-medium">{reason.label}</div>
+                                            <div className="text-xs text-gray-500">{reason.description}</div>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="note" className="text-sm font-medium">
+                            Ghi chú thêm
+                        </Label>
+                        <Textarea
+                            id="note"
+                            placeholder="Mô tả chi tiết về vấn đề..."
+                            value={formData.note}
+                            onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                            rows={4}
+                            className="resize-none"
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                        <Button type="button" variant="outline" onClick={onClose}>
+                            Hủy
+                        </Button>
+                        <Button type="submit" variant="destructive">
+                            Xác nhận từ chối
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
     )
 }

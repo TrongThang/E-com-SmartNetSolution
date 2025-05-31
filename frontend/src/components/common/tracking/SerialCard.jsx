@@ -1,12 +1,11 @@
 "use client"
 import { useState } from "react"
 import { Eye, Clock, AlertCircle, CheckCircle, Package, ChevronDown, ChevronUp } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
-import StageLogHistory from "./StageLogHistory"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
 
 export default function SerialCard({ serialData, isCheckable = true, isSelected = false, onSelect }) {
@@ -95,15 +94,9 @@ export default function SerialCard({ serialData, isCheckable = true, isSelected 
     const statusConfig = getStatusConfig(serialData.status)
     const StatusIcon = statusConfig.icon
 
-    const handleCardClick = () => {
-        if (isCheckable && serialData.status !== "failed") {
-            onSelect?.(serialData.serial)
-        }
-    }
-
     const handleHistoryClick = (e) => {
-        e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
-        setIsExpanded(!isExpanded);
+        e.stopPropagation()
+        setIsExpanded(!isExpanded)
     }
 
     return (

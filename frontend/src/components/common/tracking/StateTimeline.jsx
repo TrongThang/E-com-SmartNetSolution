@@ -1,278 +1,124 @@
 "use client"
-import { useState, useEffect } from "react"
-import { Check, Circle, ChevronUp, ChevronDown, AlertCircle } from "lucide-react"
+import { Check, Clock, AlertCircle, ChevronDown, ChevronRight } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import StageDetails from "./StageDetails"
-import StageStats from "./StageStats"
-import { useManufacturing } from "@/hooks/useManufacturing"
-import axiosPublic from "@/apis/clients/public.client"
-import { useParams } from "react-router-dom"
 
-const StateTimeline = ({
-    stages = [],
-    currentStage = 0,
-    size = "md",
-    showLabels = true,
-    showDescription = false,
-    clickable = false,
-    onStageClick,
-    className = "",
-    ...props
-}) => {
-    const { serialsByStage, loading, error, fetchSerials, rejectQC, setSerialsByStage } =
-        useManufacturing()
-    const { production_batch_id } = useParams()
-    const [expandedStages, setExpandedStages] = useState({})
-    const [serialsStageSelected, setSerialsStageSelected] = useState({
-        pending: [],
-        assembly: [],
-        labeling: [],
-        firmware_upload: [],
-        qc: [],
-        completed: [],
-    })
+export default function StateTimeline({ stages, serialsByStage, onStageSelect, selectedStage }) {
+    const getStageProgress = (stageId) => {
+        const stageSerials = serialsByStage[stageId] || []
+        if (stageSerials.length === 0) return { progress: 0, status: "empty" }
 
-    // Function to handle SSE updates
-    const handleSerialUpdate = (device_serial, newStage, newStatus, stage_logs) => {
-        setSerialsByStage(prevSerials => {
-            const updatedSerials = { ...prevSerials };
-    
-            // Xóa serial khỏi tất cả các stage cũ
-            Object.keys(updatedSerials).forEach(stage => {
-                updatedSerials[stage] = updatedSerials[stage].filter(
-                    serial => serial.serial !== device_serial
-                );
-            });
-    
-            // Thêm serial vào stage mới với stage_logs mới nhất từ backend
-            if (!updatedSerials[newStage]) {
-                updatedSerials[newStage] = [];
-            }
-    
-            const updatedSerial = {
-                serial: device_serial,
-                status: newStatus,
-                stage_logs: stage_logs // <-- Dùng trực tiếp mảng từ backend
-            };
-    
-            updatedSerials[newStage].push(updatedSerial);
-            return updatedSerials;
-        });
-    };
-    
+        const completed = stageSerials.filter((s) => s.status === "completed").length
+        const failed = stageSerials.filter((s) => s.status === "failed").length
+        const inProgress = stageSerials.length - completed - failed
 
-    useEffect(() => {
-        const fetchProductionTrackingData = async () => {
-            if (!serialsByStage || Object.keys(serialsByStage).length === 0) {
-                try {
-                    const result = await axiosPublic.get("http://localhost:8888/api/production-tracking/production-batch/BATCH202406");
-                    if (result.success === true) {
-                        setSerialsByStage(result.data);
-                    }
-                } catch (error) {
-                    console.error("Error fetching production tracking data:", error);
-                }
-            }
-        };
+        const progress = (completed / stageSerials.length) * 100
 
-        fetchProductionTrackingData();
-    }, []); // Only run once on mount
-    
-    const sizes = {
-        sm: {
-            circle: "w-6 h-6",
-            icon: "w-3 h-3",
-            text: "text-xs",
-            connector: "h-0.5",
-        },
-        md: {
-            circle: "w-8 h-8",
-            icon: "w-4 h-4",
-            text: "text-sm",
-            connector: "h-1",
-        },
-        lg: {
-            circle: "w-12 h-12",
-            icon: "w-6 h-6",
-            text: "text-base",
-            connector: "h-1.5",
-        },
+        let status = "pending"
+        if (failed > 0) status = "warning"
+        else if (inProgress > 0) status = "active"
+        else if (completed === stageSerials.length && stageSerials.length > 0) status = "completed"
+
+        return { progress, status, completed, failed, inProgress, total: stageSerials.length }
     }
-
-    const toggleStage = (stageId) => {
-        setExpandedStages((prev) => ({
-            ...prev,
-            [stageId]: !prev[stageId],
-        }))
-    }
-
-    const handleSelectSerial = (serial, stageId) => {
-        setSerialsStageSelected((prev) => {
-            const current = prev[stageId] || []
-            const isSelected = current.includes(serial)
-
-            return {
-                ...prev,
-                [stageId]: isSelected ? current.filter((s) => s !== serial) : [...current, serial],
-            }
-        })
-    }
-
-    const handleSelectAllSerial = (stageId, checked) => {
-        setSerialsStageSelected((prev) => ({
-            ...prev,
-            [stageId]: checked ? serialsByStage[stageId].map((serial) => serial.serial) : [],
-        }))
-    }
-
-    const handleRejectQC = async (selectedSerials, reason, note) => {
-        try {
-            await rejectQC(selectedSerials, reason, note)
-            // Clear selection after successful rejection
-            setSerialsStageSelected((prev) => ({
-                ...prev,
-                qc: [],
-            }))
-        } catch (error) {
-            console.error("Error rejecting QC:", error)
-        }
-    }
-
-    const getStageStatus = (index, stage) => {
-        const stageSerials = serialsByStage[stage.id] || []
-
-        if (stageSerials.length === 0) return "empty"
-
-        const hasInProgress = stageSerials.some(
-            (serial) => serial.status === "in_progress" || serial.status === "pending_approval",
-        )
-        const hasCompleted = stageSerials.some((serial) => serial.status === "completed")
-        const hasFailed = stageSerials.some((serial) => serial.status === "fixing" || serial.status === "failed")
-
-        if (hasInProgress) return "current"
-        if (hasFailed) return "warning"
-        if (hasCompleted && index <= currentStage) return "completed"
-
-        return "pending"
-    }
-
-    const getStageIcon = (stage, status, index) => {
-        if (stage.icon) return stage.icon
-
+    
+    const getStageIcon = (status) => {
         switch (status) {
             case "completed":
-                return <Check className={sizes[size].icon} />
-            case "current":
-                return <Circle className={sizes[size].icon} fill="currentColor" />
+                return <Check className="w-5 h-5 text-white" />
+            case "active":
+                return <Clock className="w-5 h-5 text-white" />
             case "warning":
-                return <AlertCircle className={sizes[size].icon} />
-            case "empty":
-                return <span className={cn("font-semibold", sizes[size].text)}>{index + 1}</span>
+                return <AlertCircle className="w-5 h-5 text-white" />
             default:
-                return <span className={cn("font-semibold", sizes[size].text)}>{index + 1}</span>
+                return <div className="w-2 h-2 bg-white rounded-full" />
         }
     }
 
     const getStageColors = (status) => {
         switch (status) {
             case "completed":
-                return "bg-green-500 text-white border-green-500"
-            case "current":
-                return "bg-blue-500 text-white border-blue-500"
+                return "bg-green-500 border-green-500"
+            case "active":
+                return "bg-blue-500 border-blue-500"
             case "warning":
-                return "bg-yellow-500 text-white border-yellow-500"
-            case "empty":
-                return "bg-gray-100 text-gray-400 border-gray-200"
+                return "bg-red-500 border-red-500"
             default:
-                return "bg-gray-200 text-gray-500 border-gray-300"
+                return "bg-gray-300 border-gray-300"
         }
-    }
-
-    const handleStageClick = (index, stage) => {
-        if (clickable && onStageClick) {
-            onStageClick(index, stage)
-        }
-    }
-
-    if (error) {
-        return (
-            <div className="text-center py-8">
-                <div className="text-red-500 mb-2">Có lỗi xảy ra: {error}</div>
-                <button onClick={fetchSerials} className="text-blue-500 hover:underline">
-                    Thử lại
-                </button>
-            </div>
-        )
     }
 
     return (
-        <div className={cn("space-y-4", className)} {...props}>
-            {stages.map((stage, index) => {
-                const isExpanded = expandedStages[stage.id]
-                const status = getStageStatus(index, stage)
-                const stageSerials = serialsByStage[stage.id] || []
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    Timeline Sản Xuất
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    {stages.map((stage, index) => {
+                        const stageData = getStageProgress(stage.id)
+                        const isSelected = selectedStage === stage.id
+                        const isLast = index === stages.length - 1
 
-                return (
-                    <div key={index}>
-                        <div className="flex items-start space-x-3">
-                            <div
-                                className={cn(
-                                    "flex items-center justify-center rounded-full border-2 flex-shrink-0",
-                                    sizes[size].circle,
-                                    getStageColors(status),
-                                    clickable && "cursor-pointer hover:scale-105 transition-transform",
-                                )}
-                                onClick={() => handleStageClick(index, stage)}
-                            >
-                                {getStageIcon(stage, status, index)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        {showLabels && (
-                                            <h3
-                                                className={cn(
-                                                    "font-medium",
-                                                    sizes[size].text,
-                                                    status === "current" ? "text-blue-600" : "text-gray-900",
-                                                )}
-                                            >
-                                                {stage.label}
-                                            </h3>
+                        return (
+                            <div key={stage.id} className="relative">
+                                <div
+                                    className={cn(
+                                        "flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md",
+                                        isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300",
+                                    )}
+                                    onClick={() => onStageSelect(stage.id)}
+                                >
+                                    {/* Stage Icon */}
+                                    <div
+                                        className={cn(
+                                            "w-10 h-10 rounded-full border-2 flex items-center justify-center flex-shrink-0",
+                                            getStageColors(stageData.status),
                                         )}
+                                    >
+                                        {getStageIcon(stageData.status)}
                                     </div>
 
-                                    <StageStats serials={stageSerials} />
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => toggleStage(stage.id)}
-                                className="ml-2 focus:outline-none hover:bg-gray-100 p-1 rounded"
-                                disabled={loading}
-                            >
-                                {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                            </button>
-                        </div>
+                                    {/* Stage Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h3 className="font-semibold text-gray-900">{stage.label}</h3>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className="text-xs">
+                                                    {stageData.total} sản phẩm
+                                                </Badge>
+                                                {isSelected ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                            </div>
+                                        </div>
 
-                        {isExpanded && (
-                            <div className="mt-4 pl-12">
-                                <StageDetails
-                                    serialsByStage={serialsByStage}
-                                    stage={stage}
-                                    selectedSerials={serialsStageSelected[stage.id] || []}
-                                    onSelectAllSerial={(checked) => handleSelectAllSerial(stage.id, checked)}
-                                    onSelectSerial={(serial) => handleSelectSerial(serial, stage.id)}
-                                    onRejectQC={handleRejectQC}
-                                    loading={loading}
-                                    onUpdateSerials={handleSerialUpdate}
-                                />
+                                        <p className="text-sm text-gray-600 mb-3">{stage.description}</p>
+
+                                        {/* Progress Bar */}
+                                        {stageData.total > 0 && (
+                                            <div className="space-y-2">
+                                                <Progress value={stageData.progress} className="h-2" />
+                                                <div className="flex justify-between text-xs text-gray-500">
+                                                    <span>Hoàn thành: {stageData.completed}</span>
+                                                    <span>Đang xử lý: {stageData.inProgress}</span>
+                                                    {stageData.failed > 0 && <span className="text-red-500">Lỗi: {stageData.failed}</span>}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Connector Line */}
+                                {!isLast && <div className="absolute left-9 top-20 w-0.5 h-4 bg-gray-300"></div>}
                             </div>
-                        )}
-                    </div>
-                )
-            })}
-        </div>
+                        )
+                    })}
+                </div>
+            </CardContent>
+        </Card>
     )
 }
-
-export default StateTimeline

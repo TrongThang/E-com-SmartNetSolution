@@ -1,31 +1,123 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { Search, Filter, Download } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import SerialCard from "./SerialCard"
 import Swal from "sweetalert2"
-import SerialTable from "./SerialTable"
-import StageActions from "./StageActions"
-import ModalFormQC from "./ModalFormQC"
 import axiosPublic from "@/apis/clients/public.client"
+import { useManufacturing } from "@/hooks/useManufacturing"
+import { exportMultipleQRCodesToPDF } from "@/utils/print"
 
 export default function StageDetails({
-    serialsByStage,
     stage,
+    serials,
     selectedSerials,
+    setSelectedSerials,
     onSelectSerial,
     onSelectAllSerial,
-    onRejectQC,
+    onReject,
     loading = false,
 }) {
-    const [isShowModalQcReject, setIsShowModalQcReject] = useState(false)
-    const [formData, setFormData] = useState({
-        reason: "",
-        note: "",
-    })
+    const [searchTerm, setSearchTerm] = useState("")
+    const [statusFilter, setStatusFilter] = useState("all")
+    const [note, setNote] = useState("")
 
-    const stageSerials = serialsByStage[stage.id] || []
-    const selectedCount = selectedSerials.length
+    const filteredSerials = serials.filter((serial) => {
+        const matchesSearch = serial.serial.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesStatus = statusFilter === "all" || serial.status === statusFilter
+        return matchesSearch && matchesStatus
+    })
+    
+
+    const isAllSelected =
+        filteredSerials.length > 0 && filteredSerials.every((serial) => selectedSerials.includes(serial.serial))
+
+    const getStageActions = () => {
+        switch (stage.id) {
+            case "pending":
+                return (
+                    <div className="flex gap-2">
+                        <Button
+                            variant="destructive"
+                            onClick={handleCancel}
+                            disabled={loading || selectedSerials.length === 0}
+                            className="flex-1"
+                        >
+                            Từ chối ({selectedSerials.length})
+                        </Button>
+                        <Button
+                            onClick={handleNext}
+                            disabled={loading || selectedSerials.length === 0}
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                        >
+                            Duyệt sản xuất ({selectedSerials.length})
+                        </Button>
+                    </div>
+                )
+            case "assembly":
+                return (
+                    <Button
+                        variant="outline"
+                        onClick={handlePrintSerial}
+                        disabled={loading || selectedSerials.length === 0}
+                        className="w-full border-blue-500 text-blue-600 hover:bg-blue-50"
+                    >
+                        <Download className="w-4 h-4 mr-2" />
+                        In mã Serial ({selectedSerials.length})
+                    </Button>
+                )
+            case "qc":
+                return (
+                    <Button
+                        variant="destructive"
+                        onClick={onReject}
+                        disabled={loading || selectedSerials.length === 0}
+                        className="w-full"
+                    >
+                        Từ chối ({selectedSerials.length})
+                    </Button>
+                )
+            default:
+                return null
+        }
+    }
+
+    const getUniqueStatuses = () => {
+        const statuses = [...new Set(serials.map((s) => s.status))]
+        return statuses.map((status) => ({
+            value: status,
+            label:
+                status === "pending"
+                    ? "Chờ duyệt"
+                    : status === "completed"
+                        ? "Hoàn thành"
+                        : status === "in_progress"
+                            ? "Đang xử lý"
+                            : status === "failed"
+                                ? "Thất bại"
+                                : status,
+        }))
+    }
+
+    if (serials.length === 0) {
+        return (
+            <Card>
+                <CardContent className="p-8 text-center">
+                    <div className="text-gray-400 mb-2">Không có serial nào trong giai đoạn này</div>
+                    <p className="text-sm text-gray-500">Serial sẽ xuất hiện ở đây khi được chuyển từ giai đoạn trước</p>
+                </CardContent>
+            </Card>
+        )
+    }
 
     const handleNext = async () => {
-        if (selectedCount === 0) {
+        if (selectedSerials.length === 0) {
             Swal.fire({
                 icon: "warning",
                 title: "Chưa chọn serial",
@@ -36,6 +128,7 @@ export default function StageDetails({
         
         const response = await axiosPublic.post(`http://localhost:8888/api/production-tracking/approve-production-serial`, {
             device_serials: selectedSerials,
+            note: note,
         })
 
         if (response.success) {
@@ -44,6 +137,7 @@ export default function StageDetails({
                 title: "Thành công",
                 text: response.message,
             })
+            setSelectedSerials([])
         } else {
             Swal.fire({
                 icon: "error",
@@ -54,7 +148,7 @@ export default function StageDetails({
     }
 
     const handleCancel = async () => {
-        if (selectedCount === 0) {
+        if (selectedSerials.length === 0) {
             Swal.fire({
                 icon: "warning",
                 title: "Chưa chọn serial",
@@ -62,10 +156,10 @@ export default function StageDetails({
             })
             return
         }
-        console.log('Xoá: ', selectedSerials)
+        
         const response = await axiosPublic.patch(`http://localhost:8888/api/production-tracking/cancel-production-serial`, {
             device_serials: selectedSerials,
-            note: "Từ chối sản xuất",
+            note: note,
         })
 
         if (response.success) {
@@ -74,6 +168,8 @@ export default function StageDetails({
                 title: "Thành công",
                 text: response.message,
             })
+            setNote("")
+            setSelectedSerials([])
         } else {
             Swal.fire({
                 icon: "error",
@@ -83,118 +179,103 @@ export default function StageDetails({
         }
     }
 
-    const handleReject = () => {
-        if (stage.id === "qc") {
-            setIsShowModalQcReject(true)
-        } else {
+    const handlePrintSerial = () => {
+        if (selectedSerials.length === 0) {
             Swal.fire({
-                icon: "error",
-                title: "Lỗi",
-                text: "Không có logic từ chối cho giai đoạn này",
-            })
+                title: 'Thông báo',
+                text: 'Vui lòng chọn sản phẩm để in mã Serial',
+                icon: 'warning',
+            });
+            return;
         }
+        console.log("selectedSerials", selectedSerials);
+        exportMultipleQRCodesToPDF(selectedSerials);
     }
 
-    const handleSubmitModalQcReject = (e) => {
-        e.preventDefault()
-        if (formData.reason === "") {
-            Swal.fire({
-                icon: "error",
-                title: "Lỗi",
-                text: "Vui lòng chọn lý do từ chối",
-            })
-            return
-        }
-
-        if (selectedCount === 0) {
-            Swal.fire({
-                icon: "error",
-                title: "Lỗi",
-                text: "Vui lòng chọn serial để từ chối",
-            })
-            return
-        }
-
-        onRejectQC(selectedSerials, formData.reason, formData.note)
-        setIsShowModalQcReject(false)
-        setFormData({ reason: "", note: "" })
-    }
-
-    const getStageInfo = () => {
-        switch (stage.id) {
-            case "pending":
-                return {
-                    title: "Duyệt sản xuất",
-                    description: "Bạn có thể duyệt hoặc từ chối các serial bên dưới để bắt đầu quá trình sản xuất.",
-                    bgColor: "bg-blue-50",
-                    textColor: "text-blue-900",
-                    descColor: "text-blue-700",
-                }
-            case "assembly":
-                return {
-                    title: "Lắp ráp, gắn nhãn và nạp firmware thiết bị ",
-                    description: "Ghi chú tiến độ lắp ráp, gắn nhãn và nạp firmware cho từng serial và cập nhật trạng thái.",
-                    bgColor: "bg-blue-50",
-                    textColor: "text-blue-900",
-                    descColor: "text-blue-700",
-                }
-            case "qc":
-                return {
-                    title: "Kiểm tra chất lượng",
-                    description: "Kiểm tra chất lượng sản phẩm và quyết định chấp nhận hoặc từ chối.",
-                    bgColor: "bg-blue-50",
-                    textColor: "text-blue-900",
-                    descColor: "text-blue-700",
-                }
-            default:
-                return {
-                    title: "Sản phẩm hoàn thành",
-                    description: "Các sản phẩm đã hoàn thành tất cả giai đoạn sản xuất.",
-                    bgColor: "bg-green-50",
-                    textColor: "text-green-900",
-                    descColor: "text-green-700",
-                }
-        }
-    }
-
-    const stageInfo = getStageInfo()
-    useEffect(() => {
-        console.log("StageDetails - serialsByStage:", serialsByStage);
-    }, [serialsByStage]);
     return (
-        <div className="space-y-4">
-            <div className={`${stageInfo.bgColor} p-4 rounded-lg `}>
-                <h3 className={`font-medium ${stageInfo.textColor} mb-2`}>{stageInfo.title}</h3>
-                <p className={`text-sm ${stageInfo.descColor}`}>{stageInfo.description}</p>
-            </div>
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-lg">{stage.label}</CardTitle>
+                        <p className="text-sm text-gray-600 mt-1">{stage.description}</p>
+                    </div>
+                    <Badge variant="outline" className="text-sm">
+                        {serials.length} sản phẩm
+                    </Badge>
+                </div>
+            </CardHeader>
 
-            <SerialTable
-                serials={stageSerials}
-                stageId={stage.id}
-                isCheckable={stage.id !== "completed"}
-                selectedSerials={selectedSerials}
-                onSelectSerial={onSelectSerial}
-                onSelectAllSerial={onSelectAllSerial}
-            />
+            <CardContent className="space-y-4">
+                {/* Search and Filter */}
+                <div className="flex gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                            placeholder="Tìm kiếm serial..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-48">
+                            <Filter className="w-4 h-4 mr-2" />
+                            <SelectValue placeholder="Lọc theo trạng thái" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                            {getUniqueStatuses().map((status) => (
+                                <SelectItem key={status.value} value={status.value}>
+                                    {status.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
 
-            <StageActions
-                stage={stage}
-                selectedCount={selectedCount}
-                selectedSerials={selectedSerials}
-                onNext={handleNext}
-                onReject={handleReject}
-                loading={loading}
-                onCancel={handleCancel}
-            />
+                {/* Select All */}
+                {stage.id !== "completed" && (
+                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                        <Checkbox
+                            checked={isAllSelected}
+                            onCheckedChange={onSelectAllSerial}
+                            className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                        <label className="text-sm font-medium text-gray-700">
+                            Chọn tất cả ({selectedSerials.length}/{filteredSerials.length})
+                        </label>
+                    </div>
+                )}
 
-            {isShowModalQcReject && (
-                <ModalFormQC
-                    setFormData={setFormData}
-                    formData={formData}
-                    onClose={() => setIsShowModalQcReject(false)}
-                    onSubmit={handleSubmitModalQcReject}
-                />
-            )}
-        </div>
+                {/* Serial Cards */}
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {filteredSerials.map((serialData) => (
+                        <SerialCard
+                            key={serialData.serial}
+                            serialData={serialData}
+                            isCheckable={stage.id !== "completed"}
+                            isSelected={selectedSerials.includes(serialData.serial)}
+                            onSelect={onSelectSerial}
+                        />
+                    ))}
+                </div>
+
+                {/* Notes */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Ghi chú cho giai đoạn này</label>
+                    <Textarea
+                        placeholder="Nhập ghi chú..."
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        rows={3}
+                        className="resize-none"
+                    />
+                </div>
+
+                {/* Actions */}
+                {getStageActions()}
+            </CardContent>
+        </Card>
     )
 }
