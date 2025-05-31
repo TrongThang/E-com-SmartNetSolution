@@ -49,7 +49,7 @@ const productApi = {
     },
     async edit(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.put(productEndpoints.common, data);
+            return await axiosPrivate.put(productPublic.common, data);
         } catch (error) {
             throw error;
         }

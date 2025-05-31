@@ -1,7 +1,23 @@
-"use client"
-import { Package, Truck, DollarSign, Hash, PackagePlus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Package, Truck, Hash, User, X, DollarSign } from "lucide-react"
+import { useEffect, useState } from "react"
 
-export default function TemplateComponentDetails({ components, templateName }) {
+export default function TemplateComponentDetails({ components, template, onStatusChange, handleClick }) {
+    const [statusTemplate, setStatusTemplate] = useState(template.status)
+
+    const statusOptions = [
+        { value: "Sản xuất" },
+        { value: "Tạm ngưng" },
+    ]
+
+    const handleStatusChange = (e) => {
+        const newStatus = e.target.value
+        setStatusTemplate(newStatus)
+        if (onStatusChange) {
+            onStatusChange(template.template_id, newStatus)
+        }
+    }
+
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("vi-VN", {
             style: "currency",
@@ -9,17 +25,21 @@ export default function TemplateComponentDetails({ components, templateName }) {
         }).format(amount)
     }
 
-    const totalCost = components.reduce((sum, component) => sum + component.quantity_required * component.unit_cost, 0)
+    const totalCost = components.reduce(
+        (sum, component) =>
+            sum + (component.quantity_required || 0) * (component.unit_cost || 0),
+        0
+    );  
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Chi tiết linh kiện - {templateName}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Chi tiết linh kiện - {template.name}</h3>
                 <div className="text-sm text-gray-500">Tổng: {components.length} linh kiện</div>
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-blue-50 rounded-lg p-4">
                     <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -45,18 +65,6 @@ export default function TemplateComponentDetails({ components, templateName }) {
                         </div>
                     </div>
                 </div>
-
-                <div className="bg-purple-50 rounded-lg p-4">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <DollarSign className="h-8 w-8 text-purple-600" />
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm font-medium text-purple-900">Tổng chi phí</p>
-                            <p className="text-lg font-bold text-purple-600">{formatCurrency(totalCost)}</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* Components Table */}
@@ -71,13 +79,16 @@ export default function TemplateComponentDetails({ components, templateName }) {
                                 Nhà cung cấp
                             </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Trạng thái
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Số lượng cần
                             </th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Đơn giá
+                                Đơn giá ước lượng
                             </th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Thành tiền
+                                Thành tiền ước lượng
                             </th>
                         </tr>
                     </thead>
@@ -104,6 +115,18 @@ export default function TemplateComponentDetails({ components, templateName }) {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    {Number(component.status) === 0 && (
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            Hết hàng
+                                        </span>
+                                    )}
+                                    {Number(component.status) === 1 && (
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Còn hàng
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                                         {component.quantity_required}
                                     </span>
@@ -119,26 +142,51 @@ export default function TemplateComponentDetails({ components, templateName }) {
                     </tbody>
                     <tfoot className="bg-gray-50">
                         <tr>
-                            <td colSpan="4" className="px-6 py-3 text-right text-sm font-medium text-gray-900">
-                                Tổng cộng:
+                            <td colSpan="5" className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                                Giá sản phẩm ước lượng:
                             </td>
                             <td className="px-6 py-3 text-right text-lg font-bold text-blue-600">{formatCurrency(totalCost)}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
+            {(template.status === "Sản xuất" || template.status === "Tạm ngưng") && (
+                <div className="mt-4 flex justify-end space-x-3">
+                    <select
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        value={statusTemplate}
+                        onChange={handleStatusChange}
+                    >
+                        {statusOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.value}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            )}
+            {(template.status === "Chờ duyệt") && (
+                <div className="mt-4 flex justify-end space-x-3">
+                    <Button
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-700"
+                        onClick={() => onStatusChange(template.template_id, 0)}
+                    >
+                        <X className="w-4 h-4 mr-2" />
+                        Từ chối
+                    </Button>
+                    <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={() => { onStatusChange(template.template_id, 1); handleClick(template) }}
+                    >
+                        <User className="w-4 h-4 mr-2" />
+                        Duyệt
+                    </Button>
+                </div>
 
-            {/* Additional Actions */}
-            <div className="mt-4 flex justify-end space-x-3">
-                <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <Package className="h-4 w-4 mr-2" />
-                    Xuất danh sách
-                </button>
-                <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <PackagePlus className="h-4 w-4 mr-2" />
-                    Tạo đơn yêu cầu sản xuất
-                </button>
-            </div>
+            )}
+
         </div>
     )
 }

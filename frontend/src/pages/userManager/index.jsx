@@ -19,12 +19,12 @@ const UserManagerPage = () => {
             if (res.status_code === 200) {
                 setUsers(res.data || []);
             } else {
-                setError("Không thể tải danh sách sản phẩm");
+                setError("Không thể tải danh sách người dùng");
             }
             
         } catch (err) {
             console.error("Lỗi API:", err);
-            setError("Đã xảy ra lỗi khi tải danh sách sản phẩm");
+            setError("Đã xảy ra lỗi khi tải danh sách người dùng");
         } finally {
             setLoading(false);
         }

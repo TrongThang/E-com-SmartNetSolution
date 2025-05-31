@@ -14,7 +14,7 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
             render: (row) => (
                 <img
                     src={row.image}
-                    alt={row.text_button}
+                    alt={row.name}
                     className="w-32 h-20 object-cover rounded"
                 />
             ),
@@ -33,19 +33,20 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
             render: (row) => { return Number(row.selling_price).toLocaleString('vi-VN') + 'đ'},
         },
         {
-            key: "views",
-            label: "Lượt xem",
-        },
-        {
             key: "categories",
             label: "Danh mục",
         },
         {
             key: "status",
             label: "Trạng thái",
+            className: "w-[120px] whitespace-nowrap",
             render: (row) => (
-                <span className={`px-2 py-1 rounded text-sm ${row.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {row.status ? 'Hiển thị' : 'Ẩn'}
+                <span
+                    className={`px-2 py-1 rounded text-sm whitespace-nowrap ${
+                        row.status ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}
+                >
+                    {row.status ? "Hiển thị" : "Ẩn"}
                 </span>
             ),
         },

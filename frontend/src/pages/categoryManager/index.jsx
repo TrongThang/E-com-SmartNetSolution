@@ -5,7 +5,7 @@ import { ChevronRight, ChevronLeft, Plus, Search, Folder } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import categoryApi from "@/apis/modules/categories.api.ts"
 import { useNavigate } from "react-router-dom"
-import ActionsColumn from "@/components/common/table/ActionsColumn"
+import ActionsColumn from "@/components/common/Table/ActionsColumn"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 // Assuming these are from your UI library (e.g., @/components/ui/pagination)
