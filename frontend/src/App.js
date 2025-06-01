@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from 'sonner';
 
 function App() {
+	console.log("ENV:", process.env.REACT_APP_SMART_NET_IOT_API_URL);
 	return (
 		<AuthProvider>
 			<CartProvider>

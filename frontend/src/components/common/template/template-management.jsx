@@ -7,9 +7,10 @@ import TemplateList from "@/components/common/template/template-list";
 import { cn } from "@/lib/utils";
 import FirmwarePage from "@/components/firmware/firmware-manager";
 import { removeVietnameseTones } from "@/utils/format";
-import axios from "axios";
 import Swal from "sweetalert2";
 import categoryApi from "@/apis/modules/categories.api.ts";
+import axiosIOTPublic from "@/apis/clients/iot.private.client";
+import axiosPublic from "@/apis/clients/public.client";
 
 export default function TemplateManagement() {
     const [activeTab, setActiveTab] = useState("Templates");
@@ -24,9 +25,9 @@ export default function TemplateManagement() {
 
     const fetchTemplate = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/device-templates');
-            console.log("Fetched templates:", res.data);
-            setTemplates(res.data);
+            const res = await axiosIOTPublic.get('device-templates');
+            
+            setTemplates(res);
         } catch (error) {
             console.error('Failed to fetch device templates:', error);
             Swal.fire({
@@ -39,9 +40,9 @@ export default function TemplateManagement() {
 
     const fetchComponent = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/component');
-            console.log("Fetched components:", res.data.data);
-            setComponents(res.data.data);
+            const res = await axiosIOTPublic.get('component');
+            
+            setComponents(res);
         } catch (error) {
             console.error('Failed to fetch component:', error);
             Swal.fire({
@@ -54,7 +55,7 @@ export default function TemplateManagement() {
 
     const fetchCategories = async () => {
         try {
-            const res = await categoryApi.list({});
+            const res = await axiosPublic.get('categories');
             if (res.status_code === 200) {
                 const flattenCategories = flattenCategoryTree(res.data?.categories || []);
                 setCategories(flattenCategories);
@@ -87,7 +88,7 @@ export default function TemplateManagement() {
 
     const createTemplate = async (dataTemplate) => {
         try {
-            const res = await axios.post('http://localhost:3000/api/device-templates', dataTemplate);
+            const res = await axiosIOTPublic.post('device-templates', dataTemplate);
             console.log("Create template response:", res);
             if (res.status === 201) {
                 Swal.fire({
@@ -115,7 +116,7 @@ export default function TemplateManagement() {
 
     const updateTemplate = async (dataTemplate) => {
         try {
-            const res = await axios.put(`http://localhost:3000/api/device-templates/${editingTemplate.template_id}`, dataTemplate);
+            const res = await axiosIOTPublic.put(`device-templates/${editingTemplate.template_id}`, dataTemplate);
             console.log("Update template response:", res);
             if (res.status === 200) {
                 Swal.fire({
@@ -171,7 +172,7 @@ export default function TemplateManagement() {
 
         if (result.isConfirmed) {
             try {
-                const res = await axios.delete(`http://localhost:3000/api/device-templates/${templateId}`);
+                const res = await axiosIOTPublic.delete(`device-templates/${templateId}`);
                 if (res.status === 204) {
                     Swal.fire({
                         title: "Thành công",
