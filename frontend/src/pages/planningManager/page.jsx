@@ -14,7 +14,6 @@ import { PlanningDetailsDialog } from "@/components/common/planning/PlanningDeta
 import { PlanningApprovalDialog } from "@/components/common/planning/PlanningApprovalDialog"
 import { StatusUpdateDialog } from "@/components/common/batch/StatusUpdateDialog"
 import { BatchDetailsDialog } from "@/components/common/batch/BatchDetailsDialog"
-import { calculatePlanningStatus } from "@/components/common/planning/planningStatusUtils"
 import PlanPagination from "@/components/common/planning/PlanPagination"
 
 // Import API services

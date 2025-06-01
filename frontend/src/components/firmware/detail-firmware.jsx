@@ -11,8 +11,8 @@ import {
 	FileText,
 	FileX,
 } from "lucide-react"
-import axiosPublic from "@/apis/clients/public.client"
 import Swal from "sweetalert2"
+import axiosIOTPublic from "@/apis/clients/iot.private.client"
 
 export default function FirmwareDetailPage() {
 	const [firmware, setFirmware] = useState(null)
@@ -25,7 +25,7 @@ export default function FirmwareDetailPage() {
 
 	useEffect(() => {
 		const fetchFirmware = async () => {
-			const response = await axiosPublic.get(`http://localhost:8888/api/firmware/detail/${params.id}`)
+			const response = await axiosIOTPublic.get(`firmware/detail/${params.id}`)
 
 			if (response.success) {
 				setFirmware(response.data)
@@ -111,7 +111,7 @@ export default function FirmwareDetailPage() {
 					console.log(type === "confirmTest")
 					const pathTest = type === "confirmTest" ? "confirm-by-tester" : "confirm-by-rd"
 
-					const response = await axiosPublic.patch(`http://localhost:8888/api/firmware/${pathTest}`, {
+					const response = await axiosIOTPublic.patch(`firmware/${pathTest}`, {
 						firmwareId: formData.firmwareId,
 						testResult: true,
 					})

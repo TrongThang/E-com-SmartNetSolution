@@ -10,9 +10,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SerialCard from "./SerialCard"
 import Swal from "sweetalert2"
-import axiosPublic from "@/apis/clients/public.client"
 import { useManufacturing } from "@/hooks/useManufacturing"
 import { exportMultipleQRCodesToPDF } from "@/utils/print"
+import axiosIOTPublic from "@/apis/clients/iot.private.client"
 
 export default function StageDetails({
     stage,
@@ -126,7 +126,7 @@ export default function StageDetails({
             return
         }
         
-        const response = await axiosPublic.post(`http://localhost:8888/api/production-tracking/approve-production-serial`, {
+        const response = await axiosIOTPublic.post(`production-tracking/approve-production-serial`, {
             device_serials: selectedSerials,
             note: note,
         })
@@ -157,7 +157,7 @@ export default function StageDetails({
             return
         }
         
-        const response = await axiosPublic.patch(`http://localhost:8888/api/production-tracking/cancel-production-serial`, {
+        const response = await axiosIOTPublic.patch(`production-tracking/cancel-production-serial`, {
             device_serials: selectedSerials,
             note: note,
         })

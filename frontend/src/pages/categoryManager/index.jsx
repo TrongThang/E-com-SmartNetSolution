@@ -7,8 +7,6 @@ import categoryApi from "@/apis/modules/categories.api.ts"
 import { useNavigate } from "react-router-dom"
 import ActionsColumn from "@/components/common/table/ActionsColumn"
 import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-// Assuming these are from your UI library (e.g., @/components/ui/pagination)
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationEllipsis } from "@/components/ui/pagination"
 import Swal from "sweetalert2"
 

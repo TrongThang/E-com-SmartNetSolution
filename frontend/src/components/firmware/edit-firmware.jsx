@@ -9,9 +9,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Save, AlertTriangle, FileText, Calendar, Info, Shield, Clock, Users, Loader2, CheckCircle } from "lucide-react"
-import axiosPublic from "@/apis/clients/public.client"
+import { ArrowLeft, Save, AlertTriangle, Info, Shield, Clock, Users, Loader2, CheckCircle } from "lucide-react"
 import Swal from "sweetalert2"
+import axiosIOTPublic from "@/apis/clients/iot.private.client"
 
 export default function EditFirmwarePage() {
     const params = useParams()
@@ -40,7 +40,7 @@ export default function EditFirmwarePage() {
         const fetchData = async () => {
             try {
                 // Fetch firmware details
-                const firmwareResponse = await axiosPublic.get(`http://localhost:8888/api/firmware/detail/${params.id}`)
+                const firmwareResponse = await axiosIOTPublic.get(`firmware/detail/${params.id}`)
                 if (firmwareResponse.success) {
                     const firmwareData = firmwareResponse.data
                     console.log('firmwareData:',firmwareData)
@@ -55,7 +55,7 @@ export default function EditFirmwarePage() {
                 }
 
                 // Fetch device templates
-                const templatesResponse = await axiosPublic.get("http://localhost:8888/api/firmware/latest-version-by-template")
+                const templatesResponse = await axiosIOTPublic.get("firmware/latest-version-by-template")
                 if (templatesResponse.success) {
                     setDeviceTemplates(templatesResponse.data)
                 }
@@ -118,7 +118,7 @@ export default function EditFirmwarePage() {
                 note: formData.note,
             }
 
-            const response = await axiosPublic.put(`http://localhost:8888/api/firmware/edit/${params.id}`, updatedFirmware)
+            const response = await axiosIOTPublic.put(`firmware/edit/${params.id}`, updatedFirmware)
 
             if (response.success) {
                 setSaveProgress(100)

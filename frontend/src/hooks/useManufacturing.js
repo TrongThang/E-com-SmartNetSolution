@@ -1,5 +1,5 @@
 // hooks/useManufacturing.ts
-import axiosPublic from "@/apis/clients/public.client";
+import axiosIOTPublic from "@/apis/clients/iot.private.client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ export const useManufacturing = () => {
 
     // Xử lý SSE message
     useEffect(() => {
-        let eventSource = new EventSource(`http://localhost:8888/api/sse/events`);
+        let eventSource = new EventSource(`${process.env.REACT_APP_SMART_NET_IOT_API_URL}sse/events`);
 
         eventSource.onmessage = (event) => {
             try {
@@ -77,7 +77,7 @@ export const useManufacturing = () => {
             // Thử kết nối lại sau 5 giây
             setTimeout(() => {
                 // Kết nối lại
-                eventSource = new EventSource(`http://localhost:8888/api/sse/events`);
+                eventSource = new EventSource(`${process.env.REACT_APP_SMART_NET_IOT_API_URL}sse/events`);
             }, 5000);
         };
 
@@ -88,7 +88,7 @@ export const useManufacturing = () => {
 
     const rejectQC = async (selectedSerials, reason, note) => {
         try {
-            const response = await axiosPublic.patch('http://localhost:8888/api/production-tracking/reject-qc', {
+            const response = await axiosIOTPublic.patch('production-tracking/reject-qc', {
                 device_serials: selectedSerials,
                 reason,
                 note,

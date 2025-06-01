@@ -26,8 +26,8 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDate, removeVietnameseTones } from "@/utils/format";
-import axiosPublic from "@/apis/clients/public.client";
 import Swal from "sweetalert2";
+import axiosIOTPublic from "@/apis/clients/iot.private.client";
 
 // const firmwareData = [
 //     {
@@ -88,7 +88,7 @@ export default function FirmwarePage() {
     useEffect(() => {
         const fetchFirmwareData = async () => {
             try {
-                const response = await axiosPublic.get(`http://localhost:8888/api/firmware`);
+                const response = await axiosIOTPublic.get(`firmware`);
 
                 console.log('response', response)
                 if (response.success) {
@@ -141,7 +141,7 @@ export default function FirmwarePage() {
                 cancelButtonText: 'Hủy bỏ'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    const response = await axiosPublic.delete(`http://localhost:8888/api/firmware/${firmwareId}`)
+                    const response = await axiosIOTPublic.delete(`firmware/${firmwareId}`)
                     console.log('response', response)
                     if (response.success) {
                         Swal.fire({

@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-const axiosPublic = axios.create({
-    baseURL: process.env.REACT_APP_SMART_NET_ECOMERCE_API_URL || "http://localhost:3000/api/", // Địa chỉ API public
+const axiosIOTPublic = axios.create({
+    baseURL: process.env.REACT_APP_SMART_NET_IOT_API_URL || "http://localhost:3000/api/", // Địa chỉ API public
     headers: {
         // 'ngrok-skip-browser-warning': 'true',
         'Accept': 'application/json',
@@ -14,7 +14,7 @@ const axiosPublic = axios.create({
     }
 })
 
-axiosPublic.interceptors.request.use(
+axiosIOTPublic.interceptors.request.use(
     (config) => {
          // Log thông tin request
         console.log('🚀 Sending Request:', {
@@ -31,7 +31,7 @@ axiosPublic.interceptors.request.use(
 );
 
 // Thêm interceptor nếu cần (tùy chọn)
-axiosPublic.interceptors.response.use(
+axiosIOTPublic.interceptors.response.use(
     (response) => response.data, // Xử lý khi thành công
     (error) => {
         if (error.response) {
@@ -54,4 +54,4 @@ axiosPublic.interceptors.response.use(
 
 
 
-export default axiosPublic
+export default axiosIOTPublic

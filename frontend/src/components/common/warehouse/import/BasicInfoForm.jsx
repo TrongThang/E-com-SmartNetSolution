@@ -24,7 +24,7 @@ export function BasicInfoForm({ formData, onChange, onNext }) {
         const fetchData = async () => {
             let filter = { field: "role.id", condition: "contains", value: "WAREHOUSE" }
             
-            let response = await axiosPublic.get("http://localhost:8081/api/employee", {
+            let response = await axiosPublic.get("employee", {
                 params: {
                     filter: JSON.stringify(filter),
                 }
@@ -35,7 +35,7 @@ export function BasicInfoForm({ formData, onChange, onNext }) {
                 console.log(response.data.data)
             }
 
-            response = await axiosPublic.get("http://localhost:8081/api/warehouse")
+            response = await axiosPublic.get("warehouse")
 
             if(response.status_code === 200) {
                 setWarehouses(response.data.data)

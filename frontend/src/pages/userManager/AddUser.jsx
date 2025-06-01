@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Link, Navigate, useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Upload } from "lucide-react"
 import Swal from 'sweetalert2';
 import customerApi from "@/apis/modules/customer.api.ts"
-import { data } from "autoprefixer"
 
 const AddUserPage = () => {
   const navigate = useNavigate()

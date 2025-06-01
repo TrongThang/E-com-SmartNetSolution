@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { ArrowLeft, Eye, Plus, Upload, X } from "lucide-react"
+import { ArrowLeft, Plus, Upload, X } from "lucide-react"
 import { Label } from "@/components/ui/label"
 
 const AddProductPage = () => {

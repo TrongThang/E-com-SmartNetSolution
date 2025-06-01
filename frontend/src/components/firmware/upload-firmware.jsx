@@ -10,8 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle, X, Info, Shield, Clock, Users, Loader2 } from "lucide-react"
-import axiosPublic from "@/apis/clients/public.client"
 import Swal from "sweetalert2"
+import axiosIOTPublic from "@/apis/clients/iot.private.client"
 
 export default function NewFirmwarePage() {
     const navigate = useNavigate()
@@ -44,7 +44,7 @@ export default function NewFirmwarePage() {
     useEffect(() => {
         const fetchDeviceTemplates = async () => {
             try {
-            const response = await axiosPublic.get("http://localhost:8888/api/firmware/latest-version-by-template")
+            const response = await axiosIOTPublic.get("firmware/latest-version-by-template")
 
                 if (response.success) {
                     setDeviceTemplates(response.data)
@@ -129,7 +129,7 @@ export default function NewFirmwarePage() {
             file_path: textFile,
         }
         try {
-            const response = await axiosPublic.post("http://localhost:8888/api/firmware", newFirmware)
+            const response = await axiosIOTPublic.post("firmware", newFirmware)
 
             if (response.success) {
                 const result = await Swal.fire({
