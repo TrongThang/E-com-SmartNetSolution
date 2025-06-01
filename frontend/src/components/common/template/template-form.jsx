@@ -6,6 +6,7 @@ import categoryApi from "@/apis/modules/categories.api.ts";
 
 export default function TemplateForm({ template, components, setComponents, onSave, onCancel }) {
   const [formData, setFormData] = useState({
+    template_id: null,
     name: "",
     device_type_id: "",
     device_type_name: "",
@@ -49,6 +50,7 @@ export default function TemplateForm({ template, components, setComponents, onSa
       });
 
       setFormData({
+        template_id: template.template_id || null,
         name: template.name,
         device_type_id: initialDeviceTypeId,
         device_type_name: initialDeviceTypeName,
@@ -169,6 +171,7 @@ export default function TemplateForm({ template, components, setComponents, onSa
     }
 
     const payload = {
+      template_id: formData.template_id,
       name: formData.name,
       device_type_id: deviceTypeId,
       production_cost: formData.production_cost,

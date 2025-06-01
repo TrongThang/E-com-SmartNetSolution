@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Package, Truck, Hash, User, X, DollarSign } from "lucide-react"
 import { useEffect, useState } from "react"
 
-export default function TemplateComponentDetails({ components, template, onStatusChange, handleClick }) {
+export default function TemplateComponentDetails({ components, template, onStatusChange }) {
     const [statusTemplate, setStatusTemplate] = useState(template.status)
 
     const statusOptions = [
@@ -10,12 +10,15 @@ export default function TemplateComponentDetails({ components, template, onStatu
         { value: "pause", label: "Tạm ngưng" },
     ]
 
-    const handleStatusChange = (e) => {
-        const newStatus = e.target.value
-        setStatusTemplate(newStatus)
+    const handleStatusChange = (template, value) => {
         if (onStatusChange) {
-            onStatusChange(template.template_id, newStatus)
+            const updatedTemplate = {
+                ...template,
+                status: value,
+            };
+            onStatusChange(updatedTemplate);
         }
+        setStatusTemplate(value)
     }
 
     const formatCurrency = (amount) => {
@@ -99,7 +102,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0 h-10 w-10">
                                             <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                                                <Package className="h-5 w-5 text-blue-600" />
+                                                <Package className="h-5 w-5 text-green-600" />
                                             </div>
                                         </div>
                                         <div className="ml-4">
@@ -155,7 +158,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     <select
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         value={statusTemplate}
-                        onChange={handleStatusChange}
+                        onChange={(e) => handleStatusChange(template, e.target.value)}
                     >
                         {statusOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -170,7 +173,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     <Button
                         size="sm"
                         className="bg-red-600 hover:bg-red-700"
-                        onClick={() => onStatusChange(template.template_id, 0)}
+                        onClick={() => handleStatusChange(template, "rejected")}
                     >
                         <X className="w-4 h-4 mr-2" />
                         Từ chối
@@ -178,7 +181,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     <Button
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
-                        onClick={() => { onStatusChange(template.template_id, 1); handleClick(template) }}
+                        onClick={() => { handleStatusChange(template, "production") }}
                     >
                         <User className="w-4 h-4 mr-2" />
                         Duyệt

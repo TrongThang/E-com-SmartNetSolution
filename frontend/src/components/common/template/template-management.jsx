@@ -25,7 +25,6 @@ export default function TemplateManagement() {
     const fetchTemplate = async () => {
         try {
             const res = await axios.get('http://localhost:3000/api/device-templates');
-            console.log("Fetched templates:", res.data);
             setTemplates(res.data);
         } catch (error) {
             console.error('Failed to fetch device templates:', error);
@@ -96,6 +95,7 @@ export default function TemplateManagement() {
                     icon: "success",
                 });
                 fetchTemplate();
+                setShowTemplateForm(false);
             } else {
                 Swal.fire({
                     title: "Lỗi",
@@ -105,18 +105,25 @@ export default function TemplateManagement() {
             }
         } catch (error) {
             console.error('Failed to create template:', error);
-            Swal.fire({
-                title: "Lỗi",
-                text: error.response?.data?.error || "Có lỗi xảy ra khi tạo khuôn mẫu",
-                icon: "error",
-            });
+            if (error.response?.data?.code === "TEMPLATE_ALREADY_EXISTS") {
+                Swal.fire({
+                    title: "Lưu ý",
+                    text: "Tên template đã tồn tại",
+                    icon: "warning",
+                });
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: error.response?.data?.message || "Có lỗi xảy ra khi tạo khuôn mẫu",
+                    icon: "error",
+                });
+            }
         }
     };
 
     const updateTemplate = async (dataTemplate) => {
         try {
-            const res = await axios.put(`http://localhost:3000/api/device-templates/${editingTemplate.template_id}`, dataTemplate);
-            console.log("Update template response:", res);
+            const res = await axios.put(`http://localhost:3000/api/device-templates/${dataTemplate.template_id}`, dataTemplate);
             if (res.status === 200) {
                 Swal.fire({
                     title: "Thành công",
@@ -124,6 +131,7 @@ export default function TemplateManagement() {
                     icon: "success",
                 });
                 fetchTemplate();
+                setShowTemplateForm(false);
             } else {
                 Swal.fire({
                     title: "Lỗi",
@@ -133,11 +141,19 @@ export default function TemplateManagement() {
             }
         } catch (error) {
             console.error('Failed to update template:', error);
-            Swal.fire({
-                title: "Lỗi",
-                text: error.response?.data?.error || "Có lỗi xảy ra khi cập nhật khuôn mẫu",
-                icon: "error",
-            });
+            if (error.response?.data?.code === "TEMPLATE_ALREADY_EXISTS") {
+                Swal.fire({
+                    title: "Lưu ý",
+                    text: "Tên template đã tồn tại",
+                    icon: "warning",
+                });
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: error.response?.data?.message || "Có lỗi xảy ra khi cập nhật khuôn mẫu",
+                    icon: "error",
+                });
+            }
         }
     };
 
@@ -161,7 +177,7 @@ export default function TemplateManagement() {
         const result = await Swal.fire({
             title: 'Bạn có chắc chắn?',
             text: "Khuôn mẫu sẽ bị xóa khỏi hệ thống!",
-            icon: 'warning',
+            icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
@@ -190,7 +206,7 @@ export default function TemplateManagement() {
                 console.error('Failed to delete template:', error);
                 Swal.fire({
                     title: "Lỗi",
-                    text: error.response?.data?.error || "Có lỗi xảy ra khi xóa khuôn mẫu",
+                    text: error.response?.data?.message || "Có lỗi xảy ra khi xóa khuôn mẫu",
                     icon: "error",
                 });
             }
@@ -199,32 +215,19 @@ export default function TemplateManagement() {
 
     const handleSaveTemplate = (templateData) => {
         if (editingTemplate) {
-            updateTemplate(templateData);
+            updateTemplate(templateData)
         } else {
             createTemplate(templateData);
         }
-        setShowTemplateForm(false);
-        setEditingTemplate(null);
     };
 
-    const handleChangeStatus = (templateId, newStatus) => {
-        setTemplates(
-            templates.map((t) =>
-                t.template_id === templateId ? { ...t, status: newStatus, updated_at: new Date().toISOString().split("T")[0] } : t
-            )
-        );
+    const handleChangeStatus = (dataTemplate) => {
+        updateTemplate(dataTemplate)
     };
 
-    const handleCostChange = (templateId, value) => {
-        const updatedValue = parseFloat(value);
-        setTemplates((prev) =>
-            prev.map((template) =>
-                template.template_id === templateId
-                    ? { ...template, manufacturing_cost: updatedValue, updated_at: new Date().toISOString().split("T")[0] }
-                    : template
-            )
-        );
-    };
+    const handleCostChange = (dataTemplate) => {
+        updateTemplate(dataTemplate)
+    }
 
     // Cải thiện logic tìm kiếm và lọc
     const filteredTemplates = templates.filter((template) => {

@@ -6,6 +6,7 @@ import TemplateComponentDetails from "./template-component-details";
 export default function TemplateList({ templates, onEdit, onDelete, onChangeStatus, handleCostChange }) {
     const [expandedTemplate, setExpandedTemplate] = useState([]);
     const [totalCosts, setTotalCosts] = useState({});
+    const [tempCosts, setTempCosts] = useState({}); // State mới để lưu giá trị tạm thời
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("vi-VN", {
@@ -50,37 +51,57 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
         }
     };
 
+    // Xử lý khi người dùng thay đổi giá trị input (lưu tạm thời)
+    const handleInputChange = (templateId, value) => {
+        setTempCosts((prev) => ({
+            ...prev,
+            [templateId]: value,
+        }));
+    };
+
+    // Xử lý khi input mất focus (gửi giá trị đến handleCostChange)
+    const handleInputBlur = (template, value) => {
+        const parsedValue = parseFloat(value) || 0;
+        if (parsedValue >= 0 && parsedValue <= 100) {
+            const updatedTemplate = {
+                ...template,
+                production_cost: parsedValue,
+            };
+            handleCostChange(updatedTemplate);
+        }
+    };
+
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Khuôn mẫu
                             </th>
-                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Loại thiết bị
                             </th>
                             <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Trạng thái
                             </th>
-                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Người tạo
                             </th>
-                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ngày tạo
                             </th>
-                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ngày cập nhật
                             </th>
-                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Chi phí sản xuất
                             </th>
-                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Tổng giá ước lượng
                             </th>
-                            <th className=" py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Thao tác
                             </th>
                         </tr>
@@ -90,8 +111,9 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                             <>
                                 <tr
                                     key={template.template_id}
-                                    className={`hover:bg-gray-50 cursor-pointer transition-colors ${expandedTemplate.includes(template.template_id) ? "bg-blue-50" : ""
-                                        }`}
+                                    className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                                        expandedTemplate.includes(template.template_id) ? "bg-blue-50" : ""
+                                    }`}
                                     onClick={() => handleTemplateClick(template)}
                                 >
                                     <td className="px-2 py-4 whitespace-nowrap">
@@ -138,21 +160,21 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                     <td className="px-1 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {template.created_at
                                             ? new Date(template.created_at).toLocaleString('vi-VN', {
-                                                timeZone: 'Asia/Ho_Chi_Minh',
-                                                day: '2-digit',
-                                                month: '2-digit',
-                                                year: 'numeric',
-                                            })
+                                                  timeZone: 'Asia/Ho_Chi_Minh',
+                                                  day: '2-digit',
+                                                  month: '2-digit',
+                                                  year: 'numeric',
+                                              })
                                             : 'N/A'}
                                     </td>
                                     <td className="px-1 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {template.updated_at
                                             ? new Date(template.updated_at).toLocaleString('vi-VN', {
-                                                timeZone: 'Asia/Ho_Chi_Minh',
-                                                day: '2-digit',
-                                                month: '2-digit',
-                                                year: 'numeric',
-                                            })
+                                                  timeZone: 'Asia/Ho_Chi_Minh',
+                                                  day: '2-digit',
+                                                  month: '2-digit',
+                                                  year: 'numeric',
+                                              })
                                             : 'N/A'}
                                     </td>
                                     <td className="px-1 py-4 whitespace-nowrap text-center text-sm text-gray-900">
@@ -160,9 +182,10 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                             <input
                                                 type="number"
                                                 className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
-                                                value={template.production_cost || 0}
+                                                value={tempCosts[template.template_id] ?? template.production_cost ?? 0}
                                                 onClick={(e) => e.stopPropagation()}
-                                                onChange={(e) => e.target.value}
+                                                onChange={(e) => handleInputChange(template.template_id, e.target.value)}
+                                                onBlur={(e) => handleInputBlur(template, e.target.value)}
                                                 min={0}
                                                 max={100}
                                                 step={1}
@@ -172,7 +195,7 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                     </td>
                                     <td className="px-1 py-4 whitespace-nowrap text-center text-sm text-gray-900">
                                         <div className="flex items-center justify-center gap-1">
-                                            {formatCurrency((totalCosts[template.template_id] * (template.production_cost/100 + 1)) || 0)}
+                                            {formatCurrency((totalCosts[template.template_id] * (template.production_cost / 100 + 1)) || 0)}
                                         </div>
                                     </td>
                                     <td className="px-1 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -199,9 +222,8 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                         <td colSpan="9" className="px-6 py-4 bg-gray-50">
                                             <TemplateComponentDetails
                                                 components={template.components || []}
-                                                template={{ ...template, status:template.status }}
+                                                template={{ ...template, status: template.status }}
                                                 onStatusChange={onChangeStatus}
-                                                handleCreateBatch={(template) => console.log("Create batch for", template)}
                                             />
                                         </td>
                                     </tr>
