@@ -114,7 +114,6 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
-
     const register = async (userData) => {
         try {
             const response = await axios.post('http://localhost:8081/api/auth/register', userData);

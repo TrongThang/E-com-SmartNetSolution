@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 
 // Tạo instance axios
 const axiosPrivate = axios.create({
-    baseURL: process.env.SMART_NET_API_URL || "http://localhost:8081/api/",
+    baseURL: process.env.SMART_NET_API_URL || "http://localhost:3000/api/",
     timeout: 1000000,
     headers: {
         Accept: "application/json",

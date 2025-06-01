@@ -58,6 +58,7 @@ export default function LoginForm({ onSuccess }) {
   // Xử lý đăng nhập
   const handleLogin = async (e) => {
     e.preventDefault()
+    console.log('vafo ddnawg nhap')
     setIsLoading(true)
     try {
       const result = await loginEmployee(loginForm.username, loginForm.password)

@@ -57,6 +57,8 @@ import StatePrimary from "@/components/common/tracking/StatePrimary";
 import AttributeGroupPage from "@/pages/attribute_groupManager";
 import FirmwarePage from "@/components/firmware/firmware-manager";
 
+import PlanningManagement from "@/pages/planningManager/page";
+
 export const router = createBrowserRouter([
   {
     path: '/test-template',
@@ -293,6 +295,14 @@ export const router = createBrowserRouter([
       {
         path: 'firmware',
         element: <FirmwarePage />
+      },
+      {
+        path: 'planning',
+        element: <PlanningManagement />
+      },
+      {
+        path: 'mana-template',
+        element: <TemplateManagement />
       }
       // },
       // {
