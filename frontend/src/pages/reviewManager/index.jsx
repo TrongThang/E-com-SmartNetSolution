@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import reviewApi from "@/apis/modules/review.api.ts";
 import productApi from "@/apis/modules/product.api.ts";
-import ReviewTable from "@/components/common/table/ReviewTable";
+import ReviewTable from "@/components/common/Table/ReviewTable";
 import { Button } from "@/components/ui/button.jsx";
 import Swal from 'sweetalert2';
 import GenericTable from "@/components/common/GenericTable";
