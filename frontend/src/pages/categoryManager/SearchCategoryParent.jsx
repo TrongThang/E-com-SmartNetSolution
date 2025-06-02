@@ -8,7 +8,7 @@ import categoryApi from "@/apis/modules/categories.api.ts";
 const ParentCategorySelect = ({ value, onChange, currentId }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState(""); // Thêm state cho tìm kiếm
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -16,8 +16,15 @@ const ParentCategorySelect = ({ value, onChange, currentId }) => {
         setLoading(true);
         const res = await categoryApi.list({});
         if (res.status_code === 200) {
-          // Lọc bỏ danh mục hiện tại và các danh mục con của nó nếu cần
-          setCategories(res.data.categories);
+          // Lấy chỉ các danh mục cha (không có parent_id hoặc parent_id là null)
+          const parentCategories = res.data.categories.filter(
+            (cat) => !cat.parent_id || cat.parent_id === null
+          );
+          // Loại bỏ danh mục hiện tại nếu có currentId
+          const filteredCategories = currentId
+            ? parentCategories.filter((cat) => cat.category_id !== parseInt(currentId))
+            : parentCategories;
+          setCategories(filteredCategories);
         }
       } catch (error) {
         toast.error("Có lỗi xảy ra khi tải danh mục");
@@ -28,41 +35,10 @@ const ParentCategorySelect = ({ value, onChange, currentId }) => {
     fetchCategories();
   }, [currentId]);
 
-  // Hàm filter đệ quy
-  const filterCategories = (categories, keyword) => {
-    if (!keyword) return categories;
-    return categories
-      .map(cat => {
-        if (
-          cat.name.toLowerCase().includes(keyword.toLowerCase()) ||
-          (cat.children && filterCategories(cat.children, keyword).length > 0)
-        ) {
-          return {
-            ...cat,
-            children: filterCategories(cat.children || [], keyword)
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
-  };
-
-  const renderCategoryOptions = (categories, level = 0) => {
-    return categories.map(category => (
-      <React.Fragment key={category.category_id}>
-        <SelectItem
-          value={category.category_id.toString()}
-          className={`pl-${4 + level * 4} hover:bg-gray-300 hover:text-black transition-colors duration-150`} // Added hover effect
-        >
-          {"—".repeat(level)} {category.name}
-        </SelectItem>
-        {category.children && category.children.length > 0 && renderCategoryOptions(category.children, level + 1)}
-      </React.Fragment>
-    ));
-  };
-
-  // Áp dụng filter
-  const filteredCategories = filterCategories(categories, search);
+  // Lọc danh mục dựa trên từ khóa tìm kiếm
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div>
@@ -83,17 +59,25 @@ const ParentCategorySelect = ({ value, onChange, currentId }) => {
             <Input
               placeholder="Tìm kiếm danh mục..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               className="mb-2"
             />
           </div>
           <SelectItem
             value="none"
-            className="hover:bg-gray-300 hover:text-black transition-colors duration-150" // Added hover effect to "none" option
+            className="hover:bg-gray-300 hover:text-black transition-colors duration-150"
           >
             Không có (Danh mục gốc)
           </SelectItem>
-          {renderCategoryOptions(filteredCategories)}
+          {filteredCategories.map((category) => (
+            <SelectItem
+              key={category.category_id}
+              value={category.category_id.toString()}
+              className="hover:bg-gray-300 hover:text-black transition-colors duration-150"
+            >
+              {category.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <p className="text-xs text-gray-500 mt-1">Chọn danh mục cha cho danh mục này</p>
