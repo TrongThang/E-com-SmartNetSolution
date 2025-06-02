@@ -3,6 +3,7 @@ const {
     loginAPI,
     refreshTokenAPI,
     register_service,
+    ChangedPasswordAccountForgot,
     ChangedPasswordAccount
 } = require('../services/auth.service');
 const bcrypt = require('bcrypt');
@@ -44,8 +45,8 @@ class AuthController {
         return res.status(response.status_code).json(response);
     }
 
-    async changedPassword(req, res) {
-        const response = await ChangedPasswordAccount(req.body)
+    async ChangedPasswordForgot(req, res) {
+        const response = await ChangedPasswordAccountForgot(req.body)
 
         return res.status(response.status_code).json(response)
     }
@@ -103,6 +104,13 @@ class AuthController {
         const response = await notificationService.verifyOtpEmail(account_id, email, otp);
 
         return res.status(response.status_code).json(response);
+    }
+
+    async ChangedPassword(req, res) {
+        console.log(1233123)
+        const response = await ChangedPasswordAccount(req.body)
+
+        return res.status(response.status_code).json(response)
     }
 }
 

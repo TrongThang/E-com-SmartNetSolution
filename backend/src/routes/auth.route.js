@@ -1,7 +1,8 @@
 const express = require('express');
 const { login, getMe, register,
     sendOtpEmail, verifyOtpEmail,
-    changedPassword
+    ChangedPasswordForgot,
+    ChangedPassword
 } = require('../controllers/auth.controller');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const authRouter = express.Router();
@@ -22,8 +23,11 @@ authRouter.post('/register', validateMiddleware(registerCustomerSchema), asyncHa
 authRouter.post('/send-otp', validateMiddleware(sendOtpSchema), asyncHandler(sendOtpEmail));
 authRouter.post('/verify-otp', validateMiddleware(verifyOtpSchema), asyncHandler(verifyOtpEmail));
 
-// Đổi mật khẩu
-authRouter.post('/account/change-password', asyncHandler(changedPassword));
+// Đổi mật khẩu - quên
+authRouter.post('/account/change-password-forgot', asyncHandler(ChangedPasswordForgot));
+
+// Đổi mật khẩu - quên
+authRouter.patch('/account/changed-password', asyncHandler(ChangedPassword));
 
 // Lấy thông tin tài khoản hiện tại
 authRouter.post('/account/get-me', getMe);

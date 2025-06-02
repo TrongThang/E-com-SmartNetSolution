@@ -61,7 +61,7 @@ import PlanningManagement from "@/pages/planningManager/page";
 
 export const router = createBrowserRouter([
   {
-    path: '/test-template',
+    path: '/test-template/:batch',
     element: <TemplateManagement />
   },
   {
