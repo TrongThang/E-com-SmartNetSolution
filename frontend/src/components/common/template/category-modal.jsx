@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Plus, Upload, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner"; // Thay thế Swal bằng sonner (đã import trong code gốc)
+import { toast } from "sonner";
 import categoryApi from "@/apis/modules/categories.api.ts";
-import ParentCategorySelect from "@/pages/categoryManager/SearchCategoryParent";
+import ParentCategorySelect from "@/pages/Admin/categoryManager/SearchCategoryParent";
 
 export default function CategoryModal({ fetchCategories }) {
   const [open, setOpen] = useState(false);

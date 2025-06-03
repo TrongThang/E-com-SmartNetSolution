@@ -16,9 +16,9 @@ import AddressesPage from "@/pages/User/Profile/Address.jsx";
 
 import AdminLayout from "@/components/layout/AdminLayout";
 import SlideshowManagerPage from "@/pages/Admin/slideshowManager";
-import BlogListPage from "@/pages/user/BlogList.page.jsx";
-import BlogDetailPage from "@/pages/user/BlogDetail.page.jsx";
-import ContactPage from "@/pages/user/Contact.page.jsx";
+import BlogListPage from "@/pages/User/BlogList.page.jsx";
+import BlogDetailPage from "@/pages/User/BlogDetail.page.jsx";
+import ContactPage from "@/pages/User/Contact.page.jsx";
 import UnitManagerPage from "@/pages/Admin/unitManager";
 import AddUnit from "@/pages/Admin/unitManager/AddUnit.jsx";
 import EditUnit from "@/pages/Admin/unitManager/EditUnit";
@@ -49,13 +49,13 @@ import EditUserPage from "@/pages/Admin/userManager/EditUser";
 import AddProductPage from "@/pages/Admin/productManager/AddProduct";
 import EditProductPage from "@/pages/Admin/productManager/EditProduct";
 import TemplateManagement from "@/components/common/template/template-management";
-import NewFirmwarePage from "@/components/firmware/upload-firmware";
-import FirmwareDetailPage from "@/components/firmware/detail-firmware";
-import EditFirmwarePage from "@/components/firmware/edit-firmware";
+import NewFirmwarePage from "@/components/common/firmware/upload-firmware";
+import FirmwareDetailPage from "@/components/common/firmware/detail-firmware";
+import EditFirmwarePage from "@/components/common/firmware/edit-firmware";
 import CategoryManagement from "@/pages/Admin/categoryManager";
 import StatePrimary from "@/components/common/tracking/StatePrimary";
 import AttributeGroupPage from "@/pages/Admin/attribute_groupManager";
-import FirmwarePage from "@/components/firmware/firmware-manager";
+import FirmwarePage from "@/components/common/firmware/firmware-manager";
 
 import PlanningManagement from "@/pages/Admin/planningManager/page";
 

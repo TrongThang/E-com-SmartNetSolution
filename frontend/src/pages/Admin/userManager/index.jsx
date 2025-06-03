@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import UserTable from "@/components/common/Table/UserTable";
+import UserTable from "@/components/common/table/UserTable";
 import { Button } from "@/components/ui/button.jsx";
 import Swal from 'sweetalert2';
 import customerApi from "@/apis/modules/customer.api.ts";

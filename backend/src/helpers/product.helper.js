@@ -48,6 +48,7 @@ function configDataProduct(productRows) {
                 name: row.name,
                 slug: row.slug,
                 description: row.description,
+                description_normal: row.description_normal,
                 selling_price: row.selling_price,
                 sold: row.sold,
                 views: row.views,
