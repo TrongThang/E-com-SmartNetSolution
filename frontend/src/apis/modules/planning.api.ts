@@ -1,4 +1,3 @@
-import axiosPrivate from "../clients/private.client"
 import axiosIOTPublic from "../clients/iot.private.client"
 import type { IApiResponse } from "@/models/interfaces"
 

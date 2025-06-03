@@ -79,6 +79,12 @@ export default function SerialCard({ serialData, isCheckable = true, isSelected 
                 icon: AlertCircle,
                 dotColor: "bg-red-500",
             },
+            pending_packaging: {
+                label: "Chờ đóng gói",
+                color: "bg-purple-100 text-purple-800 border-purple-200",
+                icon: Package,
+                dotColor: "bg-purple-500",
+            },
         }
 
         return (

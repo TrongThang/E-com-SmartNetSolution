@@ -84,17 +84,8 @@ const getRoleDetailService = async (id) => {
 };
 const createRoleService = async (id, name, permission) => {
     try {
-        const nameExits = await prisma.role.findFirst({
-            where: { name: name },
-        });
-        if (nameExits) {
-            return get_error_response(
-                ERROR_CODES.ROLE_NAME_EXISTED,
-                STATUS_CODE.BAD_REQUEST,
-            );
-        }
         const idExits = await prisma.role.findFirst({
-            where: { id: id },
+            where: { id: id, deleted_at: null },
         });
         if (idExits) {
             return get_error_response(
@@ -102,6 +93,18 @@ const createRoleService = async (id, name, permission) => {
                 STATUS_CODE.BAD_REQUEST,
             );
         }
+        
+        const nameExits = await prisma.role.findFirst({
+            where: { name: name, deleted_at: null },
+        });
+
+        if (nameExits) {
+            return get_error_response(
+                ERROR_CODES.ROLE_NAME_EXISTED,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
+        
         // Tạo vai trò mới
         const role = await prisma.role.create({
             data: {
@@ -182,6 +185,7 @@ const updateRoleService = async (id, name, permission) => {
         await prisma.permission_role.deleteMany({
             where: {
                 role_id: id,
+                deleted_at: null,
             },
         });
 

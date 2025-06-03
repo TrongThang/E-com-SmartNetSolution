@@ -80,8 +80,9 @@ class NotificationService {
         return account;
     }
 
-    async sendOtpEmail(account_id, email) {
-        const result_check = await this.checkAccountEmail(account_id, email);
+    async sendOtpEmail(payload) {
+        const { account_id, email } = payload;
+        const result_check = await this.checkAccountEmail(payload);
 
         if (result_check.status_code) {
             return result_check; // Trả về lỗi nếu có
@@ -123,6 +124,60 @@ class NotificationService {
         }
     }
 
+    async sendOtpEmailForChangeEmail(payload) {
+        const { account_id, email } = payload;
+
+        const account = await this.prisma.account.findFirst({
+            where: {
+                account_id: account_id,
+                deleted_at: null,
+            },
+        });
+        
+        if (!account) {
+            return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+        }
+
+        const ex_email = await this.prisma.customer.findFirst({
+            where: {
+                email: email,
+                deleted_at: null,
+            }
+        })
+
+        if (ex_email) {
+            return get_error_response(ERROR_CODES.EMAIL_ALREADY_EXISTS, STATUS_CODE.BAD_REQUEST);
+        }
+
+        let otp = generateVerificationOTPCode(); // Tạo mã OTP mới
+        const expirationTime = addVietnamMinutes(10); // Thời gian hết hạn là 10 phút sau
+
+        account.verification_code = otp; // Cập nhật mã OTP vào tài khoản
+        account.verification_expiry = expirationTime; // Cập nhật thời gian hết hạn mã OTP
+
+        await this.prisma.account.update({
+            where: { account_id: targetAccountId },
+            data: {
+                verification_code: otp,
+                verification_expiry: expirationTime,
+            },
+        });
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: targetEmail,
+            subject: "Mã xác minh đổi email - SmartNet Solution",
+            template: "otp", // Tên file template (không cần .handlebars)
+            context: {
+                otp: otp, // Giá trị thay thế {{otp}}
+                currentYear: 2025, // Giá trị thay thế {{currentYear}}
+            },
+        });
+
+        const result = { success: true, message: "Đã gửi OTP", email };
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, result);
+    }
+
     async verifyOtpEmail(account_id, email, otp) {
         const account = await this.checkAccountEmail({ account_id, email });
 
@@ -159,6 +214,54 @@ class NotificationService {
                 where: { id: account.customer.id },
                 data: {
                     email_verified: true,
+                },
+            });
+
+            return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, { message: "Xác minh thành công" });
+        } catch (error) {
+            console.error("Lỗi xác minh OTP:", error);
+            return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async verifyOtpEmailForChangeEmail(payload) {
+        const { account_id, email, otp } = payload;
+        const account = await this.checkAccountEmail({ account_id, email });
+
+        if (account.status_code) {
+            return account; // Trả về lỗi nếu có
+        }
+
+        const targetAccountId = account.account_id;
+
+        if (!account.verification_code) {
+            return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_CODE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+        }
+
+        if (account.verification_code !== otp.toString()) {
+            return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_CODE_NOT_MATCH, STATUS_CODE.BAD_REQUEST);
+        }
+
+        if (getVietnamTimeNow() > account.verification_expiry) {
+            return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_CODE_EXPIRED, STATUS_CODE.BAD_REQUEST);
+        }
+
+        try {
+            // Cập nhật bảng account
+            await this.prisma.account.update({
+                where: { account_id: targetAccountId },
+                data: {
+                    verification_code: null,
+                    verification_expiry: null,
+                },
+            });
+
+            // Cập nhật bảng customer
+            await this.prisma.customer.update({
+                where: { id: account.customer.id },
+                data: {
+                    email_verified: true,
+                    email: email,
                 },
             });
 

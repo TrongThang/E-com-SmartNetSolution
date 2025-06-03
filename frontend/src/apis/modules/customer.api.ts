@@ -42,7 +42,7 @@ const customerApi = {
     },
     async edit(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.put(customerEndpoints.user, data);
+            return await axiosPublic.put(customerEndpoints.user, data);
         } catch (error) {
             throw error;
         }

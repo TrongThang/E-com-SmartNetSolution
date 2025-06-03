@@ -7,6 +7,20 @@ export const useManufacturing = () => {
     const [serialsByStage, setSerialsByStage] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [notifications, setNotifications] = useState([
+        {
+            "serial": "1234567890",
+            "stage": "assembly",
+            "status": "in_progress",
+            "timestamp": "2025-06-01T08:10:38.878Z"
+        },
+        {
+            "serial": "SN1234",
+            "stage": "firmware",
+            "status": "firmware_upload",
+            "timestamp": "2025-06-01T11:43:09.878Z"
+        },
+    ]);
 
     // Xử lý SSE message
     useEffect(() => {
@@ -64,6 +78,16 @@ export const useManufacturing = () => {
                         return updatedState;
                     });
 
+                    const newNotification = {
+                        id: Date.now() + Math.random().toString(),
+                        stage: data.stage,
+                        status: data.status,
+                        serial: data.device_serial,
+                        read: false,
+                        timestamp: new Date()
+                    }
+
+                    setNotifications(prevNotifications => [...prevNotifications, newNotification]);
                 }
             } catch (error) {
                 console.error('Error handling SSE message:', error);
@@ -113,6 +137,8 @@ export const useManufacturing = () => {
         loading,
         error,
         setSerialsByStage,
-        rejectQC
+        rejectQC,
+        notifications,
+        setNotifications
     };
 };
