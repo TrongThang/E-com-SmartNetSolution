@@ -514,7 +514,7 @@ model houses {
 }
 
 model image_product {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   product_id Int?
   image        String?   @db.MediumText
   created_at DateTime? @db.Timestamp(0)
@@ -718,7 +718,7 @@ model permission_role {
 }
 
 model product {
-  id                  Int                   @id
+  id                  Int                   @id @default(autoincrement())
   name                String?               @db.VarChar(500)
   slug                String?               @db.VarChar(500)
   description         String?               @db.Text
