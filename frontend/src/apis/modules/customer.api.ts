@@ -1,7 +1,7 @@
 import axiosPrivate from "../clients/private.client";
 import axiosPublic from "../clients/public.client";
 import { ESortOrderValue } from "@/models/enums/option";
-import { FilterSearch, IApiResponse, ICustomer } from "@/models/interfaces";
+import { FilterSearch, IApiResponse, ICustomer } from "@/models/interfaces/index";
 
 const customerEndpoints = {
     common: "customer/admin",

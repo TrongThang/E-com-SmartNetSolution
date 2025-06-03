@@ -1,5 +1,5 @@
 import axiosPrivate from "../clients/private.client";
-import { IApiResponse } from "@/models/interfaces";
+import { IApiResponse } from "@/models/interfaces/index";
 
 const warehouseEndpoints = {
     list: "/warehouse",
