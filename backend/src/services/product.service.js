@@ -108,13 +108,12 @@ const getProductDetailService = async (id, role = null, type = null) => {
     ])
     let get_attr = `product.name, product.slug, product.description, description_normal, product.image, selling_price, views, status, product.is_hide,
         product.category_id, categories.name as categories, unit_id, unit.name as unit_name,
-        attribute.id as attribute_id, attribute.name as attribute, attribute_group.id as attribute_group_id, attribute_group.name as attribute_group, attribute_product.value as attribute_value
-    `
+        attribute.id as attribute_id, attribute.name as attribute, attribute_group.id as attribute_group_id, attribute_group.name as attribute_group, attribute_product.value as attribute_value,
+        product.warrenty_time_id`
     let get_table = `product`
     let query_join = `
         LEFT JOIN categories ON product.category_id = categories.category_id
         LEFT JOIN unit ON product.unit_id = unit.id
-        -- LEFT JOIN warranty_time ON product.warranty_time_id = warranty_time.id
         LEFT JOIN attribute_product ON product.id = attribute_product.product_id
         LEFT JOIN attribute ON attribute_product.attribute_id = attribute.id
         LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id
@@ -328,7 +327,7 @@ async function updateProductService({ id, name, description, selling_price, cate
     const check_name = await checkNameExcludingCurrent(name, id); // Truyền id để loại trừ bản ghi hiện tại
     if (check_name) {
         return get_error_response(
-            ERROR_CODES.PRODUCT_NAME_ALREADY_EXISTS,
+            ERROR_CODES.PRODUCT_NAME_EXISTED,
             STATUS_CODE.BAD_REQUEST
         );
     }
@@ -458,15 +457,19 @@ async function deleteProductService(id) {
 }
 
 const check_attributes = async (attributes, category_id) => {
+    console.log("attributes", attributes)
+    console.log("category_id", category_id)
     const attributes_in_category = await prisma.attribute_category.findMany({
         where: { category_id: category_id },
         include: { attribute: true },
     })
 
+    console.log("attributein category", attributes_in_category)
     for (const item of attributes) {
         const attribute = attributes_in_category.find(
-            (attr) => attr.attribute_id === item.attribute_id
+            (attr) => attr.attribute_id == item.attribute_id
         )
+        console.log("attribute", attribute)
 
         if (!attribute) {
             return get_error_response(

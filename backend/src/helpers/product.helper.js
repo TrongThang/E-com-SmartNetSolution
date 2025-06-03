@@ -182,6 +182,7 @@ function configDataProductDetail(productRows) {
                 reviews: [],
                 images: [],
                 image: row.image,
+                warrenty_time_id: row.warrenty_time_id,
             };
         }
         
