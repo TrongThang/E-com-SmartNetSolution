@@ -3,7 +3,6 @@ import { ESortOrderValue } from "@/models/enums/option";
 import { FilterSearch, IApiResponse } from "@/models/interfaces";
 
 const contactEndpoints = {
-   
     common: "contact",
 };
 

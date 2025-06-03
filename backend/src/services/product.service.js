@@ -18,7 +18,7 @@ const prisma = new PrismaClient()
 const getProductService = async (filters, logic, limit, sort, order, role, type, page = 1) => {
     let get_attr = `product.name, product.slug, product.description, product.image, selling_price, views, status,
     product.category_id, categories.name as categories, COALESCE(sold.sold, 0) AS sold, COALESCE(CAST(review.total_review AS CHAR), 0) AS total_review, COALESCE(review.avg_rating, 0) AS average_rating,
-    COALESCE(CAST(total_reviews_today.total_reviews_today AS CHAR), 0) AS total_reviews_today`
+    COALESCE(CAST(total_reviews_today.total_reviews_today AS CHAR), 0) AS total_reviews_today, COALESCE(inventory.stock, 0) AS stock`
 
     let get_table = `product`
     let query_join = `LEFT JOIN categories ON product.category_id = categories.category_id`
@@ -48,27 +48,27 @@ const getProductService = async (filters, logic, limit, sort, order, role, type,
             AND created_at >= CURDATE()
             GROUP BY product_id
         ) total_reviews_today ON product.id = total_reviews_today.product_id
+        LEFT JOIN (
+            SELECT product_id, SUM(stock) AS stock
+            FROM warehouse_inventory
+            GROUP BY product_id
+        ) inventory ON product.id = inventory.product_id
     `
 
     try {
-        console.log('Page:', page, 'Limit:', limit, 'Filters:', filters, 'Logic:', logic, 'Sort:', sort, 'Order:', order);
-
         const products = await executeSelectData({
             table: get_table,
             queryJoin: query_join,
             strGetColumn: get_attr,
             limit: limit || 10,
-            page: page, // Truyền page
+            page: page,
             filter: filters,
             logic: logic,
             sort: sort,
             order: order,
             configData: configDataProduct
         });
-
-        console.log('Products raw:', products);
-        console.log('Total page:', products.total_page);
-
+        
         const formattedProducts = products.data || [];
 
         return get_error_response(
@@ -78,8 +78,7 @@ const getProductService = async (filters, logic, limit, sort, order, role, type,
                 data: formattedProducts,
                 total_page: products.total_page || 1
             }
-        );
-    } catch (error) {
+        );    } catch (error) {
         console.error('Lỗi:', error);
         return get_error_response(
             ERROR_CODES.INTERNAL_SERVER_ERROR,
@@ -297,7 +296,7 @@ async function updateProductService({ id, name, description, image, selling_pric
     if (check_attr) {
         return check_attr
     }
-    const { toAdd, toUpdate, toDelete } = (attributes, attributes_in_category);
+    const { toAdd, toUpdate, toDelete } = diffAttributeSets(attributes, attributes_in_category);
 
     createManyAttribute = await prisma.attribute_product.createMany({
         data: toAdd.map(async (item) => {

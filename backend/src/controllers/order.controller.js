@@ -39,8 +39,8 @@ class OrderController {
     }
 
     async canceledOrder(req, res) {
-        const {order_id} = req.body;
-        const result = await cancelOrderService(order_id);
+        const {id} = req.body;
+        const result = await cancelOrderService(id);
         res.status(result.status_code).json(result);
     }
 }

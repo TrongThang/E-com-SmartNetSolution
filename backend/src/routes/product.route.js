@@ -13,6 +13,7 @@ const asyncHandler = (fn) => {
 
 productRouter.get('/', asyncHandler(getProduct));
 productRouter.get('/detail/:id', asyncHandler(getProductDetail));
+// productRouter.get('/detail-by-slug/:slug', asyncHandler(getProductDetailBySlug));
 
 productRouter.post('/check-list-info', asyncHandler(checkListInfoProduct));
 productRouter.post('/', validateMiddleware(CreateProductSchema), asyncHandler(createProduct));

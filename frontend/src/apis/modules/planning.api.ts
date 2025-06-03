@@ -1,3 +1,4 @@
+import axiosIOTPublic from "../clients/iot.private.client";
 import axiosPrivate from "../clients/private.client"
 import type { IApiResponse } from "@/models/interfaces"
 
@@ -19,7 +20,7 @@ const PlanningApi = {
     // },
     async getAllDeviceTemplates() {
         try {
-            const response = await axiosPrivate.get(planningEndpoints.devtem);
+            const response = await axiosIOTPublic.get(planningEndpoints.devtem);
             let templates = response;
             if (!Array.isArray(templates)) {
                 return [];
@@ -48,7 +49,7 @@ const PlanningApi = {
 
     async create(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.post(planningEndpoints.common, data)
+            return await axiosIOTPublic.post(planningEndpoints.common, data)
         } catch (error) {
             throw error
         }
@@ -56,7 +57,7 @@ const PlanningApi = {
 
     async getAll(): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.get(planningEndpoints.common)
+            return await axiosIOTPublic.get(planningEndpoints.common)
         } catch (error) {
             console.log(error)
             throw error
@@ -65,7 +66,7 @@ const PlanningApi = {
 
     async getById(planningId: string): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.get(`${planningEndpoints.common}/${planningId}`)
+            return await axiosIOTPublic.get(`${planningEndpoints.common}/${planningId}`)
         } catch (error) {
             throw error
         }
@@ -73,7 +74,7 @@ const PlanningApi = {
 
     async approve(planningId: string, data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.post(planningEndpoints.approve(planningId), data)
+            return await axiosIOTPublic.post(planningEndpoints.approve(planningId), data)
         } catch (error) {
             throw error
         }
@@ -81,7 +82,7 @@ const PlanningApi = {
 
     async createBatch(planningId: string, data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.post(planningEndpoints.batches(planningId), data)
+            return await axiosIOTPublic.post(planningEndpoints.batches(planningId), data)
         } catch (error) {
             throw error
         }
@@ -97,7 +98,7 @@ const PlanningApi = {
 
     async updateBatchStatus(batchId: string, data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.put(planningEndpoints.batchStatus(batchId), data)
+            return await axiosIOTPublic.put(planningEndpoints.batchStatus(batchId), data)
         } catch (error) {
             throw error
         }
@@ -105,7 +106,7 @@ const PlanningApi = {
 
     async createWithBatches(data: { planning: any, batches: any[] }): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.post(`${planningEndpoints.common}/with-batches`, data)
+            return await axiosIOTPublic.post(`${planningEndpoints.common}/with-batches`, data)
         } catch (error) {
             throw error
         }

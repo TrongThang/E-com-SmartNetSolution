@@ -61,7 +61,7 @@ export default function LoginForm({ onSuccess }) {
     console.log('vafo ddnawg nhap')
     setIsLoading(true)
     try {
-      const result = await loginEmployee(loginForm.username, loginForm.password)
+      const result = await login(loginForm.username, loginForm.password)
       if (result.success) {
         toast.success("Đăng nhập thành công", { description: "Chào mừng bạn quay trở lại!" })
         onSuccess?.()

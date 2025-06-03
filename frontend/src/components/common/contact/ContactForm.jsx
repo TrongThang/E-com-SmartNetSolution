@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import contactApi from "@/apis/modules/contact.api.ts";
+import Swal from "sweetalert2";
 
 function validateContact(form) {
     const errors = {};
@@ -52,6 +53,11 @@ export default function ContactForm() {
         try {
             await contactApi.create(form);
             setMsg("Gửi thành công! Chúng tôi sẽ liên hệ lại sớm nhất.");
+            Swal.fire({
+                title: 'Thành công',
+                text: 'Gửi thành công! Chúng tôi sẽ liên hệ lại sớm nhất.',
+                icon: 'success'
+            });
             setForm({ fullname: "", email: "", title: "", content: "" });
         } catch {
             setMsg("Gửi thất bại. Vui lòng kiểm tra lại thông tin.");

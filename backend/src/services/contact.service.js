@@ -65,6 +65,7 @@ const createContactService = async ({ fullname, title, content, email }) => {
         });
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.CREATED, contact);
     } catch (error) {
+        console.error('Error in createContactService:', error);
         return get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
 };

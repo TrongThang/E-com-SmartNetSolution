@@ -112,6 +112,18 @@ class AuthController {
 
         return res.status(response.status_code).json(response)
     }
+
+    async sendOtpEmailForChangeEmail(req, res) {
+        const response = await notificationService.sendOtpEmailForChangeEmail(req.body);
+
+        return res.status(response.status_code).json(response);
+    }
+
+    async verifyOtpEmailForChangeEmail(req, res) {
+        const response = await notificationService.verifyOtpEmailForChangeEmail(req.body);
+
+        return res.status(response.status_code).json(response);
+    }
 }
 
 module.exports = new AuthController();

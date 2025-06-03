@@ -60,15 +60,14 @@ function configDataProduct(productRows) {
                 updated_at: row.updated_at,
                 deleted_at: row.deleted_at,
                 attributes: row.attributes_json && typeof row.attributes_json === 'string' ? JSON.parse(row.attributes_json) : [],
-                reviews: [],
-                images: [],
                 image: row.image,
+                delta: row.delta,
+                stock: row.stock,
             };
         }
     });
 
     return Object.values(productsById).map((product) => {
-        console.log("product",product)
         const attributeGroups = groupAttributesByGroup(product.attributes);
         const { attributes, ...productData } = product;
         return {
@@ -182,6 +181,7 @@ function configDataProductDetail(productRows) {
                 reviews: [],
                 images: [],
                 image: row.image,
+                delta: row.delta,
             };
         }
         

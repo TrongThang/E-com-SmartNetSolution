@@ -54,7 +54,7 @@ const createWarrentyTimeService = async ({ name, time }) => {
             return get_error_response(ERROR_CODES.WARRANTY_TIME_NAME_EXISTED, STATUS_CODE.CONFLICT);
         }
         const data = await prisma.warrenty_time.create({
-            data: { name, time, created_at: new Date(), updated_at: new Date() }
+            data: { name, time }
         });
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.CREATED, data);
     } catch (error) {

@@ -32,9 +32,22 @@ async function loginAPI(username, password, type = null, remember_me = null) {
 				// report: { equals: 0 }
 			}
 		})
+		if (!user) {
+			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+		}
 
 		if (await verifyPassword(password, user.password) === false) {
 			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+		}
+
+		let infoUser = null;
+		if (type === 'CUSTOMER') {
+			infoUser = await prisma.customer.findFirst({
+				where: {
+					id: user.customer_id,
+					deleted_at: null
+				},
+			})
 		}
 
 		// Tạo token JWT khi đăng nhập thành công
@@ -42,9 +55,9 @@ async function loginAPI(username, password, type = null, remember_me = null) {
 			{
 				account_id: user.account_id,
 				username: user.username,
-				customer_id: user.customer_id || undefined,
-				employee_id: user.employee_id || undefined,
-				// name: user.customer.lastname || user.employee.lastname || undefined,
+				customer_id: infoUser.id || undefined,
+				employee_id: infoUser.employee_id || undefined,
+				name: infoUser.lastname || infoUser.surname || undefined,
 				role_id: user.role_id
 			},
 			process.env.SECRET_KEY,

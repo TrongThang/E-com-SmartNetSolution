@@ -37,6 +37,7 @@ export default function StatePrimary() {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search)
+        
         const batchFromUrl = searchParams.get('batch')
         if (!batchFromUrl) {
             // Nếu không có batch trong URL, chuyển về trang danh sách lô

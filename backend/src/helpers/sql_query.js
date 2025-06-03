@@ -16,6 +16,7 @@ function buildWhereQuery(filter, table = null) {
             if (subConditions.length === 0) return "";
             return `(${subConditions.join(` ${obj.logic} `)})`;
         }
+        console.log("obj", obj)
         // Nếu là filter đơn
         const { field, condition, value } = obj;
         switch (condition) {
@@ -25,7 +26,7 @@ function buildWhereQuery(filter, table = null) {
                 return value ? `(${field} IS NOT NULL AND ${field} NOT LIKE '%${value}%')` : `(${field} NOT LIKE '%%')`;
             case 'in':
                 if (Array.isArray(value) && value.length > 0) {
-                    const inList = value.map(v => `'${v}'`).join(',');
+                    const inList = value.map(v => typeof v === 'string' ? `'${v}'` : v).join(',');
                     return `${field} IN (${inList})`;
                 }
                 break;
@@ -126,11 +127,8 @@ async function executeSelectData({
 
     console.log(queryGetIdTable)
     const idResult = await QueryHelper.queryRaw(queryGetIdTable);
-    console.log('idResult:', idResult);
     const resultIds = idResult.map(row => row[idColumn]).filter(id => id !== undefined && id !== null);
 
-
-    console.log('resultIds:', resultIds);
     const whereCondition = resultIds.length
         ? `${table}.${idColumn} IN (${resultIds.map(id => typeof id === 'string' ? `'${id}'` : id).join(',')})`
         : '1=0';

@@ -40,11 +40,15 @@ export const cartReducer = (state, action) => {
             };
 
         case CART_ACTIONS.UPDATE_QUANTITY:
+            console.log('update quantity', state)
             return {
                 ...state,
                 items: state.items.map(item =>
                     item.id === action.payload.id
-                        ? { ...item, quantity: action.payload.quantity }
+                        ? {
+                            ...item,
+                            quantity: action.payload.quantity
+                        }
                         : item
                 ),
                 total: state.items.reduce((total, item) => {
