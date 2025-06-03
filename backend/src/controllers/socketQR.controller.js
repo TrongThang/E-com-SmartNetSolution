@@ -42,20 +42,20 @@ class SocketQRController {
 
     async verifyConnection(req, res) {
         try {
-            const { customer_id, roomCode, password } = req.body;
+            const { employee_id, roomCode, password } = req.body;
             
             // Kiểm tra mã kết nối
             const connection = global.activeConnections.get(roomCode);
             if (!connection || connection.password !== password) {
                 return res.status(400).json({
                     success: false,
-                    error: 'Invalid connection code'
+                    error: 'Mã kết nối không hợp lệ'
                 });
             }
 
             // Tạo socket token
             const token = jwt.sign(
-                { customer_id, roomCode },
+                { employee_id, roomCode },
                 process.env.JWT_SECRET,
                 { expiresIn: '1h' }
             );

@@ -35,6 +35,8 @@ export default function OrdersPage() {
         return { statusIcon: CheckCircle, statusColor: "text-green-500", status: "Hoàn thành" }
       case -1:
         return { statusIcon: AlertCircle, statusColor: "text-red-500", status: "Đã hủy" }
+      default:
+        return { statusIcon: AlertCircle, statusColor: "text-red-500", status: "Không xác định" }
     }
   }
 

@@ -1,6 +1,7 @@
 import { ESortOrderValue } from "@/models/enums/option";
 import { FilterSearch, IApiResponse, ICategories } from "@/models/interfaces";
 import axiosPrivate from "../clients/private.client";
+import axiosPublic from "../clients/public.client";
 
 const categoryEndpoints = {
     list: "/categories",
@@ -14,12 +15,12 @@ const categoryApi = {
         sort?: keyof ICategories | "";
         order?: ESortOrderValue;
     }): Promise<IApiResponse<ICategories[]>> {
-        return axiosPrivate.get(categoryEndpoints.list, {
-            params: { ...params, filters: JSON.stringify(params.filters) },
+        return axiosPublic.get(categoryEndpoints.list, {
+            params: params ? { ...params, filters: params.filters ? JSON.stringify(params.filters) : undefined } : undefined,
         });
     },
     async getById(id: number): Promise<IApiResponse<ICategories>> {
-        return axiosPrivate.get(`${categoryEndpoints.list}/${id}`);
+        return axiosPublic.get(`${categoryEndpoints.list}/${id}`);
     },
     async add(data: any): Promise<IApiResponse> {
         try {

@@ -1,6 +1,6 @@
 import axiosPrivate from "../clients/private.client";
 import { ESortOrderValue } from "@/models/enums/option";
-import { FilterSearch, IApiResponse, IProduct, IProductDetail } from "@/models/interfaces";
+import { FilterSearch, IApiResponse, IProduct, IProductDetail } from "@/models/interfaces/index";
 import axiosPublic from "../clients/public.client";
 
 const productEndpoints = {
@@ -15,9 +15,10 @@ const productApi = {
     async search(params: {
         page?: number;
         limit?: number;
-        filters?: FilterSearch[];
+        filters?: any;
         order?: ESortOrderValue;
     }): Promise<IApiResponse<IProduct[]>> {
+        
         return axiosPublic.get(productPublic.common, {
             params: { ...params, filters: JSON.stringify(params.filters) },
         });
@@ -49,7 +50,7 @@ const productApi = {
     },
     async edit(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.put(productEndpoints.common, data);
+            return await axiosPrivate.put(productPublic.common, data);
         } catch (error) {
             throw error;
         }

@@ -1,88 +1,114 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import CartItem from "./cartItem";
-import { useCart } from "@/contexts/CartContext";
-import { Button } from "@/components/ui/button";
+"use client"
+
+import { useState } from "react"
+import { useSearchParams } from "react-router-dom"
+import CartItem from "./cartItem"
+import { useCart } from "@/contexts/CartContext"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Trash2, ShoppingCart, Package } from "lucide-react"
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function CartList() {
-    const { state, clearSelected, selectAll } = useCart(); // Thay đổi ở đây
-    const [searchParams, setSearchParams] = useSearchParams();
-    const currentPage = Number(searchParams.get("page")) || 1;
-    const [itemsPerPage] = useState(5);
+    const { cart, clearSelected, selectAll, removeSelected } = useCart()
+    const [searchParams, setSearchParams] = useSearchParams()
+    const currentPage = Number(searchParams.get("page")) || 1
+    const [itemsPerPage] = useState(5)
+    const indexOfLastItem = currentPage * itemsPerPage
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage
+    const currentItems = cart.items.slice(indexOfFirstItem, indexOfLastItem)
+    const totalPages = Math.ceil(cart.items.length / itemsPerPage)
 
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = state.items.slice(indexOfFirstItem, indexOfLastItem); // Thay đổi ở đây
-    const totalPages = Math.ceil(state.items.length / itemsPerPage); // Thay đổi ở đây
-    
-    const allSelected = state.items.length > 0 && state.items.every(item => item.selected);
+    const allSelected = cart.items.length > 0 && cart.items.every((item) => item.selected)
+    const someSelected = cart.items.some((item) => item.selected)
 
     const handleToggleAll = () => {
         if (allSelected) {
-            clearSelected();
+            clearSelected()
         } else {
-            selectAll();
+            selectAll()
         }
-    };
-    const handlePageChange = (page) => {
-        setSearchParams({ page });
-    };
+    }
 
-    if (!state.items || state.items.length === 0) { // Thay đổi ở đây
+    const handlePageChange = (page) => {
+        setSearchParams({ page: page.toString() })
+    }
+
+    if (!cart.items || cart.items.length === 0) {
         return (
-            <div className="bg-gray-50 p-8 rounded-lg text-center">
-                <p className="text-xl text-gray-600">Không có sản phẩm trong giỏ hàng</p>
-            </div>
-        );
+            <Card className="bg-white shadow-md">
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                    <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">Giỏ hàng trống</h3>
+                    <p className="text-muted-foreground mb-6">Không có sản phẩm nào trong giỏ hàng của bạn</p>
+                    <Button asChild>
+                        <a href="/products">Tiếp tục mua sắm</a>
+                    </Button>
+                </CardContent>
+            </Card>
+        )
     }
 
     return (
-        <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b flex items-center justify-between">
+        <Card className="bg-white shadow-md">
+            <CardHeader className="border-b px-4 py-3 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <input
-                        type="checkbox"
+                    <Checkbox
+                        id="select-all"
                         checked={allSelected}
-                        onChange={handleToggleAll}
-                        className="accent-blue-600 w-5 h-5"
+                        onCheckedChange={handleToggleAll}
                         aria-label="Chọn tất cả sản phẩm"
                     />
-                    <span className="font-medium">
-                        Chọn tất cả ({state.items.length})
-                    </span>
+                    <label htmlFor="select-all" className="text-sm font-medium flex items-center gap-2 cursor-pointer">
+                        <Package className="h-4 w-4" />
+                        Chọn tất cả ({cart.items.length})
+                    </label>
                 </div>
+
                 <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={clearSelected}
-                >
-                    <i className="fa-solid fa-trash mr-2"></i>
+                    variant="destructive" size="sm"
+                    onClick={removeSelected} disabled={!someSelected} className="h-8">
+                    <Trash2 className="h-4 w-4 mr-1" />
                     Xóa đã chọn
                 </Button>
-            </div>
+            </CardHeader>
 
-            <div className="divide-y">
-                {currentItems.map((item) => (
-                    <CartItem key={item.id} product={item} />
-                ))}
-            </div>
+            <CardContent className="p-0">
+                {someSelected && (
+                    <Alert className="m-4 bg-blue-50 border-blue-200">
+                        <AlertTitle className="text-blue-700">
+                            Đã chọn {cart.items.filter((item) => item.selected).length} sản phẩm
+                        </AlertTitle>
+                        <AlertDescription className="text-blue-600">
+                            Các sản phẩm đã chọn sẽ được tính vào tổng thanh toán
+                        </AlertDescription>
+                    </Alert>
+                )}
 
-            {totalPages > 1 && (
-                <div className="p-4 border-t">
-                    <div className="flex justify-center space-x-2">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <Button
-                                key={page}
-                                variant={page === currentPage ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handlePageChange(page)}
-                            >
-                                {page}
-                            </Button>
-                        ))}
-                    </div>
+                <div className="divide-y">
+                    {currentItems.map((item) => (
+                        <CartItem key={item.id} product={item} />
+                    ))}
                 </div>
-            )}
-        </div>
-    );
+
+                {totalPages > 1 && (
+                    <div className="p-4 border-t">
+                        <Pagination>
+                            <PaginationContent>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                    <PaginationItem key={page}>
+                                        <PaginationLink isActive={page === currentPage} onClick={() => handlePageChange(page)}>
+                                            {page}
+                                        </PaginationLink>
+                                    </PaginationItem>
+                                ))}
+                            </PaginationContent>
+                        </Pagination>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
 }

@@ -36,15 +36,24 @@ class ProductController {
     }
 
     async createProduct(req, res) {
-        const { name, description, description_normal, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes } = req.body;
+        const { name, description, description_normal, images, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes } = req.body;
 
         const response = await createProductService({
-            name, description, description_normal, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes
+            name, description, description_normal, images, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes
         })
 
         return res.status(response.status_code).json(response);
     }
+    
+    async updateProduct(req, res) {
+        const { id, name, description, description_normal, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes, images } = req.body;
 
+        const response = await updateProductService({
+            id, name, description, description_normal, image, selling_price, category_id, unit_id, warrenty_time_id, views, is_hide, status, attributes, images
+        })
+
+        return res.status(response.status_code).json(response);
+    }
 
     async checkListInfoProduct(req, res) {
         const { products } = req.body;

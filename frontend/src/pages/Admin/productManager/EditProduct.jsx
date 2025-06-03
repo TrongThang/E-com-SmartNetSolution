@@ -1,0 +1,926 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Link, useNavigate, useParams } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { ArrowLeft, Plus, Upload, X, Star, Edit, ArrowRight } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
+import productApi from "@/apis/modules/product.api.ts"
+import attributeGroupApi from "@/apis/modules/attribute_group.api.ts"
+import categoryApi from "@/apis/modules/categories.api.ts"
+import Swal from "sweetalert2"
+
+export default function ProductDetailPage() {
+    const navigate = useNavigate()
+    const params = useParams();
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
+    const [product, setProduct] = useState({
+        id: 0,
+        name: "",
+        slug: "",
+        description: "",
+        description_normal: "",
+        selling_price: 0,
+        sold: 0,
+        views: 0,
+        status: 1,
+        is_hide: 0,
+        category_id: 0,
+        categories: "",
+        unit_id: 0,
+        unit_name: "",
+        stock: "0",
+        average_rating: "0",
+        total_liked: "0",
+        total_review: "0",
+        image: "",
+        specifications: [],
+        images: [],
+    })
+    const [attribute, setAttribute] = useState([]);
+    const [categories, setCategories] = useState([]);
+
+    // State cho popup thêm thuộc tính
+    const [showAddAttributeDialog, setShowAddAttributeDialog] = useState(false)
+    const [showAddValueDialog, setShowAddValueDialog] = useState(false)
+    const [searchAttribute, setSearchAttribute] = useState("")
+    const [selectedAttribute, setSelectedAttribute] = useState(null)
+    const [attributeValue, setAttributeValue] = useState("")
+    const [selectedSpecGroup, setSelectedSpecGroup] = useState(null)
+
+    // State cho chỉnh sửa thuộc tính
+    const [showEditValueDialog, setShowEditValueDialog] = useState(false)
+    const [editingAttribute, setEditingAttribute] = useState(null)
+    const [editingGroupIndex, setEditingGroupIndex] = useState(null)
+    const [editingAttrIndex, setEditingAttrIndex] = useState(null)
+    const [editAttributeValue, setEditAttributeValue] = useState("")
+
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+    const [imageStartIndex, setImageStartIndex] = useState(0)
+
+    // Lọc thuộc tính theo từ khóa tìm kiếm
+    const filteredAttributes = attribute
+        ? attribute
+            .filter((group) => group?.attributes && Array.isArray(group.attributes)) // Kiểm tra group.attributes
+            .map((group) => ({
+                id: group.id,
+                name: group.name,
+                type: "group",
+                attributes: group.attributes.map((attr) => ({
+                    id: attr.id,
+                    name: attr.name,
+                    type: "attribute",
+                    parentId: group.id,
+                })),
+            }))
+            .flatMap((group) => [
+                group,
+                ...group.attributes.filter((attr) =>
+                    attr.name?.toLowerCase().includes(searchAttribute?.toLowerCase() ?? "")
+                ),
+            ])
+        : [];
+
+    const fetchProducts = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await productApi.getById(params.id);
+            if (res.status_code === 200) {
+                const data = res.data.data[0] || res.data.data || {};
+                setProduct({
+                    ...product,
+                    ...data,
+                    stock: Number(data.stock) || 0,
+                    average_rating: Number(data.average_rating) || 0,
+                    total_liked: Number(data.total_liked) || 0,
+                    total_reviews: Number(data.total_reviews) || 0,
+                    specifications: data.specifications || [],
+                });
+            } else {
+                setError("Không thể tải sản phẩm");
+            }
+        } catch (err) {
+            setError("Có lỗi khi tải sản phẩm");
+            console.error("Failed to fetch product", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchAttributes = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await attributeGroupApi.list();
+            console.log("Attributes API response:", res);
+            if (res.status_code === 200 && Array.isArray(res?.data)) {
+                setAttribute(res.data || []);
+            } else {
+                setError("Không thể tải thuộc tính: Dữ liệu không hợp lệ");
+                setAttribute([]);
+            }
+        } catch (err) {
+            setError("Có lỗi khi tải thuộc tính");
+            console.error("Failed to load attributes", err);
+            setAttribute([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchCategories = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await categoryApi.list();
+            if (res.status_code === 200 && Array.isArray(res?.data?.categories)) {
+                setCategories(res.data.categories || []);
+            } else {
+                setError("Không thể tải danh mục");
+                setCategories([]);
+            }
+        } catch (err) {
+            setError("Error fetching categories");
+            console.error("Failed to load categories", err);
+            setCategories([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (params.id) fetchProducts();
+    }, [params.id]);
+
+    useEffect(() => {
+        fetchAttributes();
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        if (categories.length > 0 && product.category_id) {
+            const validCategory = categories.some((cat) =>
+                cat.category_id === product.category_id ||
+                cat.children?.some((child) => child.category_id === product.category_id)
+            );
+            if (!validCategory) {
+                setProduct((prev) => ({ ...prev, category_id: 0 }));
+                console.log("Reset category_id: No matching category found");
+            }
+        }
+    }, [categories, product.category_id]);
+
+    const renderCategoryOptions = (categories, level = 0) => {
+        const options = [];
+        categories.forEach((category) => {
+            const indent = "—".repeat(level);
+            const hasChildren = category.children && category.children.length > 0;
+            options.push(
+                <SelectItem
+                    key={category.category_id}
+                    value={category.category_id.toString()}
+                    disabled={hasChildren}
+                    className={hasChildren ? "font-medium text-muted-foreground cursor-not-allowed" : ""}
+                >
+                    <div className="flex items-center gap-2">
+                        <span>
+                            {indent} {category.name}
+                        </span>
+                    </div>
+                </SelectItem>
+            );
+            if (category.children && category.children.length > 0) {
+                options.push(...renderCategoryOptions(category.children, level + 1));
+            }
+        });
+        return options;
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setProduct({
+            ...product,
+            [name]: value,
+        });
+    };
+
+    const handleNumberInputChange = (e) => {
+        const { name, value } = e.target;
+        setProduct({
+            ...product,
+            [name]: value === "" ? 0 : Number(value),
+        });
+    };
+
+    const handleMultipleImageUpload = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            const newImages = [];
+            let processedCount = 0;
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    newImages[index] = { image: reader.result };
+                    processedCount++;
+                    if (processedCount === files.length) {
+                        const updatedImages = [...product.images, ...newImages];
+                        setProduct({
+                            ...product,
+                            images: updatedImages,
+                            image: updatedImages.length > 0 ? updatedImages[0].image : product.image,
+                        });
+                        setSelectedImageIndex(0);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+
+    const handleSelectImage = (index) => {
+        setSelectedImageIndex(index);
+        const selectedImage = product.images[index];
+        const imageToShow = selectedImage?.image || "/placeholder.svg";
+        setProduct({
+            ...product,
+            image: imageToShow,
+        });
+    };
+
+    const handleRemoveImage = (index) => {
+        const updatedImages = [...product.images];
+        updatedImages.splice(index, 1);
+        if (imageStartIndex > 0 && imageStartIndex >= updatedImages.length - 3) {
+            setImageStartIndex(Math.max(0, updatedImages.length - 4));
+        }
+        let newSelectedIndex = selectedImageIndex;
+        let newMainImage = product.image;
+        if (updatedImages.length === 0) {
+            newSelectedIndex = 0;
+            newMainImage = "";
+        } else if (selectedImageIndex === index) {
+            newSelectedIndex = 0;
+            newMainImage = updatedImages[0]?.image || "/placeholder.svg";
+        } else if (selectedImageIndex > index) {
+            newSelectedIndex = selectedImageIndex - 1;
+            newMainImage = updatedImages[newSelectedIndex]?.image || "/placeholder.svg";
+        }
+        setSelectedImageIndex(newSelectedIndex);
+        setProduct({
+            ...product,
+            images: updatedImages,
+            image: newMainImage,
+        });
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setProduct({ ...product, image: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSelectAttribute = (attribute, group) => {
+        setSelectedAttribute(attribute);
+        setSelectedSpecGroup(group);
+        setShowAddAttributeDialog(false);
+        setShowAddValueDialog(true);
+    };
+
+    const handleAddAttributeValue = () => {
+        if (selectedAttribute && attributeValue && selectedSpecGroup) {
+            const existingGroupIndex = product.specifications.findIndex(
+                (spec) => spec.name === selectedSpecGroup.name
+            );
+            if (existingGroupIndex >= 0) {
+                const updatedSpecs = [...product.specifications];
+                updatedSpecs[existingGroupIndex].attributes.push({
+                    id: Date.now(),
+                    name: selectedAttribute.name,
+                    value: attributeValue,
+                });
+                setProduct({
+                    ...product,
+                    specifications: updatedSpecs,
+                });
+            } else {
+                const newSpec = {
+                    id: Date.now(),
+                    name: selectedSpecGroup.name,
+                    attributes: [
+                        {
+                            id: Date.now() + 1,
+                            name: selectedAttribute.name,
+                            value: attributeValue,
+                        },
+                    ],
+                };
+                setProduct({
+                    ...product,
+                    specifications: [...product.specifications, newSpec],
+                });
+            }
+            setShowAddValueDialog(false);
+            setSelectedAttribute(null);
+            setSelectedSpecGroup(null);
+            setAttributeValue("");
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: 'Vui lòng chọn thuộc tính và nhập giá trị.',
+            });
+        }
+    };
+
+    const handleEditAttribute = (groupIndex, attrIndex) => {
+        const attribute = product.specifications[groupIndex].attributes[attrIndex];
+        setEditingAttribute(attribute);
+        setEditingGroupIndex(groupIndex);
+        setEditingAttrIndex(attrIndex);
+        setEditAttributeValue(attribute.value);
+        setShowEditValueDialog(true);
+    };
+
+    const handleUpdateAttributeValue = () => {
+        if (editingGroupIndex !== null && editingAttrIndex !== null && editAttributeValue) {
+            const updatedSpecs = [...product.specifications];
+            updatedSpecs[editingGroupIndex].attributes[editingAttrIndex].value = editAttributeValue;
+            setProduct({
+                ...product,
+                specifications: updatedSpecs,
+            });
+            setShowEditValueDialog(false);
+            setEditingAttribute(null);
+            setEditingGroupIndex(null);
+            setEditingAttrIndex(null);
+            setEditAttributeValue("");
+        }
+    };
+
+    const handleRemoveAttribute = (groupIndex, attrIndex) => {
+        const updatedSpecs = [...product.specifications];
+        updatedSpecs[groupIndex].attributes.splice(attrIndex, 1);
+        if (updatedSpecs[groupIndex].attributes.length === 0) {
+            updatedSpecs.splice(groupIndex, 1);
+        }
+        setProduct({
+            ...product,
+            specifications: updatedSpecs,
+        });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        // Sửa: Chỉ kiểm tra các trường có trong product
+        if (!product.name.trim() ||
+            !product.description.trim() ||
+            !product.selling_price ||
+            !product.category_id) {
+            console.log("Validation failed", product);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: 'Vui lòng điền đầy đủ các trường bắt buộc: Tên sản phẩm, Mô tả, Giá bán, Danh mục.',
+            });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const dataToSubmit = {
+                id: Number(params.id),
+                name: product.name,
+                slug: product.slug,
+                description: product.description,
+                description_normal: product.description_normal,
+                selling_price: product.selling_price,
+                stock: Number(product.stock),
+                is_hide: product.is_hide,
+                unit_id: product.unit_id,
+                category_id: product.category_id,
+                status: product.status,
+                is_hide: Boolean(product.is_hide),
+                image: product.image,
+                images: product.images,
+                specifications: product.specifications,
+            };
+            console.log("dataToSubmit", dataToSubmit);
+            const res = await productApi.edit(dataToSubmit); // Thêm params.id nếu API yêu cầu
+            if (res.error && res.error !== 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: res.message || "Có lỗi xảy ra!",
+                });
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: 'Cập nhật sản phẩm thành công',
+                });
+                navigate("/admin/products");
+            }
+        } catch (err) {
+            const apiError = err?.response?.data?.errors?.[0]?.message || "Có lỗi xảy ra!";
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: apiError,
+            });
+            console.error("Submit error", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatPrice = (price) => {
+        const numPrice = Number(price) || 0;
+        return new Intl.NumberFormat("vi-VN").format(numPrice);
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <Button variant="ghost" size="sm" asChild className="gap-1">
+                    <Link to="/admin/products">
+                        <ArrowLeft className="h-4 w-4" />
+                        Trở về
+                    </Link>
+                </Button>
+            </div>
+
+            <Tabs defaultValue="info" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-white">
+                    <TabsTrigger value="info" className="data-[state=active]:bg-black data-[state=active]:text-white">Thông tin sản phẩm</TabsTrigger>
+                    <TabsTrigger value="specs" className="data-[state=active]:bg-black data-[state=active]:text-white">Thông số kỹ thuật</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="info" className="space-y-4 pt-4">
+                    <div className="rounded-lg bg-muted/30 p-6">
+                        <form onSubmit={handleSubmit}>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <div className="space-y-6">
+                                    <div className="grid w-full items-center gap-2">
+                                        <Label htmlFor="name">Tên sản phẩm:</Label>
+                                        <Input
+                                            id="name"
+                                            name="name"
+                                            value={product.name}
+                                            onChange={handleInputChange}
+                                            className="bg-muted"
+                                        />
+                                    </div>
+
+                                    <div className="grid w-full items-center gap-2">
+                                        <Label htmlFor="slug">Slug:</Label>
+                                        <Input
+                                            id="slug"
+                                            name="slug"
+                                            value={product.slug}
+                                            onChange={handleInputChange}
+                                            className="bg-muted"
+                                            disabled
+                                        />
+                                    </div>
+
+                                    <div className="grid w-full items-center gap-2">
+                                        <Label htmlFor="description">Mô tả ngắn:</Label>
+                                        <Input
+                                            id="description"
+                                            name="description"
+                                            value={product.description}
+                                            onChange={handleInputChange}
+                                            className="bg-muted"
+                                        />
+                                    </div>
+
+                                    <div className="grid w-full items-center gap-2">
+                                        <Label htmlFor="description_normal">Mô tả chi tiết:</Label>
+                                        <Textarea
+                                            id="description_normal"
+                                            name="description_normal"
+                                            value={product.description_normal}
+                                            onChange={handleInputChange}
+                                            className="bg-muted"
+                                            rows={3}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid w-full items-center gap-2">
+                                            <Label htmlFor="selling_price">Giá bán:</Label>
+                                            <Input
+                                                id="selling_price"
+                                                name="selling_price"
+                                                type="number"
+                                                value={product.selling_price}
+                                                onChange={handleNumberInputChange}
+                                                className="bg-muted"
+                                            />
+                                        </div>
+
+                                        <div className="grid w-full items-center gap-2">
+                                            <Label htmlFor="stock">Tồn kho:</Label>
+                                            <Input
+                                                id="stock"
+                                                name="stock"
+                                                type="number"
+                                                value={product.stock}
+                                                onChange={handleNumberInputChange}
+                                                className="bg-muted"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid w-full items-center gap-2">
+                                        <Label htmlFor="categories">Danh mục:</Label>
+                                        {loading ? (
+                                            <div className="text-muted-foreground">Đang tải danh mục...</div>
+                                        ) : error ? (
+                                            <div className="text-red-500">{error}</div>
+                                        ) : categories.length === 0 ? (
+                                            <div className="text-muted-foreground">Không có danh mục nào</div>
+                                        ) : (
+                                            <Select
+                                                value={product.category_id?.toString() || ""}
+                                                onValueChange={(value) => setProduct({ ...product, category_id: Number.parseInt(value) })}
+                                            >
+                                                <SelectTrigger id="categories" className="bg-muted w-full">
+                                                    <SelectValue placeholder="Chọn danh mục" />
+                                                </SelectTrigger>
+                                                <SelectContent>{renderCategoryOptions(categories)}</SelectContent>
+                                            </Select>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-8">
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="is_hide"
+                                                checked={product.is_hide === 1}
+                                                onCheckedChange={(checked) => setProduct({ ...product, is_hide: checked ? 1 : 0 })}
+                                            />
+                                            <Label htmlFor="is_hide">Ẩn sản phẩm</Label>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <Label htmlFor="status">Trạng thái:</Label>
+                                            <Select
+                                                value={product.status.toString()}
+                                                onValueChange={(value) => setProduct({ ...product, status: Number.parseInt(value) })}
+                                            >
+                                                <SelectTrigger id="status" className="bg-muted w-[150px]">
+                                                    <SelectValue placeholder="Chọn trạng thái" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="1">Hoạt động</SelectItem>
+                                                    <SelectItem value="0">Ngừng kinh doanh</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="flex flex-col items-center">
+                                        <Label className="mb-2">Hình ảnh sản phẩm:</Label>
+                                        <div
+                                            className="relative flex h-[200px] w-[200px] cursor-pointer flex-col items-center justify-center rounded-md border bg-muted mb-4"
+                                            onClick={() => document.getElementById("image-upload").click()}
+                                        >
+                                            {product?.images?.length > 0 ? (
+                                                <img
+                                                    src={product.images[selectedImageIndex]?.image || product.images[0].image}
+                                                    alt={product.name || "Hình ảnh sản phẩm"}
+                                                    className="h-full w-full rounded-md object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                                    <Upload className="mb-2 h-10 w-10" />
+                                                    <span className="text-xs">Upload ảnh</span>
+                                                </div>
+                                            )}
+                                            <input
+                                                id="image-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handleMultipleImageUpload}
+                                                className="hidden"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center w-[300px] mt-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setImageStartIndex(Math.max(0, imageStartIndex - 1))}
+                                                disabled={imageStartIndex === 0}
+                                                className="h-8 w-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 disabled:opacity-30 mr-2"
+                                            >
+                                                <ArrowLeft className="h-4 w-4" />
+                                            </button>
+
+                                            <div className="grid grid-cols-4 gap-3 flex-1">
+                                                {(product?.images || []).slice(imageStartIndex, imageStartIndex + 4).map((imageObj, index) => (
+                                                    <div
+                                                        key={imageStartIndex + index}
+                                                        className={`relative h-14 w-14 cursor-pointer rounded-md border-2 ${selectedImageIndex === imageStartIndex + index ? "border-primary" : "border-muted"} bg-muted overflow-hidden`}
+                                                        onClick={() => handleSelectImage(imageStartIndex + index)}
+                                                    >
+                                                        <img
+                                                            src={imageObj?.image || "/placeholder.svg"}
+                                                            alt={`Ảnh ${imageStartIndex + index + 1}`}
+                                                            className="h-full w-full rounded-md object-cover"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRemoveImage(imageStartIndex + index);
+                                                            }}
+                                                            className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center hover:bg-red-600 shadow-sm"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {Array.from({
+                                                    length: Math.max(0, 4 - (product?.images || []).slice(imageStartIndex, imageStartIndex + 4).length),
+                                                }).map((_, index) => (
+                                                    <div
+                                                        key={`empty-${index}`}
+                                                        className="h-14 w-14 rounded-md border-2 border-dashed border-muted bg-muted/30 flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+                                                        onClick={() => document.getElementById("image-upload").click()}
+                                                    >
+                                                        <Plus className="h-5 w-5 text-muted-foreground" />
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setImageStartIndex(Math.min((product?.images?.length || 0) - 4, imageStartIndex + 1))}
+                                                disabled={imageStartIndex + 4 >= (product?.images?.length || 0)}
+                                                className="h-8 w-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 disabled:opacity-30 ml-2"
+                                            >
+                                                <ArrowRight className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 space-y-4 rounded-md border p-4">
+                                        <h3 className="font-medium">Thông tin bổ sung</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-muted-foreground">Đã bán</span>
+                                                <span className="font-medium">{product.sold || 0}</span>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-muted-foreground">Lượt xem</span>
+                                                <span className="font-medium">{product.views || 0}</span>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-muted-foreground">Đánh giá</span>
+                                                <div className="flex items-center">
+                                                    <span className="font-medium mr-1">{product.average_rating || 0}</span>
+                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                    <span className="ml-1 text-xs text-muted-foreground">({product.total_reviews || 0} đánh giá)</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-muted-foreground">Lượt thích</span>
+                                                <span className="font-medium">{product.total_liked || 0}</span>
+                                            </div>
+                                        </div>
+                                        <Separator />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-muted-foreground">Ngày tạo</span>
+                                                <span className="font-medium">{product.created_at ? new Date(product.created_at).toLocaleDateString("vi-VN") : "N/A"}</span>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-muted-foreground">Cập nhật lần cuối</span>
+                                                <span className="font-medium">{product.updated_at ? new Date(product.updated_at).toLocaleDateString("vi-VN") : "N/A"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-8 flex justify-end gap-2">
+                                <Button type="button" variant="outline" onClick={() => navigate("/admin/products")}>
+                                    Hủy
+                                </Button>
+                                <Button type="submit" className="px-6 bg-black text-white hover:opacity-70 flex items-center gap-1" disabled={loading}>
+                                    {loading ? "Đang lưu..." : "Lưu"}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="specs" className="space-y-4 pt-4">
+                    <div className="rounded-lg bg-muted/30 p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-bold">Thông số kỹ thuật</h2>
+                            <Button variant="outline" size="sm" className="gap-1" onClick={() => setShowAddAttributeDialog(true)}>
+                                <Plus className="h-4 w-4" />
+                                Thêm thuộc tính
+                            </Button>
+                        </div>
+                        {product.specifications.length > 0 ? (
+                            <div className="space-y-6">
+                                {product.specifications.map((specGroup, groupIndex) => (
+                                    <Card key={specGroup.id} className="p-4">
+                                        <h3 className="mb-4 font-medium">{specGroup.name}</h3>
+                                        <div className="space-y-3">
+                                            {specGroup.attributes.map((attr, attrIndex) => (
+                                                <div key={attr.id} className="flex items-start group">
+                                                    <div className="w-1/3 font-medium">{attr.name}:</div>
+                                                    <div className="flex w-2/3 items-center justify-between">
+                                                        <span>{attr.value}</span>
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleEditAttribute(groupIndex, attrIndex)}
+                                                                className="invisible rounded-full p-1 text-blue-500 hover:bg-blue-50 group-hover:visible"
+                                                                title="Sửa"
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveAttribute(groupIndex, attrIndex)}
+                                                                className="invisible rounded-full p-1 text-red-500 hover:bg-red-50 group-hover:visible"
+                                                                title="Xóa"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                                Chưa có thông số kỹ thuật nào. Nhấn "Thêm thuộc tính" để bắt đầu.
+                            </div>
+                        )}
+                    </div>
+                </TabsContent>
+            </Tabs>
+
+            <Dialog open={showAddAttributeDialog} onOpenChange={setShowAddAttributeDialog}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl">Thêm thuộc tính sản phẩm</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <Input
+                            placeholder="Tìm kiếm"
+                            value={searchAttribute}
+                            onChange={(e) => setSearchAttribute(e.target.value)}
+                            className="mb-4"
+                        />
+                        {loading ? (
+                            <div className="text-muted-foreground">Đang tải thuộc tính...</div>
+                        ) : error ? (
+                            <div className="text-red-500">{error}</div>
+                        ) : !attribute || attribute.length === 0 ? (
+                            <div className="text-muted-foreground">Không có thuộc tính nào</div>
+                        ) : (
+                            <div className="max-h-[300px] space-y-2 overflow-y-auto">
+                                {attribute
+                                    .filter((group) => group.attributes && group.attributes.length > 0)
+                                    .map((group) => (
+                                        <div key={group.id} className="space-y-2">
+                                            <div className="font-medium">{group.name}</div>
+                                            <div className="space-y-2 pl-4">
+                                                {group.attributes
+                                                    .filter((attr) =>
+                                                        attr.name?.toLowerCase().includes(searchAttribute?.toLowerCase() ?? "")
+                                                    )
+                                                    .map((attr) => (
+                                                        <div
+                                                            key={attr.id}
+                                                            className="flex cursor-pointer items-center justify-between rounded-md border p-2 hover:bg-muted"
+                                                            onClick={() =>
+                                                                handleSelectAttribute(attr, group)
+                                                            }
+                                                        >
+                                                            <span>{attr.name}</span>
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showAddValueDialog} onOpenChange={setShowAddValueDialog}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl">Thêm giá trị thuộc tính</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="flex items-center gap-4">
+                            <Label htmlFor="attributeValue" className="w-1/3 text-right">
+                                {selectedAttribute?.name || "Thuộc tính"}:
+                            </Label>
+                            <Input
+                                id="attributeValue"
+                                value={attributeValue}
+                                onChange={(e) => setAttributeValue(e.target.value)}
+                                className="w-2/3"
+                                placeholder="Nhập giá trị"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowAddValueDialog(false);
+                                setSelectedAttribute(null);
+                                setSelectedSpecGroup(null);
+                                setAttributeValue("");
+                            }}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            onClick={handleAddAttributeValue}
+                            disabled={!selectedAttribute || !attributeValue.trim()}
+                        >
+                            Lưu
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showEditValueDialog} onOpenChange={setShowEditValueDialog}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl">Sửa giá trị thuộc tính</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="flex items-center gap-4">
+                            <Label htmlFor="editAttributeValue" className="w-1/3 text-right">
+                                {editingAttribute?.name || "Thuộc tính"}:
+                            </Label>
+                            <Input
+                                id="editAttributeValue"
+                                value={editAttributeValue}
+                                onChange={(e) => setEditAttributeValue(e.target.value)}
+                                className="w-2/3"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowEditValueDialog(false);
+                                setEditingAttribute(null);
+                                setEditingGroupIndex(null);
+                                setEditingAttrIndex(null);
+                                setEditAttributeValue("");
+                            }}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            onClick={handleUpdateAttributeValue}
+                            disabled={!editAttributeValue.trim()}
+                            className="px-6 bg-black text-white hover:opacity-70 flex items-center gap-1"
+                        >
+                            Cập nhật
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+}

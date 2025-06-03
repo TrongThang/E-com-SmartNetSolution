@@ -4,7 +4,8 @@ import StarRating from "../reviews/StarRating";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format";
 export function ProductCard({ product }) {
-    const { id, image, name, selling_price, slug, description, total_review, categories, average_rating, sold } = product;
+    console.log("Rendering ProductCard for product:", product);
+    const { id, image, name, selling_price, slug, description_normal, total_review, categories, average_rating, sold } = product;
     return (
         <Link to={`/products/${id}`}>
         <Card className="h-full overflow-hidden border border-gray-200 transition-all duration-300 hover:scale-105 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100">
@@ -25,7 +26,7 @@ export function ProductCard({ product }) {
                     <StarRating rating={average_rating} />
                     <span className="ml-1 text-xs text-gray-500">({total_review})</span>
                 </div>
-                {description && <p className="mt-2 line-clamp-2 h-[2.5rem] text-xs text-gray-500">{description}</p>}
+                {description_normal && <p className="mt-2 line-clamp-2 h-[2.5rem] text-xs text-gray-500">{description_normal}</p>}
                 <p className="mt-2 text-xs text-gray-500">Đã bán: {sold}</p>
             </CardContent>
             <CardFooter className="p-4 pt-0">

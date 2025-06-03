@@ -6,10 +6,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
 import { AtSign, KeyRound, Loader2, Mail, Lock } from 'lucide-react'
-import axios from "axios"
 
 export default function LoginForm({ onSuccess }) {
-  const { login, sendOtp, verifyOtp, changePassword } = useAuth()
+  const { login, sendOtp, verifyOtp, changePassword, loginEmployee } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [loginForm, setLoginForm] = useState({ username: "", password: "" })
@@ -59,6 +58,7 @@ export default function LoginForm({ onSuccess }) {
   // Xử lý đăng nhập
   const handleLogin = async (e) => {
     e.preventDefault()
+    console.log('vafo ddnawg nhap')
     setIsLoading(true)
     try {
       const result = await login(loginForm.username, loginForm.password)

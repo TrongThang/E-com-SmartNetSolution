@@ -21,10 +21,11 @@ const orderRouter = require('./order.route');
 const exportWarehouseRouter = require('./export.warehouse.route');
 const importWarehouseRouter = require('./import.warehouse.route');
 const socketQRRouter = require('./socketQR.route');
-
+const cartRouter = require('./cart.route');
 
 router.use('/auth', authRouter)
 router.use('/product', productRouter)
+router.use('/cart', cartRouter)
 router.use('/review', reviewRouter)
 router.use('/unit', unitRouter)
 router.use('/slideshow', slideshowRouter)

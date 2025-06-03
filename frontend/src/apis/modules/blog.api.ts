@@ -1,7 +1,7 @@
 import axiosPrivate from "../clients/private.client";
 import axiosPublic from "../clients/public.client";
 import { ESortOrderValue } from "@/models/enums/option";
-import { FilterSearch, IApiResponse } from "@/models/interfaces";
+import { FilterSearch, IApiResponse } from "@/models/interfaces/index";
 import { IBlog } from "@/models/interfaces/index";
 
 const blogEndpoints = {

@@ -3,7 +3,8 @@ const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 const { PrismaClient, sql } = require('@prisma/client');
 const { hashPassword, verifyPassword } = require('../helpers/auth.helper');
-const { generateAccountId, generateCustomerId } = require('../helpers/generate.helper')
+const { generateAccountId, generateCustomerId } = require('../helpers/generate.helper');
+const { getVietnamTimeNow } = require('../helpers/time.helper');
 
 const prisma = new PrismaClient();
 
@@ -31,9 +32,22 @@ async function loginAPI(username, password, type = null, remember_me = null) {
 				// report: { equals: 0 }
 			}
 		})
+		if (!user) {
+			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+		}
 
 		if (await verifyPassword(password, user.password) === false) {
 			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+		}
+
+		let infoUser = null;
+		if (type === 'CUSTOMER') {
+			infoUser = await prisma.customer.findFirst({
+				where: {
+					id: user.customer_id,
+					deleted_at: null
+				},
+			})
 		}
 
 		// Tạo token JWT khi đăng nhập thành công
@@ -41,9 +55,9 @@ async function loginAPI(username, password, type = null, remember_me = null) {
 			{
 				account_id: user.account_id,
 				username: user.username,
-				customer_id: user.customer_id || undefined,
-				employee_id: user.employee_id || undefined,
-				// name: user.customer.lastname || user.employee.lastname || undefined,
+				customer_id: infoUser.id || undefined,
+				employee_id: infoUser.employee_id || undefined,
+				name: infoUser.lastname || infoUser.surname || undefined,
 				role_id: user.role_id
 			},
 			process.env.SECRET_KEY,
@@ -175,7 +189,7 @@ const register = async ({ username, password, confirm_password, surname, lastnam
 	Call APi verify OTP
 	Nếu đúng thì bắt đầu Đổi mật khẩu
 */
-const ChangedPasswordAccount = async (payload) => {
+const ChangedPasswordAccountForgot = async (payload) => {
 	const { email, newPassword, confirmPassword } = payload;
 
 	if (newPassword !== confirmPassword) {
@@ -205,9 +219,47 @@ const ChangedPasswordAccount = async (payload) => {
 	return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, null);
 };
 
+const ChangedPasswordAccount = async (payload) => {
+	const { username, password, newPassword, confirmPassword } = payload;
+
+	const account = await prisma.account.findFirst({
+		where: {
+			username: username
+		}
+	});
+
+	if (!account) {
+		return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.NOT_FOUND);
+	}
+
+	const user = await prisma.account.findFirst({
+		where: {
+			username: username,
+			// report: { equals: 0 }
+		}
+	})
+
+	if (await verifyPassword(password, user.password) === false) {
+		return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+	}
+	
+	if (newPassword !== confirmPassword) {
+		return get_error_response(ERROR_CODES.ACCOUNT_NEW_PASSWORD_AND_CONFIRM_PASSWORD_NOT_MATCH, STATUS_CODE.BAD_REQUEST);
+	}
+
+	const hashedPassword = await hashPassword(newPassword);
+
+	await prisma.account.update({
+		where: { account_id: account.account_id },
+		data: { password: hashedPassword, updated_at: getVietnamTimeNow() }
+	});
+
+	return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, null);
+}
 
 module.exports = {
 	loginAPI, register_service: register,
 	refreshTokenAPI,
+	ChangedPasswordAccountForgot,
 	ChangedPasswordAccount
 }

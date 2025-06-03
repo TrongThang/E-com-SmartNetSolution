@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import axiosPublic from '@/apis/clients/public.client';
+import axiosIOTPublic from '@/apis/clients/iot.private.client';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -34,7 +35,6 @@ export const AuthProvider = ({ children }) => {
                     // fetchUserInfo(decoded);
                     setIsAuthenticated(true);
                     setUser(decoded);
-                    console.log('decoded', decoded)
                 } else {
                     // Token hết hạn
                     localStorage.removeItem('authToken');
@@ -54,20 +54,20 @@ export const AuthProvider = ({ children }) => {
                 password,
                 type: "CUSTOMER"
             });
-
+            
             if (response.status_code === 200) {
                 const token = response.data.accessToken;
                 localStorage.setItem('authToken', token);
-                console.log('token', token);
+                
                 const decoded = jwtDecode(token);
-                console.log('decoded', decoded);
+                
                 setUser(decoded);
                 setIsAuthenticated(true);
                 return { success: true };
             } else {
                 return {
                     success: false,
-                    message: response.data.message || 'Đăng nhập thất bại'
+                    message: response?.message || response?.errors[0]?.message || 'Đăng nhập thất bại'
                 };
             }
         } catch (error) {
@@ -79,6 +79,36 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const loginEmployee = async (username, password) => {
+        try {
+            const response = await axiosPublic.post('http://localhost:8888/api/auth/employee/login', {
+                username,
+                password,
+            });
+            console.log("response", response)
+            if (response.accessToken) {
+                const token = response.accessToken;
+                localStorage.setItem('authToken', token);
+                
+                const decoded = jwtDecode(token);
+                console.log('decoded', decoded);
+                setUser(decoded);
+                setIsAuthenticated(true);
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.data?.message || 'Đăng nhập thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi đăng nhập'
+            };
+        }
+    };
     const register = async (userData) => {
         try {
             const response = await axios.post('http://localhost:8081/api/auth/register', userData);
@@ -108,8 +138,10 @@ export const AuthProvider = ({ children }) => {
 
     const sendOtp = async (email) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { email });
-            if (response.data.status_code === 200) {
+            const response = await axiosPublic.post('auth/send-otp', { email });
+
+            console.log("response", response)
+            if (response.status_code === 200 || response.success) {
                 return { success: true };
             } else {
                 return {
@@ -128,8 +160,8 @@ export const AuthProvider = ({ children }) => {
 
     const verifyOtp = async (email, otp) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/send-otp', { email, otp });
-            if (response.data.status_code === 200) {
+            const response = await axiosPublic.post('auth/verify-otp', { email, otp });
+            if (response.status_code === 200 || response.success) {
                 return { success: true };
             } else {
                 return {
@@ -155,7 +187,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/account/change-password', { email, newPassword, confirmPassword });
+            const response = await axiosIOTPublic.patch('auth/account/changed-password', { email, newPassword, confirmPassword });
             if (response.data.status_code === 200) {
                 return { success: true };
             } else {
@@ -173,11 +205,32 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const verifyOtpForChangeEmail = async (email, otp) => {
+        try {
+            const response = await axiosPublic.post('auth/verify-otp-change-email', { account_id: user.account_id, email, otp });
+            if (response.status_code === 200 || response.success) {
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.data.message || 'Xác thực OTP thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Verify OTP for change email error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi xác thực OTP'
+            };
+        }
+    }
+
     const value = {
         user,
         isAuthenticated,
         loading,
         login,
+        loginEmployee,
         register,
         logout,
         sendOtp,

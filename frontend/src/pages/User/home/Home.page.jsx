@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom"
 import { useState } from "react"
-import { ChevronRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import ProductGrid from "@/components/common/product/ProductGrid.jsx"
@@ -15,17 +14,31 @@ export default function HomePage() {
   const [categories, setCategories] = useState([])
   const fecthProducts = async () => {
     try {
+      const filter = {
+        logic: 'OR',
+        filters: [
+          {
+            field: 'product.status',
+            condition: '=',
+            value: 3,
+          },
+          {
+            field: 'product.status',
+            condition: '=',
+            value: 4,
+          }
+        ]
+      }
       const res = await productApi.search({
-        limit: 100
+        limit: 10,
+        filters: filter
       })
 
-      console.log("resonse:", res)
       if (res.status_code === 200) {
-        const filterFeatured = (res.data?.data || []).filter(item => item.status === 3)
+        const filterFeatured = (res.data.data || []).filter(item => item.status === 3)
 
-        console.log("filterFeatured:", filterFeatured)
-        const filteredNewArrivals = (res.data?.data || []).filter(item => item.status === 4)
-        console.log("filteredNewArrivals:", filteredNewArrivals)
+        const filteredNewArrivals = (res.data.data || []).filter(item => item.status === 4)
+        
         setFeaturedProducts(filterFeatured)
         setNewArrivals(filteredNewArrivals)
       }
@@ -35,7 +48,7 @@ export default function HomePage() {
   }
   const fetchCategories = async () => {
     try {
-      const res = await categoryApi.list({});
+      const res = await categoryApi.list({ limit: 10 });
       if (res.status_code === 200) {
         setCategories(res.data?.categories || []);
       }

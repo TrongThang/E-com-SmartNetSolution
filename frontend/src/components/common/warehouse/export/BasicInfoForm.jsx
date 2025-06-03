@@ -20,7 +20,7 @@ export function BasicInfoForm({ formData, onChange }) {
         const fetchEmployees = async () => {
             const filter = { field: "role.id", condition: "contains", value: "WAREHOUSE" }
             
-            const response = await axiosPublic.get("http://localhost:8081/api/employee", {
+            const response = await axiosPublic.get("employee", {
                 params: {
                     filter: JSON.stringify(filter),
                 }

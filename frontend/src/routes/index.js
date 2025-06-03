@@ -1,59 +1,67 @@
+import { createBrowserRouter } from "react-router-dom";
 import DefaultLayout from "@/components/layout/defaultLayout";
-import HomePage from "@/pages/user/home/Home.page.jsx";
-import SearchPage from "@/pages/user/Search.page.jsx";
-import ProductDetailPage from "@/pages/user/ProductDetail.page.jsx";
-import CartPage from "@/pages/user/Cart.page";
-import CheckoutPage from "@/pages/user/checkout/Checkout.page.jsx";
+import HomePage from "@/pages/User/home/Home.page.jsx";
+import SearchPage from "@/pages/User/Search.page.jsx";
+import ProductDetailPage from "@/pages/User/ProductDetail.page.jsx";
+import CartPage from "@/pages/User/Cart.page";
+import CheckoutPage from "@/pages/User/checkout/Checkout.page.jsx";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 
 // Profile
-import ProfileInfo from "@/pages/user/Profile/Info.jsx";
-import OrdersPage from "@/pages/user/Profile/Orders.jsx";
-import LikedPage from "@/pages/user/Profile/Liked.jsx";
-import AddressesPage from "@/pages/user/Profile/Address.jsx";
+import ProfileInfo from "@/pages/User/Profile/Info.jsx";
+import OrdersPage from "@/pages/User/Profile/Orders.jsx";
+import LikedPage from "@/pages/User/Profile/Liked.jsx";
+import AddressesPage from "@/pages/User/Profile/Address.jsx";
 //Kết thúc
 
 import AdminLayout from "@/components/layout/AdminLayout";
-import SlideshowManagerPage from "@/pages/slideshowManager";
-import BlogListPage from "@/pages/user/BlogList.page.jsx";
-import BlogDetailPage from "@/pages/user/BlogDetail.page.jsx";
-import ContactPage from "@/pages/user/Contact.page.jsx";
-import UnitManagerPage from "@/pages/unitManager";
-import AddUnit from "@/pages/unitManager/AddUnit.jsx";
-import EditUnit from "@/pages/unitManager/EditUnit";
-import WarehouseManagerPage from "@/pages/warehouseManager";
-import AddWarehouse from "@/pages/warehouseManager/AddWarehouse";
-import EditWarehouse from "@/pages/warehouseManager/EditWarehouse";
-import WarrantyTimeManagerPage from "@/pages/warrantyTimeManager";
-import AddWarrantyTime from "@/pages/warrantyTimeManager/AddWarrantyTime";
-import EditWarrantyTime from "@/pages/warrantyTimeManager/EditWarrantyTime";
-import AddSlideshow from "@/pages/slideshowManager/AddSlideshow";
-import EditSlideshow from "@/pages/slideshowManager/EditSlideshow";
-import ContactManagerPage from "@/pages/contactManager";
-import ContactEdit from "@/pages/contactManager/EditContact";
-import ReviewManagerPage from "@/pages/reviewManager";
-import BlogManagerPage from "@/pages/blogManager";
-import AddBlog from "@/pages/blogManager/AddBlog";
-import EditBlog from "@/pages/blogManager/EditBlog";
-import CategoryManagerPage from "@/pages/categoryManager/index.jsx";
-import AddCategoryPage from "@/pages/categoryManager/AddCategory.jsx";
-import EditCategoryPage from "@/pages/categoryManager/EditCategory.jsx";
-
-import { createBrowserRouter } from "react-router-dom";
+import SlideshowManagerPage from "@/pages/Admin/slideshowManager";
+import BlogListPage from "@/pages/User/BlogList.page.jsx";
+import BlogDetailPage from "@/pages/User/BlogDetail.page.jsx";
+import ContactPage from "@/pages/User/Contact.page.jsx";
+import UnitManagerPage from "@/pages/Admin/unitManager";
+import AddUnit from "@/pages/Admin/unitManager/AddUnit.jsx";
+import EditUnit from "@/pages/Admin/unitManager/EditUnit";
+import WarehouseManagerPage from "@/pages/Admin/warehouseManager";
+import AddWarehouse from "@/pages/Admin/warehouseManager/AddWarehouse";
+import EditWarehouse from "@/pages/Admin/warehouseManager/EditWarehouse";
+import WarrantyTimeManagerPage from "@/pages/Admin/warrantyTimeManager";
+import AddWarrantyTime from "@/pages/Admin/warrantyTimeManager/AddWarrantyTime";
+import EditWarrantyTime from "@/pages/Admin/warrantyTimeManager/EditWarrantyTime";
+import AddSlideshow from "@/pages/Admin/slideshowManager/AddSlideshow";
+import EditSlideshow from "@/pages/Admin/slideshowManager/EditSlideshow";
+import ContactManagerPage from "@/pages/Admin/contactManager";
+import ContactEdit from "@/pages/Admin/contactManager/EditContact";
+import ReviewManagerPage from "@/pages/Admin/reviewManager";
+import BlogManagerPage from "@/pages/Admin/blogManager";
+import AddBlog from "@/pages/Admin/blogManager/AddBlog";
+import EditBlog from "@/pages/Admin/blogManager/EditBlog";
+import CategoryManagerPage from "@/pages/Admin/categoryManager/index.jsx";
+import AddCategoryPage from "@/pages/Admin/categoryManager/AddCategory.jsx";
+import EditCategoryPage from "@/pages/Admin/categoryManager/EditCategory.jsx";
 import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
-import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
-import UserManagerPage from "@/pages/userManager";
-import ProductManagerPage from "@/pages/productManager";
-import EmployeeManagerPage from "@/pages/employeeManager";
-import AddUserPage from "@/pages/userManager/AddUser";
-import EditUserPage from "@/pages/userManager/EditUser";
-import AddProductPage from "@/pages/productManager/AddProduct";
-import AttributeGroupPage from "@/pages/attribute_groupManager";
+import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/create";
+import UserManagerPage from "@/pages/Admin/userManager";
+import ProductManagerPage from "@/pages/Admin/productManager";
+import EmployeeManagerPage from "@/pages/Admin/employeeManager";
+import AddUserPage from "@/pages/Admin/userManager/AddUser";
+import EditUserPage from "@/pages/Admin/userManager/EditUser";
+import AddProductPage from "@/pages/Admin/productManager/AddProduct";
+import EditProductPage from "@/pages/Admin/productManager/EditProduct";
+import TemplateManagement from "@/components/common/template/template-management";
+import NewFirmwarePage from "@/components/common/firmware/upload-firmware";
+import FirmwareDetailPage from "@/components/common/firmware/detail-firmware";
+import EditFirmwarePage from "@/components/common/firmware/edit-firmware";
+import CategoryManagement from "@/pages/Admin/categoryManager";
+import StatePrimary from "@/components/common/tracking/StatePrimary";
+import AttributeGroupPage from "@/pages/Admin/attribute_groupManager";
+import FirmwarePage from "@/components/common/firmware/firmware-manager";
 
+import PlanningManagement from "@/pages/Admin/planningManager/page";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: <DefaultLayout />,
     children: [
       {
@@ -213,6 +221,18 @@ export const router = createBrowserRouter([
         element: <EditBlog />,
       },
       {
+        path: 'categories',
+        element: <CategoryManagement />
+      },
+      {
+        path: 'categories/create',
+        element: <AddCategoryPage />
+      },
+      {
+        path: 'categories/create',
+        element: <EditCategoryPage />
+      },
+      {
         path: 'warehouse/import/create',
         element: <CreateImportWarehousePage />
       },
@@ -221,7 +241,7 @@ export const router = createBrowserRouter([
         element: <CreateExportWarehousePage />
       },
       {
-        path: 'users',
+        path: 'customers',
         element: <UserManagerPage />,
       },
       {
@@ -243,12 +263,43 @@ export const router = createBrowserRouter([
       {
         path: 'products/add',
         element: <AddProductPage />
-      }
-      // },
-      // {
-      //   path: 'products/edit/:id',
-      //   element: <EditProductPage />
-      // }
+      },
+      {
+        path: 'products/edit/:id',
+        element: <EditProductPage />
+      },
+      {
+        path: 'templates/:activeTab',
+        element: <TemplateManagement />
+      },
+      {
+        path: 'firmware/new',
+        element: <NewFirmwarePage />
+      },
+      {
+        path: 'firmware/:id',
+        element: <FirmwareDetailPage />
+      },
+      {
+        path: 'firmware/edit/:id',
+        element: <EditFirmwarePage />
+      },
+      {
+        path: 'firmware',
+        element: <FirmwarePage />
+      },
+      {
+        path: 'planning',
+        element: <PlanningManagement />
+      },
+      {
+        path: 'production-trackings',
+        element: <StatePrimary />
+      },
+      {
+        path: 'test-template/:batch',
+        element: <TemplateManagement />
+      },
     ],
   },
 ]);

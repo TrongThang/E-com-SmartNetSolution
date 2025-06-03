@@ -223,3 +223,14 @@ export interface IOrder {
     created_at: string;
     updated_at: string;
 }
+
+export interface IComponent {
+    component_id: number;
+    name: string;
+    supperlier: string;
+    unit_cost: number;
+    created_at: string;
+    updated_at: string;
+    is_deleted: string;
+    status: string;
+}

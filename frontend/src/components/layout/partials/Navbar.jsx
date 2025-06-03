@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, ShoppingCart, User, ChevronDown, Menu } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { formatCurrency } from "@/utils/format"
 import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
@@ -21,12 +21,13 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
+  const location = useLocation();
+  const [isPath, setIsPath] = useState('')
 
   const fetchCategories = async () => {
     try {
-      console.log("Fetching categories...")
       const res = await categoryApi.list({})
-      console.log("Category API response:", res)
+      
       if (res.status_code === 200) {
         const categoriesData = res.data?.categories || []
         const nestedCategories = buildCategoryTree(categoriesData)
@@ -38,10 +39,9 @@ export default function Navbar() {
   }
 
   const handleSearch = () => {
-    if (searchValue.trim()) {
       navigate(`/search?keyword=${encodeURIComponent(searchValue.trim())}`)
       setIsMobileMenuOpen(false) // Close mobile menu after search
-    }
+    
   }
 
   const buildCategoryTree = (categories) => {
@@ -75,18 +75,24 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  useEffect(() => {
+    const path = location.pathname.split('/')[1]
+    setIsPath(path)
+
+  }, [location.pathname])
+
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "py-4 bg-white/95 backdrop-blur-sm"}`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "h-[11.5vh] py-4 bg-white "}`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold text-blue-500">INQ Shop</span>
+            <span className="text-xl font-bold text-blue-500">SmartNet Solution Shop</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-10">
-            <Link to="/" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
+            <Link to="/" className={`text-sm font-medium hover:text-blue-500 transition-colors relative group py-2 ${isPath === '' ? 'text-blue-500' : ''}`}>
               Trang chủ
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
@@ -235,20 +241,20 @@ export default function Navbar() {
                 </div>
               </div>
             </div>
-            <Link to="/blog" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
+            <Link to="/blog" className={`text-sm font-medium hover:text-blue-500 transition-colors relative group py-2 ${isPath === 'blog' ? 'text-blue-500' : ''}`}>
               Tin Tức
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            <Link to="/contact" className="text-sm font-medium hover:text-blue-500 transition-colors relative group py-2">
+            <Link to="/contact" className={`text-sm font-medium hover:text-blue-500 transition-colors relative group py-2 ${isPath === 'contact' ? 'text-blue-500' : ''}`}>
               Liên hệ
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </nav>
 
           <div className="flex items-center gap-3 md:gap-4">
-            <div className="hidden md:flex items-center relative">
+            <div className="hidden md:flex items-center relative ">
               <Input
-                className="w-full border rounded-md p-2 pl-8 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full border rounded-md p-2 pl-8 pr-10 focus:outline-none focus:ring-1 focus:ring-blue-600 border-gray-950 focus:border-none"
                 placeholder="Tìm kiếm..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
@@ -267,14 +273,11 @@ export default function Navbar() {
             </div>
             <Link
               to="/cart"
-              className="relative flex items-center h-10 px-3 rounded-full border border-slate-200 hover:border-blue-200 hover:bg-blue-50 transition-colors"
+              className={`relative flex items-center h-10 px-3 rounded-xl border border-slate-200 hover:border-blue-200 hover:bg-blue-50 hover:shadow-md hover:shadow-blue-200/50 hover:text-blue-500 hover:text-white transition-all duration-300 ${isPath === 'cart' ? 'text-blue-500' : ''}`}
             >
-              <ShoppingCart className="h-5 w-5 text-slate-600" />
-              <span className="ml-2 font-medium text-sm text-blue-500 hidden sm:inline">
-                {formatCurrency(totalAmount)}
-              </span>
+              <ShoppingCart className="h-6 w-6 text-slate-600 hover:text-blue-500" />
               {totalItems > 0 && (
-                <span className="absolute top-2 right-2 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-sm rounded-full flex items-center justify-center w-4 h-4">
                   {totalItems}
                 </span>
               )}
@@ -291,7 +294,7 @@ export default function Navbar() {
                 </Button>
                 <div className="absolute top-full right-0 bg-white shadow-lg rounded-md p-2 min-w-[180px] hidden group-hover:block">
                   <Link
-                    to="/profile"
+                    to="/profile/info"
                     className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md"
                   >
                     Tài khoản của tôi

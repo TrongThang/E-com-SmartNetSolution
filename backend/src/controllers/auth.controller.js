@@ -3,6 +3,7 @@ const {
     loginAPI,
     refreshTokenAPI,
     register_service,
+    ChangedPasswordAccountForgot,
     ChangedPasswordAccount
 } = require('../services/auth.service');
 const bcrypt = require('bcrypt');
@@ -44,19 +45,40 @@ class AuthController {
         return res.status(response.status_code).json(response);
     }
 
-    async changedPassword(req, res) {
-        const response = await ChangedPasswordAccount(req.body)
+    async ChangedPasswordForgot(req, res) {
+        const response = await ChangedPasswordAccountForgot(req.body)
 
         return res.status(response.status_code).json(response)
     }
 
     async getMe(req, res) {
         try {
+            const token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
             const user = await this.prisma.user.findUnique({
-                where: { id: req.user.id },
+                where: {
+                    id: decoded.id
+                },
+                select: {
+                    account_id: true,
+                    id: true,
+                    username: true,
+                    role: true,
+                },
+                include: {
+                    customer: {
+                        select: {
+                            id: true,
+                            name: true,
+                            phone: true,
+                            email: true,
+                        }
+                    }
+                }
             });
 
-            get_error_response(
+            return get_error_response(
                 ERROR_CODES.SUCCESS,
                 STATUS_CODE.OK,
                 user
@@ -80,6 +102,25 @@ class AuthController {
         const { account_id, email, otp } = req.body;
 
         const response = await notificationService.verifyOtpEmail(account_id, email, otp);
+
+        return res.status(response.status_code).json(response);
+    }
+
+    async ChangedPassword(req, res) {
+        console.log(1233123)
+        const response = await ChangedPasswordAccount(req.body)
+
+        return res.status(response.status_code).json(response)
+    }
+
+    async sendOtpEmailForChangeEmail(req, res) {
+        const response = await notificationService.sendOtpEmailForChangeEmail(req.body);
+
+        return res.status(response.status_code).json(response);
+    }
+
+    async verifyOtpEmailForChangeEmail(req, res) {
+        const response = await notificationService.verifyOtpEmailForChangeEmail(req.body);
 
         return res.status(response.status_code).json(response);
     }

@@ -23,3 +23,11 @@ export function formatDate(date) {
         day: "numeric",
     }).format(new Date(date))
 }
+
+export function removeVietnameseTones(str) {
+    return str
+        .normalize("NFD")                    // chuyển thành tổ hợp ký tự (dấu tách riêng)
+        .replace(/[\u0300-\u036f]/g, "")     // xoá các dấu
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D");
+};

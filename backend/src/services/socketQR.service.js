@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 function initializeSocket(server) {
     const io = new Server(server, {
         cors: {
-            origin: "http://localhost:3000", // hoặc ["http://localhost:3000", ...] nếu nhiều domain
+            origin: ["http://localhost:3000", "http://localhost:3001"],
             methods: ["GET", "POST"],
             credentials: true
         }

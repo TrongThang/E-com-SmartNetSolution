@@ -2,8 +2,8 @@ const { io } = require("socket.io-client");
 
 // Thay các giá trị này bằng giá trị thực tế bạn lấy được
 const SOCKET_URL = "http://localhost:8081";
-const roomCode = "EXP-CONNNPTKWXTPK924P93S6UOV";
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6MSwicm9vbUNvZGUiOiJFWFAtQ09OTk5QVEtXWFRQSzkyNFA5M1M2VU9WIiwiaWF0IjoxNzQ3NzMzNDcwLCJleHAiOjE3NDc3MzcwNzB9.GEQOVhB1oAAVqMSqJ_KSLn8vIATQ1SHw5UQExtDwSv8";
+const roomCode = "EXP-CONN7770RVLU9S6MU86ASGN3";
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6MSwicm9vbUNvZGUiOiJFWFAtQ09OTjc3NzBSVkxVOVM2TVU4NkFTR04zIiwiaWF0IjoxNzQ4MDU0MjEwLCJleHAiOjE3NDgwNTc4MTB9.V8N5ipXYnjFCtYCUuaocqY3ipyXvTK5EY2kIfbRpbRg";
 console.log("Bắt đầu test mobile socket:\n", {
     SOCKET_URL,
     roomCode,
@@ -27,7 +27,7 @@ socket.on("connect", () => {
         //     }
         // ]
         // Test nhập sản phẩm
-        serial_number: "IMP-12345678912312"
+        serial_number: "IMP172387238"
     });
 
     // Gửi thông tin kết nối (nếu cần)
