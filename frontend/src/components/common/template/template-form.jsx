@@ -3,9 +3,11 @@ import { useState, useEffect } from "react";
 import { X, Plus, Minus, Search } from "lucide-react";
 import { ComponentFormModal } from "../component/form-component";
 import categoryApi from "@/apis/modules/categories.api.ts";
+import CategoryModal from "./category-modal";
 
 export default function TemplateForm({ template, components, setComponents, onSave, onCancel }) {
   const [formData, setFormData] = useState({
+    template_id: null,
     name: "",
     device_type_id: "",
     device_type_name: "",
@@ -49,6 +51,7 @@ export default function TemplateForm({ template, components, setComponents, onSa
       });
 
       setFormData({
+        template_id: template.template_id || null,
         name: template.name,
         device_type_id: initialDeviceTypeId,
         device_type_name: initialDeviceTypeName,
@@ -139,6 +142,10 @@ export default function TemplateForm({ template, components, setComponents, onSa
     });
   };
 
+  const handleCategoryFetch = () => {
+    fetchCategories();
+  }
+
   const handleComponentSubmit = (e) => {
     e.preventDefault();
     const newComponent = {
@@ -169,6 +176,7 @@ export default function TemplateForm({ template, components, setComponents, onSa
     }
 
     const payload = {
+      template_id: formData.template_id,
       name: formData.name,
       device_type_id: deviceTypeId,
       production_cost: formData.production_cost,
@@ -276,17 +284,24 @@ export default function TemplateForm({ template, components, setComponents, onSa
               </div>
             </div>
             <div>
+
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium">Linh kiện ({formData.components.length})</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowComponentSearch(true)}
-                  className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-green-700"
-                >
-                  <Plus size={16} />
-                  <span>Thêm linh kiện</span>
-                </button>
+                <div className="flex space-x-2">
+                <CategoryModal
+                fetchCategories={handleCategoryFetch}
+              />
+                  <button
+                    type="button"
+                    onClick={() => setShowComponentSearch(true)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-green-700"
+                  >
+                    <Plus size={16} />
+                    <span>Thêm linh kiện</span>
+                  </button>
+                </div>
               </div>
+
               {showComponentSearch && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
                   <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">

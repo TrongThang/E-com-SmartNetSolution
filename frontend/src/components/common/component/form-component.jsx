@@ -34,6 +34,7 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
                     icon: "success",
                 })
                 fetchComponent();
+                onClose();
             } else {
                 Swal.fire({
                     title: "Lỗi",
@@ -43,6 +44,19 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
             }
         } catch (error) {
             console.error('Failed to create component:', error);
+            if (error.response?.data?.code === "CONFLICT") {
+                Swal.fire({
+                    title: "Lưu ý",
+                    text: "Tên linh kiện đã tồn tại",
+                    icon: "warning",
+                });
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: error.response?.data?.message,
+                    icon: "error",
+                });
+            }
         }
     }
 
@@ -62,6 +76,7 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
                     status: true,
                 })
                 fetchComponent();
+                onClose();
             } else {
                 Swal.fire({
                     title: "Lỗi",
@@ -71,6 +86,19 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
             }
         } catch (error) {
             console.error('Failed to update component:', error);
+            if (error.response?.data?.code === "CONFLICT") {
+                Swal.fire({
+                    title: "Lưu ý",
+                    text: "Tên linh kiện đã tồn tại",
+                    icon: "warning",
+                });
+            } else {
+                Swal.fire({
+                    title: "Lỗi",
+                    text: error.response?.data?.message,
+                    icon: "error",
+                });
+            }
         }
     }
 
@@ -86,7 +114,6 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
                             <form onSubmit={(e) => {
                                 e.preventDefault();
                                 isEdit ? updateComponent() : createComponent();
-                                onClose()
                             }} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Tên linh kiện</label>
