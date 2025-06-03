@@ -1,17 +1,17 @@
 import { createBrowserRouter } from "react-router-dom";
 import DefaultLayout from "@/components/layout/defaultLayout";
-import HomePage from "@/pages/user/home/Home.page.jsx";
-import SearchPage from "@/pages/user/Search.page.jsx";
-import ProductDetailPage from "@/pages/user/ProductDetail.page.jsx";
-import CartPage from "@/pages/user/Cart.page";
-import CheckoutPage from "@/pages/user/checkout/Checkout.page.jsx";
+import HomePage from "@/pages/User/home/Home.page.jsx";
+import SearchPage from "@/pages/User/Search.page.jsx";
+import ProductDetailPage from "@/pages/User/ProductDetail.page.jsx";
+import CartPage from "@/pages/User/Cart.page";
+import CheckoutPage from "@/pages/User/checkout/Checkout.page.jsx";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 
 // Profile
-import ProfileInfo from "@/pages/user/Profile/Info.jsx";
-import OrdersPage from "@/pages/user/Profile/Orders.jsx";
-import LikedPage from "@/pages/user/Profile/Liked.jsx";
-import AddressesPage from "@/pages/user/Profile/Address.jsx";
+import ProfileInfo from "@/pages/User/Profile/Info.jsx";
+import OrdersPage from "@/pages/User/Profile/Orders.jsx";
+import LikedPage from "@/pages/User/Profile/Liked.jsx";
+import AddressesPage from "@/pages/User/Profile/Address.jsx";
 //Kết thúc
 
 import AdminLayout from "@/components/layout/AdminLayout";

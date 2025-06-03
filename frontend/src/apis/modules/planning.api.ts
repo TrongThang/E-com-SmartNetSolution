@@ -1,5 +1,6 @@
 import axiosIOTPublic from "../clients/iot.private.client";
 import axiosPrivate from "../clients/private.client"
+import axiosIOTPublic from "../clients/iot.private.client"
 import type { IApiResponse } from "@/models/interfaces"
 
 const planningEndpoints = {
@@ -90,7 +91,7 @@ const PlanningApi = {
 
     async getBatches(planningId: string): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.get(planningEndpoints.batches(planningId))
+            return await axiosIOTPublic.get(planningEndpoints.batches(planningId))
         } catch (error) {
             throw error
         }

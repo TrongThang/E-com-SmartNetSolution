@@ -192,9 +192,11 @@ const AddBlog = () => {
                                     plugins: [
                                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                                         'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                                        'insertdatetime', 'media', 'table', 'help', 'wordcount',
+                                        'emoticons','media','preview','table'
+
                                     ],
-                                    toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify |  outdent indent | removeformat |link | help',
+                                    toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify |  outdent indent | removeformat link image|fullscreen code| emoticons preview table help',
 
                                     content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
                                     skin_url: '/tinymce/skins/ui/oxide',

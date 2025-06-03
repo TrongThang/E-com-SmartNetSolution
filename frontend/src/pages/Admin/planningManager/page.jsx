@@ -107,8 +107,16 @@ export default function ProductionPlanningManagement() {
     const matchesSearch =
       planning.planning_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       planning.planning_note?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || planning.status.toLowerCase() === statusFilter.toLowerCase();
-    return matchesSearch && matchesStatus && !planning.is_deleted;
+
+    // Thay đổi logic lọc status
+    const matchesStatus =
+      statusFilter === "rejected"
+        ? planning.status.toLowerCase() === "rejected"
+        : statusFilter === "all"
+          ? planning.status.toLowerCase() !== "rejected" // Ẩn các kế hoạch bị hủy khi xem tất cả
+          : planning.status.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
   });
 
   useEffect(() => {
@@ -461,6 +469,14 @@ export default function ProductionPlanningManagement() {
             className="pl-10"
           />
         </div>
+        <Button
+          variant={statusFilter === "rejected" ? "destructive" : "outline"}
+          onClick={() => setStatusFilter(statusFilter === "rejected" ? "all" : "rejected")}
+          className="flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x-circle"><circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" /></svg>
+          {statusFilter === "rejected" ? "Tất cả kế hoạch" : "Xem kế hoạch bị hủy"}
+        </Button>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Lọc theo trạng thái" />

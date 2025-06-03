@@ -1,6 +1,6 @@
 import axiosPrivate from "../clients/private.client";
 import { ESortOrderValue } from "@/models/enums/option";
-import { FilterSearch, IApiResponse, IReview, IProductDetail } from "@/models/interfaces";
+import { FilterSearch, IApiResponse, IReview, IProductDetail } from "@/models/interfaces/index";
 import axiosPublic from "../clients/public.client";
 
 const reviewEndpoints = {
