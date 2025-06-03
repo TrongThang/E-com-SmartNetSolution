@@ -25,14 +25,14 @@ class CategoriesController {
         return res.status(response.status_code).json(response);
     }
     async createCategories(req, res) {
-        const { name, description, image, attribute_id, parent_id } = req.body || {};
-        const response = await createCategoriesService({ name, description, image, attribute_id, parent_id });
+        const { name, slug,description, image, is_hide,attribute_id, parent_id } = req.body || {};
+        const response = await createCategoriesService({ name, slug, description, image, is_hide, attribute_id, parent_id });
         return res.status(response.status_code).json(response);
     }
     async updateCategories(req, res) {
         const { id } = req.params;
-        const { name, description, image, is_hide, attribute_id, parent_id } = req.body || {};
-        const response = await updateCategoriesService({ id, name, description, image, is_hide, attribute_id, parent_id });
+        const { name, slug, description, image, is_hide, attribute_id, parent_id } = req.body || {};
+        const response = await updateCategoriesService({ id, name, slug, description, image, is_hide, attribute_id, parent_id });
         return res.status(response.status_code).json(response);
     }
     async deletedSoftCategories(req, res) {
