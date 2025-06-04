@@ -94,6 +94,64 @@ async function loginAPI(username, password, type = null, remember_me = null) {
 	}
 }
 
+async function loginEmployee({ username, password }) {
+	const account = await prisma.account.findFirst({ where: { username: username, deleted_at: null } });
+	if (!account) {
+		return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+	}
+
+	if (!account.password) {
+		return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+	} else {
+		const isPasswordValid = await verifyPassword(password, account.password);
+		if (!isPasswordValid) {
+			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+		}
+	}
+
+	if (!account.employee_id) {
+		return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+	}	
+
+	const employee = await prisma.employee.findFirst(
+		{ where: { id: account.employee_id, deleted_at: null } }
+	);
+	if (!employee) {
+		return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+	}
+
+	const accessToken = jwt.sign(
+		{
+			account_id: account.account_id,
+			username: account.username,
+			employee_id: employee.id,
+			role: account.role_id || 'employee',
+		},
+		process.env.SECRET_KEY,
+		{ expiresIn: '8h' }
+	);
+
+	const refreshToken = jwt.sign(
+		{ employeeId: account.account_id, type: 'refresh' },
+		process.env.SECRET_KEY,
+		{ expiresIn: '8h' }
+	);
+
+	// Redis logic - có thể comment để disable
+	// const previousAccessToken = await redisClient.get(`employee:token:${account.account_id}`);
+	// const previousRefreshToken = await redisClient.get(`employee:refresh:${account.account_id}`);
+	// if (previousAccessToken) {
+	// 	await blacklistToken(previousAccessToken, 8 * 60 * 60);
+	// }
+	// if (previousRefreshToken) {
+	// 	await blacklistToken(previousRefreshToken, 8 * 60 * 60);
+	// }
+	// await redisClient.setex(`employee:token:${account.account_id}`, 8 * 60 * 60, accessToken);
+	// await redisClient.setex(`employee:refresh:${account.account_id}`, 8 * 60 * 60, refreshToken);
+
+	return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, { accessToken, refreshToken });
+}
+
 const refreshTokenAPI = async (req, res) => {
 	try {
 		const { refresh_token } = req.body;
@@ -261,5 +319,6 @@ module.exports = {
 	loginAPI, register_service: register,
 	refreshTokenAPI,
 	ChangedPasswordAccountForgot,
-	ChangedPasswordAccount
+	ChangedPasswordAccount,
+	loginEmployee
 }

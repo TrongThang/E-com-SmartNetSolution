@@ -3,12 +3,20 @@ import { Link } from "react-router-dom";
 import StarRating from "../reviews/StarRating";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format";
+import { useNavigate } from "react-router-dom";
+
 export function ProductCard({ product }) {
-    console.log("Rendering ProductCard for product:", product);
-    const { id, image, name, selling_price, slug, description_normal, total_review, categories, average_rating, sold } = product;
+    const { id, image, name, selling_price, slug, description_normal, total_review, average_rating, sold } = product;
+    const navigate = useNavigate();
+
+    const handleClick = () => {
+        navigate(`/products/${id}`);
+    }
+
     return (
-        <Link to={`/products/${id}`}>
-        <Card className="h-full overflow-hidden border border-gray-200 transition-all duration-300 hover:scale-105 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100">
+        <Card className="h-full overflow-hidden border border-gray-200 transition-all duration-300 hover:scale-105 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100"
+            onClick={handleClick}
+        >
             <div className="relative aspect-square overflow-hidden bg-gray-100 p-4 max-h-[15vh]">
                 <img
                     src={image || "/placeholder.svg"}
@@ -38,7 +46,6 @@ export function ProductCard({ product }) {
                     <Link to={`/products/${id}`}>Chi tiết</Link>
                 </Button>
             </CardFooter>
-            </Card>
-        </Link>
+        </Card>
     );
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Bell, ChevronDown, LogOut, Settings, User, Wifi, Thermometer, Shield, Calendar } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export default function Topbar() {
     const [notifications] = useState(3)
@@ -22,18 +21,35 @@ export default function Topbar() {
     const role = "Quản trị viên"
     const email = "nguyenvana@smartnet.com"
 
-    const now = new Date()
-    const time = now.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-    })
-    const date = now.toLocaleDateString("vi-VN", {
-        weekday: "long",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-    })
+    const [time, setTime] = useState("")
+    const [date, setDate] = useState("")
+
+    useEffect(() => {
+        const updateTime = () => {
+            const now = new Date()
+
+            const newTime = now.toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            })
+
+            const newDate = now.toLocaleDateString("vi-VN", {
+                weekday: "long",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+            })
+
+            setTime(newTime)
+            setDate(newDate)
+        }
+
+        updateTime() // chạy lần đầu
+        const interval = setInterval(updateTime, 1000)
+
+        return () => clearInterval(interval) // cleanup khi component unmount
+    }, [])
 
     return (
         <div className="h-[10vh] w-full bg-gradient-to-r from-slate-950 to-blue-900 text-slate-100 shadow-md flex items-center justify-between px-4 border-b border-slate-700">

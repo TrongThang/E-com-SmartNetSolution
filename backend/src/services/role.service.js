@@ -7,6 +7,8 @@ const { get } = require('../routes/role.route');
 
 const prisma = new PrismaClient();
 
+
+
 const getRoleService = async (filter, limit, sort, order) => {
     try {
         const get_attr = `role.name as role_name, permission.name as per_name, permission.code, permission.type, permission.show_in_menu ,role.created_at, role.updated_at, role.deleted_at`;
@@ -14,13 +16,6 @@ const getRoleService = async (filter, limit, sort, order) => {
         const query_join = `LEFT JOIN permission_role ON role.id = permission_role.role_id
         LEFT JOIN permission ON permission.id = permission_role.permission_id`;
 
-        const filter = JSON.stringify([
-            {
-                field: "role.deleted_at",
-                condition: "is",
-                value: null,
-            }
-        ])
         const result = await executeSelectData({
             strGetColumn: get_attr,
             table: get_table,
@@ -44,27 +39,8 @@ const getRoleService = async (filter, limit, sort, order) => {
 }
 const getRoleDetailService = async (id) => {
     try {
-        const get_attr = `role.id, role.name as role_name, role.created_at, role.updated_at, permission.name as permission_name, permission.code as permission_code`;
-        const get_table = `role`;
-        const query_join = `
-            LEFT JOIN permission_role ON role.id = permission_role.role_id
-            LEFT JOIN permission ON permission_role.permission_id = permission.id`;
-
-        // Bộ lọc
-        const filter = JSON.stringify([
-            {
-                field: "role.id",
-                condition: "=",
-                value: id
-            }
-        ]);
-
-        // Thực hiện truy vấn
-        const result = await executeSelectData({
-            strGetColumn: get_attr,
-            table: get_table,
-            queryJoin: query_join,
-            filter: filter
+        const result = await prisma.role.findFirst({
+            where: { id: id , deleted_at: null},
         });
 
         // Trả về kết quả
@@ -82,21 +58,13 @@ const getRoleDetailService = async (id) => {
         );
     }
 };
-const createRoleService = async (id, name, permission) => {
+const createRoleService = async (name) => {
     try {
-        const idExits = await prisma.role.findFirst({
-            where: { id: id, deleted_at: null },
-        });
-        if (idExits) {
-            return get_error_response(
-                ERROR_CODES.ROLE_ID_EXISTED,
-                STATUS_CODE.BAD_REQUEST,
-            );
-        }
-        
         const nameExits = await prisma.role.findFirst({
             where: { name: name, deleted_at: null },
         });
+
+        console.log('nameExits', nameExits)
 
         if (nameExits) {
             return get_error_response(
@@ -104,28 +72,13 @@ const createRoleService = async (id, name, permission) => {
                 STATUS_CODE.BAD_REQUEST,
             );
         }
-        
-        // Tạo vai trò mới
+
         const role = await prisma.role.create({
             data: {
-                id: id, // ID phải là String
                 name: name,
-                created_at: getVietnamTimeNow(),
-                permission_role: {
-                    create: permission.map(permissionId => ({
-                        permission_id: permissionId,
-                        created_at: getVietnamTimeNow(),
-                    })),
-                },
             },
-            include: {
-                permission_role: {
-                    include: {
-                        permission: true, // Lấy thông tin chi tiết của quyền
-                    },
-                },
-            },
-        });
+        }); 
+
         // Trả về kết quả thành công
         return get_error_response(
             ERROR_CODES.SUCCESS,
@@ -142,8 +95,18 @@ const createRoleService = async (id, name, permission) => {
     }
 };
 
-const updateRoleService = async (id, name, permission) => {
+const updateRoleService = async (id, name) => {
     try {
+        const existingRole = await prisma.role.findFirst({
+            where: { id: id, deleted_at: null },
+        });
+
+        if (!existingRole) {
+            return get_error_response(
+                ERROR_CODES.ROLE_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND,
+            );
+        }
 
         const nameExits = await prisma.role.findFirst({
             where: {
@@ -151,22 +114,11 @@ const updateRoleService = async (id, name, permission) => {
                 NOT: { id: id }
             },
         });
+
         if (nameExits) {
             return get_error_response(
                 ERROR_CODES.ROLE_NAME_EXISTED,
                 STATUS_CODE.BAD_REQUEST,
-            );
-        }
-
-        // Kiểm tra nếu vai trò không tồn tại
-        const existingRole = await prisma.role.findUnique({
-            where: { id: id },
-        });
-
-        if (!existingRole) {
-            return get_error_response(
-                ERROR_CODES.ROLE_NOT_FOUND,
-                STATUS_CODE.NOT_FOUND,
             );
         }
 
@@ -177,47 +129,13 @@ const updateRoleService = async (id, name, permission) => {
             },
             data: {
                 name,
-                updated_at: getVietnamTimeNow(),
             },
         });
 
-        // Xóa các quyền liên kết cũ
-        await prisma.permission_role.deleteMany({
-            where: {
-                role_id: id,
-                deleted_at: null,
-            },
-        });
-
-        // Thêm các quyền mới vào bảng permission_role
-        if (permission && permission.length > 0) {
-            const permissionRoleData = permission.map(permissionId => ({
-                role_id: id,
-                permission_id: permissionId,
-                updated_at: getVietnamTimeNow(),
-            }));
-
-            await prisma.permission_role.createMany({
-                data: permissionRoleData,
-            });
-        }
-
-        // Lấy thông tin vai trò cùng danh sách quyền sau khi cập nhật
-        const roleWithPermissions = await prisma.role.findUnique({
-            where: { id: id },
-            include: {
-                permission_role: {
-                    include: {
-                        permission: true, // Lấy thông tin chi tiết của quyền
-                    },
-                },
-            },
-        });
         // Trả về kết quả thành công
         return get_error_response(
             ERROR_CODES.SUCCESS,
             STATUS_CODE.OK,
-            roleWithPermissions
         );
     } catch (error) {
         console.error("Error in updateRoleService:", error);

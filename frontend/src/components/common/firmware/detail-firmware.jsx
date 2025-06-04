@@ -10,6 +10,8 @@ import {
 	AlertTriangle,
 	FileText,
 	FileX,
+	ShieldCheck,
+	UserRoundPen,
 } from "lucide-react"
 import Swal from "sweetalert2"
 import axiosIOTPublic from "@/apis/clients/iot.private.client"
@@ -71,14 +73,14 @@ export default function FirmwareDetailPage() {
 		if (!firmware.tested_at) {
 			return (
 				<Button variant="ghost" size="sm" className="gap-1 bg-blue-500 hover:bg-blue-600 text-white hover:text-white" onClick={() => handleSubmit("confirmTest")}>
-					<ArrowLeft className="h-4 w-4" />
+					<ShieldCheck className="h-4 w-4" />
 					Xác nhận kiểm tra
 				</Button>
 			)
 		} else if (!firmware.is_approved) {
 			return (
 				<Button variant="ghost" size="sm" className="gap-1 bg-green-500 hover:bg-green-600 text-white hover:text-white" onClick={() => handleSubmit("confirmApprove")}>
-					<ArrowLeft className="h-4 w-4" />
+					<UserRoundPen className="h-4 w-4" />
 					Xác nhận duyệt
 				</Button>
 			)
@@ -159,7 +161,7 @@ export default function FirmwareDetailPage() {
 		<div className="max-w-7xl mx-auto space-y-8 p-6">
 			<div className="flex items-center justify-between">
 				<Button variant="ghost" size="sm" asChild className="gap-1 hover:bg-gray-100">
-					<Link to="/admin/manager-template">
+					<Link to="/admin/firmwares">
 						<ArrowLeft className="h-4 w-4" />
 						Trở về
 					</Link>
@@ -182,12 +184,12 @@ export default function FirmwareDetailPage() {
 								</CardDescription>
 							</div>
 							<div className="text-right space-y-2">
-								{firmware.is_mandatory && (
+								{firmware.is_mandatory ? (
 									<Badge variant="destructive" className="mb-2 px-3 py-1">
 										<AlertTriangle className="h-3 w-3 mr-1" />
 										Bắt buộc
 									</Badge>
-								)}
+								) : <></>}
 							</div>
 							{getActionButton()}
 						</div>

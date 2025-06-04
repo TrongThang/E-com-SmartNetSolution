@@ -15,24 +15,25 @@ class RoleController {
     }
     async getRoleDetail(req, res) {
         const { id } = req.params;
-        const response = await getRoleDetailService(id)
+        
+        const response = await getRoleDetailService(Number(id))
         return res.status(response.status_code).json(response);
     }
     async createRole(req, res) {
-        const { id, name, permission } = req.body;
-        const response = await createRoleService(id, name, permission)
+        const { name } = req.body;
+        const response = await createRoleService(name)
         return res.status(response.status_code).json(response);
     }
     async updateRole(req, res) {
         const { id } = req.params;
-        const { name, permission } = req.body;
-        const response = await updateRoleService(id, name, permission)
+        const { name } = req.body;
+        const response = await updateRoleService(Number(id), name)
         return res.status(response.status_code).json(response);
     }
     async toggleDeleteRestoreRole(req, res) {
         const { id } = req.params;
         const { isRestore } = req.body || {};
-        const response = await toggleDeleteRestoreRoleService(id, isRestore)
+        const response = await toggleDeleteRestoreRoleService(Number(id), isRestore)
         return res.status(response.status_code).json(response);
     }
 }

@@ -56,7 +56,6 @@ const getCartFromCookie = () => {
 // Hàm lưu cart vào cookie
 const saveCartToCookie = (cart) => {
     try {
-        console.log("cart saveCartToCookie", cart)
         if (!cart || !Array.isArray(cart.items)) {
             console.error('Invalid cart data:', cart);
             return;
@@ -114,7 +113,7 @@ export const CartProvider = ({ children }) => {
                 ]
             };
 
-            if (user.customer_id) {
+            if (user && user.customer_id) {
                 filters.filters.push({
                     "field": "customer_id",
                     "condition": "=",
@@ -138,12 +137,9 @@ export const CartProvider = ({ children }) => {
     // Khởi tạo cart
     const initializeCart = async () => {
         try {
-            console.log("Vào đăng nhập", isAuthenticated)
             if (isAuthenticated) {
                 const serverCart = await cartApi.getByIdCustomer(user.customer_id);
-                console.log("serverCart", serverCart)
                 if (serverCart && serverCart.data) {
-                    console.log("serverCart.data", serverCart.data)
                     const items = serverCart.data.map(item => ({
                         ...item,
                         id: item.id,
@@ -159,7 +155,7 @@ export const CartProvider = ({ children }) => {
 
                     setCart({
                         items: items,
-                        total: items.reduce((total, item) => total + (item.selling_price * item.quantity), 0)
+                        total: items?.reduce((total, item) => total + (item.selling_price * item.quantity), 0)
                     });
                 } else {
                     setCart({
@@ -392,7 +388,6 @@ export const CartProvider = ({ children }) => {
 
     // Tính toán các thống kê từ cart
     const cartStats = useMemo(() => (
-        console.log('cart', cart),
         {
         totalItems: cart.items.reduce((total, item) => total + item.quantity, 0),
         totalAmount: cart.total,
@@ -410,7 +405,6 @@ export const CartProvider = ({ children }) => {
             initializeCart()
             cartApi.updateCart(user.customer_id, cart).catch(console.error);
         } else {
-            console.log("Đăng nhập thất bại")
             setCart(getCartFromCookie());
         }
     }, [isAuthenticated]);

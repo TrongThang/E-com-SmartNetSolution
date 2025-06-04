@@ -4,7 +4,8 @@ const {
     refreshTokenAPI,
     register_service,
     ChangedPasswordAccountForgot,
-    ChangedPasswordAccount
+    ChangedPasswordAccount,
+    loginEmployee
 } = require('../services/auth.service');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -45,6 +46,14 @@ class AuthController {
         return res.status(response.status_code).json(response);
     }
 
+    async loginEmployee(req, res) {
+        const { username, password } = req.body;
+
+        const response = await loginEmployee({ username, password });
+
+        return res.status(response.status_code).json(response);
+    }
+
     async ChangedPasswordForgot(req, res) {
         const response = await ChangedPasswordAccountForgot(req.body)
 
@@ -71,6 +80,49 @@ class AuthController {
                         select: {
                             id: true,
                             name: true,
+                            phone: true,
+                            email: true,
+                        }
+                    }
+                }
+            });
+
+            return get_error_response(
+                ERROR_CODES.SUCCESS,
+                STATUS_CODE.OK,
+                user
+            );
+        } catch (error) {
+            console.error(error);
+            return get_error_response(
+                ERROR_CODES.INTERNAL_SERVER_ERROR,
+                STATUS_CODE.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async getMeEmployee(req, res) {
+        try {
+            const token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+            const user = await this.prisma.employee.findUnique({
+                where: {
+                    id: decoded.employeeId
+                },
+                select: {
+                    account_id: true,
+                    id: true,
+                    username: true,
+                    role: true,
+                },
+                include: {
+                    employee: {
+                        select: {
+                            id: true,
+                            name: true,
+                            surname: true,
+                            lastname: true,
                             phone: true,
                             email: true,
                         }

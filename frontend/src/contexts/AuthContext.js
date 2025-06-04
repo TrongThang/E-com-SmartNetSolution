@@ -7,8 +7,10 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [employee, setEmployee] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
 
     // const fetchUserInfo = async (token) => {
     //     try {
@@ -44,6 +46,26 @@ export const AuthProvider = ({ children }) => {
                 localStorage.removeItem('authToken');
             }
         }
+
+        const employeeToken = localStorage.getItem('employeeToken');
+        
+        if(employeeToken){
+            try {
+                const decoded = jwtDecode(employeeToken);
+                if (decoded.exp * 1000 > Date.now()) {
+                    // fetchUserInfo(decoded);
+                    setIsAdminAuthenticated(true);
+                    setEmployee(decoded);
+                } else {
+                    // Token hết hạn
+                    localStorage.removeItem('employeeToken');
+                }
+            } catch (error) {
+                console.error('Error decoding token:', error);
+                localStorage.removeItem('employeeToken');
+            }
+        }
+
         setLoading(false);
     }, []);
 
@@ -81,24 +103,23 @@ export const AuthProvider = ({ children }) => {
 
     const loginEmployee = async (username, password) => {
         try {
-            const response = await axiosPublic.post('http://localhost:8888/api/auth/employee/login', {
+            const response = await axiosPublic.post('auth/login-employee', {
                 username,
                 password,
             });
-            console.log("response", response)
-            if (response.accessToken) {
-                const token = response.accessToken;
-                localStorage.setItem('authToken', token);
+            if (response.data.accessToken) {
+                const token = response.data.accessToken;
+                localStorage.setItem('employeeToken', token);
                 
                 const decoded = jwtDecode(token);
                 console.log('decoded', decoded);
-                setUser(decoded);
-                setIsAuthenticated(true);
+                setIsAdminAuthenticated(true);
+                setEmployee(decoded);
                 return { success: true };
             } else {
                 return {
                     success: false,
-                    message: response.data?.message || 'Đăng nhập thất bại'
+                    message: response.data?.message || response.data?.errors[0]?.message || 'Đăng nhập thất bại'
                 };
             }
         } catch (error) {
@@ -140,7 +161,6 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await axiosPublic.post('auth/send-otp', { email });
 
-            console.log("response", response)
             if (response.status_code === 200 || response.success) {
                 return { success: true };
             } else {
@@ -228,6 +248,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         isAuthenticated,
+        isAdminAuthenticated,
         loading,
         login,
         loginEmployee,

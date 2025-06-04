@@ -16,9 +16,9 @@ const asyncHandler = (fn) => {
 }
 
 roleRouter.get('/', asyncHandler(getRole));
-roleRouter.get('/:id', asyncHandler(getRoleDetail));
+roleRouter.get('/detail/:id', asyncHandler(getRoleDetail));
 roleRouter.post('/', validateMiddleware(CreateRoleSchema) ,asyncHandler(createRole));
 roleRouter.put('/:id',  validateMiddleware(UpdateRoleSchema),asyncHandler(updateRole));
-roleRouter.patch('/:id',  asyncHandler(toggleDeleteRestoreRole));
+roleRouter.delete('/:id',  asyncHandler(toggleDeleteRestoreRole));
 
 module.exports = roleRouter;

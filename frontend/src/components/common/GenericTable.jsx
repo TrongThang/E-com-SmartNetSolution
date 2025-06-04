@@ -75,6 +75,7 @@ export default function GenericTable({
 
   const currentData = useMemo(() => {
     const startIndex = (currentPage - 1) * rowsPerPage;
+
     return filteredData.slice(startIndex, startIndex + rowsPerPage);
   }, [filteredData, currentPage, rowsPerPage]);
 

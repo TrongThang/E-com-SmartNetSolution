@@ -166,7 +166,7 @@ export default function CategoryManagement() {
                 }
               }}
             >
-              <Folder size={16} className="mr-2 text-gray-500" />
+              <Folder size={16} className="mr-2 text-yellow-500" />
               <span className="text-sm flex-1">
                 {category.name}
                 {searchTerm && category.name.toLowerCase().includes(searchTerm.toLowerCase()) && (
@@ -248,7 +248,7 @@ export default function CategoryManagement() {
               <h2 className="font-medium">Danh mục</h2>
               <Button
                 onClick={handleAddCategory}
-                className="px-6 bg-black text-white hover:opacity-70 flex items-center gap-2"
+                className="px-6 bg-blue-600 text-white hover:opacity-70 flex items-center gap-2"
               >
                 <Plus size={16} /> Thêm danh mục
               </Button>

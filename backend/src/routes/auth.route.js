@@ -3,7 +3,8 @@ const { login, getMe, register,
     sendOtpEmail, verifyOtpEmail,
     ChangedPasswordForgot,
     ChangedPassword,
-    verifyOtpEmailForChangeEmail
+    verifyOtpEmailForChangeEmail,
+    loginEmployee
 } = require('../controllers/auth.controller');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const authRouter = express.Router();
@@ -19,6 +20,7 @@ const asyncHandler = (fn) => {
 // Đăng nhập và đăng ký
 authRouter.post('/login', validateMiddleware(loginSchema), asyncHandler(login));
 authRouter.post('/register', validateMiddleware(registerCustomerSchema), asyncHandler(register));
+authRouter.post('/login-employee', validateMiddleware(loginSchema), asyncHandler(loginEmployee));
 
 // Xác minh tài khoản
 authRouter.post('/send-otp', validateMiddleware(sendOtpSchema), asyncHandler(sendOtpEmail));

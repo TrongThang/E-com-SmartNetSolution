@@ -56,8 +56,12 @@ import CategoryManagement from "@/pages/Admin/categoryManager";
 import StatePrimary from "@/components/common/tracking/StatePrimary";
 import AttributeGroupPage from "@/pages/Admin/attribute_groupManager";
 import FirmwarePage from "@/components/common/firmware/firmware-manager";
-
 import PlanningManagement from "@/pages/Admin/planningManager/page";
+import EmployeeLogin from "@/components/common/auth/EmployeeLogin";
+import Permission from "@/pages/Admin/roleManager/permission";
+import RoleManager from "@/pages/Admin/roleManager";
+import EditRole from "@/pages/Admin/roleManager/edit";
+import CreateRole from "@/pages/Admin/roleManager/create";
 
 export const router = createBrowserRouter([
   {
@@ -123,6 +127,10 @@ export const router = createBrowserRouter([
         element: <ContactPage />,
       },
     ],
+  },
+  {
+    path: "/admin/login",
+    element: <EmployeeLogin />,
   },
   {
     path: "/admin",
@@ -273,19 +281,19 @@ export const router = createBrowserRouter([
         element: <TemplateManagement />
       },
       {
-        path: 'firmware/new',
+        path: 'firmwares/new',
         element: <NewFirmwarePage />
       },
       {
-        path: 'firmware/:id',
+        path: 'firmwares/:id',
         element: <FirmwareDetailPage />
       },
       {
-        path: 'firmware/edit/:id',
+        path: 'firmwares/edit/:id',
         element: <EditFirmwarePage />
       },
       {
-        path: 'firmware',
+        path: 'firmwares',
         element: <FirmwarePage />
       },
       {
@@ -299,6 +307,22 @@ export const router = createBrowserRouter([
       {
         path: 'test-template/:batch',
         element: <TemplateManagement />
+      },
+      {
+        path: 'role',
+        element: <RoleManager />
+      },
+      {
+        path: 'role/permission/:id',
+        element: <Permission />
+      },
+      {
+        path: 'role/edit/:id',
+        element: <EditRole />
+      },
+      {
+        path: 'role/create',
+        element: <CreateRole />
       },
     ],
   },

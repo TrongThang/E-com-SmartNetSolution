@@ -1,8 +1,27 @@
 import Topbar from "./partials/Topbar";
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import EcommerceSidebar from "./partials/EcommerceSidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+
+
 
 const AdminLayout = () => {
+	const { isAdminAuthenticated } = useAuth()
+	const [isLoading, setIsLoading] = useState(true)
+
+	useEffect(() => {
+		console.log('isAdminAuthenticated',isAdminAuthenticated)
+		if (isAdminAuthenticated) {
+			setIsLoading(false)
+		}
+	}, [isAdminAuthenticated])
+
+	if (!isAdminAuthenticated) {
+		return <Navigate to="/admin/login" />
+	}
+	
 	return (
 		<div className="flex min-h-screen">
 			<div className="w-full fixed top-0 left-0 z-30">

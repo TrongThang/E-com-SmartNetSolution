@@ -273,13 +273,13 @@ export default function EditFirmwarePage() {
                                             Phiên bản firmware bắt buộc
                                         </Label>
                                     </div>
-                                    {formData.is_mandatory && (
+                                    {formData.is_mandatory ? (
                                         <div className="ml-8 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                                             <p className="text-sm text-orange-700">
                                                 ⚠️ Tất cả thiết bị {formData.name} chỉ sử dụng phiên bản này
                                             </p>
                                         </div>
-                                    )}
+                                    ) : <></>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -320,7 +320,7 @@ export default function EditFirmwarePage() {
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={() => navigate("/admin/firmware")}
+                                        onClick={() => navigate("/admin/firmwares")}
                                         disabled={isSaving}
                                         size="lg"
                                     >

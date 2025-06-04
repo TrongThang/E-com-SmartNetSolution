@@ -3,9 +3,6 @@ const { ERROR_CODES, ERROR_MESSAGES } = require('../contants/errors');
 
 const CreateRoleSchema = z.object({
     body: z.object({
-        id: z.string().min(1, {
-            message: `[${ERROR_CODES.ROLE_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.ROLE_ID_REQUIRED]}`,
-        }),
         name: z.string()
             .min(3, {
                 message: `[${ERROR_CODES.ROLE_NAME_MIN_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.ROLE_NAME_MIN_LENGTH]}`,

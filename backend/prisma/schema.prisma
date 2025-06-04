@@ -12,7 +12,7 @@ model account {
   account_id                                                 String                @id @db.VarChar(32)
   customer_id                                                String?               @db.VarChar(32)
   employee_id                                                String?               @db.VarChar(32)
-  role_id                                                    String?               @db.VarChar(12)
+  role_id                                                    Int?                  
   username                                                   String                @db.VarChar(50)
   password                                                   String?               @db.VarChar(255)
   verification_code                                          String?               @db.VarChar(6)
@@ -567,7 +567,7 @@ model liked {
 model notification {
   id         Int       @id @default(autoincrement())
   account_id String?   @db.VarChar(32)
-  role_id    String?   @db.VarChar(5)
+  role_id    Int? 
   text       String?   @db.VarChar(255)
   type       String?   @db.VarChar(200)
   is_read    Boolean?
@@ -695,8 +695,8 @@ model permission {
 }
 
 model permission_role {
-  id            Int        @id @default(autoincrement())
-  role_id       String     @db.VarChar(5)
+  id            Int         @id @default(autoincrement())
+  role_id       Int        
   permission_id Int
   created_at    DateTime? @db.Timestamp(0) @default(now())
   updated_at    DateTime? @db.Timestamp(0) @updatedAt
@@ -828,7 +828,7 @@ model review_product {
 }
 
 model role {
-  id              String            @id @db.VarChar(12)
+  id              Int               @id @default(autoincrement())
   name            String?           @db.VarChar(500)
   created_at      DateTime?         @db.Timestamp(0) @default(now())
   updated_at      DateTime?         @db.Timestamp(0) @updatedAt
