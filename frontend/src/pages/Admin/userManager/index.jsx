@@ -32,8 +32,8 @@ const UserManagerPage = () => {
 
     useEffect(() => { fetchUsers(); }, []);
 
-    const handleAdd = () => navigate("/admin/users/add");
-    const handleEdit = (user) => navigate(`/admin/users/edit/${user.id}`);
+    const handleAdd = () => navigate("/admin/customers/add");
+    const handleEdit = (user) => navigate(`/admin/customers/edit/${user.id}`);
     const handleDelete = async (user) => {
         const result = await Swal.fire({
             title: 'Xác nhận xóa?',
@@ -59,7 +59,7 @@ const UserManagerPage = () => {
                     Swal.fire({
                         icon: 'success',
                         title: 'Thành công!',
-                        text: 'Đã xóa slideshow thành công'
+                        text: 'Đã xóa khách hàng thành công'
                     });
                     fetchUsers();
                 }

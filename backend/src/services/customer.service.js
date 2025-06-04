@@ -55,7 +55,7 @@ async function getCustomersService(filter, limit, sort, order) {
 
 async function getCustomerDetailService(id) {
     try {
-        const customer = await prisma.customer.findUnique({
+        const customer = await prisma.customer.findFirst({
             where: { id },
             include: {
                 account: {
@@ -135,7 +135,7 @@ async function createCustomerService({ surname, lastname, image, phone, email, g
         
         // Chuyển đổi gender thành boolean hoặc null
         const genderValue = gender === undefined ? null : (gender === "true" || gender === true);
-
+        
         const customer = await prisma.customer.create({
             data: {
                 id: id,

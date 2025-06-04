@@ -394,9 +394,9 @@ export const CartProvider = ({ children }) => {
     const cartStats = useMemo(() => (
         console.log('cart', cart),
         {
-        totalItems: cart.items.reduce((total, item) => total + item.quantity, 0),
-        totalAmount: cart.total,
-        itemCount: cart.items.length,
+        totalItems: cart?.items?.reduce((total, item) => total + item.quantity, 0),
+        totalAmount: cart?.total,
+        itemCount: cart?.items?.length,
     }), [cart]);
 
     // Effect khởi tạo cart
