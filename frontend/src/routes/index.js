@@ -39,15 +39,15 @@ import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
 import UserManagerPage from "@/pages/userManager";
 import AddUserPage from "@/pages/userManager/AddUser";
 import EditUserPage from "@/pages/userManager/EditUser";
-import ProductManagerPage from "@/pages/productManager";
-import AddProductPage from "@/pages/productManager/AddProduct";
-import EditProductPage from "@/pages/productManager/EditProduct";
+import ProductManagerPage from "@/pages/Admin/productManager/index";
+import AddProductPage from "@/pages/Admin/productManager/AddProduct";
+import EditProductPage from "@/pages/Admin/productManager/EditProduct";
 import EmployeeManagerPage from "@/pages/employeeManager";
 import StageExamples from "@/components/common/stage/state-example";
 import TemplateManagement from "@/components/common/template/template-management";
-import NewFirmwarePage from "@/components/firmware/upload-firmware";
-import FirmwareDetailPage from "@/components/firmware/detail-firmware";
-import EditFirmwarePage from "@/components/firmware/edit-firmware";
+import NewFirmwarePage from "@/components/common/firmware/upload-firmware";
+import FirmwareDetailPage from "@/components/common/firmware/detail-firmware";
+import EditFirmwarePage from "@/components/common/firmware/edit-firmware";
 import CategoryManagement from "@/pages/categoryManager";
 import AddCategoryPage from "@/pages/categoryManager/AddCategory";
 import EditCategoryPage from "@/pages/categoryManager/EditCategory";
@@ -265,7 +265,7 @@ export const router = createBrowserRouter([
         element: <EditProductPage />
       },
       {
-        path: 'Manager-template/:activeTab',
+        path: 'template/:activeTab',
         element: <TemplateManagement />
       },
       {

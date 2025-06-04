@@ -5,7 +5,7 @@ import TemplateForm from "@/components/common/template/template-form";
 import ComponentManager from "@/components/common/component/component-manager";
 import TemplateList from "@/components/common/template/template-list";
 import { cn } from "@/lib/utils";
-import FirmwarePage from "@/components/firmware/firmware-manager";
+import FirmwarePage from "@/components/common/firmware/firmware-manager";
 import { removeVietnameseTones } from "@/utils/format";
 import axios from "axios";
 import Swal from "sweetalert2";

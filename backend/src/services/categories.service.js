@@ -16,7 +16,7 @@ const getCategoriesService = async (filter, limit, sort, order) => {
         categories.parent_id, categories.image, categories.is_hide, 
         categories.created_at, categories.updated_at, categories.deleted_at,
         attribute_group.id as group_id, attribute_group.name as group_name, 
-        attribute.id as attribute_id, attribute.name as attribute_name`;
+        attribute.id as attribute_id, attribute.name as attribute_name, attribute.datatype as attribute_type`;
 
         let get_table = `categories`;
         let query_join = `LEFT JOIN attribute_category ON categories.category_id = attribute_category.category_id
@@ -81,7 +81,8 @@ const getCategoriesService = async (filter, limit, sort, order) => {
                 }
                 category.attribute_groups.get(item.group_id).attributes.push({
                     attribute_id: item.attribute_id,
-                    attribute_name: item.attribute_name
+                    attribute_name: item.attribute_name,
+                    attribute_type: item.attribute_type
                 });
             }
         });
@@ -250,7 +251,8 @@ const getCategoriesDetailService = async (id) => {
                     }
                     childCategory.attribute_groups.get(item.group_id).attributes.push({
                         attribute_id: item.attribute_id,
-                        attribute_name: item.attribute_name
+                        attribute_name: item.attribute_name,
+                        attribute_type: item.attribute_type
                     });
                 }
             });

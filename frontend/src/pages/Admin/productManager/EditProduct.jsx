@@ -9,12 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Upload, X, Star, Edit, ArrowRight } from "lucide-react";
+import { ArrowLeft, Plus, Upload, X, Edit, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import productApi from "@/apis/modules/product.api.ts";
-import attributeGroupApi from "@/apis/modules/attribute_group.api.ts";
 import categoryApi from "@/apis/modules/categories.api.ts";
 import WarrantyTimeApi from "@/apis/modules/warrantyTime.api.ts";
 import UnitApi from "@/apis/modules/unit.api.ts";
@@ -37,21 +36,14 @@ export default function ProductDetailPage() {
         status: 1,
         is_hide: false,
         category_id: 0,
-        categories: "",
         unit_id: 0,
-        unit_name: "",
         warrenty_time_id: 0,
-        stock: "0",
-        average_rating: "0",
-        total_liked: "0",
-        total_review: "0",
         image: "",
         images: [],
-        attributes: [], // Thay specifications bằng attributes để đồng bộ với định dạng gửi đi
+        attributes: [],
         created_at: "",
         updated_at: "",
     });
-    const [attribute, setAttribute] = useState([]);
     const [categories, setCategories] = useState([]);
     const [units, setUnits] = useState([]);
     const [warrentyTimes, setWarrentyTimes] = useState([]);
@@ -60,8 +52,8 @@ export default function ProductDetailPage() {
     const [showAddValueDialog, setShowAddValueDialog] = useState(false);
     const [searchAttribute, setSearchAttribute] = useState("");
     const [selectedAttribute, setSelectedAttribute] = useState(null);
-    const [attributeValue, setAttributeValue] = useState("");
     const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
+    const [attributeValue, setAttributeValue] = useState("");
 
     const [showEditValueDialog, setShowEditValueDialog] = useState(false);
     const [editingAttribute, setEditingAttribute] = useState(null);
@@ -71,43 +63,28 @@ export default function ProductDetailPage() {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [imageStartIndex, setImageStartIndex] = useState(0);
 
-    const filteredAttributes = attribute
-        ? attribute
-            .filter((group) => group?.attributes && Array.isArray(group.attributes))
-            .map((group) => ({
-                id: group.id,
-                name: group.name,
-                type: "group",
-                attributes: group.attributes.map((attr) => ({
-                    attribute_id: attr.id,
-                    name: attr.name,
-                    type: "attribute",
-                    parentId: group.id,
-                })),
-            }))
-            .flatMap((group) => [
-                group,
-                ...group.attributes.filter((attr) =>
-                    attr.name?.toLowerCase().includes(searchAttribute?.toLowerCase() ?? "")
-                ),
-            ])
-        : [];
-
     const fetchProducts = async () => {
         setLoading(true);
         setError(null);
         try {
             const res = await productApi.getById(params.id);
             if (res.status_code === 200) {
-                console.log("res", res)
                 const data = res.data.data[0] || res.data.data || {};
-                console.log("data", data)
-                // Lấy warrenty_time_id từ dữ liệu, nếu không có thì tìm trong warrentyTimes
+                console.log("API Response:", data); // Debug API response
+
                 let warrentyTimeId = Number(data.warrenty_time_id) || 0;
                 if (!data.warrenty_time_id && warrentyTimes.length > 0) {
-                    // Giả sử warrentyTimes có trường id và bạn muốn chọn giá trị đầu tiên làm mặc định
                     warrentyTimeId = warrentyTimes[0].id;
                 }
+
+                const attributes = Array.isArray(data.attributes)
+                    ? data.attributes.map((attr) => ({
+                        id: attr.attribute_id || attr.id,
+                        name: attr.attribute_name || attr.name || "Unknown",
+                        value: attr.value || "",
+                        attribute_type: attr.attribute_type || "text",
+                    }))
+                    : [];
 
                 setProduct({
                     id: data.id || 0,
@@ -121,17 +98,11 @@ export default function ProductDetailPage() {
                     status: Number(data.status) || 1,
                     is_hide: Boolean(data.is_hide),
                     category_id: Number(data.category_id) || 0,
-                    categories: data.categories || "",
                     unit_id: Number(data.unit_id) || 0,
-                    unit_name: data.unit_name || "",
-                    warrenty_time_id: warrentyTimeId, // Gán giá trị đã xử lý
-                    stock: data.stock || "0",
-                    average_rating: data.average_rating || "0",
-                    total_liked: data.total_liked || "0",
-                    total_review: data.total_review || "0",
+                    warrenty_time_id: warrentyTimeId,
                     image: data.image || "",
-                    images: data.images || [],
-                    attributes: data.specifications?.[0]?.attributes || [], // Chuyển specifications thành attributes phẳng
+                    images: Array.isArray(data.images) ? data.images.map(img => ({ image: img.image || "/placeholder.svg" })) : [],
+                    attributes,
                     created_at: data.created_at || "",
                     updated_at: data.updated_at || "",
                 });
@@ -142,26 +113,6 @@ export default function ProductDetailPage() {
         } catch (err) {
             setError("Có lỗi khi tải sản phẩm");
             console.error("Failed to fetch product", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchAttributes = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await attributeGroupApi.list();
-            if (res.status_code === 200 && Array.isArray(res?.data)) {
-                setAttribute(res.data || []);
-            } else {
-                setError("Không thể tải thuộc tính: Dữ liệu không hợp lệ");
-                setAttribute([]);
-            }
-        } catch (err) {
-            setError("Có lỗi khi tải thuộc tính");
-            console.error("Failed to load attributes", err);
-            setAttribute([]);
         } finally {
             setLoading(false);
         }
@@ -229,50 +180,65 @@ export default function ProductDetailPage() {
 
     useEffect(() => {
         if (params.id) fetchProducts();
-    }, [params.id]);
+    }, [params.id, warrentyTimes]);
 
     useEffect(() => {
-        fetchAttributes();
         fetchCategories();
         fetchUnits();
         fetchWarrentyTimes();
     }, []);
 
-    useEffect(() => {
-        if (categories.length > 0 && product.category_id) {
-            const validCategory = categories.some((cat) =>
-                cat.category_id === product.category_id ||
-                cat.children?.some((child) => child.category_id === product.category_id)
-            );
-            if (!validCategory) {
-                setProduct((prev) => ({ ...prev, category_id: 0 }));
-                console.log("Reset category_id: No matching category found");
-            }
-        }
-    }, [categories, product.category_id]);
-
     const renderCategoryOptions = (categories, level = 0) => {
         const options = [];
         categories.forEach((category) => {
             const indent = "—".repeat(level);
-            const hasChildren = category.children && category.children.length > 0;
+            const isRootCategory = level === 0;
+            const isLeafCategory = !category.children || category.children.length === 0;
+
             options.push(
                 <SelectItem
                     key={category.category_id}
                     value={category.category_id.toString()}
-                    disabled={hasChildren}
-                    className={hasChildren ? "font-medium text-muted-foreground cursor-not-allowed" : ""}
+                    disabled={isRootCategory || !isLeafCategory}
+                    className={isRootCategory || !isLeafCategory ? "font-medium text-muted-foreground cursor-not-allowed" : "text-foreground"}
                 >
                     <div className="flex items-center gap-2">
                         <span>{indent} {category.name}</span>
                     </div>
                 </SelectItem>
             );
+
             if (category.children && category.children.length > 0) {
                 options.push(...renderCategoryOptions(category.children, level + 1));
             }
         });
         return options;
+    };
+
+    const handleCategoryChange = (value) => {
+        if (product.attributes.length > 0 && product.category_id !== 0) {
+            Swal.fire({
+                title: "Xác nhận thay đổi danh mục",
+                text: "Những thông tin kỹ thuật sẽ mất khi bạn đổi danh mục.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Đồng ý",
+                cancelButtonText: "Hủy",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    setProduct({
+                        ...product,
+                        category_id: Number.parseInt(value),
+                        attributes: [],
+                    });
+                }
+            });
+        } else {
+            setProduct({
+                ...product,
+                category_id: Number.parseInt(value),
+            });
+        }
     };
 
     const handleInputChange = (e) => {
@@ -353,18 +319,42 @@ export default function ProductDetailPage() {
     };
 
     const handleSelectAttribute = (attribute, group) => {
-        setSelectedAttribute(attribute);
-        setSelectedSpecGroup(group);
-        setShowAddAttributeDialog(false);
-        setShowAddValueDialog(true);
+        if (attribute.attribute_type === "boolean") {
+            const newAttribute = {
+                id: attribute.id || attribute.attribute_id,
+                name: attribute.name || attribute.attribute_name,
+                value: "",
+                attribute_type: attribute.attribute_type,
+            };
+            setProduct({
+                ...product,
+                attributes: [...product.attributes, newAttribute],
+            });
+            setShowAddAttributeDialog(false);
+        } else {
+            setSelectedAttribute({ ...attribute, attribute_type: attribute.attribute_type });
+            setSelectedSpecGroup(group);
+            setShowAddAttributeDialog(false);
+            setShowAddValueDialog(true);
+            setAttributeValue("");
+        }
     };
 
     const handleAddAttributeValue = () => {
         if (selectedAttribute && attributeValue && selectedSpecGroup) {
+            if (!selectedAttribute.id) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi!",
+                    text: "Không có id hợp lệ.",
+                });
+                return;
+            }
             const newAttribute = {
-                product_id: product.id,
-                attribute_id: selectedAttribute.id,
+                id: selectedAttribute.id,
+                name: selectedAttribute.name,
                 value: attributeValue,
+                attribute_type: selectedAttribute.attribute_type,
             };
             setProduct({
                 ...product,
@@ -392,9 +382,14 @@ export default function ProductDetailPage() {
     };
 
     const handleUpdateAttributeValue = () => {
-        if (editingAttrIndex !== null && editAttributeValue) {
+        if (editingAttrIndex !== null && editAttributeValue !== null) {
             const updatedAttributes = [...product.attributes];
-            updatedAttributes[editingAttrIndex].value = editAttributeValue;
+            updatedAttributes[editingAttrIndex] = {
+                id: updatedAttributes[editingAttrIndex].id,
+                name: updatedAttributes[editingAttrIndex].name,
+                value: editAttributeValue,
+                attribute_type: updatedAttributes[editingAttrIndex].attribute_type,
+            };
             setProduct({
                 ...product,
                 attributes: updatedAttributes,
@@ -417,8 +412,14 @@ export default function ProductDetailPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!product.name.trim() || !product.description.trim() || !product.selling_price || !product.category_id || !product.unit_id || !product.warrenty_time_id) {
-            console.log("Validation failed", product);
+        if (
+            !product.name.trim() ||
+            !product.description.trim() ||
+            !product.selling_price ||
+            !product.category_id ||
+            !product.unit_id ||
+            !product.warrenty_time_id
+        ) {
             Swal.fire({
                 icon: "error",
                 title: "Lỗi!",
@@ -432,6 +433,7 @@ export default function ProductDetailPage() {
             const dataToSubmit = {
                 id: product.id,
                 name: product.name,
+                slug: product.slug,
                 description: product.description,
                 description_normal: product.description_normal,
                 images: product.images.map((img) => ({ image: img.image })),
@@ -441,7 +443,10 @@ export default function ProductDetailPage() {
                 warrenty_time_id: product.warrenty_time_id,
                 is_hide: product.is_hide,
                 status: product.status,
-                attributes: product.attributes,
+                attributes: product.attributes.map((attr) => ({
+                    id: attr.id,
+                    value: attr.value,
+                })),
             };
             console.log("dataToSubmit", dataToSubmit);
             const res = await productApi.edit(dataToSubmit);
@@ -472,9 +477,53 @@ export default function ProductDetailPage() {
         }
     };
 
-    const formatPrice = (price) => {
-        const numPrice = Number(price) || 0;
-        return new Intl.NumberFormat("vi-VN").format(numPrice);
+    const getSelectedCategoryAttributes = () => {
+        const flattenCategories = (cats) => {
+            return cats.flatMap(cat => [
+                cat,
+                ...(cat.children ? flattenCategories(cat.children) : [])
+            ]);
+        };
+        const selectedCategory = flattenCategories(categories).find(
+            cat => cat.category_id === product.category_id
+        );
+        return selectedCategory?.attribute_groups || [];
+    };
+
+    const filteredAttributes = getSelectedCategoryAttributes()
+        .filter((group) => group?.attributes && Array.isArray(group.attributes))
+        .map((group) => ({
+            id: group.group_id,
+            name: group.group_name,
+            type: "group",
+            attributes: group.attributes
+                .filter((attr) => !product.attributes.some((pa) => pa.id === attr.attribute_id))
+                .map((attr) => ({
+                    id: attr.attribute_id,
+                    name: attr.attribute_name,
+                    type: "attribute",
+                    parentId: group.group_id,
+                    attribute_type: attr.attribute_type,
+                })),
+        }))
+        .flatMap((group) => [
+            group,
+            ...group.attributes.filter((attr) =>
+                attr.name?.toLowerCase().includes(searchAttribute?.toLowerCase() ?? "")
+            ),
+        ]);
+
+    const renderAttributeInput = (value, onChange, id) => {
+        return (
+            <Input
+                id={id}
+                value={value}
+                onChange={onChange}
+                className="w-2/3"
+                placeholder="Nhập giá trị (VD: 220W)"
+                type="text"
+            />
+        );
     };
 
     return (
@@ -489,9 +538,19 @@ export default function ProductDetailPage() {
             </div>
 
             <Tabs defaultValue="info" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-white">
-                    <TabsTrigger value="info" className="data-[state=active]:bg-black data-[state=active]:text-white">Thông tin sản phẩm</TabsTrigger>
-                    <TabsTrigger value="specs" className="data-[state=active]:bg-black data-[state=active]:text-white">Thông số kỹ thuật</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                    <TabsTrigger
+                        value="info"
+                        className="bg-gray-100 hover:bg-white data-[state=active]:bg-black data-[state=active]:text-white transition-colors"
+                    >
+                        Thông tin sản phẩm
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="specs"
+                        className="bg-gray-100 hover:bg-white data-[state=active]:bg-black data-[state=active]:text-white transition-colors"
+                    >
+                        Thông số kỹ thuật
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-4 pt-4">
@@ -507,6 +566,7 @@ export default function ProductDetailPage() {
                                             value={product.name}
                                             onChange={handleInputChange}
                                             className="bg-muted"
+                                            placeholder="Nhập tên sản phẩm"
                                         />
                                     </div>
 
@@ -518,6 +578,7 @@ export default function ProductDetailPage() {
                                             value={product.slug}
                                             onChange={handleInputChange}
                                             className="bg-muted"
+                                            placeholder="Nhập slug"
                                             disabled
                                         />
                                     </div>
@@ -557,19 +618,6 @@ export default function ProductDetailPage() {
                                                 className="bg-muted"
                                             />
                                         </div>
-
-                                        <div className="grid w-full items-center gap-2">
-                                            <Label htmlFor="stock">Tồn kho:</Label>
-                                            <Input
-                                                id="stock"
-                                                name="stock"
-                                                type="number"
-                                                value={product.stock}
-                                                onChange={handleNumberInputChange}
-                                                className="bg-muted"
-                                                disabled
-                                            />
-                                        </div>
                                     </div>
 
                                     <div className="grid w-full items-center gap-2">
@@ -583,7 +631,7 @@ export default function ProductDetailPage() {
                                         ) : (
                                             <Select
                                                 value={product.category_id?.toString() || ""}
-                                                onValueChange={(value) => setProduct({ ...product, category_id: Number.parseInt(value) })}
+                                                onValueChange={handleCategoryChange}
                                             >
                                                 <SelectTrigger id="categories" className="bg-muted w-full">
                                                     <SelectValue placeholder="Chọn danh mục" />
@@ -646,36 +694,9 @@ export default function ProductDetailPage() {
                                             </Select>
                                         )}
                                     </div>
-
-                                    <div className="flex items-center gap-8">
-                                        <div className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id="is_hide"
-                                                checked={product.is_hide}
-                                                onCheckedChange={(checked) => setProduct({ ...product, is_hide: Boolean(checked) })}
-                                            />
-                                            <Label htmlFor="is_hide">Ẩn sản phẩm</Label>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            <Label htmlFor="status">Trạng thái:</Label>
-                                            <Select
-                                                value={product.status.toString()}
-                                                onValueChange={(value) => setProduct({ ...product, status: Number.parseInt(value) })}
-                                            >
-                                                <SelectTrigger id="status" className="bg-muted w-[150px]">
-                                                    <SelectValue placeholder="Chọn trạng thái" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="1">Hoạt động</SelectItem>
-                                                    <SelectItem value="0">Ngừng kinh doanh</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
                                 </div>
 
-                                <div className="space-y-6">
+                                <div className="space-y-8">
                                     <div className="flex flex-col items-center">
                                         <Label className="mb-2">Hình ảnh sản phẩm:</Label>
                                         <div
@@ -762,42 +783,30 @@ export default function ProductDetailPage() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-6 space-y-4 rounded-md border p-4">
-                                        <h3 className="font-medium">Thông tin bổ sung</h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm text-muted-foreground">Đã bán</span>
-                                                <span className="font-medium">{product.sold || 0}</span>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm text-muted-foreground">Lượt xem</span>
-                                                <span className="font-medium">{product.views || 0}</span>
-                                            </div>
+                                    <div className="flex items-center gap-8 flex-col">
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="is_hide"
+                                                checked={product.is_hide}
+                                                onCheckedChange={(checked) => setProduct({ ...product, is_hide: Boolean(checked) })}
+                                            />
+                                            <Label htmlFor="is_hide">Ẩn sản phẩm</Label>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm text-muted-foreground">Đánh giá</span>
-                                                <div className="flex items-center">
-                                                    <span className="font-medium mr-1">{product.average_rating || 0}</span>
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <span className="ml-1 text-xs text-muted-foreground">({product.total_review || 0} đánh giá)</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm text-muted-foreground">Lượt thích</span>
-                                                <span className="font-medium">{product.total_liked || 0}</span>
-                                            </div>
-                                        </div>
-                                        <Separator />
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm text-muted-foreground">Ngày tạo</span>
-                                                <span className="font-medium">{product.created_at ? new Date(product.created_at).toLocaleDateString("vi-VN") : "N/A"}</span>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm text-muted-foreground">Cập nhật lần cuối</span>
-                                                <span className="font-medium">{product.updated_at ? new Date(product.updated_at).toLocaleDateString("vi-VN") : "N/A"}</span>
-                                            </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <Label htmlFor="status">Trạng thái:</Label>
+                                            <Select
+                                                value={product.status.toString()}
+                                                onValueChange={(value) => setProduct({ ...product, status: Number.parseInt(value) })}
+                                            >
+                                                <SelectTrigger id="status" className="bg-muted w-[150px]">
+                                                    <SelectValue placeholder="Chọn trạng thái" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="1">Hoạt động</SelectItem>
+                                                    <SelectItem value="0">Ngừng kinh doanh</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
                                 </div>
@@ -816,48 +825,58 @@ export default function ProductDetailPage() {
 
                 <TabsContent value="specs" className="space-y-4 pt-4">
                     <div className="rounded-lg bg-muted/30 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold">Thông số kỹ thuật</h2>
-                            <Button variant="outline" size="sm" className="gap-1" onClick={() => setShowAddAttributeDialog(true)}>
-                                <Plus className="h-4 w-4" />
-                                Thêm thuộc tính
-                            </Button>
-                        </div>
-                        {product.attributes.length > 0 ? (
-                            <div className="space-y-6">
-                                {product.attributes.map((attr, attrIndex) => (
-                                    <Card key={attr.id || attrIndex} className="p-4">
-                                        <div className="flex items-start group">
-                                            <div className="w-1/3 font-medium">{attr.name || "Thuộc tính"}:</div>
-                                            <div className="flex w-2/3 items-center justify-between">
-                                                <span>{attr.value}</span>
-                                                <div className="flex gap-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleEditAttribute(attrIndex)}
-                                                        className="invisible rounded-full p-1 text-blue-500 hover:bg-blue-50 group-hover:visible"
-                                                        title="Sửa"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveAttribute(attrIndex)}
-                                                        className="invisible rounded-full p-1 text-red-500 hover:bg-red-50 group-hover:visible"
-                                                        title="Xóa"
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                ))}
+                        {product.category_id === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                                Bạn cần chọn danh mục trước.
                             </div>
                         ) : (
-                            <div className="text-center py-8 text-muted-foreground">
-                                Chưa có thông số kỹ thuật nào. Nhấn "Thêm thuộc tính" để bắt đầu.
-                            </div>
+                            <>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-xl font-bold">Thông số kỹ thuật</h2>
+                                    <Button variant="outline" size="sm" className="gap-1" onClick={() => setShowAddAttributeDialog(true)}>
+                                        <Plus className="h-4 w-4" />
+                                        Thêm thuộc tính
+                                    </Button>
+                                </div>
+                                {product.attributes.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {product.attributes.map((attr, attrIndex) => (
+                                            <Card key={attr.id || attrIndex} className="p-4">
+                                                <div className="flex items-start group">
+                                                    <div className="w-1/3 font-medium">{attr.name}:</div>
+                                                    <div className="flex w-2/3 items-center justify-between">
+                                                        <span>{attr.attribute_type === "boolean" ? "Có" : attr.value}</span>
+                                                        <div className="flex gap-1">
+                                                            {attr.attribute_type !== "boolean" && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleEditAttribute(attrIndex)}
+                                                                    className="invisible rounded-full p-1 text-blue-500 hover:bg-blue-50 group-hover:visible"
+                                                                    title="Sửa"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveAttribute(attrIndex)}
+                                                                className="invisible rounded-full p-1 text-red-500 hover:bg-red-50 group-hover:visible"
+                                                                title="Xóa"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        Chưa có thông số kỹ thuật nào. Nhấn "Thêm thuộc tính" để bắt đầu.
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </TabsContent>
@@ -879,12 +898,12 @@ export default function ProductDetailPage() {
                             <div className="text-muted-foreground">Đang tải thuộc tính...</div>
                         ) : error ? (
                             <div className="text-red-500">{error}</div>
-                        ) : !attribute || attribute.length === 0 ? (
+                        ) : filteredAttributes.length === 0 ? (
                             <div className="text-muted-foreground">Không có thuộc tính nào</div>
                         ) : (
                             <div className="max-h-[300px] space-y-2 overflow-y-auto">
-                                {attribute
-                                    .filter((group) => group.attributes && group.attributes.length > 0)
+                                {filteredAttributes
+                                    .filter((item) => item.type === "group" && item.attributes && item.attributes.length > 0)
                                     .map((group) => (
                                         <div key={group.id} className="space-y-2">
                                             <div className="font-medium">{group.name}</div>
@@ -897,9 +916,7 @@ export default function ProductDetailPage() {
                                                         <div
                                                             key={attr.id}
                                                             className="flex cursor-pointer items-center justify-between rounded-md border p-2 hover:bg-muted"
-                                                            onClick={() =>
-                                                                handleSelectAttribute(attr, group)
-                                                            }
+                                                            onClick={() => handleSelectAttribute(attr, group)}
                                                         >
                                                             <span>{attr.name}</span>
                                                         </div>
@@ -923,13 +940,11 @@ export default function ProductDetailPage() {
                             <Label htmlFor="attributeValue" className="w-1/3 text-right">
                                 {selectedAttribute?.name || "Thuộc tính"}:
                             </Label>
-                            <Input
-                                id="attributeValue"
-                                value={attributeValue}
-                                onChange={(e) => setAttributeValue(e.target.value)}
-                                className="w-2/3"
-                                placeholder="Nhập giá trị"
-                            />
+                            {renderAttributeInput(
+                                attributeValue,
+                                (e) => setAttributeValue(e.target.value),
+                                "attributeValue"
+                            )}
                         </div>
                     </div>
                     <DialogFooter>
@@ -964,12 +979,11 @@ export default function ProductDetailPage() {
                             <Label htmlFor="editAttributeValue" className="w-1/3 text-right">
                                 {editingAttribute?.name || "Thuộc tính"}:
                             </Label>
-                            <Input
-                                id="editAttributeValue"
-                                value={editAttributeValue}
-                                onChange={(e) => setEditAttributeValue(e.target.value)}
-                                className="w-2/3"
-                            />
+                            {renderAttributeInput(
+                                editAttributeValue,
+                                (e) => setEditAttributeValue(e.target.value),
+                                "editAttributeValue"
+                            )}
                         </div>
                     </div>
                     <DialogFooter>
@@ -986,7 +1000,7 @@ export default function ProductDetailPage() {
                         </Button>
                         <Button
                             onClick={handleUpdateAttributeValue}
-                            disabled={!editAttributeValue.trim()}
+                            disabled={!editAttributeValue?.trim()}
                             className="px-6 bg-black text-white hover:opacity-70 flex items-center gap-1"
                         >
                             Cập nhật

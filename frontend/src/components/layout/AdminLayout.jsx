@@ -1,4 +1,4 @@
-import Navbar_admin from "./partials/Navbar_admin";
+import EcommerceSildebar from "./partials/EcommerceSidebar";
 import Topbar from "./partials/Topbar";
 import { Outlet } from "react-router-dom";
 const AdminLayout = () => {
@@ -8,7 +8,7 @@ const AdminLayout = () => {
         <Topbar />
       </div>
       <div className="z-40">
-        <Navbar_admin />
+        <EcommerceSildebar />
       </div>
       <div className="flex-1 flex flex-col">
         {/* chỉnh sửa giao diện bên trong */}

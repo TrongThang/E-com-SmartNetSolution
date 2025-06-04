@@ -29,57 +29,6 @@ import { formatDate, removeVietnameseTones } from "@/utils/format";
 import Swal from "sweetalert2";
 import axiosIOTPublic from "@/apis/clients/iot.private.client";
 
-// const firmwareData = [
-//     {
-//         firmware_id: 1,
-//         version: "v2.1.0",
-//         file_path: "/firmware/camera_v2.1.0.bin",
-//         template_id: 1,
-//         template_name: "Camera Xiaomi 360°",
-//         is_mandatory: true,
-//         created_at: "2024-01-15T10:30:00Z",
-//         tested_at: "2024-01-16T14:20:00Z",
-//         is_approved: true,
-//         updated_at: "2024-01-16T15:00:00Z",
-//         is_deleted: false,
-//         note: "Cập nhật tính năng phát hiện chuyển động",
-//         file_size: "2.5 MB",
-//         download_count: 156,
-//     },
-//     {
-//         firmware_id: 2,
-//         version: "v1.8.5",
-//         file_path: "/firmware/light_v1.8.5.bin",
-//         template_id: 2,
-//         template_name: "Đèn thông minh Philips",
-//         is_mandatory: false,
-//         created_at: "2024-01-10T09:15:00Z",
-//         tested_at: null,
-//         is_approved: false,
-//         updated_at: "2024-01-10T09:15:00Z",
-//         is_deleted: false,
-//         note: "Sửa lỗi kết nối WiFi",
-//         file_size: "1.2 MB",
-//         download_count: 89,
-//     },
-//     {
-//         firmware_id: 3,
-//         version: "v3.0.0-beta",
-//         file_path: "/firmware/sensor_v3.0.0-beta.bin",
-//         template_id: 3,
-//         template_name: "Cảm biến nhiệt độ",
-//         is_mandatory: false,
-//         created_at: "2024-01-20T16:45:00Z",
-//         tested_at: "2024-01-21T10:30:00Z",
-//         is_approved: false,
-//         updated_at: "2024-01-21T11:00:00Z",
-//         is_deleted: false,
-//         note: "Phiên bản beta - thêm tính năng AI",
-//         file_size: "3.1 MB",
-//         download_count: 23,
-//     },
-// ];
-
 export default function FirmwarePage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [firmwareData, setFirmwareData] = useState([])
