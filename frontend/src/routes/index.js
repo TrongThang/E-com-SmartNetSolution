@@ -257,11 +257,11 @@ export const router = createBrowserRouter([
         element: <EmployeeManagerPage />,
       },
       {
-        path: 'users/add',
+        path: 'customers/add',
         element: <AddUserPage />,
       },
       {
-        path: 'users/edit/:id',
+        path: 'customers/edit/:id',
         element: <EditUserPage />,
       },
       {

@@ -151,7 +151,7 @@ async function modifyPermissionForRoleService(payload) {
     try {
         const role = await prisma.role.findFirst({
             where: {
-                id: role_id,
+                id: Number(role_id),
                 deleted_at: null
             },
             include: {
@@ -222,7 +222,7 @@ async function modifyPermissionForRoleService(payload) {
 
                 await tx.permission_role.updateMany({
                     where: {
-                        role_id: role_id,
+                        role_id: Number(role_id),
                         permission_id: { in: toDelete }
                     },
                     data: {

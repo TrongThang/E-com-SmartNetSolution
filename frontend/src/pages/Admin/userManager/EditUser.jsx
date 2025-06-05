@@ -97,7 +97,7 @@ const EditUserPage = () => {
                     title: 'Thành công!',
                     text: 'Cập nhật người dùng thành công'
                 });
-                navigate("/admin/users");
+                navigate("/admin/customers");
             }
         } catch (err) {
             const apiError = err?.response?.data?.errors?.[0]?.message;
@@ -116,7 +116,9 @@ const EditUserPage = () => {
         setError(null);
         try {
             const res = await customerApi.getById(id);
+            console.log("api repon:",res)
             if (res.status_code === 200) {
+                console.log("dcd",res.data)
                 // Cập nhật formData khi có dữ liệu
                 setCustomer({
                     surname: res?.data?.surname || "",
@@ -125,9 +127,9 @@ const EditUserPage = () => {
                     birthdate: res?.data?.birthdate ? dayjs(res.data.birthdate).format("YYYY-MM-DD") : "",
                     gender: String(res?.data?.gender) || "",
                     email: res?.data?.email || "",
-                    status: String(res?.data?.account[0].status) || null,
+                    status: String(res?.data?.account[0]?.status) || null,
                     image: res?.data?.image || "",
-                    username: res?.data?.account[0].username || "",
+                    username: res?.data?.account[0]?.username || "",
                 });
             } else {
                 setError("Không thể tải khách hàng");
@@ -147,7 +149,7 @@ const EditUserPage = () => {
         <div className="space-y-6">
             <div className="flex items-center">
                 <Button variant="ghost" size="sm" asChild className="gap-1">
-                    <Link to="/admin/users">
+                    <Link to="/admin/customers">
                         <ArrowLeft className="h-4 w-4" />
                         Trở về
                     </Link>
@@ -293,7 +295,7 @@ const EditUserPage = () => {
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => navigate("/admin/users")}
+                            onClick={() => navigate("/admin/customers")}
                             className="bg-muted/70 hover:bg-muted"
                         >
                             Hủy

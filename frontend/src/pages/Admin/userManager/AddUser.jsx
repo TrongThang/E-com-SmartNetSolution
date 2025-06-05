@@ -93,7 +93,7 @@ const AddUserPage = () => {
           title: 'Thành công!',
           text: 'Thêm người dùng thành công'
         });
-        navigate("/admin/users");
+        navigate("/admin/customers");
       }
     } catch (err) {
       const apiError = err?.response?.data?.errors?.[0]?.message;
@@ -111,7 +111,7 @@ const AddUserPage = () => {
     <div className="space-y-6">
       <div className="flex items-center">
         <Button variant="ghost" size="sm" asChild className="gap-1">
-          <Link to="/admin/users">
+          <Link to="/admin/customers">
             <ArrowLeft className="h-4 w-4" />
             Trở về
           </Link>
@@ -257,7 +257,7 @@ const AddUserPage = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/admin/users")}
+              onClick={() => navigate("/admin/customers")}
               className="bg-muted/70 hover:bg-muted"
             >
               Hủy

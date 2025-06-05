@@ -72,7 +72,6 @@ const createRoleService = async (name) => {
                 STATUS_CODE.BAD_REQUEST,
             );
         }
-
         const role = await prisma.role.create({
             data: {
                 name: name,

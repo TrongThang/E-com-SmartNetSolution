@@ -588,6 +588,7 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.CUSTOMER_EMAIL_INVALID]: "Email không hợp lệ",
     [ERROR_CODES.CUSTOMER_GENDER_INVALID]: "Giới tính không hợp lệ",
     [ERROR_CODES.CUSTOMER_EMAIL_EXISTED]: "Email đã tồn tại",
+    [ERROR_CODES.CUSTOMER_PHONE_EXISTED]: "Số điện thoại đã tồn tại",
 
     // DETAIL_ORDER
     [ERROR_CODES.DETAIL_ORDER_SUCCESS]: "Thao tác với chi tiết đơn hàng thành công",
