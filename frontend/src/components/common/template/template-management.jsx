@@ -10,8 +10,7 @@ import { removeVietnameseTones } from "@/utils/format";
 import axios from "axios";
 import Swal from "sweetalert2";
 import categoryApi from "@/apis/modules/categories.api.ts";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import CategoryModal from "./category-modal";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function TemplateManagement() {
 	const [searchParams] = useSearchParams();
@@ -29,7 +28,8 @@ export default function TemplateManagement() {
 
 	useEffect(() => {
 		const handleValueTab = async () => {
-			if(activeTab != 'templates' || activeTab != 'firmware' || activeTab != 'component'){
+			console.log(activeTab)
+			if(activeTab != 'templates' && activeTab != 'firmwares' && activeTab != 'components'){
 				const result = await Swal.fire({
 					title: "Cảnh báo",
 					icon: "error",
@@ -41,7 +41,7 @@ export default function TemplateManagement() {
 		}
 
 		handleValueTab()
-	}, [])
+	}, [activeTab])
 
 
 	const fetchTemplate = async () => {
@@ -347,16 +347,16 @@ export default function TemplateManagement() {
 							Linh kiện
 						</button>
 						<button
-							onClick={() => handleTabChange("firmware")}
+							onClick={() => handleTabChange("firmwares")}
 							className={cn(
 								"py-4 px-1 border-b-2 font-medium text-sm",
-								activeTab === "firmware"
+								activeTab === "firmwares"
 									? "border-blue-500 text-blue-600"
 									: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
 							)}
 						>
 							<Code className="inline mr-2" size={16} />
-							Firmware
+							Firmwares
 						</button>
 					</nav>
 				</div>
@@ -405,7 +405,7 @@ export default function TemplateManagement() {
 				{activeTab === "components" && (
 					<ComponentManager components={components} setComponents={setComponents} fetchComponent={fetchComponent} />
 				)}
-				{activeTab === "firmware" && <FirmwarePage />}
+				{activeTab === "firmwares" && <FirmwarePage />}
 			</div>
 
 			{/* Template Form Modal */}
@@ -413,7 +413,7 @@ export default function TemplateManagement() {
 				<TemplateForm
 					template={editingTemplate}
 					components={components}
-					setComponents={setComponents}
+					fetchComponent={fetchComponent}
 					onSave={handleSaveTemplate}
 					onCancel={() => {
 						setShowTemplateForm(false);
