@@ -1,6 +1,6 @@
 import axiosPrivate from "../clients/private.client";
 import axiosPublic from "../clients/public.client";
-import { IApiResponse,  ILiked } from "@/models/interfaces";
+import { IApiResponse,  ILiked } from "@/models/interfaces/index";
 
 const likdedEndpoints = {
     common: "liked",

@@ -36,6 +36,7 @@ class CategoriesController {
         const response = await updateCategoriesService({ id, name, slug, description, image, is_hide, attribute_id, parent_id });
         return res.status(response.status_code).json(response);
     }
+
     async deletedSoftCategories(req, res) {
         const { id } = req.params;
         const { forceDelete } = req.body || {};

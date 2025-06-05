@@ -121,7 +121,7 @@ export const CartProvider = ({ children }) => {
                     "value": user.customer_id
                 })
                 const response = await cartApi.getByIdCustomer(user.customer_id);
-                
+
                 return response.data || [];
             } else {
                 const response = await cartApi.getList({
@@ -173,7 +173,7 @@ export const CartProvider = ({ children }) => {
                     const latestProducts = await fetchLatestProductInfo(
                         cookieCart.items.map(item => item.id)
                     );
-                    
+
                     const updatedItems = cookieCart.items.map(item => {
                         const latestProduct = latestProducts.find(p => p.id === item.id);
                         return latestProduct ? {
@@ -283,7 +283,7 @@ export const CartProvider = ({ children }) => {
         try {
             if (isAuthenticated) {
                 const response = await cartApi.removeFromCart(productId);
-                
+
             }
 
             setCart(prevCart => {
@@ -330,8 +330,8 @@ export const CartProvider = ({ children }) => {
                 ...prevCart,
                 items: prevCart.items.map(item =>
                     item.id === id
-                    ? { ...item, selected: !item.selected }
-                    : item
+                        ? { ...item, selected: !item.selected }
+                        : item
                 )
             };
 
@@ -391,13 +391,15 @@ export const CartProvider = ({ children }) => {
     };
 
     // Tính toán các thống kê từ cart
-    const cartStats = useMemo(() => (
-        console.log('cart', cart),
-        {
-        totalItems: cart.items.reduce((total, item) => total + item.quantity, 0),
-        totalAmount: cart.total,
-        itemCount: cart.items.length,
-    }), [cart]);
+    const cartStats = useMemo(() => {
+        const items = cart?.items ?? [];
+        return {
+            totalItems: items.reduce((total, item) => total + item.quantity, 0),
+            totalAmount: cart?.total ?? 0,
+            itemCount: items.length,
+        };
+    }, [cart]);
+
 
     // Effect khởi tạo cart
     useEffect(() => {

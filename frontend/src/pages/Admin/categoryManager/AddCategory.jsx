@@ -406,7 +406,7 @@ export default function AddCategoryPage() {
                         <SelectValue placeholder="Chọn trạng thái" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
-                        <SelectItem value="1">Đang hoạt động</SelectItem>
+                        <SelectItem value="1">hoạt động</SelectItem>
                         <SelectItem value="0">Không hoạt động</SelectItem>
                       </SelectContent>
                     </Select>

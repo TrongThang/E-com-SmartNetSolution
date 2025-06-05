@@ -287,7 +287,7 @@ export default function EcommerceSidebar() {
 												asChild
 												className="text-blue-100 hover:bg-blue-600/50 hover:text-white transition-all duration-200 py-2.5"
 											>
-												<Link to="/categories">
+												<Link to="/admin/categories">
 													<ShoppingBag className="size-4" />
 													<span>Danh Mục</span>
 												</Link>

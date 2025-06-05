@@ -40,7 +40,7 @@ import CategoryManagerPage from "@/pages/Admin/categoryManager/index.jsx";
 import AddCategoryPage from "@/pages/Admin/categoryManager/AddCategory.jsx";
 import EditCategoryPage from "@/pages/Admin/categoryManager/EditCategory.jsx";
 import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
-import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/create";
+import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
 import UserManagerPage from "@/pages/Admin/userManager";
 import ProductManagerPage from "@/pages/Admin/productManager";
 import EmployeeManagerPage from "@/pages/Admin/employeeManager";
@@ -52,12 +52,13 @@ import TemplateManagement from "@/components/common/template/template-management
 import NewFirmwarePage from "@/components/common/firmware/upload-firmware";
 import FirmwareDetailPage from "@/components/common/firmware/detail-firmware";
 import EditFirmwarePage from "@/components/common/firmware/edit-firmware";
-import CategoryManagement from "@/pages/Admin/categoryManager";
 import StatePrimary from "@/components/common/tracking/StatePrimary";
 import AttributeGroupPage from "@/pages/Admin/attribute_groupManager";
 import FirmwarePage from "@/components/common/firmware/firmware-manager";
 
 import PlanningManagement from "@/pages/Admin/planningManager/page";
+import AddEmployeeForm from "@/pages/Admin/employeeManager/AddEmployee";
+import EditEmployeeForm from "@/pages/Admin/employeeManager/EditEmployee";
 
 export const router = createBrowserRouter([
   {
@@ -221,18 +222,6 @@ export const router = createBrowserRouter([
         element: <EditBlog />,
       },
       {
-        path: 'categories',
-        element: <CategoryManagement />
-      },
-      {
-        path: 'categories/create',
-        element: <AddCategoryPage />
-      },
-      {
-        path: 'categories/create',
-        element: <EditCategoryPage />
-      },
-      {
         path: 'warehouse/import/create',
         element: <CreateImportWarehousePage />
       },
@@ -247,6 +236,14 @@ export const router = createBrowserRouter([
       {
         path: 'employees',
         element: <EmployeeManagerPage />,
+      },
+      {
+        path: 'employees/add',
+        element: <AddEmployeeForm />
+      },
+      {
+        path: 'employees/edit/:id',
+        element: <EditEmployeeForm />
       },
       {
         path: 'users/add',

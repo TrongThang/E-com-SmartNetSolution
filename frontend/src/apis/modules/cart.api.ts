@@ -2,8 +2,7 @@ import axiosPrivate from "../clients/private.client";
 import { ESortOrderValue } from "@/models/enums/option";
 import axiosPublic from "../clients/public.client";
 import { jwtDecode } from "jwt-decode";
-import { IApiResponse } from "@/models/interfaces";
-import { FilterSearch } from "@/models/interfaces";
+import { IApiResponse, FilterSearch } from "@/models/interfaces/index";
 
 const cartEndpoints = {
     common: "cart",

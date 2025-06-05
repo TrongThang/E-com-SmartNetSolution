@@ -40,6 +40,7 @@ const customerApi = {
             throw error;
         }
     },
+
     async edit(data: any): Promise<IApiResponse> {
         try {
             return await axiosPublic.put(customerEndpoints.user, data);
