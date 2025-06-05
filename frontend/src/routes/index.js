@@ -265,7 +265,7 @@ export const router = createBrowserRouter([
         element: <EditProductPage />
       },
       {
-        path: 'template/:activeTab',
+        path: 'templates',
         element: <TemplateManagement />
       },
       {
