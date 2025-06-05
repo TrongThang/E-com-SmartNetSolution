@@ -1,5 +1,5 @@
 const express = require('express');
-const { getProduct, getProductDetail, createProduct, updateProduct, checkListInfoProduct } = require('../controllers/product.controller');
+const { getProduct, getProductDetail, createProduct, updateProduct, checkListInfoProduct, deleteProduct } = require('../controllers/product.controller');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const productRouter = express.Router();
 
@@ -18,6 +18,6 @@ productRouter.get('/detail/:id', asyncHandler(getProductDetail));
 productRouter.post('/check-list-info', asyncHandler(checkListInfoProduct));
 productRouter.post('/', validateMiddleware(CreateProductSchema), asyncHandler(createProduct));
 productRouter.put('/', validateMiddleware(UpdateProductSchema), asyncHandler(updateProduct));
-productRouter.delete('/', validateMiddleware(), asyncHandler());
+productRouter.delete('/:product_id', asyncHandler(deleteProduct));
 
 module.exports = productRouter;

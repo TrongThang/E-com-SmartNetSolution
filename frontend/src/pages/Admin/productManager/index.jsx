@@ -48,6 +48,7 @@ const ProductManagerPage = () => {
         if (result.isConfirmed) {
             try {
                 const res = await productApi.delete(product.id);
+                console.log("res", res)
                 if (res.error && res.error !== 0) {
                     Swal.fire({
                         icon: 'error',
@@ -58,7 +59,7 @@ const ProductManagerPage = () => {
                     Swal.fire({
                         icon: 'success',
                         title: 'Thành công!',
-                        text: 'Đã xóa slideshow thành công'
+                        text: 'Đã xóa sản phẩm thành công'
                     });
                     fetchProducts();
                 }

@@ -108,13 +108,12 @@ const getProductDetailService = async (id, role = null, type = null) => {
     ])
     let get_attr = `product.name, product.slug, product.description, description_normal, product.image, selling_price, views, status, product.is_hide,
         product.category_id, categories.name as categories, unit_id, unit.name as unit_name,
-        attribute.id as attribute_id, attribute.name as attribute, attribute_group.id as attribute_group_id, attribute_group.name as attribute_group, attribute_product.value as attribute_value
-    `
+        attribute.id as attribute_id, attribute.name as attribute, attribute_group.id as attribute_group_id, attribute_group.name as attribute_group, attribute_product.value as attribute_value,
+        product.warrenty_time_id`
     let get_table = `product`
     let query_join = `
         LEFT JOIN categories ON product.category_id = categories.category_id
         LEFT JOIN unit ON product.unit_id = unit.id
-        -- LEFT JOIN warranty_time ON product.warranty_time_id = warranty_time.id
         LEFT JOIN attribute_product ON product.id = attribute_product.product_id
         LEFT JOIN attribute ON attribute_product.attribute_id = attribute.id
         LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id
@@ -216,10 +215,10 @@ async function createProductService({ name, description, images, selling_price, 
         return check_product;
     }
 
-    const check_name = await checkNameExcludingCurrent(name); // Không truyền excludeId khi tạo mới
+    const check_name = await checkNameExcludingCurrent(name);
     if (check_name) {
         return get_error_response(
-            ERROR_CODES.PRODUCT_NAME_ALREADY_EXISTS,
+            ERROR_CODES.PRODUCT_NAME_EXISTS,
             STATUS_CODE.BAD_REQUEST
         );
     }
@@ -237,23 +236,36 @@ async function createProductService({ name, description, images, selling_price, 
 
     // Chuẩn bị dữ liệu bổ sung
     const description_normal = removeTagHtml(description);
-    const slug = convertToSlug(name);
+    let slug = convertToSlug(name);
 
-    // Kiêm tra slug đã tồn tại chưa, nếu tồn tại thì thêm số 1 vào cuối
+    // Kiểm tra slug đã tồn tại chưa, nếu tồn tại thì thêm số 1 vào cuối
     const check_slug = await prisma.product.findFirst({
         where: {
             slug: slug
         }
-    })
+    });
 
     if (check_slug) {
-        slug = slug + '1'
+        slug = slug + '1';
     }
 
     // Kiểm tra và xử lý thuộc tính
-    const check_attr = await check_attributes(attributes, category_id);
-    if (check_attr) {
-        return check_attr;
+    if (attributes && Array.isArray(attributes) && attributes.length > 0) {
+        // Kiểm tra xem attributes có id hợp lệ
+        for (const item of attributes) {
+            if (!item.id || isNaN(item.id)) {
+                return get_error_response(
+                    ERROR_CODES.INVALID_ATTRIBUTE_ID,
+                    STATUS_CODE.BAD_REQUEST,
+                    { message: "Mỗi thuộc tính phải có id hợp lệ." }
+                );
+            }
+        }
+
+        const check_attr = await check_attributes(attributes, category_id);
+        if (check_attr) {
+            return check_attr;
+        }
     }
 
     // Tạo sản phẩm
@@ -281,13 +293,13 @@ async function createProductService({ name, description, images, selling_price, 
         await prisma.attribute_product.createMany({
             data: attributes.map((item) => ({
                 product_id: product.id,
-                attribute_id: item.attribute_id || item.attribute?.id, // Hỗ trợ cả object attribute
+                attribute_id: Number(item.id), // Lấy attribute_id từ item.id
                 value: item.value
             }))
         });
     }
 
-    // Lưu toàn bộ mảng images vào image_product (bao gồm cả ảnh đầu tiên)
+    // Lưu toàn bộ mảng images vào image_product
     const imageRecords = images.map((img) => ({
         product_id: product.id,
         image: img.image
@@ -298,9 +310,9 @@ async function createProductService({ name, description, images, selling_price, 
         });
     }
 
-    // Lấy lại danh sách hình ảnh để trả về (giữ nguyên mảng images ban đầu)
-    const allImages = images.map((img, index) => ({
-        id: null, // ID sẽ được gán sau khi tạo, nhưng hiện tại để null
+    // Lấy lại danh sách hình ảnh để trả về
+    const allImages = images.map((img) => ({
+        id: null,
         product_id: product.id,
         image: img.image
     }));
@@ -328,7 +340,7 @@ async function updateProductService({ id, name, description, selling_price, cate
     const check_name = await checkNameExcludingCurrent(name, id); // Truyền id để loại trừ bản ghi hiện tại
     if (check_name) {
         return get_error_response(
-            ERROR_CODES.PRODUCT_NAME_ALREADY_EXISTS,
+            ERROR_CODES.PRODUCT_NAME_EXISTED,
             STATUS_CODE.BAD_REQUEST
         );
     }
@@ -385,7 +397,7 @@ async function updateProductService({ id, name, description, selling_price, cate
         await prisma.attribute_product.createMany({
             data: attributes.map((item) => ({
                 product_id: id,
-                attribute_id: item.attribute_id,
+                attribute_id: item.id,
                 value: item.value
             }))
         });
@@ -415,7 +427,11 @@ async function updateProductService({ id, name, description, selling_price, cate
 }
 
 async function deleteProductService(id) {
-    const product = await prisma.product.findUnique(id)
+    const product = await prisma.product.findUnique({
+        where: {
+          id: Number(id),
+        },
+      });
 
     if (!product) {
         return get_error_response(
@@ -423,33 +439,12 @@ async function deleteProductService(id) {
         )
     }
 
-    const relatedTables = [
-        { model: prisma.warehouse_inventory, error: ERROR_CODES.DEIVCE_HAS_WAREHOUSE_INVENTORY },
-        { model: prisma.detail_export, error: ERROR_CODES.DEIVCE_HAS_DETAIL_EXPORT },
-        { model: prisma.image_product, error: ERROR_CODES.DEIVCE_HAS_IMAGE_PRODUCT },
-        { model: prisma.review_product, error: ERROR_CODES.DEIVCE_HAS_REVIEW_PRODUCT },
-        { model: prisma.liked, error: ERROR_CODES.DEIVCE_HAS_LIKED_PRODUCT },
-        { model: prisma.cart, error: ERROR_CODES.DEIVCE_HAS_CART_ITEM },
-        { model: prisma.order_detail, error: ERROR_CODES.DEIVCE_HAS_ORDER_DETAIL },
-        { model: prisma.detail_import, error: ERROR_CODES.DEIVCE_HAS_DETAIL_IMPORT },
-        { model: prisma.blog, error: ERROR_CODES.DEIVCE_HAS_BLOG },
-    ];
-
-    const checks = await Promise.all(
-        relatedTables.map(({ model }) =>
-            model.findFirst({ where: { product_id: id } })
-        )
-    );
-
-    for (let i = 0; i < checks.length; i++) {
-        if (checks[i]) {
-            return get_error_response(relatedTables[i].error, STATUS_CODE.BAD_REQUEST);
+    await prisma.product.update({
+        where: { id: parseInt(id) },
+        data: {
+            deleted_at: new Date()
         }
-    }
-
-    await prisma.$transaction([
-        prisma.product.delete({ where: { id } })
-    ]);
+    });
 
     return get_error_response(
         ERROR_CODES.SUCCESS,
@@ -457,16 +452,63 @@ async function deleteProductService(id) {
     )
 }
 
+// async function deleteProductService(id) {
+//     const product = await prisma.product.findUnique(id)
+
+//     if (!product) {
+//         return get_error_response(
+//             ERROR_CODES.PRODUCT_NOT_FOUND
+//         )
+//     }
+
+//     const relatedTables = [
+//         { model: prisma.warehouse_inventory, error: ERROR_CODES.DEIVCE_HAS_WAREHOUSE_INVENTORY },
+//         { model: prisma.detail_export, error: ERROR_CODES.DEIVCE_HAS_DETAIL_EXPORT },
+//         { model: prisma.image_product, error: ERROR_CODES.DEIVCE_HAS_IMAGE_PRODUCT },
+//         { model: prisma.review_product, error: ERROR_CODES.DEIVCE_HAS_REVIEW_PRODUCT },
+//         { model: prisma.liked, error: ERROR_CODES.DEIVCE_HAS_LIKED_PRODUCT },
+//         { model: prisma.cart, error: ERROR_CODES.DEIVCE_HAS_CART_ITEM },
+//         { model: prisma.order_detail, error: ERROR_CODES.DEIVCE_HAS_ORDER_DETAIL },
+//         { model: prisma.detail_import, error: ERROR_CODES.DEIVCE_HAS_DETAIL_IMPORT },
+//         { model: prisma.blog, error: ERROR_CODES.DEIVCE_HAS_BLOG },
+//     ];
+
+//     const checks = await Promise.all(
+//         relatedTables.map(({ model }) =>
+//             model.findFirst({ where: { product_id: id } })
+//         )
+//     );
+
+//     for (let i = 0; i < checks.length; i++) {
+//         if (checks[i]) {
+//             return get_error_response(relatedTables[i].error, STATUS_CODE.BAD_REQUEST);
+//         }
+//     }
+
+//     await prisma.$transaction([
+//         prisma.product.delete({ where: { id } })
+//     ]);
+
+//     return get_error_response(
+//         ERROR_CODES.SUCCESS,
+//         STATUS_CODE.OK
+//     )
+// }
+
 const check_attributes = async (attributes, category_id) => {
+    console.log("attributes", attributes)
+    console.log("category_id", category_id)
     const attributes_in_category = await prisma.attribute_category.findMany({
         where: { category_id: category_id },
         include: { attribute: true },
     })
 
+    console.log("attributein category", attributes_in_category)
     for (const item of attributes) {
         const attribute = attributes_in_category.find(
-            (attr) => attr.attribute_id === item.attribute_id
+            (attr) => attr.attribute_id == item.id
         )
+        console.log("attribute", attribute)
 
         if (!attribute) {
             return get_error_response(

@@ -36,14 +36,14 @@ const productApi = {
     },
     async add(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.post(productEndpoints.common, data);
+            return await axiosPrivate.post(productPublic.common, data);
         } catch (error) {
             throw error;
         }
     },
     async delete(id: number | string): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.delete(productEndpoints.common + "/" + id);
+            return await axiosPrivate.delete(productPublic.common + "/" + id);
         } catch (error) {
             throw error;
         }

@@ -277,7 +277,7 @@ export const router = createBrowserRouter([
         element: <EditProductPage />
       },
       {
-        path: 'templates/:activeTab',
+        path: 'templates',
         element: <TemplateManagement />
       },
       {
@@ -303,10 +303,6 @@ export const router = createBrowserRouter([
       {
         path: 'production-trackings',
         element: <StatePrimary />
-      },
-      {
-        path: 'test-template/:batch',
-        element: <TemplateManagement />
       },
       {
         path: 'role',

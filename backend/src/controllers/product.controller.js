@@ -55,6 +55,13 @@ class ProductController {
         return res.status(response.status_code).json(response);
     }
 
+    async deleteProduct(req, res) {
+        const { product_id } = req.params
+        const response = await deleteProductService(product_id)
+
+        return res.status(response.status_code).json(response);
+    }
+
     async checkListInfoProduct(req, res) {
         const { products } = req.body;
 

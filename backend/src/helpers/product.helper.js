@@ -183,6 +183,7 @@ function configDataProductDetail(productRows) {
                 images: [],
                 image: row.image,
                 delta: row.delta,
+                warrenty_time_id: row.warrenty_time_id,
             };
         }
         

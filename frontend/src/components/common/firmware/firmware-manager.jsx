@@ -119,7 +119,7 @@ export default function FirmwarePage() {
                 <div>
                     <h2 className="text-xl font-semibold">Quản lý firmware</h2>
                 </div>
-                <Link to="/admin/firmwares/new">
+                <Link to="/admin/firmware/new">
                     <Button className="flex items-center gap-2">
                         <Upload className="h-4 w-4" />
                         <span>Tạo Firmware</span>
@@ -258,12 +258,12 @@ export default function FirmwarePage() {
                                                         <div className="flex items-center justify-center gap-2">
                                                             {/* Quick Actions */}
                                                             <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-yellow-900">
-                                                                <Link to={`/admin/firmwares/edit/${firmware.firmware_id}`}>
+                                                                <Link to={`/admin/firmware/edit/${firmware.firmware_id}`}>
                                                                     <Pencil className="h-6 w-6" />
                                                                 </Link>
                                                             </Button>
                                                             <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-900">
-                                                                <Link to={`/admin/firmwares/${firmware.firmware_id}`}>
+                                                                <Link to={`/admin/firmware/${firmware.firmware_id}`}>
                                                                     <Eye className="h-6 w-6" />
                                                                 </Link>
                                                             </Button>
