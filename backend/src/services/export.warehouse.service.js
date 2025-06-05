@@ -6,6 +6,149 @@ const { prisma, isExistId } = require("../helpers/query.helper");
 const { get_error_response } = require("../helpers/response.helper");
 const { getExportNumber } = require("../helpers/import.warehouse.helper");
 const { generateExportNumber } = require("../helpers/generate.helper");
+const { executeSelectData } = require("../helpers/sql_query");
+
+function configDataExportWarehouse(rows) {
+    const result = [];
+
+    const map = new Map();
+
+    rows.forEach(row => {
+        const exportId = row.id;
+
+        if (!map.has(exportId)) {
+            const exportData = {
+                id: row.id,
+                employee_name: row.employee_name,
+                export_date: row.export_date,
+                file_authenticate: row.file_authenticate,
+                total_profit: row.total_profit,
+                note: row.note,
+                products: []
+            };
+            map.set(exportId, exportData);
+            result.push(exportData);
+
+            if (row.product_name) {
+                map.get(exportId).products.push({
+                    product_name: row.product_name,
+                    quantity: row.quantity,
+                    sale_price: row.sale_price,
+                    amount: row.amount,
+                    is_gift: row.is_gift,
+                    note: row.detail_export_note,
+                    amount_detail: row.detail_export_amount
+                });
+            }
+        }
+    });
+
+    return result;
+}
+
+async function getExportWarehouseService(filter, limit, sort, order) {
+    let get_attr = `
+        export_warehouse.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS employee_name,
+        export_warehouse.export_date,
+        export_warehouse.file_authenticate,
+        export_warehouse.total_profit,
+        export_warehouse.note
+    `;
+
+    let get_table = `export_warehouse`;
+    let query_join = `
+        LEFT JOIN employee ON export_warehouse.employee_id = employee.id
+    `;
+
+    try {
+        const exportWarehouse = await executeSelectData ({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: filter,
+            sort: sort,
+            order: order,
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            exportWarehouse
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+async function getExportWarehouseDetailService(id) {
+    const filter = [{
+        filter: {
+            field: "export_warehouse.id",
+            condition: "=",
+            value: id
+        }
+    }]
+
+    let get_attr = `
+        export_warehouse.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS employee_name,
+        export_warehouse.export_date,
+        export_warehouse.file_authenticate,
+        export_warehouse.total_profit,
+        export_warehouse.note,
+
+        detail_export.order_id,
+        detail_export.product_id,
+        product.name as product_name,
+        detail_export.quantity,
+        detail_export.sale_price,
+        detail_export.amount,
+        detail_export.is_gift,
+        detail_export.note as detail_export_note,
+
+        order_detail.batch_code,
+        order_detail.serial_number,
+
+    `;
+
+    let get_table = `export_warehouse`;
+    let query_join = `
+        LEFT JOIN employee ON export_warehouse.employee_id = employee.id
+        LEFT JOIN detail_export ON export_warehouse.id = detail_export.export_id
+        LEFT JOIN product ON detail_export.product_id = product.id
+        LEFT JOIN order ON detail_export.order_id = order.id
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+    `;
+
+    try {
+        const exportWarehouse = await executeSelectData ({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            filter: filter,
+            configData: configDataExportWarehouse
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            exportWarehouse
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
 /**
  * Tạo bản ghi xuất kho và xử lý các đơn hàng liên quan
  * @param {Object} exportWarehouse - Dữ liệu xuất kho
@@ -364,4 +507,6 @@ const processAfterExport = async (tx, productToExport, batch_product_detail) => 
 
 module.exports = {
     createExportWarehouseService: createExportWarehouse,
+    getExportWarehouseService,
+    getExportWarehouseDetailService
 }

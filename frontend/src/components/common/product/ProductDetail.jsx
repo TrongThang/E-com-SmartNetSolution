@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { ShoppingCart, Heart, Star } from "lucide-react"
 import { formatCurrency } from "@/utils/format"
 import { useCart } from "@/contexts/CartContext"
+import LikedApi from "@/apis/modules/liked.api.ts"
 
 export default function ProductDetails({ device }) {
     const { addToCart } = useCart();
@@ -28,6 +29,14 @@ export default function ProductDetails({ device }) {
         }
     };
 
+
+    const handleLike = async () => {
+        try {
+            const res = await LikedApi.add(device.id);
+        } catch (error) {
+            console.log("Lỗi: ", error)
+        }
+    }
 
     // // Tính giá sau khi giảm giá
     // const discountedPrice = device.discount ? device.price * (1 - device.discount / 100) : device.price

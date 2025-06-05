@@ -20,6 +20,8 @@ class CartController {
     async addToCart(req, res) {
         const { customer_id, product_id, quantity } = req.body;
         const cart = await addToCart(customer_id, product_id, quantity);
+
+        console.log("cart", cart)
         return res.status(200).json(cart);
     }
 

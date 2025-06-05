@@ -47,21 +47,21 @@ function configOrderData(dbResults) {
 
 async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     let get_attr = `
-        order.id, 
+        order.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS saler_name,
+        CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
         order.name_recipient,
-        order.created_at as order_date,
-        order.status,
+        order.address,
+        order.phone,
         order.amount,
-        order_detail.product_id,
-        product.name as product_name,
-        order_detail.quantity_sold as quantity,
-        order_detail.sale_price as price
+        order.status,
+        order.note
     `;
 
     let get_table = `\`order\``;
     let query_join = `
-        LEFT JOIN order_detail ON order.id = order_detail.order_id
-        LEFT JOIN product ON order_detail.product_id = product.id
+        LEFT JOIN customer ON order.customer_id = customer.id
+        LEFT JOIN employee ON order.saler_id = employee.id
     `;
 
     try {
@@ -74,7 +74,6 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
             logic: logic,
             sort: sort,
             order: order,
-            configData: configOrderData
         });
 
         return get_error_response(

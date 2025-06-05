@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { createExportWarehouseService } = require('../services/export.warehouse.service');
+const { createExportWarehouseService, getExportWarehouseService, getExportWarehouseDetailService } = require('../services/export.warehouse.service');
 
 
 class ExportWarehouseController {
@@ -11,6 +11,14 @@ class ExportWarehouseController {
         return res.status(response.status_code).json(response);
     }
 
+    async getExportWarehouseDetail(req, res) {
+        const { id } = req.params;
+
+        const response = await getExportWarehouseDetailService(id);
+
+        return res.status(response.status_code).json(response);
+    }
+
     async createExportWarehouse(req, res) {
         const { data } = req.body;
 
@@ -18,7 +26,7 @@ class ExportWarehouseController {
         console.log('response', response)
         return res.status(response.status_code).json(response);
     }
-    
+
 }
 
 module.exports = new ExportWarehouseController();

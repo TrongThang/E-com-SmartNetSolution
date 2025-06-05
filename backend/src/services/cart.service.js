@@ -60,18 +60,17 @@ async function checkQuantityAndInventory(product_id, quantity) {
  * @param {Object} cartItem - Thông tin sản phẩm trong giỏ hàng (customer_id, product_id, quantity)
  * @returns {Object} - Phản hồi thành công hoặc lỗi
  */
-async function addToCart(cartItem) {
-    const { customer_id, product_id, quantity } = cartItem;
+async function addToCart(customer_id, product_id, quantity) {
 
     try {
         // Kiểm tra sự tồn tại của khách hàng và sản phẩm
-        const isErrorCustomerOrProduct = checkCustomerAndProduct(customer_id, product_id);
+        const isErrorCustomerOrProduct = await checkCustomerAndProduct(customer_id, product_id);
         if (isErrorCustomerOrProduct) {
             return isErrorCustomerOrProduct;
         }
 
         // Kiểm tra số lượng hợp lệ và tồn kho
-        const isQuantityError = checkQuantityAndInventory(product_id, quantity);
+        const isQuantityError = await checkQuantityAndInventory(product_id, quantity);
         if (isQuantityError) {
             return isQuantityError;
         }
@@ -95,17 +94,16 @@ async function addToCart(cartItem) {
                     data: { quantity: existingItem.quantity + quantity },
                 });
             }
-
-            return { cart, cartItem };
+            
+            return { cartItem };
         });
 
-        logger.info(`Added product ${product_id} to cart for customer ${customer_id}`);
-        return get_success_response(
+        return get_error_response(
             ERROR_CODES.CART_SUCCESS,
             STATUS_CODE.OK
         );
     } catch (err) {
-        logger.error(`Error adding to cart: ${err.message}`);
+        console.log("err", err)
         return get_error_response(
             ERROR_CODES.INTERNAL_SERVER_ERROR,
             STATUS_CODE.INTERNAL_SERVER_ERROR
@@ -120,9 +118,6 @@ async function addToCart(cartItem) {
  */
 async function updateQuantityCartItem(cartItem) {
     const { customer_id, product_id, quantity } = cartItem;
-    console.log("customer_id", customer_id)
-    console.log("product_id", product_id)
-    console.log("quantity", quantity)
     try {
         // Kiểm tra sự tồn tại của khách hàng và sản phẩm
         const isErrorCustomerOrProduct = await checkCustomerAndProduct(customer_id, product_id);

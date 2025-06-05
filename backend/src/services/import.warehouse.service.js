@@ -6,6 +6,151 @@ const { check_list_info_product } = require("../helpers/product.helper");
 const { prisma, isExistId } = require("../helpers/query.helper");
 
 const { get_error_response } = require("../helpers/response.helper");
+const { executeSelectData } = require("../helpers/sql_query");
+
+
+function configDataImportWarehouse(rows) {
+    const result = [];
+
+    const map = new Map();
+
+    rows.forEach(row => {
+        const importId = row.id;
+
+        if (!map.has(importId)) {
+            // Tạo object mới cho mỗi phiếu nhập
+            const importData = {
+                id: row.id,
+                employee_name: row.employee_name,
+                warehouse_name: row.warehouse_name,
+                import_date: row.import_date,
+                file_authenticate: row.file_authenticate,
+                total_money: row.total_money,
+                note: row.note,
+                products: []
+            };
+            map.set(importId, importData);
+            result.push(importData);
+        }
+
+        // Đẩy sản phẩm vào mảng products nếu có
+        if (row.product_name) {
+            map.get(importId).products.push({
+                product_name: row.product_name,
+                quantity: row.quantity,
+                import_price: row.import_price,
+                amount: row.amount,
+                is_gift: row.is_gift,
+                note: row.detail_import_note,
+                amount_detail: row.detail_import_amount
+            });
+        }
+    });
+
+    return result;
+}
+
+async function getImportWarehouseService(filter, limit, sort, order) {
+    let get_attr = `
+        import_warehouse.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS employee_name,
+        CONCAT(warehouse.name) AS warehouse_name,
+        import_warehouse.import_date,
+        import_warehouse.file_authenticate,
+        import_warehouse.total_money,
+        import_warehouse.note
+    `;
+
+    let get_table = `\`import_warehouse\``;
+    let query_join = `
+        LEFT JOIN employee ON import_warehouse.employee_id = employee.id
+        LEFT JOIN warehouse ON import_warehouse.warehouse_id = warehouse.id
+    `;
+
+    try {
+        const importWarehouse = await executeSelectData ({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: filter,
+            sort: sort,
+            order: order,
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            importWarehouse
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+async function getImportWarehouseDetailService(id) {
+
+    const filter = [{
+        filter: {
+            field: "import_warehouse.id",
+            condition: "=",
+            value: id
+        }
+    }]
+
+    let get_attr = `
+        import_warehouse.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS employee_name,
+        CONCAT(warehouse.name) AS warehouse_name,
+        import_warehouse.import_date,
+        import_warehouse.file_authenticate,
+        import_warehouse.total_money,
+        import_warehouse.note,
+
+        product.name as product_name,
+        detail_import.quantity,
+        detail_import.import_price,
+        detail_import.amount,
+        detail_import.is_gift,
+        detail_import.note as detail_import_note,
+        detail_import.amount as detail_import_amount,
+        
+    `;
+
+    let get_table = `\`import_warehouse\``;
+    let query_join = `
+        LEFT JOIN employee ON import_warehouse.employee_id = employee.id
+        LEFT JOIN warehouse ON import_warehouse.warehouse_id = warehouse.id
+        LEFT JOIN detail_import ON import_warehouse.id = detail_import.import_id
+        LEFT JOIN product ON detail_import.product_id = product.id
+    `;
+
+    try {
+        const importWarehouse = await executeSelectData ({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            filter: filter,
+            configData: configDataImportWarehouse
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            importWarehouse
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
 
 async function createImportWarehouse(importWarehouse) {
     const employee = await prisma.employee.findFirst({
@@ -157,4 +302,6 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
 
 module.exports = {
     createImportWarehouse,
+    getImportWarehouseService,
+    getImportWarehouseDetailService
 }

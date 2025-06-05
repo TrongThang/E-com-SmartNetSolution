@@ -1,19 +1,27 @@
 import LikedApi from "@/apis/modules/liked.api.ts";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/contexts/AuthContext";
 import { Eye, Heart } from "lucide-react"
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function LikedPage() {
+  const { user, isAuthenticated } = useAuth();
   const [likeds, setLikeds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await LikedApi.getById("CUST0001");
+      if (!isAuthenticated) {
+        navigate("/");
+        return;
+      }
+      const res = await LikedApi.getById(user.customer_id);
       if (res.status_code === 200) {
         setLikeds(res?.data?.data || []);
       }
@@ -39,7 +47,7 @@ export default function LikedPage() {
 
   const deleteLiked = async (id) => {
     try {
-      const res = await LikedApi.delete(id, "CUST0001");
+      const res = await LikedApi.delete(id, user.customer_id);
       if (res.status_code === 200) {
         console.log("Xóa sản phẩm yêu thích thành công");
         await fetchData();

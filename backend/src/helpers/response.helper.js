@@ -28,7 +28,7 @@ function get_error_response(errors = null, status_code = 200, data = null, field
     else if (errors) {
         const errorCode = errors;
         const message = ERROR_MESSAGES[errorCode]
-        errorList.push({ code: errors, message });
+        errorList.push({ code: errorCode, message });
     }
 
     // Trả về object JSON (không dùng res ở đây, để controller xử lý)

@@ -2,45 +2,35 @@
 
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Plus, AlertCircle } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
-import RoleTable from "@/components/common/table/RoleTable"
 import { Skeleton } from "@/components/ui/skeleton"
 import Swal from "sweetalert2"
+import ExportWarehouseTable from "@/components/common/table/ExportWarehouseTable"
 
-export default function RoleManager() {
-    const [roles, setRoles] = useState([])
+export default function ExportWarehousePage() {
+    const [exportWarehouse, setExportWarehouse] = useState([])
     const [loading, setLoading] = useState(true)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [selectedRole, setSelectedRole] = useState(null)
     const navigate = useNavigate()
 
     useEffect(() => {
-        fetchRoles()
+        fetchExportWarehouse()
     }, [])
 
-    const fetchRoles = async () => {
+    const fetchExportWarehouse = async () => {
         setLoading(true)
         try {
-            const response = await axiosPublic.get("/permission/role")
+            const response = await axiosPublic.get("/export-warehouse")
             console.log('response', response)
             if (response.status_code === 200) {
-                setRoles(response.data)
+                setExportWarehouse(response.data.data)
             }
         } catch (error) {
-            toast.error("Không thể tải danh sách chức vụ")
+            toast.error("Không thể tải danh sách đơn hàng")
             console.error(error)
         } finally {
             setLoading(false)
@@ -49,12 +39,12 @@ export default function RoleManager() {
 
     const handleView = (role) => {
         // Chuyển hướng đến trang quản lý quyền
-        navigate(`/admin/role/permission/${role.id}`)
+        navigate(`/admin/warehouse/export/detail/${role.id}`)
     }
 
-    const handleDelete = async(role) => {
+    const handleDelete = async(exportWarehouse) => {
         Swal.fire({ 
-            title: `Bạn có chắc chắn muốn xóa chức vụ ${role.name}?`,
+            title: `Bạn có chắc chắn muốn xóa đơn hàng ${exportWarehouse.id}?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -63,19 +53,19 @@ export default function RoleManager() {
             cancelButtonText: 'Hủy bỏ',
         }).then(async (result) => {
             if (result.isConfirmed) {
-                if (!role) return
+                if (!exportWarehouse) return
 
                 try {
-                    const response = await axiosPublic.delete(`/role/${role.id}`)
+                    const response = await axiosPublic.delete(`/export-warehouse/${exportWarehouse.id}`)
                     if (response.status_code === 200) {
-                        toast.success("Xóa chức vụ thành công")
+                        toast.success("Xóa đơn hàng thành công")
                         // Cập nhật lại danh sách
-                        setRoles(roles.filter(item => item.id !== role.id))
+                        setExportWarehouse(exportWarehouse.filter(item => item.id !== exportWarehouse.id))
                     } else {
-                        toast.error(response.message || "Không thể xóa chức vụ")
+                        toast.error(response.message || "Không thể xóa đơn hàng")
                     }
                 } catch (error) {
-                    toast.error(error.message || "Có lỗi xảy ra khi xóa chức vụ")
+                    toast.error(error.message || "Có lỗi xảy ra khi xóa đơn hàng")
                     console.error(error)
                 } finally {
                     setDeleteDialogOpen(false)
@@ -85,9 +75,9 @@ export default function RoleManager() {
         })
     }
 
-    const handleEdit = (role) => {
-        // Chuyển hướng đến trang chỉnh sửa chức vụ
-        navigate(`/admin/role/edit/${role.id}`)
+    const handleEdit = (exportWarehouse) => {
+        // Chuyển hướng đến trang chỉnh sửa đơn hàng
+        navigate(`/admin/warehouse/export/edit/${exportWarehouse.id}`)
     }
 
     const confirmDelete = async () => {
@@ -110,21 +100,21 @@ export default function RoleManager() {
         <div className="container mx-auto p-6 space-y-6">
             <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Quản lý chức vụ</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Quản lý đơn hàng xuất kho</h1>
                     <p className="text-muted-foreground">
-                        Quản lý và phân quyền cho các chức vụ trong hệ thống
+                        Quản lý và xử lý đơn hàng xuất kho trong hệ thống
                     </p>
                 </div>
                 <Button asChild>
-                    <Link to="/admin/role/create">
+                    <Link to="/admin/warehouse/export/create">
                         <Plus className="mr-2 h-4 w-4" />
-                        Thêm chức vụ
+                        Tạo phiếu xuất kho mới
                     </Link>
                 </Button>
             </div>
 
-            <RoleTable
-                roles={roles}
+            <ExportWarehouseTable
+                exportWarehouse={exportWarehouse}
                 onModifyPermission={handleView} 
                 onDelete={handleDelete}
                 onEdit={handleEdit}
