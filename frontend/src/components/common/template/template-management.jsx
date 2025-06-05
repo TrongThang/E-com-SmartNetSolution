@@ -46,8 +46,8 @@ export default function TemplateManagement() {
 
 	const fetchTemplate = async () => {
 		try {
-			const res = await axios.get("http://localhost:3000/api/device-templates");
-			setTemplates(res.data);
+			const res = await axiosIOTPublic.get("device-templates");
+			setTemplates(res);
 		} catch (error) {
 			console.error("Failed to fetch device templates:", error);
 			Swal.fire({
@@ -60,9 +60,9 @@ export default function TemplateManagement() {
 
 	const fetchComponent = async () => {
 		try {
-			const res = await axios.get("http://localhost:3000/api/component");
-			console.log("Fetched components:", res.data.data);
-			setComponents(res.data.data);
+			const res = await axiosIOTPublic.get("component");
+			
+			setComponents(res.data);
 		} catch (error) {
 			console.error("Failed to fetch component:", error);
 			Swal.fire({
@@ -108,7 +108,7 @@ export default function TemplateManagement() {
 
 	const createTemplate = async (dataTemplate) => {
 		try {
-			const res = await axios.post("http://localhost:3000/api/device-templates", dataTemplate);
+			const res = await axiosIOTPublic.post("device-templates", dataTemplate);
 			console.log("Create template response:", res);
 			if (res.status === 201) {
 				Swal.fire({
@@ -145,8 +145,7 @@ export default function TemplateManagement() {
 
 	const updateTemplate = async (dataTemplate) => {
 		try {
-			const res = await axios.put(
-				`http://localhost:3000/api/device-templates/${dataTemplate.template_id}`,
+			const res = await axiosIOTPublic.put(`device-templates/${dataTemplate.template_id}`,
 				dataTemplate,
 			);
 			if (res.status === 200) {

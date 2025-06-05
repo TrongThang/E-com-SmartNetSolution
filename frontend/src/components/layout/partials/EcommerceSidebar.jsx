@@ -126,7 +126,7 @@ export default function EcommerceSidebar() {
 												asChild
 												className="text-blue-100 hover:bg-blue-600/50 hover:text-white transition-all duration-200 py-2.5"
 											>
-												<Link to="/admin/templates">
+												<Link to="/admin/templates?tab=templates">
 													<Warehouse className="h-4 w-4" />
 													<span>Khuôn mẫu</span>
 												</Link>
@@ -140,28 +140,6 @@ export default function EcommerceSidebar() {
 												<Link to="/admin/planning">
 													<Users className="size-4" />
 													<span>Kế hoạch</span>
-												</Link>
-											</SidebarMenuButton>
-										</SidebarMenuItem>
-										<SidebarMenuItem>
-											<SidebarMenuButton
-												asChild
-												className="bg-blue-600 text-white hover:bg-blue-500 transition-all duration-200 py-2.5"
-											>
-												<Link to="/admin/firmwares">
-													<UserCog className="size-4" />
-													<span>Firmware</span>
-												</Link>
-											</SidebarMenuButton>
-										</SidebarMenuItem>
-										<SidebarMenuItem>
-											<SidebarMenuButton
-												asChild
-												className="text-blue-100 hover:bg-blue-600/50 hover:text-white transition-all duration-200 py-2.5"
-											>
-												<Link to="/admin/production-trackings">
-													<Users className="size-4" />
-													<span>Theo dõi</span>
 												</Link>
 											</SidebarMenuButton>
 										</SidebarMenuItem>

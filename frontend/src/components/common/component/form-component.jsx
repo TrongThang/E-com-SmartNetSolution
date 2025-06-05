@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom"; // Thêm import createPortal
-import axios from "axios";
+import { createPortal } from "react-dom";
 import Swal from "sweetalert2";
+import axiosIOTPublic from "@/apis/clients/iot.private.client";
 
 export function ComponentFormModal({ showForm, component, onClose, isEdit, fetchComponent }) {
   const [formData, setFormData] = useState({});
@@ -28,7 +28,7 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
   const createComponent = async () => {
     try {
       console.log("Creating component with data:", formData); // Debug
-      const res = await axios.post("http://localhost:3000/api/component", formData);
+      const res = await axiosIOTPublic.post("component", formData);
       console.log("API response:", res); // Debug
       if (res.data.success === 201) {
         Swal.fire({
@@ -66,7 +66,7 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
   const updateComponent = async () => {
     try {
       console.log("Updating component with data:", formData); // Debug
-      const res = await axios.put(`http://localhost:3000/api/component/${component.component_id}`, formData);
+      const res = await axiosIOTPublic.put(`component/${component.component_id}`, formData);
       console.log("API response:", res); // Debug
       if (res.data.success === 200) {
         Swal.fire({

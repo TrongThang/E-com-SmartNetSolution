@@ -194,12 +194,12 @@ export default function NewFirmwarePage() {
                                 <p className="text-sm text-muted-foreground">Hệ thống đang tiến hành kiểm tra tự động...</p>
                             </div>
                             <div className="space-y-3">
-                                <Button onClick={() => navigate("/dashboard/firmware")} className="w-full" size="lg">
+                                <Button onClick={() => navigate("/admin/templates?tab=firmwares")} className="w-full" size="lg">
                                     Quay về danh sách Firmware
                                 </Button>
                                 <Button
                                     variant="outline"
-                                    onClick={() => navigate(`/dashboard/firmware/${Date.now()}`)}
+                                    onClick={() => navigate(`/admin/firmware/${formData.id}`)}
                                     className="w-full"
                                 >
                                     Xem chi tiết Firmware
@@ -425,7 +425,7 @@ export default function NewFirmwarePage() {
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={() => navigate("/dashboard/firmware")}
+                                        onClick={() => navigate("/admin/templates?tab=firmware")}
                                         disabled={isUploading}
                                         size="lg"
                                     >

@@ -161,7 +161,7 @@ export default function FirmwareDetailPage() {
 		<div className="max-w-7xl mx-auto space-y-8 p-6">
 			<div className="flex items-center justify-between">
 				<Button variant="ghost" size="sm" asChild className="gap-1 hover:bg-gray-100">
-					<Link to="/admin/firmwares">
+					<Link to="/admin/temaplates/firmware">
 						<ArrowLeft className="h-4 w-4" />
 						Trở về
 					</Link>

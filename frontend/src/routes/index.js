@@ -281,20 +281,16 @@ export const router = createBrowserRouter([
         element: <TemplateManagement />
       },
       {
-        path: 'firmwares/new',
+        path: 'firmware/new',
         element: <NewFirmwarePage />
       },
       {
-        path: 'firmwares/:id',
+        path: 'firmware/:id',
         element: <FirmwareDetailPage />
       },
       {
-        path: 'firmwares/edit/:id',
+        path: 'firmware/edit/:id',
         element: <EditFirmwarePage />
-      },
-      {
-        path: 'firmwares',
-        element: <FirmwarePage />
       },
       {
         path: 'planning',

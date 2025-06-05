@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2, Package, Search } from "lucide-react"
 import { ComponentFormModal } from "./form-component"
 import { formatDate } from "@/utils/format"
 import Swal from "sweetalert2"
-import axios from "axios"
+import axiosIOTPublic from "@/apis/clients/iot.private.client"
 
 export default function ComponentManager({ components, setComponents, fetchComponent }) {
     const [showForm, setShowForm] = useState(false)
@@ -54,7 +54,7 @@ export default function ComponentManager({ components, setComponents, fetchCompo
     
         if (result.isConfirmed) {
             try {
-                const res = await axios.delete(`http://localhost:3000/api/component/${componentId}`);
+                const res = await axiosIOTPublic.delete(`component/${componentId}`);
                 if (res.data.success === 200) {
                     Swal.fire({
                         title: "Thành công",
