@@ -6,6 +6,19 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const getLikedService = async (id) => {
+    const customer = await prisma.customer.findFirst({
+        where: {
+            id: id
+        }
+    })
+
+    if (!customer) {
+        return get_error_response(
+            errors=ERROR_CODES.LIKED_CUSTOMER_ID_REQUIRED,
+            status_code=STATUS_CODE.BAD_REQUEST
+        );
+    }
+
     // Các cột cần lấy từ liked và product
     let get_attr = `product.name, product.image, product.selling_price, product.description`
     
@@ -24,13 +37,6 @@ const getLikedService = async (id) => {
             strGetColumn: get_attr,
             filter: filter
         })
-
-        if (!liked.data || liked.data.length === 0) {
-            return get_error_response(
-                errors=ERROR_CODES.LIKED_NOT_FOUND,
-                status_code=STATUS_CODE.NOT_FOUND
-            );
-        }
 
         return get_error_response(
             errors=ERROR_CODES.SUCCESS, 

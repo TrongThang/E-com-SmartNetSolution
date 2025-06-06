@@ -1,6 +1,6 @@
 import axiosPrivate from "../clients/private.client";
-import { ESortOrderValue } from "@/models/enums/option";
 import axiosPublic from "../clients/public.client";
+import { ESortOrderValue } from "@/models/enums/option";
 import { jwtDecode } from "jwt-decode";
 import { IApiResponse } from "@/models/interfaces";
 import { FilterSearch } from "@/models/interfaces";
@@ -38,27 +38,27 @@ const cartApi = {
         filters?: FilterSearch[];
         order?: ESortOrderValue;
     }): Promise<IApiResponse> {
-        return axiosPrivate.get(cartEndpoints.common, {
+        return axiosPublic.get(cartEndpoints.common, {
             params: { ...params, filters: JSON.stringify(params.filters) },
         });
     },
-    async add(data: any): Promise<IApiResponse> {
+    async addToCart(product_id: number | string, quantity: number): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.post(cartEndpoints.common, data);
+            return await axiosPublic.post(cartEndpoints.common, { customer_id, product_id, quantity });
         } catch (error) {
             throw error;
         }
     },
     async delete(id: number | string): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.delete(cartEndpoints.common + "/" + id);
+            return await axiosPublic.delete(cartEndpoints.common + "/" + id);
         } catch (error) {
             throw error;
         }
     },
     async edit(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.put(cartEndpoints.common, data);
+            return await axiosPublic.put(cartEndpoints.common, data);
         } catch (error) {
             throw error;
         }

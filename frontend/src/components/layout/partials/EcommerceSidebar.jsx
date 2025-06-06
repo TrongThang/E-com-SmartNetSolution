@@ -17,6 +17,7 @@ import {
 	ShoppingBag,
 	FolderTree,
 	Warehouse,
+	UserLock,
 } from "lucide-react"
 
 import {
@@ -177,9 +178,31 @@ export default function EcommerceSidebar() {
 												asChild
 												className="text-blue-100 hover:bg-blue-600/50 hover:text-white transition-all duration-200 py-2.5"
 											>
+												<Link to="/admin/orders">
+													<Package className="h-4 w-4" />
+													<span>Đơn hàng</span>
+												</Link>
+											</SidebarMenuButton>
+										</SidebarMenuItem>
+										<SidebarMenuItem>
+											<SidebarMenuButton
+												asChild
+												className="text-blue-100 hover:bg-blue-600/50 hover:text-white transition-all duration-200 py-2.5"
+											>
 												<Link to="/admin/slideshows">
 													<Image className="size-4" />
 													<span>Slideshow</span>
+												</Link>
+											</SidebarMenuButton>
+										</SidebarMenuItem>
+										<SidebarMenuItem>
+											<SidebarMenuButton
+												asChild
+												className="text-blue-100 hover:bg-blue-600/50 hover:text-white transition-all duration-200 py-2.5"
+											>
+												<Link to="/admin/roles">
+													<UserLock className="h-4 w-4" />
+													<span>Chức vụ & Quyền</span>
 												</Link>
 											</SidebarMenuButton>
 										</SidebarMenuItem>
@@ -201,7 +224,7 @@ export default function EcommerceSidebar() {
 											>
 												<Link to="/admin/customers">
 													<Users className="size-4" />
-													<span>Người Dùng</span>
+													<span>Khách hàng</span>
 												</Link>
 											</SidebarMenuButton>
 										</SidebarMenuItem>

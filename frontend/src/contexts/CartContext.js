@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import Cookies from 'js-cookie';
 import cartApi from '@/apis/modules/cart.api.ts';
 import { useAuth } from '@/contexts/AuthContext';
+import Swal from 'sweetalert2';
 
 const CartContext = createContext();
 
@@ -205,7 +206,19 @@ export const CartProvider = ({ children }) => {
     const handleAddToCart = async (product) => {
         try {
             if (isAuthenticated) {
-                await cartApi.addToCart(product.id, 1);
+                const response = await cartApi.addToCart(product.id, product.quantity);
+                if (response.status_code !== 200) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Oops...',
+                        text: response.errors[0].message,
+                    })
+                }   
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: 'Thêm sản phẩm vào giỏ hàng thành công',
+                })
             }
 
             setCart(prevCart => {

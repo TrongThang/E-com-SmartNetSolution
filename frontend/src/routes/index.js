@@ -62,6 +62,10 @@ import Permission from "@/pages/Admin/roleManager/permission";
 import RoleManager from "@/pages/Admin/roleManager";
 import EditRole from "@/pages/Admin/roleManager/edit";
 import CreateRole from "@/pages/Admin/roleManager/create";
+import OrderManagerPage from "@/pages/Admin/orderManager";
+import CreateOrderPage from "@/pages/Admin/orderManager/create";
+import ImportWarehousePage from "@/pages/Admin/warehouse/import";
+import ExportWarehousePage from "@/pages/Admin/warehouse/export";
 
 export const router = createBrowserRouter([
   {
@@ -316,6 +320,22 @@ export const router = createBrowserRouter([
         path: 'role/create',
         element: <CreateRole />
       },
+      {
+        path: 'orders',
+        element: <OrderManagerPage />
+      },
+      {
+        path: 'orders/create',
+        element: <CreateOrderPage />
+      },
+      {
+        path: 'warehouses/import',
+        element: <ImportWarehousePage />
+      },
+      {
+        path: 'warehouses/export',
+        element: <ExportWarehousePage />
+      }
     ],
   },
 ]);

@@ -12,11 +12,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { useAuth } from "@/contexts/AuthContext"
 import { Home, MapPin, Plus, Edit, Trash } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"; 
 
 export default function AddressesPage() {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -37,7 +41,11 @@ export default function AddressesPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await addressBookApi.getById("CUST0001");
+      if (!isAuthenticated) {
+        navigate("/");
+        return;
+      }
+      const res = await addressBookApi.getById(user.customer_id);
       if (res.status_code === 200) {
         setAddresses(res?.data?.data?.address_books || []);
       } else {
@@ -80,7 +88,7 @@ export default function AddressesPage() {
     try {
       const updateData = {
         id: addressId,
-        customer_id: "CUST0001",
+        customer_id: user.customer_id,
         ...formData,
         is_default: formData.is_default ? true : false
       };
@@ -118,7 +126,7 @@ export default function AddressesPage() {
   const createAddress = async () => {
     try {
       const createData = {
-        customer_id: "CUST0001",
+        customer_id: user.customer_id,
         ...formData,
         is_default: formData.is_default ? true : false
       };
@@ -404,7 +412,7 @@ export default function AddressesPage() {
                           </DialogContent>
                         </Dialog>
                         <Button variant="ghost" size="sm">
-                          <Trash className="h-4 w-4 text-red-500" onClick={() => deleteAddress("CUST0001", address.id)}/> {/* nên dùng address.customer_id, vì tạm thời chưa có customer_id trong address */}
+                          <Trash className="h-4 w-4 text-red-500" onClick={() => deleteAddress(user.customer_id, address.id)}/>
                         </Button>
                       </div>
                     </div>

@@ -89,7 +89,7 @@ export default function SearchPage() {
         }
 
         console.log("Filters sent to API:", JSON.stringify(filters, null, 2))
-        return filters.length === 0 ? null : filters.length === 1 ? filters[0] : { logic: "AND", filters }
+        return filters.length === 0 ? null : filters.length === 1 ? filters : { logic: "AND", filters }
     }, [keyword, selectedCategories, priceRange, allCategories])
 
     // Initialize page and selectedCategories from URL
@@ -177,7 +177,6 @@ export default function SearchPage() {
                     ...(sort.field && { sort: sort.field }),
                     ...(sort.order && { order: sort.order }),
                 }
-                console.log("Fetching products with params:", JSON.stringify(params, null, 2))
                 const res = await productApi.search(params)
                 console.log("API response:", JSON.stringify(res, null, 2))
 
@@ -189,12 +188,8 @@ export default function SearchPage() {
                     setTotalPage(newTotalPage)
 
                     if (page > newTotalPage && newTotalPage > 0) {
-                        console.log(`Adjusting page from ${page} to ${newTotalPage}`)
                         setPage(newTotalPage)
                     }
-
-                    console.log("Products set:", productsData.map(p => ({ id: p.id, name: p.name })))
-                    console.log("Total pages set:", newTotalPage)
 
                     // Xử lý filterCategories
                     if (keyword.trim()) {
@@ -255,7 +250,6 @@ export default function SearchPage() {
     }, [])
 
     const handlePriceChange = useCallback((min, max) => {
-        console.log("Price change:", { min, max })
         setPriceRange({ min, max })
         setPage(1)
         setProducts([]) // Clear products when filters change
