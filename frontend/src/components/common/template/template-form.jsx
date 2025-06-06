@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, Plus, Minus, Search } from "lucide-react";
+import { X, Plus, Minus, Search, Tags } from "lucide-react";
 import { ComponentFormModal } from "../component/form-component";
 import categoryApi from "@/apis/modules/categories.api.ts";
+import CategoryModal from "./category-modal";
 
 export default function TemplateForm({ template, components, fetchComponent, onSave, onCancel }) {
     const [formData, setFormData] = useState({
@@ -99,6 +100,10 @@ export default function TemplateForm({ template, components, fetchComponent, onS
             component.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
             !formData.components.some((c) => c.component_id === component.component_id)
     );
+
+    const handleCategoryFetch = () => {
+        fetchCategories();
+      }
 
     const addComponent = (component) => {
         setFormData({
@@ -234,7 +239,7 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                                             disabled={type.parentId === null}
                                             className={type.parentId === null ? "text-gray-500" : "text-gray-700"}
                                         >
-                                            {"--".repeat(type.level)} {type.name}
+                                            {'--'.repeat(type.level)} {type.name}
                                         </option>
                                     ))}
                                 </select>
@@ -267,6 +272,9 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-medium">Linh kiện ({formData.components.length})</h3>
                                 <div className="flex space-x-2">
+                                    <CategoryModal
+                                        fetchCategories={handleCategoryFetch}
+                                    />
                                     <button
                                         type="button"
                                         onClick={() => setShowComponentSearch(true)}
