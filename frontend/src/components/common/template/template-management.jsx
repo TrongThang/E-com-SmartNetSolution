@@ -52,7 +52,7 @@ export default function TemplateManagement() {
 			console.error("Failed to fetch device templates:", error);
 			Swal.fire({
 				title: "Lỗi",
-				text: "Không thể tải danh sách khuôn mẫu. Vui lòng thử lại!",
+				text: "Không thể tải danh sách thiết bị. Vui lòng thử lại!",
 				icon: "error",
 			});
 		}
@@ -110,10 +110,10 @@ export default function TemplateManagement() {
 		try {
 			const res = await axiosIOTPublic.post("device-templates", dataTemplate);
 			console.log("Create template response:", res);
-			if (res.status === 201) {
+			if (res.status_code === 201) {
 				Swal.fire({
 					title: "Thành công",
-					text: "Khuôn mẫu đã được tạo thành công",
+					text: res.message,
 					icon: "success",
 				});
 				fetchTemplate();
@@ -121,25 +121,17 @@ export default function TemplateManagement() {
 			} else {
 				Swal.fire({
 					title: "Lỗi",
-					text: res.data.error || "Có lỗi xảy ra khi tạo khuôn mẫu",
+					text: res.message || "Có lỗi xảy ra khi tạo thiết bị",
 					icon: "error",
 				});
 			}
 		} catch (error) {
 			console.error("Failed to create template:", error);
-			if (error.response?.data?.code === "TEMPLATE_ALREADY_EXISTS") {
-				Swal.fire({
-					title: "Lưu ý",
-					text: "Tên template đã tồn tại",
-					icon: "warning",
-				});
-			} else {
 				Swal.fire({
 					title: "Lỗi",
-					text: error.response?.data?.message || "Có lỗi xảy ra khi tạo khuôn mẫu",
+					text: error.response?.data?.message || "Có lỗi xảy ra khi tạo thiết bị",
 					icon: "error",
 				});
-			}
 		}
 	};
 
@@ -148,10 +140,11 @@ export default function TemplateManagement() {
 			const res = await axiosIOTPublic.put(`device-templates/${dataTemplate.template_id}`,
 				dataTemplate,
 			);
-			if (res.status === 200) {
+			console.log(res)
+			if (res.status_code === 200) {
 				Swal.fire({
 					title: "Thành công",
-					text: "Khuôn mẫu đã được cập nhật thành công",
+					text: res.message,
 					icon: "success",
 				});
 				fetchTemplate();
@@ -159,7 +152,7 @@ export default function TemplateManagement() {
 			} else {
 				Swal.fire({
 					title: "Lỗi",
-					text: res.data.error || "Có lỗi xảy ra khi cập nhật khuôn mẫu",
+					text: res.data.error || "Có lỗi xảy ra khi cập nhật thiết bị",
 					icon: "error",
 				});
 			}
@@ -174,7 +167,7 @@ export default function TemplateManagement() {
 			} else {
 				Swal.fire({
 					title: "Lỗi",
-					text: error.response?.data?.message || "Có lỗi xảy ra khi cập nhật khuôn mẫu",
+					text: error.response?.data?.message || "Có lỗi xảy ra khi cập nhật thiết bị",
 					icon: "error",
 				});
 			}
@@ -200,7 +193,7 @@ export default function TemplateManagement() {
 	const deleteTemplate = async (templateId) => {
 		const result = await Swal.fire({
 			title: "Bạn có chắc chắn?",
-			text: "Khuôn mẫu sẽ bị xóa khỏi hệ thống!",
+			text: "Thiết bị sẽ bị xóa khỏi hệ thống!",
 			icon: "question",
 			showCancelButton: true,
 			confirmButtonColor: "#d33",
@@ -212,17 +205,18 @@ export default function TemplateManagement() {
 		if (result.isConfirmed) {
 			try {
 				const res = await axiosIOTPublic.delete(`device-templates/${templateId}`);
-				if (res.status === 204) {
+				console.log("res",res)
+				if (res.status_code === 204) {
 					Swal.fire({
 						title: "Thành công",
-						text: "Khuôn mẫu đã được xóa",
+						text: res.message,
 						icon: "success",
 					});
 					fetchTemplate();
 				} else {
 					Swal.fire({
 						title: "Lỗi",
-						text: res.data.error || "Có lỗi xảy ra khi xóa khuôn mẫu",
+						text: res.message	 || "Có lỗi xảy ra khi xóa thiết bị",
 						icon: "error",
 					});
 				}
@@ -230,7 +224,7 @@ export default function TemplateManagement() {
 				console.error("Failed to delete template:", error);
 				Swal.fire({
 					title: "Lỗi",
-					text: error.response?.data?.message || "Có lỗi xảy ra khi xóa khuôn mẫu",
+					text: error.message || "Có lỗi xảy ra khi xóa thiết bị",
 					icon: "error",
 				});
 			}
@@ -298,7 +292,7 @@ export default function TemplateManagement() {
 					<div className="flex justify-between items-center py-4">
 						<div>
 							<h1 className="text-2xl font-bold text-gray-900">
-								Quản lý khuôn mẫu sản xuất <span className="mx-2">→</span> {activeTab === "templates" ? "Khuôn mẫu" : activeTab === "components" ? "Linh kiện" : "Firmwares"}
+								Quản lý khuôn mẫu sản xuất <span className="mx-2">→</span> {activeTab === "templates" ? "Thiết bị" : activeTab === "components" ? "Linh kiện" : "Firmwares"}
 							</h1>
 						</div>
 						<div className="flex items-center space-x-3">
@@ -331,7 +325,7 @@ export default function TemplateManagement() {
 							)}
 						>
 							<Package className="inline mr-2" size={16} />
-							Khuôn mẫu
+							Thiết bị
 						</button>
 						<button
 							onClick={() => handleTabChange("components")}

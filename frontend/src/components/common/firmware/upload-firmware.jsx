@@ -216,7 +216,7 @@ export default function NewFirmwarePage() {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <Button variant="ghost" size="sm" asChild>
-                    <Link to="/admin/templates?tab=firmware" className="flex items-center">
+                    <Link to="/admin/templates?tab=firmwares" className="flex items-center">
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Trở về
                     </Link>
