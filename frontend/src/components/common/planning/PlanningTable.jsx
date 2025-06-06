@@ -140,7 +140,7 @@ export function PlanningTable({
                                         Mã Lô
                                       </TableHead>
                                       <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Template
+                                        Thiết bị
                                       </TableHead>
                                       <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Số lượng

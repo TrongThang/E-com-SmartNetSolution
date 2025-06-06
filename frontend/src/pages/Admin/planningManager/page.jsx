@@ -447,8 +447,8 @@ export default function ProductionPlanningManagement() {
           if (templates.length === 0) {
             Swal.fire({
               icon: "warning",
-              title: "Không có template khả dụng",
-              text: "Hiện không có template nào đủ điều kiện để tạo kế hoạch",
+              title: "Không có thiết bị khả dụng",
+              text: "Hiện không có thiết bị nào đủ điều kiện để tạo kế hoạch",
             });
             return;
           }

@@ -183,7 +183,7 @@ const PlanningPDF = ({ planning }) => (
                             <Text style={styles.infoValue} wrap>{batch.production_batch_id}</Text>
                         </View>
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Template:</Text>
+                            <Text style={styles.infoLabel}>Thiết bị:</Text>
                             <Text style={styles.infoValue} wrap>{batch.device_templates?.name || '-'}</Text>
                         </View>
                         <View style={styles.infoRow}>

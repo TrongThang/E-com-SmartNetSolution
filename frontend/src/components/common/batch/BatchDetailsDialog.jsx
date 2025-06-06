@@ -49,7 +49,7 @@ export function BatchDetailsDialog({ isOpen, onClose, batch }) {
               <div className="flex items-center">
                 
                 <div className="ml-3 w-full">
-                  <p className="text-sm font-medium text-green-900">Firmware tên</p>
+                  <p className="text-sm font-medium text-green-900">Firmware</p>
                   <p className="text-sm font-bold text-green-600 whitespace-normal break-words">
                     {firmware ? `${firmware.name} (v${firmware.version})` : "Không xác định"}
                   </p>
@@ -61,7 +61,7 @@ export function BatchDetailsDialog({ isOpen, onClose, batch }) {
               <div className="flex items-center">
                 
                 <div className="ml-3 w-full">
-                  <p className="text-sm font-medium text-yellow-900">Tên Template</p>
+                  <p className="text-sm font-medium text-yellow-900">Tên thiết bị</p>
                   <p className="text-sm font-bold text-yellow-600 whitespace-normal break-words">
                     {batch.device_templates?.name || batch.template_id}
                   </p>

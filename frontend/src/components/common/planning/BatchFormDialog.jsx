@@ -43,7 +43,7 @@ export function BatchFormDialog({
     clearErrors();
 
     if (!data.template_id) {
-      setError("template_id", { message: "Vui lòng chọn template" });
+      setError("template_id", { message: "Vui lòng chọn thiết bị" });
       isValid = false;
     }
 
@@ -53,7 +53,7 @@ export function BatchFormDialog({
     } else if (selectedTemplate?.firmware?.length > 0) {
       const firmwareExists = selectedTemplate.firmware.some(f => f.firmware_id.toString() === data.firmware_id);
       if (!firmwareExists) {
-        setError("firmware_id", { message: "Firmware không thuộc template này" });
+        setError("firmware_id", { message: "Firmware không thuộc thiết bị này" });
         isValid = false;
       }
     }
@@ -126,7 +126,7 @@ export function BatchFormDialog({
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Chọn template" />
+                            <SelectValue placeholder="Chọn thiết bị" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -141,12 +141,12 @@ export function BatchFormDialog({
                             ))
                           ) : (
                             <SelectItem value="no-templates" disabled>
-                              Không có template
+                              Không có thiết bị
                             </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
-                      <FormDescription>Chọn template sản xuất</FormDescription>
+                      <FormDescription>Chọn thiết bị sản xuất</FormDescription>
                       <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
