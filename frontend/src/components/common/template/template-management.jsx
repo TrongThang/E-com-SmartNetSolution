@@ -298,7 +298,7 @@ export default function TemplateManagement() {
 					<div className="flex justify-between items-center py-4">
 						<div>
 							<h1 className="text-2xl font-bold text-gray-900">
-								Quản lý khuôn mẫu sản xuất <span className="mx-2">→</span> {activeTab}
+								Quản lý khuôn mẫu sản xuất <span className="mx-2">→</span> {activeTab === "templates" ? "Khuôn mẫu" : activeTab === "components" ? "Linh kiện" : "Firmwares"}
 							</h1>
 						</div>
 						<div className="flex items-center space-x-3">
