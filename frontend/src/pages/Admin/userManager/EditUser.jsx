@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -10,11 +8,14 @@ import { ArrowLeft, Upload } from "lucide-react"
 import Swal from 'sweetalert2';
 import customerApi from "@/apis/modules/customer.api.ts"
 import dayjs from "dayjs"
+import ImageCropper from "@/components/common/ImageCropper"
 
 const EditUserPage = () => {
     const { id } = useParams();
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
+    const [showCropModal, setShowCropModal] = useState(false);
+    const [tempImage, setTempImage] = useState(null);
     const [customer, setCustomer] = useState({
         surname: "",
         lastname: "",
@@ -29,20 +30,19 @@ const EditUserPage = () => {
     const [error, setError] = useState(null);
 
     const handleImageChange = (e) => {
-        // Lấy file ảnh từ input file khi người dùng chọn
         const file = e.target.files[0];
         if (!file) return;
-
-        // Tạo FileReader để đọc file ảnh thành base64 string
         const reader = new FileReader();
-
-        // Khi đọc file xong sẽ cập nhật state form.image với dữ liệu base64
         reader.onloadend = () => {
-            setCustomer(prev => ({ ...prev, image: reader.result }));
+            setTempImage(reader.result);
+            setShowCropModal(true);
         };
-
-        // Bắt đầu đọc file dưới dạng base64 URL
         reader.readAsDataURL(file);
+    };
+
+    const handleCropComplete = (croppedImage) => {
+        setCustomer(prev => ({ ...prev, image: croppedImage }));
+        setShowCropModal(false);
     };
 
     const handleInputChange = (e) => {
@@ -116,9 +116,9 @@ const EditUserPage = () => {
         setError(null);
         try {
             const res = await customerApi.getById(id);
-            console.log("api repon:",res)
+            console.log("api repon:", res)
             if (res.status_code === 200) {
-                console.log("dcd",res.data)
+                console.log("dcd", res.data)
                 // Cập nhật formData khi có dữ liệu
                 setCustomer({
                     surname: res?.data?.surname || "",
@@ -304,6 +304,21 @@ const EditUserPage = () => {
                     </div>
                 </form>
             </div>
+
+            {/* Modal cắt ảnh */}
+            {showCropModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4">
+                        <div className="p-6">
+                            <ImageCropper
+                                image={tempImage}
+                                onCropComplete={handleCropComplete}
+                                aspectRatio={5 / 5}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
