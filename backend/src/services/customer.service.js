@@ -163,7 +163,7 @@ async function createCustomerService({ surname, lastname, image, phone, email, g
                     username: username,
                     password: hashedPassword,
                     role: {
-                        connect: { id: "role003" } // Kết nối tài khoản với role
+                        connect: { id: 2 } // Kết nối tài khoản với role
                     },
                     customer: {
                         connect: { id: customer.id } // Kết nối tài khoản với khách hàng

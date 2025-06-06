@@ -11,12 +11,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Upload, X, Edit, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import productApi from "@/apis/modules/product.api.ts";
 import categoryApi from "@/apis/modules/categories.api.ts";
 import WarrantyTimeApi from "@/apis/modules/warrantyTime.api.ts";
 import UnitApi from "@/apis/modules/unit.api.ts";
 import Swal from "sweetalert2";
+
+const PRODUCT = {
+    STOP_SELLING: -1,
+    SOLD_OUT: 0, 
+    ACTIVE: 1,
+    DISCOUNT: 2,
+    FETURED: 3,
+    NEW: 4,
+};
 
 const AddProductPage = () => {
     const navigate = useNavigate();
@@ -27,7 +36,7 @@ const AddProductPage = () => {
         description: "",
         description_normal: "",
         selling_price: 0,
-        status: 1,
+        status: PRODUCT.ACTIVE, // Mặc định là ACTIVE
         is_hide: false,
         category_id: 0,
         unit_id: 0,
@@ -665,6 +674,7 @@ const AddProductPage = () => {
                                                         <img
                                                             src={imageObj?.image || "/placeholder.svg"}
                                                             alt={`Ảnh ${imageStartIndex + index + 1}`}
+ Abroad
                                                             className="h-full w-full rounded-md object-cover"
                                                         />
                                                         <button
@@ -723,8 +733,12 @@ const AddProductPage = () => {
                                                     <SelectValue placeholder="Chọn trạng thái" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="1">Hoạt động</SelectItem>
-                                                    <SelectItem value="0">Ngừng kinh doanh</SelectItem>
+                                                    <SelectItem value={PRODUCT.STOP_SELLING.toString()}>Ngừng bán</SelectItem>
+                                                    <SelectItem value={PRODUCT.SOLD_OUT.toString()}>Hết hàng</SelectItem>
+                                                    <SelectItem value={PRODUCT.ACTIVE.toString()}>Đang bán</SelectItem>
+                                                    <SelectItem value={PRODUCT.DISCOUNT.toString()}>Giảm giá</SelectItem>
+                                                    <SelectItem value={PRODUCT.FETURED.toString()}>Nổi bật</SelectItem>
+                                                    <SelectItem value={PRODUCT.NEW.toString()}>Mới</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
