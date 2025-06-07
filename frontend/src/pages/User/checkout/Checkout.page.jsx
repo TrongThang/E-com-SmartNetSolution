@@ -16,6 +16,7 @@ import CheckoutSuccess from "@/pages/User/checkout/success/CheckoutSuccess"
 import { useCart } from "@/contexts/CartContext"
 import Swal from "sweetalert2"
 import axiosPublic from "@/apis/clients/public.client"
+import axiosIOTPublic from "@/apis/clients/iot.private.client"
 export default function CheckoutPage() {
     const { getItemSelected, removeSelected } = useCart()
     const products = getItemSelected()
@@ -48,7 +49,7 @@ export default function CheckoutPage() {
             const shippingFee = shippingData?.shippingMethod === 'standard' ? 30000 : 50000
 
             // Kiểm tra sản phẩm có status = 5
-            const preOrderProducts = products.filter(item => item.status === 5);
+            const preOrderProducts = products.filter(item => Number(item.status) === 5);
             console.log("preOrderProducts:", preOrderProducts);
 
             const payload = {
@@ -86,7 +87,7 @@ export default function CheckoutPage() {
                             };
                             console.log("planningData:", planningData);
 
-                            await axiosPublic.post("/planning/with-batches", planningData);
+                            await axiosIOTPublic.post("/planning/with-batches", planningData);
                         }));
                     } catch (planningError) {
                         console.error('Error creating planning:', planningError);
