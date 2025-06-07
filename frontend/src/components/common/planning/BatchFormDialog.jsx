@@ -43,17 +43,14 @@ export function BatchFormDialog({
     clearErrors();
 
     if (!data.template_id) {
-      setError("template_id", { message: "Vui lòng chọn template" });
+      setError("template_id", { message: "Vui lòng chọn thiết bị" });
       isValid = false;
     }
 
-    if (!data.firmware_id) {
-      setError("firmware_id", { message: "Vui lòng chọn firmware" });
-      isValid = false;
-    } else if (selectedTemplate?.firmware?.length > 0) {
+    if (data.firmware_id && data.firmware_id !== "none" && selectedTemplate?.firmware?.length > 0) {
       const firmwareExists = selectedTemplate.firmware.some(f => f.firmware_id.toString() === data.firmware_id);
       if (!firmwareExists) {
-        setError("firmware_id", { message: "Firmware không thuộc template này" });
+        setError("firmware_id", { message: "Firmware không thuộc thiết bị này" });
         isValid = false;
       }
     }
@@ -126,7 +123,7 @@ export function BatchFormDialog({
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Chọn template" />
+                            <SelectValue placeholder="Chọn thiết bị" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -141,55 +138,51 @@ export function BatchFormDialog({
                             ))
                           ) : (
                             <SelectItem value="no-templates" disabled>
-                              Không có template
+                              Không có thiết bị
                             </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
-                      <FormDescription>Chọn template sản xuất</FormDescription>
+                      <FormDescription>Chọn thiết bị sản xuất</FormDescription>
                       <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
 
-                {selectedTemplate && (
-                  <FormField
-                    control={form.control}
-                    name="firmware_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Firmware *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          disabled={availableFirmwares.length === 0}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={
-                                availableFirmwares.length > 0
-                                  ? "Chọn firmware"
-                                  : "Không có firmware"
-                              } />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {availableFirmwares.map((firmware) => (
-                              <SelectItem
-                                key={firmware.firmware_id}
-                                value={firmware.firmware_id.toString()}
-                              >
-                                {firmware.name} (v{firmware.version})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>Chọn firmware cho lô sản xuất</FormDescription>
-                        <FormMessage className="text-red-500" />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                <FormField
+                  control={form.control}
+                  name="firmware_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Firmware</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn firmware (không bắt buộc)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            Không có firmware
+                          </SelectItem>
+                          {availableFirmwares.map((firmware) => (
+                            <SelectItem
+                              key={firmware.firmware_id}
+                              value={firmware.firmware_id.toString()}
+                            >
+                              {firmware.name} (v{firmware.version})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Chọn firmware cho lô sản xuất (không bắt buộc)</FormDescription>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField

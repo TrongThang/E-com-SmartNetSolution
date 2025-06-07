@@ -86,7 +86,7 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Mã Lô</TableHead>
-                  <TableHead>Template</TableHead>
+                  <TableHead>Thiết bị</TableHead>
                   <TableHead>Số lượng</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead>Ngày tạo</TableHead>
