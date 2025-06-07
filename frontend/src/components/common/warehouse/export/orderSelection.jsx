@@ -20,11 +20,13 @@ export function OrderSelection({ onOrderSelect, selectedOrders }) {
                 { field: "order.status", condition: ">=", value: 0 },
                 { field: "order.status", condition: "<=", value: 1 }
             ]
-            const response = await axiosPublic.get(`/order/admin`, {    
+            const response = await axiosPublic.get(`/order/admin/warehouse`, {    
                 params: {
                     filter: JSON.stringify(filter),
                 }
             })
+
+            console.log('response', response)
             
             if (response.status_code === 200) {
                 setOrders(response.data.data)
@@ -95,7 +97,7 @@ export function OrderSelection({ onOrderSelect, selectedOrders }) {
                                                 <p className="text-sm text-muted-foreground">
                                                     {order.customer_name} - {order.order_date}
                                                 </p>
-                                                <p className="text-sm font-medium mt-1">{order.total_amount.toLocaleString()} VNĐ</p>
+                                                <p className="text-sm font-medium mt-1">{order.total_amount?.toLocaleString()} VNĐ</p>
                                             </div>
                                             <div className="flex flex-col items-end">
                                                 <Badge variant="outline" className="mb-2">

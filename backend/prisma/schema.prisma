@@ -158,10 +158,10 @@ model attribute_product {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model batch_product_detail {
-  id            Int            @id 
+  id            Int            @id @default(autoincrement())
   exp_batch_id  String?        @db.VarChar(50)
   imp_batch_id  String         @db.VarChar(50)
-  seral_number  String?        @db.VarChar(20)
+  serial_number  String?        @db.VarChar(50)
   created_at    DateTime?      @db.Timestamp(0)
   updated_at    DateTime?      @db.Timestamp(0)
   deleted_at    DateTime?      @db.Timestamp(0)
@@ -529,15 +529,13 @@ model image_product {
 model import_warehouse {
   id                Int             @id @default(autoincrement())
   import_number     Int?
-  import_id         String?         @db.VarChar(12)
   employee_id       String?         @db.VarChar(32)
   warehouse_id      Int?
   import_date       DateTime?       @db.Date
   file_authenticate String?         @db.MediumText
   total_money       Float?
-  prepaid           Float?
-  remaining         Float?
   note              String?         @db.VarChar(500)
+  status            Int?
   created_at        DateTime? @db.Timestamp(0) @default(now())
   updated_at        DateTime? @db.Timestamp(0) @updatedAt
   deleted_at        DateTime?       @db.Timestamp(0)
@@ -788,6 +786,7 @@ model production_tracking {
   production_id         Int                     @id @default(autoincrement())
   batch_id              Int?
   device_serial         String?                 @db.VarChar(50)
+  serial_number         String                  @db.VarChar(50)
   stage                 String                  @db.VarChar(50)
   status                String?                 @default("pending") @db.VarChar(20)
   employee_id           String?                 @db.VarChar(32)

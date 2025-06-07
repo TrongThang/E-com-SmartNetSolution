@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { PackageCheck, Plus } from "lucide-react"
+import { Badge, PackageCheck, Plus, Shapes } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
@@ -11,6 +11,30 @@ import { Skeleton } from "@/components/ui/skeleton"
 import Swal from "sweetalert2"
 import OrderTable from "@/components/common/table/OrderTable"
 import { ORDER_STATUS } from "@/constants/status.constants"
+import ReactDOM from 'react-dom/client';
+
+function ErrorList({ errors }) {
+    return (
+        <div>
+            {errors.map((error, index) => {
+                if (error.type === 'product_stock_not_enough') {
+                    return (
+                        <div key={index} style={{ color: 'red', display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                            <PackageCheck style={{ marginRight: 1, width: 50, height: 50 }} />
+                            <p>{error.message}</p>
+                        </div>
+                    );
+                }
+                return (
+                    <div key={index} style={{ color: 'red', display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                        <Shapes style={{ marginRight: 1, width: 50, height: 50 }} />
+                        <p>{error.message}</p>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
 
 export default function OrderManager() {
     const navigate = useNavigate()
@@ -46,9 +70,9 @@ export default function OrderManager() {
         }
     }
 
-    const handleView = (role) => {
+    const handleView = (order) => {
         // Chuyển hướng đến trang quản lý quyền
-        navigate(`/admin/role/permission/${role.id}`)
+        navigate(`/admin/orders/detail/${order.id}`)
     }
 
     const handleDelete = async (order) => {
@@ -90,6 +114,56 @@ export default function OrderManager() {
 
     }
 
+    const handleConfirmOrder = async () => {
+        try {
+            const result = await Swal.fire({
+                title: `Bạn có chắc chắn muốn xác nhận các đơn hàng [ ${selectedIds.join(', ')} ]?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+            })
+
+            if (!result.isConfirmed) return
+
+            const response = await axiosPublic.patch("/order/admin/respond-orders", { orderIds: selectedIds })
+
+            if (response.status_code === 200) {
+                Swal.fire({
+                    title: 'Xác nhận đơn hàng thành công',
+                    icon: 'success',
+                    confirmButtonText: 'Đóng',
+                    confirmButtonColor: '#3085d6',
+                })
+                fetchOrders()
+            } else {
+                const container = document.createElement('div');
+
+                // Mount React component vào container
+                ReactDOM.createRoot(container).render(<ErrorList errors={response.data} />);
+                Swal.fire({
+                    title: 'Xác nhận đơn hàng thất bại',
+                    icon: 'error',
+                    // width: '800px',
+                    html: container,
+                    confirmButtonText: 'Đóng',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonText: 'Hủy bỏ',
+                    cancelButtonColor: '#d33',
+                })
+            }
+        } catch (error) {
+            console.log('error', error)
+            Swal.fire({
+                title: 'Có lỗi xảy ra khi xác nhận đơn hàng',
+                icon: 'error',
+                text: error.message,
+                confirmButtonText: 'Đóng',
+                confirmButtonColor: '#3085d6',
+            })
+        }
+    }
+
     if (loading) {
         return (
             <div className="container mx-auto p-6 space-y-6">
@@ -112,15 +186,15 @@ export default function OrderManager() {
                     </p>
                 </div>
                 <div className="flex space-x-2 ml-auto">
-                    <Button disabled={!isAllSelectedPendingConfirm} className="bg-blue-500 hover:bg-blue-600">
-                            <PackageCheck className="mr-2 h-4 w-4" />
+                    <Button disabled={!isAllSelectedPendingConfirm} className="bg-blue-500 hover:bg-blue-600" onClick={handleConfirmOrder}>
+                        <PackageCheck className="mr-2 h-4 w-4" />
                         Xác nhận đơn hàng
                     </Button>
                     <Button asChild className="bg-green-500 hover:bg-green-600">
                         <Link to="/admin/orders/create">
                             <span className="flex items-center">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tạo đơn hàng mới
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tạo đơn hàng mới
                             </span>
                         </Link>
                     </Button>
@@ -134,6 +208,7 @@ export default function OrderManager() {
                 onEdit={handleEdit}
                 selectedIds={selectedIds}
                 setSelectedIds={setSelectedIds}
+                onView={handleView}
             />
         </div>
     )

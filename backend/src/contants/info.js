@@ -24,6 +24,13 @@ ORDER = {
     REFUNDED : 7   // Hoàn tiền
 }
 
+IMPORT_WAREHOUSE = {
+    PENDING: 0, // Chờ thực hiện
+    IMPORTING: 1,
+    COMPLETED: 2,
+    CANCELLED: 3
+}
+
 module.exports = {
-    ROLE, PRODUCT, ORDER
+    ROLE, PRODUCT, ORDER, IMPORT_WAREHOUSE
 }

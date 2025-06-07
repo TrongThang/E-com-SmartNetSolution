@@ -20,9 +20,9 @@ export function ProductsTab({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Danh sách sản phẩm nhập kho</CardTitle>
+                <CardTitle>Danh sách lô sản xuất nhập kho</CardTitle>
                 <CardDescription>
-                    {products.length > 0 ? `${products.length} sản phẩm được chọn` : "Chưa có sản phẩm nào được chọn"}
+                    {products.length > 0 ? `${products.length} lô sản xuất được chọn` : "Chưa có lô nào được chọn"}
                 </CardDescription>
             </CardHeader>
             <CardContent>

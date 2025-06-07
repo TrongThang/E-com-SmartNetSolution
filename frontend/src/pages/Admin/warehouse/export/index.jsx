@@ -39,7 +39,7 @@ export default function ExportWarehousePage() {
 
     const handleView = (role) => {
         // Chuyển hướng đến trang quản lý quyền
-        navigate(`/admin/warehouse/export/detail/${role.id}`)
+        navigate(`/admin/warehouses/export/detail/${role.id}`)
     }
 
     const handleDelete = async(exportWarehouse) => {
@@ -118,6 +118,7 @@ export default function ExportWarehousePage() {
                 onModifyPermission={handleView} 
                 onDelete={handleDelete}
                 onEdit={handleEdit}
+                onView={handleView}
             />
         </div>
     )

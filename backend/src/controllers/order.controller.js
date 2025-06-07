@@ -1,9 +1,15 @@
-const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, cancelOrderService } = require("../services/order.service");
+const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, cancelOrderService, getOrderDetailService, respondListOrderService, getOrderForWarehouseEmployee } = require("../services/order.service");
 const { PrismaClient } = require('@prisma/client');
 
 class OrderController {
     constructor() {
         this.prisma = new PrismaClient();
+    }
+
+    async getOrdersForWarehouseEmployee(req, res) {
+        const { filter, logic, limit, sort, order } = req.query;
+        const result = await getOrderForWarehouseEmployee(filter, logic, limit, sort, order);
+        res.status(result.status_code).json(result);
     }
 
     async getOrdersForAdministrator(req, res) {
@@ -18,6 +24,12 @@ class OrderController {
             order
         );
 
+        res.status(result.status_code).json(result);
+    }
+
+    async getOrderDetailForAdministrator(req, res) {
+        const { order_id } = req.params;
+        const result = await getOrderDetailService(order_id);
         res.status(result.status_code).json(result);
     }
 
@@ -41,6 +53,21 @@ class OrderController {
     async canceledOrder(req, res) {
         const {id} = req.body;
         const result = await cancelOrderService(id);
+        res.status(result.status_code).json(result);
+    }
+
+    async respondListOrder(req, res) {
+        const { orderIds } = req.body;
+        const result = await respondListOrderService(orderIds);
+        res.status(result.status_code).json(result);
+    }
+
+    async shippingOrder(req, res) {
+        // const employee_id = req.user.id;
+        const employee_id = ''
+        const { orderId } = req.body;
+
+        const result = await shippingOrderService(orderId);
         res.status(result.status_code).json(result);
     }
 }

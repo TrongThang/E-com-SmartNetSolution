@@ -1,6 +1,6 @@
 const express = require('express');
 const { validateMiddleware } = require('../middleware/validate.middleware');
-const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, canceledOrder } = require('../controllers/order.controller');
+const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, canceledOrder, getOrderDetailForAdministrator, respondListOrder, getOrdersForWarehouseEmployee } = require('../controllers/order.controller');
 const orderRouter = express.Router();
 
 const asyncHandler = (fn) => {
@@ -10,9 +10,18 @@ const asyncHandler = (fn) => {
 }
 
 orderRouter.get('/admin', asyncHandler(getOrdersForAdministrator));
+orderRouter.get('/admin/warehouse', asyncHandler(getOrdersForWarehouseEmployee));
+orderRouter.get('/admin/detail/:order_id', asyncHandler(getOrderDetailForAdministrator));
 orderRouter.get('/customer/:customer_id', asyncHandler(getOrdersForCustomer));
 orderRouter.post('/checkout', asyncHandler(createOrder));
 orderRouter.put('/customer', asyncHandler(canceledOrder))
+
+// Confirm đơn hàng
+orderRouter.patch('/admin/respond-orders', asyncHandler(respondListOrder));
+// orderRouter.patch('/admin/shipping-order', asyncHandler(shippingOrder));
+// orderRouter.patch('/admin/finish-shipping-order', asyncHandler(finishShippingOrder));
+// orderRouter.patch('/admin/cancel-order', asyncHandler(canceledOrder));
+
 
 module.exports = orderRouter;
 

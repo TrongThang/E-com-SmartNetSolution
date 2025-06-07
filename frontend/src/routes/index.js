@@ -55,7 +55,6 @@ import EditFirmwarePage from "@/components/common/firmware/edit-firmware";
 import CategoryManagement from "@/pages/Admin/categoryManager";
 import StatePrimary from "@/components/common/tracking/StatePrimary";
 import AttributeGroupPage from "@/pages/Admin/attribute_groupManager";
-import FirmwarePage from "@/components/common/firmware/firmware-manager";
 import PlanningManagement from "@/pages/Admin/planningManager/page";
 import EmployeeLogin from "@/components/common/auth/EmployeeLogin";
 import Permission from "@/pages/Admin/roleManager/permission";
@@ -66,6 +65,9 @@ import OrderManagerPage from "@/pages/Admin/orderManager";
 import CreateOrderPage from "@/pages/Admin/orderManager/create";
 import ImportWarehousePage from "@/pages/Admin/warehouse/import";
 import ExportWarehousePage from "@/pages/Admin/warehouse/export";
+import ImportWarehouseDetailPage from "@/pages/Admin/warehouse/import/detail";
+import ExportWarehouseDetailPage from "@/pages/Admin/warehouse/export/detail";
+import OrderDetailPage from "@/pages/Admin/orderManager/detail";
 
 export const router = createBrowserRouter([
   {
@@ -325,6 +327,10 @@ export const router = createBrowserRouter([
         element: <OrderManagerPage />
       },
       {
+        path: 'orders/detail/:id',
+        element: <OrderDetailPage />
+      },
+      {
         path: 'orders/create',
         element: <CreateOrderPage />
       },
@@ -333,8 +339,16 @@ export const router = createBrowserRouter([
         element: <ImportWarehousePage />
       },
       {
+        path: 'warehouses/import/detail/:id',
+        element: <ImportWarehouseDetailPage />
+      },
+      {
         path: 'warehouses/export',
         element: <ExportWarehousePage />
+      },
+      {
+        path: 'warehouses/export/detail/:id',
+        element: <ExportWarehouseDetailPage />
       }
     ],
   },

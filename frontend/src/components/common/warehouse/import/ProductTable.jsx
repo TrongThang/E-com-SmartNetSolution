@@ -27,11 +27,10 @@ export function ProductTable({
             <TableHeader>
                 <TableRow>
                     <TableHead className="w-[30px]"></TableHead>
-                    <TableHead>Sản phẩm</TableHead>
+                    <TableHead>Lô sản xuất</TableHead>
+                    <TableHead className="w-[100px] text-right">Hình ảnh</TableHead>
+                    <TableHead className="w-[100px] text-right">Sản phẩm</TableHead>
                     <TableHead className="w-[100px] text-right">Số lượng</TableHead>
-                    <TableHead className="w-[150px] text-right">Đơn giá</TableHead>
-                    <TableHead className="w-[150px] text-right">Thành tiền</TableHead>
-                    <TableHead className="w-[80px] text-center">Quà tặng</TableHead>
                     <TableHead className="w-[80px]">Thao tác</TableHead>
                 </TableRow>
             </TableHeader>

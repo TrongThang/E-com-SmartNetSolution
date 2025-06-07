@@ -1,9 +1,11 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
+const { ORDER } = require("../contants/info");
 const { generateOrderID } = require("../helpers/generate.helper");
 const { getOrderNumber } = require("../helpers/import.warehouse.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
-const { prisma, isExistId } = require("../helpers/query.helper");
+const queryHelper = require("../helpers/query.helper");
+const { prisma, isExistId, queryRaw } = require("../helpers/query.helper");
 
 const { get_error_response } = require("../helpers/response.helper");
 const { executeSelectData } = require("../helpers/sql_query");
@@ -45,6 +47,52 @@ function configOrderData(dbResults) {
     return Array.from(orderMap.values());
 }
 
+async function getOrderForWarehouseEmployee(filters, logic, limit, sort, order) {
+    let get_attr = `
+        order.id, 
+        order.name_recipient,
+        order.created_at as order_date,
+        order.status,
+        order.amount,
+        order_detail.product_id,
+        product.name as product_name,
+        order_detail.quantity_sold as quantity,
+        order_detail.sale_price as price
+    `;
+
+    let get_table = `\`order\``;
+    let query_join = `
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN product ON order_detail.product_id = product.id
+    `;
+
+    try {
+        const orders = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: filters,
+            logic: logic,
+            sort: sort,
+            order: order,
+            configData: configOrderData
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            orders
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
 async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     let get_attr = `
         order.id,
@@ -80,6 +128,131 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
             ERROR_CODES.SUCCESS,
             STATUS_CODE.OK,
             orders
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+function configOrderDetailData(dbResults) {
+    if (!dbResults || dbResults.length === 0) {
+        return [];
+    }
+
+    const orderMap = new Map();
+
+    dbResults.forEach(record => {
+        if (!orderMap.has(record.id)) {
+            orderMap.set(record.id, {
+                id: record.id,
+                saler_name: record.saler_name,
+                shipper_name: record.shipper_name,
+                customer_name: record.customer_name,
+                export_date: record.export_date,
+                total_import_money: record.total_import_money,
+                discount: record.discount,
+                vat: record.vat,
+                shipping_fee: record.shipping_fee,
+                amount: record.amount,
+                payment_method: record.payment_method,
+                phone: record.phone,
+                platform_order: record.platform_order,
+                note: record.note,
+                status: record.status,
+                address: record.address,
+                name_recipient: record.name_recipient,
+                products: []
+            });
+        }
+
+        if (record.product_id) {
+            const order = orderMap.get(record.id);
+            order.products.push({
+                id: record.product_id,  
+                name: record.product_name,
+                image: record.product_image,
+                quantity: record.quantity,
+                price: record.sale_price,
+                unit: record.unit,
+                delivery_date: record.delivery_date,
+                receiving_date: record.receiving_date,
+                is_gift: record.is_gift,
+                discount: record.discount,
+                amount: record.amount,
+                note: record.note,
+                // status: record.status,
+            });
+        }
+    });
+
+    return Array.from(orderMap.values());
+}
+
+async function getOrderDetailService(order_id) {
+    const get_attr = `
+        order.id,
+        CONCAT(saler.surname, ' ',saler.lastname) AS saler_name,
+        CONCAT(shipper.surname, ' ',shipper.lastname) AS shipper_name,
+        CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
+        order.export_date,
+        order.total_import_money,
+        order.discount,
+        order.vat,
+        order.shipping_fee,
+        order.amount,
+        order.payment_method,
+        order.phone,
+        order.platform_order,
+        order.note,
+        order.status,
+        order.address,
+        order.name_recipient,
+        order_detail.product_id,
+        product.name as product_name,
+        product.image as product_image,
+        order_detail.unit,
+        product.image,
+        order_detail.quantity_sold,
+        order_detail.sale_price,
+        order_detail.delivery_date,
+        order_detail.receiving_date,
+        order_detail.is_gift,
+        order_detail.discount,
+        order_detail.amount
+    `;
+
+    const get_table = '`order`';
+    const query_join = `
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN product ON order_detail.product_id = product.id
+        LEFT JOIN employee shipper ON order.shipper_id = shipper.id
+        LEFT JOIN employee saler ON order.saler_id = saler.id
+        LEFT JOIN customer ON order.customer_id = customer.id
+    `;
+    console.log('order_id', order_id)
+    const filter = {
+        field: "order.id",
+        condition: "=",
+        value: order_id
+    };
+
+    try {
+        const result = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            filter: filter, 
+            configData: configOrderDetailData
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            result
         );
     } catch (error) {
         console.error('Lỗi:', error);
@@ -455,9 +628,175 @@ async function cancelOrderService(order_id) {
     }
 }
 
+async function respondListOrderService(orderIds) {
+    try {
+        const listOrder = await prisma.order.findMany({
+            where: { id: { in: orderIds }, deleted_at: null, status: ORDER.PENDING },
+            include: {
+                order_detail: true
+            }
+        });
+
+        if (listOrder.length !== orderIds.length) {
+            return get_error_response(
+                errors=ERROR_CODES.ORDER_NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        // Lấy danh sách số lượng sản phẩm trong kho và kiểm tra
+        const listProduct = []; // Danh sách sản phẩm trong kho
+        /**
+         * [
+         *      {
+         *          product_id: 1,
+         *          quantity: 10
+         *      },
+         *      {
+         *          product_id: 2,
+         *          quantity: 20
+         *      }
+         * ]
+         */
+        for (const order of listOrder) {
+            for (const product of order.order_detail) {
+                const productId = product.product_id;
+                const quantity = product.quantity_sold;
+
+                const productIndex = listProduct.findIndex(item => item.product_id === productId);
+                if (productIndex !== -1) {
+                    listProduct[productIndex].quantity += quantity;
+                } else {
+                    listProduct.push({ product_id: productId, quantity: quantity });
+                }
+            }
+        }
+
+        const resultCheckProductInWarehouse = await checkProductInWarehouse(listProduct)
+        if (resultCheckProductInWarehouse) return resultCheckProductInWarehouse;
+
+        await prisma.$transaction(async (tx) => {
+
+            // Cập nhật trạng thái đơn hàng
+            await tx.order.updateMany({
+                where: { id: { in: orderIds } },
+                data: { status: ORDER.PREPARING }
+            });
+
+
+            // if (result.count !== orderIds.length) {
+            //     return get_error_response(
+            //         errors=ERROR_CODES.ORDER_CONFIRM_ORDER_FAILED,
+            //         status_code=STATUS_CODE.BAD_REQUEST
+            //     );
+            // }
+
+            // Cập nhật số lượng sản phẩm trong kho
+
+
+            for (const item of listProduct) {
+                const quantityToDecrease = item.quantity;
+            
+                // Lấy các lô hàng còn tồn kho theo product_id (và deleted_at = null nếu cần)
+                const lots = await tx.warehouse_inventory.findMany({
+                    where: {
+                        product_id: item.product_id,
+                        stock: { gt: 0 }
+                    },
+                    orderBy: { created_at: 'asc' } // FIFO dùng created_at để lấy lô hàng lâu nhất
+                });
+                
+                let remaining = quantityToDecrease; // Số lượng cần giảm
+            
+                for (const lot of lots) {
+                    if (remaining <= 0) break;
+            
+                    const decrement = Math.min(lot.stock, remaining);
+            
+                    await prisma.warehouse_inventory.update({
+                        where: { id: lot.id },
+                        data: { stock: { decrement } }
+                    });
+            
+                    remaining -= decrement;
+
+                    // Nếu không đủ tồn kho → throw để rollback
+                    if (decrement === 0 && remaining > 0) {
+                        throw new Error(`Insufficient stock for product ${item.product_id}`);
+                    }
+                }
+                if (remaining > 0) {
+                    throw new Error(`Insufficient total stock for product ${item.product_id}`);
+                }
+            }
+        });
+
+        return get_error_response(
+            errors=ERROR_CODES.ORDER_CONFIRM_ORDER_SUCCESS,
+            status_code=STATUS_CODE.OK
+        );
+    } catch (error) {
+        console.log('Respond list order error:', error);
+        return get_error_response(
+            errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
+
+async function checkProductInWarehouse(listProduct) {
+    const productIds = listProduct.map(item => item.product_id);
+
+    const result = await prisma.$queryRaw`
+        SELECT 
+            wi.product_id, 
+            p.name AS product_name, 
+            SUM(wi.stock) AS total_stock
+        FROM warehouse_inventory wi
+        JOIN product p ON wi.product_id = p.id
+        WHERE wi.product_id IN (${productIds.join(',')}) AND wi.deleted_at IS NULL
+        GROUP BY wi.product_id, p.name
+    `;
+
+    const warehouseData = result.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        stock: item.total_stock
+    }));
+    
+    const errorsData = [];
+
+    const validProducts = warehouseData.filter(w => {
+        const match = listProduct.find(p => p.product_id === w.product_id);
+        console.log('match', match)
+        if (w.stock < match.quantity) {
+            errorsData.push({
+                type: 'product_stock_not_enough',
+                message: `Sản phẩm ${w.product_name} không đủ số lượng. Còn lại ${w.stock} sản phẩm`
+            });
+        }
+        return match && w.stock >= match.quantity;
+    });
+
+    if (validProducts.length !== listProduct.length) {
+        return get_error_response(
+            errors=ERROR_CODES.WAREHOUSE_INVENTORY_PRODUCT_STOCK_NOT_ENOUGH,
+            status_code = STATUS_CODE.BAD_REQUEST,
+            data = errorsData
+        );
+    }
+
+    return undefined;
+    
+}
+
 module.exports = {
     createOrder,
     getOrdersForAdministrator,
     getOrdersForCustomer,
-    cancelOrderService
+    cancelOrderService,
+    getOrderDetailService,
+    respondListOrderService,
+    getOrderForWarehouseEmployee
 }

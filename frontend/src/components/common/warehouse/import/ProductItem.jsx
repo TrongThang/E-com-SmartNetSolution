@@ -25,19 +25,6 @@ export function ProductItem({
         }
     }
 
-    // Handle price change
-    const handlePriceChange = (value) => {
-        const price = Number.parseFloat(value)
-        if (!isNaN(price) && price >= 0) {
-            onUpdateProduct(product.id, "import_price", price)
-        }
-    }
-
-    // Handle gift checkbox change
-    const handleGiftChange = (checked) => {
-        onUpdateProduct(product.id, "is_gift", checked)
-    }
-
     return (
         <>
             <TableRow className="cursor-pointer hover:bg-muted/50">
@@ -52,8 +39,14 @@ export function ProductItem({
                     </Button>
                 </TableCell>
                 <TableCell className="font-medium" onClick={onToggleExpand}>
-                    {product.name}
-                    <div className="text-xs text-muted-foreground">{product.code}</div>
+                    {product.production_batch_id}
+                </TableCell>
+                <TableCell className="font-medium" onClick={onToggleExpand}>
+                    <img src={product.product_image} alt={product.product_name} className="w-10 h-10 rounded-md" />
+                </TableCell>
+                <TableCell className="font-medium" onClick={onToggleExpand}>
+                    {product.product_name}
+                    <div className="text-xs text-muted-foreground">{product.product_code}</div>
                 </TableCell>
                 <TableCell className="w-[100px] text-right">
                     <Input
@@ -62,26 +55,6 @@ export function ProductItem({
                         value={product.quantity}
                         onChange={(e) => handleQuantityChange(e.target.value)}
                         className="w-20 text-right"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </TableCell>
-                <TableCell className="w-[150px] text-right">
-                    <Input
-                        type="number"
-                        min="0"
-                        value={product.import_price}
-                        onChange={(e) => handlePriceChange(e.target.value)}
-                        className="w-32 text-right"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </TableCell>
-                <TableCell className="w-[150px] text-right font-medium">
-                    {product.amount?.toLocaleString() || "0"} VNĐ
-                </TableCell>
-                <TableCell className="w-[80px] text-center">
-                    <Checkbox
-                        checked={product.is_gift}
-                        onCheckedChange={(checked) => handleGiftChange(checked)}
                         onClick={(e) => e.stopPropagation()}
                     />
                 </TableCell>

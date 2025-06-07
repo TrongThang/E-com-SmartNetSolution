@@ -1,8 +1,10 @@
 import GenericTable from "@/components/common/GenericTable";
 import ActionsColumn from './ActionsColumn';
 import { formatCurrency, formatDate } from "@/utils/format";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 
-const ExportWarehouseTable = ({ exportWarehouse, onEdit, onDelete }) => {
+const ExportWarehouseTable = ({ exportWarehouse, onEdit, onDelete, onView }) => {
     const columns = [
         {
             key: "id",
@@ -43,11 +45,16 @@ const ExportWarehouseTable = ({ exportWarehouse, onEdit, onDelete }) => {
             key: "actions",
             label: "Thao tác",
             render: (row) => (
-                <ActionsColumn
-                    row={row}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                />
+                <div className="flex items-center gap-2">
+                    <Button onClick={() => onView(row)} variant="outline" size="icon">
+                        <Eye className="w-4 h-4" />
+                    </Button>
+                    <ActionsColumn
+                        row={row}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                    />
+                </div>
             ),
         },
     ];

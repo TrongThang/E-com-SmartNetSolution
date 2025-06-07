@@ -11,65 +11,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import axiosPublic from "@/apis/clients/public.client"
 import { formatCurrency } from "@/utils/format"
+import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select"
+import axiosIOTPublic from "@/apis/clients/iot.private.client"
 // import { BarcodeScanner } from "@/components/common/warehouse/BarcodeScanner"
-
-// Sample data for products
-const sampleProducts = [
-    {
-        id: 1,
-        name: "Laptop Dell XPS 13",
-        code: "PROD001",
-        category: "Laptop",
-        price: 25000000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-        id: 2,
-        name: "Màn hình Dell 27 inch",
-        code: "PROD002",
-        category: "Màn hình",
-        price: 5000000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-        id: 3,
-        name: "Bàn phím cơ Logitech",
-        code: "PROD003",
-        category: "Bàn phím",
-        price: 2000000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-        id: 4,
-        name: "Chuột không dây Logitech",
-        code: "PROD004",
-        category: "Chuột",
-        price: 500000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-        id: 5,
-        name: "Tai nghe Bluetooth Sony",
-        code: "PROD005",
-        category: "Tai nghe",
-        price: 3000000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-]
 
 export function ProductSelector({ open, onOpenChange, onProductSelect }) {
     const [searchTerm, setSearchTerm] = useState("")
-    const [activeTab, setActiveTab] = useState("all")
+    const [selectedPlanning, setSelectedPlanning] = useState("")
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [plannings, setPlannings] = useState([])
+    const [batches, setBatches] = useState([])
 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 setLoading(true)
                 const response = await axiosPublic.get('/product')
-                console.log("response", response.data.data)
                 if (response.status_code === 200) {
                     setProducts(response.data.data)
                 } else {
@@ -81,29 +40,52 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
                 setLoading(false)
             }
         }
+
+        const fetchPlannings = async () => {
+            try {
+                const response = await axiosIOTPublic.get('/planning/plannings-by-batch-production-status-is-completed')
+                setPlannings(response)
+            } catch (err) {
+                setError(err.message)
+            }
+        }
     
         if (open) {
             fetchProducts()
+            fetchPlannings()
         }
     }, [open])
+
+    useEffect(() => {
+        const fetchBatchesByPlaning = async () => {
+            try {
+                const response = await axiosIOTPublic.get(`/planning/list-batches-completed/${selectedPlanning}`)
+                setBatches(response.data.data)
+            } catch (err) {
+                setError(err.message)
+            }
+        }
+
+        if (selectedPlanning) {
+            fetchBatchesByPlaning()
+        }
+
+    }, [selectedPlanning])
 
     // Filter products based on search term and category
     const filteredProducts = products.filter(
         (product) =>
             (product.name.toLowerCase().includes(searchTerm.toLowerCase())
                 ) &&
-            (activeTab === "all" || product.categories.toLowerCase() === activeTab.toLowerCase()),
+            (selectedPlanning === "all" || product.categories.toLowerCase() === selectedPlanning.toLowerCase()),
     )
-
-    // Get unique categories
-    const categories = ["all", ...new Set(products.map((product) => product.categories.toLowerCase()))]
 
     return (
         <>
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="max-w-4xl">
                     <DialogHeader>
-                        <DialogTitle>Thêm sản phẩm</DialogTitle>
+                        <DialogTitle>Thêm lô sản xuất</DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4 ">
@@ -112,7 +94,7 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="search"
-                                    placeholder="Tìm kiếm sản phẩm theo tên hoặc mã"
+                                    placeholder="Tìm kiếm lô sản xuất theo tên hoặc mã"
                                     className="pl-8"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -120,50 +102,52 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
                             </div>
                         </div>
 
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="grid grid-cols-4">
-                                <TabsTrigger value="all">Tất cả</TabsTrigger>
-                                {categories
-                                    .filter((cat) => cat !== "all")
-                                    .slice(0, 3)
-                                    .map((category) => (
-                                        <TabsTrigger key={category} value={category} className="capitalize">
-                                            {category}
-                                        </TabsTrigger>
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <Select
+                                onValueChange={(value) => setSelectedPlanning(value)}
+                            >
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Tất cả" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {plannings.map((planning) => (
+                                        <SelectItem key={planning.planning_id} value={planning.planning_id}>
+                                            {planning.planning_id}
+                                        </SelectItem>
                                     ))}
-                            </TabsList>
-                        </Tabs>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
                         <ScrollArea className="h-[400px]">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {filteredProducts.map((product) => (
+                                {batches.map((batch) => (
                                     <Card
-                                        key={product.id}
+                                        key={batch.production_batch_id}
                                         className="hover:bg-muted transition-colors cursor-pointer"
                                         onClick={() => {
-                                            onProductSelect(product)
+                                            onProductSelect(batch)
                                             onOpenChange(false)
                                         }}
                                     >
                                         <CardContent className="flex items-start">
                                             <div className="w-16 h-16 bg-muted rounded-md overflow-hidden flex-shrink-0">
                                                 <img
-                                                    src={product.image || "/placeholder.svg"}
-                                                    alt={product.name}
+                                                    src={batch.product_image || "/placeholder.svg"}
+                                                    alt={batch.product_name}
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>
                                             <div className="flex-1">
-                                                <h4 className="font-medium line-clamp-2">{product.name}</h4>
-                                                <div className="flex items-center gap-2 mt-1">
+                                                <h4 className="font-medium line-clamp-2">{batch.product_name}</h4>
+                                                <div className="flex items-center gap-2 mt-1 rounded-md bg-blue-500 text-white">
                                                     <Badge variant="secondary" className="capitalize">
-                                                        {product.categories}
+                                                        {batch.production_batch_id}
                                                     </Badge>
                                                 </div>
-                                                <p className="mt-1 font-medium">{formatCurrency(product.selling_price)} VNĐ</p>
                                             </div>
                                             <Button size="sm" className="flex-shrink-0">
-                                                <Plus className="h-4 w-4" />
+                                                <Plus className="h-4 w-4"/>
                                             </Button>
                                         </CardContent>
                                     </Card>
@@ -173,13 +157,6 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* <BarcodeScanner
-                isOpen={isScanning}
-                onClose={() => setIsScanning(false)}
-                onScanSuccess={handleScanResult}
-                scanType="barcode"
-            /> */}
         </>
     )
 }

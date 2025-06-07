@@ -1,8 +1,10 @@
 import GenericTable from "@/components/common/GenericTable";
 import ActionsColumn from './ActionsColumn';
 import { formatCurrency, formatDate } from "@/utils/format";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 
-const ImportWarehouseTable = ({ importWarehouse, onEdit, onDelete }) => {
+const ImportWarehouseTable = ({ importWarehouse, onEdit, onDelete, onView }) => {
     const columns = [
         {
             key: "id",
@@ -23,6 +25,7 @@ const ImportWarehouseTable = ({ importWarehouse, onEdit, onDelete }) => {
         {
             key: "import_date",
             label: "Ngày nhập",
+            render: (row) => row.import_date ? formatDate(row.import_date) : '',
         },
         {
             key: "total_money",
@@ -43,11 +46,17 @@ const ImportWarehouseTable = ({ importWarehouse, onEdit, onDelete }) => {
             key: "actions",
             label: "Thao tác",
             render: (row) => (
-                <ActionsColumn
-                    row={row}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                />
+                <div className="flex items-center gap-2">
+                    <Button onClick={() => onView(row)} variant="outline" size="icon">
+                        <Eye className="w-4 h-4" />
+                    </Button>
+                    <ActionsColumn
+                        row={row}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onView={onView}
+                    />
+                </div>
             ),
         },
     ];

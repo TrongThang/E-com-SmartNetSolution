@@ -46,6 +46,56 @@ function configDataExportWarehouse(rows) {
     return result;
 }
 
+function configDataExportWarehouseDetail(rows) {
+    const result = [];
+
+    const map = new Map();
+
+    rows.forEach(row => {
+        const exportId = row.id;
+
+        if (!map.has(exportId)) {
+            const exportData = {
+                id: row.id,
+                employee_name: row.employee_name,
+                export_date: row.export_date,
+                file_authenticate: row.file_authenticate,
+                total_profit: row.total_profit,
+                note: row.note,
+                orders: []
+            };
+            map.set(exportId, exportData);
+            result.push(exportData);
+
+            if (row.order_id) {
+                map.get(exportId).orders.push({
+                    order_id: row.order_id,
+                    products: []
+                });
+
+                if (row.product_id) {
+                    map.get(exportId).orders[0].products.push({
+                        product_id: row.product_id,
+                        product_name: row.product_name,
+                        product_image: row.product_image,
+                        quantity: row.quantity,
+                        note: row.detail_export_note,
+                        serials: []
+                    });
+
+                    if (row.serial_number) {
+                        map.get(exportId).orders[0].products[0].serials.push({
+                            serial_number: row.serial_number
+                        });
+                    }
+                }
+            }
+        }
+    });
+
+    return result;
+}
+
 async function getExportWarehouseService(filter, limit, sort, order) {
     let get_attr = `
         export_warehouse.id,
@@ -87,34 +137,27 @@ async function getExportWarehouseService(filter, limit, sort, order) {
 }
 
 async function getExportWarehouseDetailService(id) {
-    const filter = [{
-        filter: {
-            field: "export_warehouse.id",
-            condition: "=",
-            value: id
-        }
-    }]
+    const filter = {
+        field: "export_warehouse.id",
+        condition: "=",
+        value: id
+    }
 
     let get_attr = `
-        export_warehouse.id,
         CONCAT(employee.surname, ' ',employee.lastname) AS employee_name,
         export_warehouse.export_date,
         export_warehouse.file_authenticate,
         export_warehouse.total_profit,
         export_warehouse.note,
 
-        detail_export.order_id,
+        order.id as order_id,
+        detail_export.batch_code as detail_export_id,
         detail_export.product_id,
+        product.image as product_image,
         product.name as product_name,
         detail_export.quantity,
-        detail_export.sale_price,
-        detail_export.amount,
-        detail_export.is_gift,
         detail_export.note as detail_export_note,
-
-        order_detail.batch_code,
-        order_detail.serial_number,
-
+        batch_product_detail.serial_number
     `;
 
     let get_table = `export_warehouse`;
@@ -122,8 +165,8 @@ async function getExportWarehouseDetailService(id) {
         LEFT JOIN employee ON export_warehouse.employee_id = employee.id
         LEFT JOIN detail_export ON export_warehouse.id = detail_export.export_id
         LEFT JOIN product ON detail_export.product_id = product.id
-        LEFT JOIN order ON detail_export.order_id = order.id
-        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN \`order\` ON detail_export.order_id = order.id
+        LEFT JOIN batch_product_detail ON detail_export.batch_code = batch_product_detail.exp_batch_id
     `;
 
     try {
@@ -132,7 +175,7 @@ async function getExportWarehouseDetailService(id) {
             queryJoin: query_join,
             strGetColumn: get_attr,
             filter: filter,
-            configData: configDataExportWarehouse
+            configData: configDataExportWarehouseDetail
         });
 
         return get_error_response(

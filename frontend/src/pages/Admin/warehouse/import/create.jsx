@@ -31,53 +31,72 @@ export default function CreateImportWarehousePage() {
         products: [], // Removed TypeScript type annotation
     })
 
-    // Handle form field changes
-    const handleChange = (field, value) => {
+       // Handle form field changes
+       const handleChange = (field, value) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
         }))
     }
 
-    // Handle adding a product
-    const handleAddProduct = (product) => {
+    // Handle adding a product from batch
+    const handleAddProduct = (batch) => {
         setFormData((prev) => {
-            // Check if product already exists
-            const existingProductIndex = prev.products.findIndex((p) => p.id === product.id)
+            // Check if batch already exists in products
+            const existingProductIndex = prev.products.findIndex(
+                (p) => p.production_batch === batch.batch_id
+            )
 
             if (existingProductIndex >= 0) {
-                // Update existing product
+                // Nếu batch đã tồn tại, tăng số lượng lên 1
                 const updatedProducts = [...prev.products]
                 updatedProducts[existingProductIndex] = {
                     ...updatedProducts[existingProductIndex],
                     quantity: updatedProducts[existingProductIndex].quantity + 1,
+                    amount: (updatedProducts[existingProductIndex].quantity + 1) * 
+                            updatedProducts[existingProductIndex].import_price
                 }
+
+                // Tính lại tổng tiền
+                const totalMoney = updatedProducts.reduce(
+                    (sum, product) => sum + product.amount, 
+                    0
+                )
 
                 return {
                     ...prev,
                     products: updatedProducts,
+                    total_money: totalMoney
                 }
             } else {
-                // Add new product
+                console.log("batch", batch)
+                // Thêm sản phẩm mới từ batch
                 const newProduct = {
-                    ...product,
-                    quantity: 1,
-                    import_price: product.price || 0,
-                    amount: product.price || 0,
+                    id: batch.batch_id, // Sử dụng batch_id làm id
+                    production_batch_id: batch.production_batch_id,
+                    product_name: batch.product_name,
+                    quantity: batch.quantity,
+                    product_image: batch.product_image,
+                    amount: batch.product_price || 0,
                     is_gift: false,
-                    batch_code: `BATCH-${product.id}-${Date.now().toString().slice(-6)}`,
-                    serial_numbers: [],
-                    barcode: product.barcode || "",
+                    production_batch: batch.batch_id, // Lưu thông tin batch
+                    image: batch.product_image,
+                    serial_numbers: [], // Chuẩn bị cho serial numbers nếu cần
+                    note: "" // Ghi chú cho sản phẩm nếu cần
                 }
+
+                // Tính lại tổng tiền
+                const totalMoney = prev.total_money + newProduct.amount
 
                 return {
                     ...prev,
                     products: [...prev.products, newProduct],
+                    total_money: totalMoney
                 }
             }
         })
 
-        // Move to products tab after adding
+        // Chuyển sang tab products sau khi thêm
         setActiveTab("products")
     }
 
@@ -88,11 +107,10 @@ export default function CreateImportWarehousePage() {
                 if (product.id === productId) {
                     const updatedProduct = { ...product, [field]: value }
 
-                    // Recalculate amount if quantity or import_price changes
+                    // Tính lại amount nếu quantity hoặc import_price thay đổi
                     if (field === "quantity" || field === "import_price") {
                         const quantity = field === "quantity" ? value : product.quantity
                         const importPrice = field === "import_price" ? value : product.import_price
-
                         updatedProduct.amount = quantity * importPrice
                     }
 
@@ -101,13 +119,16 @@ export default function CreateImportWarehousePage() {
                 return product
             })
 
-            // Recalculate total_money
-            const totalMoney = updatedProducts.reduce((sum, product) => sum + (product.amount || 0), 0)
+            // Tính lại tổng tiền
+            const totalMoney = updatedProducts.reduce(
+                (sum, product) => sum + product.amount, 
+                0
+            )
 
             return {
                 ...prev,
                 products: updatedProducts,
-                total_money: totalMoney,
+                total_money: totalMoney
             }
         })
     }
@@ -115,15 +136,20 @@ export default function CreateImportWarehousePage() {
     // Handle product removal
     const handleRemoveProduct = (productId) => {
         setFormData((prev) => {
-            const updatedProducts = prev.products.filter((product) => product.id !== productId)
+            const updatedProducts = prev.products.filter(
+                (product) => product.id !== productId
+            )
 
-            // Recalculate total_money
-            const totalMoney = updatedProducts.reduce((sum, product) => sum + (product.amount || 0), 0)
+            // Tính lại tổng tiền
+            const totalMoney = updatedProducts.reduce(
+                (sum, product) => sum + product.amount, 
+                0
+            )
 
             return {
                 ...prev,
                 products: updatedProducts,
-                total_money: totalMoney,
+                total_money: totalMoney
             }
         })
     }
@@ -134,17 +160,16 @@ export default function CreateImportWarehousePage() {
             ...prev,
             products: prev.products.map((product) => {
                 if (product.id === productId) {
-                    // Hỗ trợ cả callback và mảng
                     const newSerials = typeof serialNumbers === 'function'
                         ? serialNumbers(product.serial_numbers || [])
-                        : serialNumbers;
+                        : serialNumbers
                     return {
                         ...product,
-                        serial_numbers: Array.isArray(newSerials) ? newSerials : [],
+                        serial_numbers: Array.isArray(newSerials) ? newSerials : []
                     }
                 }
                 return product
-            }),
+            })
         }))
     }
 
@@ -286,7 +311,7 @@ export default function CreateImportWarehousePage() {
                 <TabsList>
                     <TabsTrigger value="basic-info">Thông tin cơ bản</TabsTrigger>
                     <TabsTrigger value="products">
-                        Sản phẩm
+                        Lô sản xuất
                         {formData.products.length > 0 && (
                             <Badge variant="outline" className="ml-2">
                                 {formData.products.length}

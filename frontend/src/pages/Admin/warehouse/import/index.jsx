@@ -37,9 +37,9 @@ export default function ImportWarehousePage() {
         }
     }
 
-    const handleView = (role) => {
+    const handleView = (importWarehouse) => {
         // Chuyển hướng đến trang quản lý quyền
-        navigate(`/admin/warehouse/import/detail/${role.id}`)
+        navigate(`/admin/warehouses/import/detail/${importWarehouse.id}`)
     }
 
     const handleDelete = async(importWarehouse) => {
@@ -118,6 +118,7 @@ export default function ImportWarehousePage() {
                 onModifyPermission={handleView} 
                 onDelete={handleDelete}
                 onEdit={handleEdit}
+                onView={handleView}
             />
         </div>
     )

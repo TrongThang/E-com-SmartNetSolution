@@ -176,7 +176,7 @@ export default function GenericTable({
       </Table>
 
       {/* Pagination */}
-      <Pagination className="justify-start">
+      <Pagination className="justify-center">
         <PaginationContent>
           <PaginationItem>
             <PaginationLink

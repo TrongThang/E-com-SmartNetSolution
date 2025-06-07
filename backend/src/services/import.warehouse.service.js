@@ -3,10 +3,13 @@ const { generateImportID } = require("../helpers/generate.helper");
 const { getImportNumber, generateDetailImportBatchCode } = require("../helpers/import.warehouse.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
-const { prisma, isExistId } = require("../helpers/query.helper");
+const queryHelper = require("../helpers/query.helper");
+const { prisma, isExistId, queryRaw } = require("../helpers/query.helper");
 
 const { get_error_response } = require("../helpers/response.helper");
 const { executeSelectData } = require("../helpers/sql_query");
+const { IMPORT_WAREHOUSE } = require("../contants/info");
+const sseController = require('../controllers/sse.controller');
 
 
 function configDataImportWarehouse(rows) {
@@ -50,6 +53,48 @@ function configDataImportWarehouse(rows) {
     return result;
 }
 
+function configDataImportWarehouseDetail(rows) {
+    const result = [];
+
+    const map = new Map();
+
+    rows.forEach(row => {
+        const importId = row.id;
+
+        if (!map.has(importId)) {
+            const importData = {
+                id: row.id,
+                import_date: row.import_date,
+                employee_name: row.employee_name,
+                warehouse_name: row.warehouse_name,
+                file_authenticate: row.file_authenticate,
+                total_money: row.total_money,
+                note: row.note,
+                products: []
+            }
+
+            map.set(importId, importData);
+            result.push(importData);
+        }
+
+        if (row.product_name) {
+            map.get(importId).products.push({
+                product_id: row.product_id,
+                product_name: row.product_name,
+                product_image: row.product_image,
+                quantity: row.quantity,
+                import_price: row.import_price,
+                amount: row.amount,
+                is_gift: row.is_gift,
+                note: row.detail_import_note,
+                amount_detail: row.detail_import_amount
+            })
+        }
+    })
+
+    return result;
+}
+
 async function getImportWarehouseService(filter, limit, sort, order) {
     let get_attr = `
         import_warehouse.id,
@@ -68,7 +113,7 @@ async function getImportWarehouseService(filter, limit, sort, order) {
     `;
 
     try {
-        const importWarehouse = await executeSelectData ({
+        const importWarehouse = await executeSelectData({
             table: get_table,
             queryJoin: query_join,
             strGetColumn: get_attr,
@@ -93,14 +138,12 @@ async function getImportWarehouseService(filter, limit, sort, order) {
 }
 
 async function getImportWarehouseDetailService(id) {
-
-    const filter = [{
-        filter: {
-            field: "import_warehouse.id",
-            condition: "=",
-            value: id
-        }
-    }]
+    console.log("id", id)
+    const filter = {
+        field: "import_warehouse.id",
+        condition: "=",
+        value: id
+    }
 
     let get_attr = `
         import_warehouse.id,
@@ -111,13 +154,15 @@ async function getImportWarehouseDetailService(id) {
         import_warehouse.total_money,
         import_warehouse.note,
 
+        product.id as product_id,
         product.name as product_name,
+        product.image as product_image,
         detail_import.quantity,
         detail_import.import_price,
         detail_import.amount,
         detail_import.is_gift,
         detail_import.note as detail_import_note,
-        detail_import.amount as detail_import_amount,
+        detail_import.amount as detail_import_amount
         
     `;
 
@@ -130,12 +175,12 @@ async function getImportWarehouseDetailService(id) {
     `;
 
     try {
-        const importWarehouse = await executeSelectData ({
+        const importWarehouse = await executeSelectData({
             table: get_table,
             queryJoin: query_join,
             strGetColumn: get_attr,
             filter: filter,
-            configData: configDataImportWarehouse
+            configData: configDataImportWarehouseDetail
         });
 
         return get_error_response(
@@ -247,7 +292,7 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
                 serial_number: item.serial_number,
                 deleted_at: null
             }
-        }) 
+        })
         console.log("isExistSerial", isExistSerial)
         if (isExistSerial) {
             return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_SERIAL_NUMBER_EXIST, STATUS_CODE.BAD_REQUEST);
@@ -263,7 +308,7 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
 
         totalQuantity += 1
 
-        if(!serialInsertResult) {
+        if (!serialInsertResult) {
             return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
         }
 
@@ -277,7 +322,7 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
         }
     })
 
-    if(!warehouseInventory) {
+    if (!warehouseInventory) {
         const warehouseInventory = await prisma.warehouse_inventory.create({
             data: {
                 batch_code: batchCode,
@@ -293,15 +338,185 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
             },
             data: {
                 quantity: warehouseInventory.quantity + totalQuantity
-            }   
-        })  
+            }
+        })
     }
 
     return warehouseInventoryUpdate;
 }
 
+async function getProcessImportWarehouseService(importWarehouseId) {
+    const queryProductNeed = `
+        SELECT 
+            di.product_id, product.name as product_name,
+            CAST(SUM(di.quantity) AS CHAR) AS total_serial_need
+        FROM detail_import di 
+            LEFT JOIN production_batches ON production_batches.production_batch_id = di.batch_production_id
+            LEFT JOIN product ON product.id = di.product_id
+        WHERE di.import_id = ${importWarehouseId} AND di.deleted_at IS NULL
+        GROUP BY di.product_id
+    `
+
+    const queryProductImported = `
+        SELECT di.product_id, CAST(COUNT(serial_number) AS CHAR) AS total_serial_imported
+            FROM detail_import di
+            LEFT JOIN production_batches ON production_batches.production_batch_id = di.batch_production_id 
+            LEFT JOIN batch_product_detail ON batch_product_detail.imp_batch_id = di.batch_code
+            LEFT JOIN product ON product.id = di.product_id
+        WHERE di.import_id = ${importWarehouseId} AND di.deleted_at IS NULL
+        GROUP BY di.product_id
+    `
+
+    const resultProductNeed = await queryHelper.queryRaw(queryProductNeed)
+    const resultProductImported = await queryHelper.queryRaw(queryProductImported)
+    console.log("resultProductNeed", resultProductNeed)
+    console.log("resultProductImported", resultProductImported)
+
+    const result = []
+    for (const item of resultProductNeed) {
+        const product = resultProductImported.find(product => product.product_id === item.product_id)
+        result.push({
+            product_id: item.product_id,
+            product_name: item.product_name,
+            total_serial_need: item.total_serial_need,
+            total_serial_imported: product ? product.total_serial_imported : 0
+        })
+    }
+
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, result);
+}
+
+async function StartImportWarehouseService(import_id, employee_id) {
+    const importWarehouse = await prisma.import_warehouse.findFirst({
+        where: {
+            id: import_id,
+            deleted_at: null
+        }
+    })  
+
+    if (!importWarehouse) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
+    if(importWarehouse.status !== IMPORT_WAREHOUSE.PENDING) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_REQUIRE_STATUS_PENDING, STATUS_CODE.BAD_REQUEST);
+    }
+
+    if(importWarehouse.employee_id !== employee_id) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_ASSIGNED_EMPLOYEE_FOR_RECEIPT, STATUS_CODE.BAD_REQUEST);
+    }
+    
+    const importWarehouseUpdate = await prisma.import_warehouse.update({
+        where: {
+            id: import_id
+        },
+        data: {
+            status: IMPORT_WAREHOUSE.IMPORTING,
+            employee_id: employee_id
+        }   
+    })
+
+    if (!importWarehouseUpdate) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_UPDATE_FAILED, STATUS_CODE.BAD_REQUEST);
+    }
+
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, importWarehouseUpdate);
+}
+
+async function importProductService(import_id, serial_number, employee_id) {
+    const importWarehouse = await prisma.import_warehouse.findFirst({
+        where: {
+            id: import_id,
+            deleted_at: null
+        }
+    })
+
+    if (!importWarehouse) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
+    if (importWarehouse.status !== IMPORT_WAREHOUSE.IMPORTING) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_REQUIRE_STATUS_IMPORTING, STATUS_CODE.BAD_REQUEST);
+    }
+
+    if (importWarehouse.employee_id !== employee_id) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_ASSIGNED_EMPLOYEE_FOR_RECEIPT, STATUS_CODE.BAD_REQUEST);
+    }
+
+    const batchProductDetail = await prisma.batch_product_detail.findFirst({
+        where: {
+            serial_number: serial_number,
+            deleted_at: null
+        }
+    })
+
+    if (batchProductDetail) {
+        return get_error_response(ERROR_CODES.SERIAL_NUMBER_EXIST, STATUS_CODE.BAD_REQUEST);
+    }
+
+    const productionSerial = await queryHelper.queryRaw(`
+        SELECT 
+            production_tracking.serial_number,
+            production_batches.template_id,
+            production_tracking.status
+        FROM production_tracking 
+            LEFT JOIN production_batches ON production_tracking.batch_id = production_batches.production_batch_id
+        WHERE serial_number = '${serial_number}' AND production_tracking.is_deleted IS false
+    `)
+
+    if (!productionSerial) {
+        return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+    }
+
+    console.log("productionSerial", productionSerial)
+    if(productionSerial[0].status !== 'completed') {
+        return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_COMPLETED, STATUS_CODE.BAD_REQUEST);
+    }
+
+    const detailImportNeed = await queryHelper.queryRaw(`
+        SELECT di.batch_code
+        FROM detail_import di
+            LEFT JOIN production_batches pb ON pb.production_batch_id = di.batch_production_id
+            LEFT JOIN batch_product_detail bpd ON bpd.imp_batch_id = di.batch_code
+        WHERE di.import_id = ${import_id} AND di.product_id = ${productionSerial[0].template_id}
+        GROUP BY di.batch_code, di.quantity
+        HAVING COUNT(bpd.id) < di.quantity
+        ORDER BY di.created_at ASC
+    `)
+
+    console.log("detailImportNeed", detailImportNeed)
+
+    const batchProductDetailInsert = await prisma.batch_product_detail.create({
+        data: {
+            // product_id: productionSerial[0].template_id,
+            // batch_production_id: import_id,
+            serial_number: serial_number,
+            imp_batch_id: detailImportNeed[0].batch_code
+        }
+    })
+
+    console.log('sendImportWarehouseUpdate', {
+        type: 'update_import_warehouse',
+        import_id: import_id,
+        product_id: productionSerial[0].template_id,
+        serial_number: serial_number
+    })
+    sseController.sendImportWarehouseUpdate({
+        type: 'update_import_warehouse',
+        import_id: import_id,
+        product_id: productionSerial.template_id,
+        serial_number: serial_number
+    })
+
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, batchProductDetailInsert);
+
+}
+
 module.exports = {
     createImportWarehouse,
     getImportWarehouseService,
-    getImportWarehouseDetailService
+    getImportWarehouseDetailService,
+    getProcessImportWarehouseService,
+    importProductService,
+    StartImportWarehouseService
 }

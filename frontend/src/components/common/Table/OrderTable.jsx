@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ORDER_STATUS } from "@/constants/status.constants";
 import { Badge } from "@/components/ui/badge";
-import { FolderClock, Handshake, MapPinCheck, PackageSearch, Truck } from "lucide-react";
-const OrderTable = ({ orders, onEdit, onDelete, selectedIds, setSelectedIds }) => {
+import { Eye, FolderClock, Handshake, MapPinCheck, PackageSearch, Truck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelectedIds }) => {
     const rowPerPage = 10;
 
     const toggleSelectAll = (e) => {
@@ -124,11 +125,17 @@ const OrderTable = ({ orders, onEdit, onDelete, selectedIds, setSelectedIds }) =
             key: "actions",
             label: "Thao tác",
             render: (row) => (
-                <ActionsColumn
-                    row={row}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                />
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white" size="icon" onClick={() => onView(row)}>
+                        <Eye className="w-4 h-4" />
+                    </Button> 
+                    <ActionsColumn
+                        row={row}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onView={onView}
+                    />
+                </div>
             ),
         },
     ];
