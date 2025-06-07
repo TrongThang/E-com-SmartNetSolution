@@ -32,9 +32,7 @@ const BaseAddressBookSchema = z.object({
         street: z.string().max(500, {
             message: `[${ERROR_CODES.ADDRESS_BOOK_STREET_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_STREET_MAX_LENGTH]}`,
         }).optional(),
-        detail: z.string().min(1, {
-            message: `[${ERROR_CODES.ADDRESS_BOOK_DETAIL_MIN_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_DETAIL_MIN_LENGTH]}`,
-        }).max(500, {
+        detail: z.string().max(500, {
             message: `[${ERROR_CODES.ADDRESS_BOOK_DETAIL_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.ADDRESS_BOOK_DETAIL_MAX_LENGTH]}`,
         }),
         is_default: z.union([

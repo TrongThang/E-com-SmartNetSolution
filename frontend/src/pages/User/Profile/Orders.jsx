@@ -210,14 +210,14 @@ export default function OrdersPage() {
         </CardHeader>
         <CardContent className="space-y-7">
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="all">Tất cả</TabsTrigger>
-              <TabsTrigger value="pending">Chờ xác nhận</TabsTrigger>
-              <TabsTrigger value="preparing">Chuẩn bị hàng</TabsTrigger>
-              <TabsTrigger value="shipping">Đang giao hàng</TabsTrigger>
-              <TabsTrigger value="delivered">Đã giao</TabsTrigger>
-              <TabsTrigger value="completed">Hoàn thành</TabsTrigger>
-              <TabsTrigger value="canceled">Đã hủy</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-7 bg-gray-200">
+              <TabsTrigger value="all" className="bg-gray-200 hover:bg-gray-300 data-[state=active]:text-white transition-colors">Tất cả</TabsTrigger>
+              <TabsTrigger value="pending" className="bg-gray-200 hover:bg-gray-300 data-[state=active]:text-white transition-colors">Chờ xác nhận</TabsTrigger>
+              <TabsTrigger value="preparing" className="bg-gray-200 hover:bg-gray-300 data-[state=active]:text-white transition-colors">Chuẩn bị hàng</TabsTrigger>
+              <TabsTrigger value="shipping" className="bg-gray-200 hover:bg-gray-300 data-[state=active]:text-white transition-colors">Đang giao hàng</TabsTrigger>
+              <TabsTrigger value="delivered" className="bg-gray-200 hover:bg-gray-300 data-[state=active]:text-white transition-colors">Đã giao</TabsTrigger>
+              <TabsTrigger value="completed" className="bg-gray-200 hover:bg-gray-300 data-[state=active]:text-white transition-colors">Hoàn thành</TabsTrigger>
+              <TabsTrigger value="canceled" className="bg-gray-200 hover:bg-gray-300 data-[state=active]:text-white transition-colors">Đã hủy</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="pt-4">
