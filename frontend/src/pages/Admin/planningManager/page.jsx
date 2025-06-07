@@ -196,7 +196,7 @@ export default function ProductionPlanningManagement() {
         template_id: Number(data.template_id),
         quantity: Number(data.quantity),
         batch_note: data.batch_note || "",
-        firmware_id: data.firmware_id !== "none" && data.firmware_id ? Number(data.firmware_id) : null,
+        firmware_id: data.firmware_id && data.firmware_id !== "none" ? Number(data.firmware_id) : null,
       };
 
       const updatedTempBatches = [...tempBatches, batchData];
