@@ -60,7 +60,7 @@ const getProductService = async (filters, logic, limit, sort, order, role, type,
             table: get_table,
             queryJoin: query_join,
             strGetColumn: get_attr,
-            limit: limit || 10,
+            limit: limit,
             page: page,
             filter: filters,
             logic: logic,
@@ -68,7 +68,7 @@ const getProductService = async (filters, logic, limit, sort, order, role, type,
             order: order,
             configData: configDataProduct
         });
-        
+
         const formattedProducts = products.data || [];
 
         return get_error_response(
@@ -78,7 +78,8 @@ const getProductService = async (filters, logic, limit, sort, order, role, type,
                 data: formattedProducts,
                 total_page: products.total_page || 1
             }
-        );    } catch (error) {
+        );
+    } catch (error) {
         console.error('Lỗi:', error);
         return get_error_response(
             ERROR_CODES.INTERNAL_SERVER_ERROR,
@@ -223,16 +224,19 @@ async function createProductService({ name, description, images, selling_price, 
         );
     }
 
-    // Kiểm tra mảng images
-    if (!images || !Array.isArray(images) || images.length === 0) {
-        return get_error_response(
-            ERROR_CODES.IMAGE_PRODUCT_IMAGE_REQUIRED,
-            STATUS_CODE.BAD_REQUEST
-        );
-    }
+    let mainImage = null
 
-    // Lấy ảnh đầu tiên làm image chính
-    const mainImage = images[0].image;
+    //Kiểm tra images có ảnh hay không
+    if (Array.isArray(images) && images.length !== 0) {
+        // Nếu có thì lấy hình ảnh đầu tiên từ mảng images
+        if (!images || images.length === 0) {
+            return get_error_response(
+                ERROR_CODES.IMAGE_PRODUCT_IMAGE_REQUIRED,
+                STATUS_CODE.BAD_REQUEST
+            );
+        }
+        mainImage = images[0].image;
+    }
 
     // Chuẩn bị dữ liệu bổ sung
     const description_normal = removeTagHtml(description);
@@ -353,14 +357,25 @@ async function updateProductService({ id, name, description, selling_price, cate
         return attributes_in_category
     }
 
-    // Kiểm tra và lấy hình ảnh đầu tiên từ mảng images
-    if (!images || images.length === 0) {
-        return get_error_response(
-            ERROR_CODES.IMAGE_PRODUCT_IMAGE_REQUIRED,
-            STATUS_CODE.BAD_REQUEST
-        );
+    let mainImage = null
+
+    //Kiểm tra images có ảnh hay không
+    if (Array.isArray(images) && images.length !== 0) {
+        // Nếu có thì lấy hình ảnh đầu tiên từ mảng images
+        if (!images || images.length === 0) {
+            return get_error_response(
+                ERROR_CODES.IMAGE_PRODUCT_IMAGE_REQUIRED,
+                STATUS_CODE.BAD_REQUEST
+            );
+        }
+        mainImage = images[0].image;
     }
-    const mainImage = images[0].image;
+
+    let setIsHide = is_hide;
+    // Kiểm tra nếu như cập nhật trạng thái về ngừng bán thì ishide chuyển về true
+    if(status === -1) {
+        setIsHide = true;
+    }
 
     // Cập nhật thông tin cơ bản của sản phẩm
     const product = await prisma.product.update({
@@ -375,7 +390,7 @@ async function updateProductService({ id, name, description, selling_price, cate
             category_id,
             unit_id,
             warrenty_time_id,
-            is_hide,
+            is_hide: setIsHide,
             status,
             updated_at: new Date()
         }
@@ -429,9 +444,9 @@ async function updateProductService({ id, name, description, selling_price, cate
 async function deleteProductService(id) {
     const product = await prisma.product.findUnique({
         where: {
-          id: Number(id),
+            id: Number(id),
         },
-      });
+    });
 
     if (!product) {
         return get_error_response(

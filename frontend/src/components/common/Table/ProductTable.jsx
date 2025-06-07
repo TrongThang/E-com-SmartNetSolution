@@ -1,6 +1,7 @@
 import GenericTable from "@/components/common/GenericTable";
 import ActionsColumn from './ActionsColumn';
 
+
 const ProductTable = ({ products, onEdit, onDelete }) => {
     const columns = [
         {
@@ -39,16 +40,48 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
         {
             key: "status",
             label: "Trạng thái",
-            className: "w-[120px] whitespace-nowrap",
-            render: (row) => (
-                <span
-                    className={`px-2 py-1 rounded text-sm whitespace-nowrap ${
-                        row.status ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                    }`}
-                >
-                    {row.status ? "Hiển thị" : "Ẩn"}
-                </span>
-            ),
+            render: (row) => {
+                let statusClass = "";
+                let statusLabel = "";
+        
+                switch (row.status) {
+                    case -1:
+                        statusClass = "bg-red-300 text-red-700";
+                        statusLabel = "Ngừng bán";
+                        break;
+                    case 0:
+                        statusClass = "bg-red-100 text-red-800";
+                        statusLabel = "Hết hàng";
+                        break;
+                    case 1:
+                        statusClass = "bg-green-100 text-green-800";
+                        statusLabel = "Đang bán";
+                        break;
+                    case 2:
+                        statusClass = "bg-yellow-100 text-yellow-800";
+                        statusLabel = "Giảm giá";
+                        break;
+                    case 3:
+                        statusClass = "bg-blue-100 text-blue-800";
+                        statusLabel = "Nổi bật";
+                        break;
+                    case 4:
+                        statusClass = "bg-purple-100 text-purple-800";
+                        statusLabel = "Mới";
+                        break;
+                    default:
+                        statusClass = "bg-gray-100 text-gray-800";
+                        statusLabel = "Không xác định";
+                }
+        
+                return (
+                    <span
+                        className={`px-2 py-1 rounded text-sm whitespace-nowrap ${statusClass}`}
+                    >
+                        {statusLabel}
+                    </span>
+                );
+            },
         },
         {
             key: "created_at",

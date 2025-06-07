@@ -34,7 +34,7 @@ function configDataAddressBook(dbResults) {
         ward: record.ward,
         street: record.street,
         detail: record.detail,
-        is_default: record.is_default,
+        is_default: Boolean(record.is_default),
         created_at: record.created_at,
         updated_at: record.updated_at,
         deleted_at: record.deleted_at

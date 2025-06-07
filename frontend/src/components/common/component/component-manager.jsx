@@ -1,20 +1,42 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, Package, Search } from "lucide-react"
 import { ComponentFormModal } from "./form-component"
 import { formatDate } from "@/utils/format"
 import Swal from "sweetalert2"
 import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import PlanPagination from "@/components/common/planning/PlanPagination"
 
 export default function ComponentManager({ components, setComponents, fetchComponent }) {
     const [showForm, setShowForm] = useState(false)
     const [editingComponent, setEditingComponent] = useState(null)
     const [isEdit, setIsEdit] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
+    const [page, setPage] = useState(1)
+    const componentsPerPage = 2
+    const [totalPage, setTotalPage] = useState(1)
 
+    // Tải dữ liệu components khi component mount
+    useEffect(() => {
+        fetchComponent();
+    }, []);
+
+    // Tính toán danh sách linh kiện được lọc
     const filteredComponents = components.filter((component) =>
-        component.name.toLowerCase().includes(searchTerm.toLowerCase()),
+        component?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
     )
+
+    // Cập nhật totalPage và page khi filteredComponents thay đổi
+    useEffect(() => {
+        const calculatedTotalPage = Math.ceil(filteredComponents.length / componentsPerPage) || 1;
+        setTotalPage(calculatedTotalPage);
+        if (page > calculatedTotalPage) {
+            setPage(1);
+        }
+    }, [filteredComponents.length, componentsPerPage, page]);
+
+    // Tính toán danh sách linh kiện cho trang hiện tại
+    const currentComponents = filteredComponents.slice((page - 1) * componentsPerPage, page * componentsPerPage)
 
     const handleEdit = (component) => {
         setEditingComponent(component)
@@ -55,26 +77,36 @@ export default function ComponentManager({ components, setComponents, fetchCompo
         if (result.isConfirmed) {
             try {
                 const res = await axiosIOTPublic.delete(`component/${componentId}`);
-                if (res.data.success === 200) {
+                if (res.status === 204 || res.status === 200) {
                     Swal.fire({
                         title: "Thành công",
-                        text: "Linh kiện đã được xóa",
+                        text: "Linh kiện đã được xóa thành công",
                         icon: "success",
                     });
                     fetchComponent();
                 } else {
                     Swal.fire({
                         title: "Lỗi",
-                        text: res.error,
+                        text: res.data?.message || "Không thể xóa linh kiện",
                         icon: "error",
                     });
                 }
             } catch (error) {
                 console.error('Failed to delete component:', error);
+                Swal.fire({
+                    title: "Lỗi",
+                    text: error.response?.data?.message || "Có lỗi xảy ra khi xóa linh kiện",
+                    icon: "error",
+                });
             }
         }
     }
-    
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPage) {
+            setPage(newPage)
+        }
+    }
 
     return (
         <div>
@@ -132,7 +164,7 @@ export default function ComponentManager({ components, setComponents, fetchCompo
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredComponents.map((component) => (
+                        {currentComponents.map((component) => (
                             <tr key={component.component_id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
@@ -187,6 +219,24 @@ export default function ComponentManager({ components, setComponents, fetchCompo
                     </tbody>
                 </table>
             </div>
+
+            {/* Hiển thị khi không có linh kiện */}
+            {filteredComponents.length === 0 && (
+                <div className="text-center py-12">
+                    <Package className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Không có linh kiện nào</h3>
+                    <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách thêm linh kiện mới.</p>
+                </div>
+            )}
+
+            {/* Phân trang */}
+            {filteredComponents.length > 0 && (
+                <PlanPagination
+                    page={page}
+                    totalPage={totalPage}
+                    onPageChange={handlePageChange}
+                />
+            )}
 
             {/* Component Form Modal */}
             {showForm && (

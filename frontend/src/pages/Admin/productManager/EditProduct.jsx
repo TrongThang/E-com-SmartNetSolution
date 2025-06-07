@@ -19,6 +19,15 @@ import WarrantyTimeApi from "@/apis/modules/warrantyTime.api.ts";
 import UnitApi from "@/apis/modules/unit.api.ts";
 import Swal from "sweetalert2";
 
+const PRODUCT = {
+    STOP_SELLING: -1,
+    SOLD_OUT: 0, 
+    ACTIVE: 1,
+    DISCOUNT: 2,
+    FETURED: 3,
+    NEW: 4,
+};
+
 export default function ProductDetailPage() {
     const navigate = useNavigate();
     const params = useParams();
@@ -33,7 +42,7 @@ export default function ProductDetailPage() {
         selling_price: 0,
         sold: 0,
         views: 0,
-        status: 1,
+        status: PRODUCT.ACTIVE, // Mặc định là ACTIVE
         is_hide: false,
         category_id: 0,
         unit_id: 0,
@@ -95,7 +104,7 @@ export default function ProductDetailPage() {
                     selling_price: Number(data.selling_price) || 0,
                     sold: Number(data.sold) || 0,
                     views: Number(data.views) || 0,
-                    status: Number(data.status) || 1,
+                    status: Number(data.status) || PRODUCT.ACTIVE,
                     is_hide: Boolean(data.is_hide),
                     category_id: Number(data.category_id) || 0,
                     unit_id: Number(data.unit_id) || 0,
@@ -803,8 +812,12 @@ export default function ProductDetailPage() {
                                                     <SelectValue placeholder="Chọn trạng thái" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="1">Hoạt động</SelectItem>
-                                                    <SelectItem value="0">Ngừng kinh doanh</SelectItem>
+                                                    <SelectItem value={PRODUCT.STOP_SELLING.toString()}>Ngừng bán</SelectItem>
+                                                    <SelectItem value={PRODUCT.SOLD_OUT.toString()}>Hết hàng</SelectItem>
+                                                    <SelectItem value={PRODUCT.ACTIVE.toString()}>Đang bán</SelectItem>
+                                                    <SelectItem value={PRODUCT.DISCOUNT.toString()}>Giảm giá</SelectItem>
+                                                    <SelectItem value={PRODUCT.FETURED.toString()}>Nổi bật</SelectItem>
+                                                    <SelectItem value={PRODUCT.NEW.toString()}>Mới</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
