@@ -82,7 +82,7 @@ export default function CheckoutPage() {
                                 batches: [{
                                     template_id: product.id, // Sử dụng product.id làm template_id
                                     quantity: product.quantity,
-                                    batch_note: `Lô sản xuất cho sản phẩm đặt trước ${product.name}`
+                                    batch_note: `Đơn sản xuất cho sản phẩm đặt trước ${product.name}`
                                 }]
                             };
                             console.log("planningData:", planningData);

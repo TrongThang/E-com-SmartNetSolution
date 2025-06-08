@@ -13,7 +13,7 @@ import { Plus, Minus } from "lucide-react"
 
 const createPlanningSchema = z.object({
   planning_note: z.string().optional(),
-  batch_count: z.number().min(1, "Số lô phải lớn hơn 0").max(20, "Không được tạo quá 20 lô"),
+  batch_count: z.number().min(1, "Số đơn sản xuất phải lớn hơn 0").max(20, "Không được tạo quá 20 đơn sản xuất"),
 })
 
 export function CreatePlanningDialog({ isOpen, onClose, onSubmit, isSubmitting }) {
@@ -53,7 +53,7 @@ export function CreatePlanningDialog({ isOpen, onClose, onSubmit, isSubmitting }
         <DialogHeader>
           <DialogTitle>Tạo Kế hoạch Sản xuất Mới</DialogTitle>
           <DialogDescription>
-            Nhập thông tin để tạo kế hoạch sản xuất mới. Bạn sẽ tạo form cho từng lô sau bước này.
+            Nhập thông tin để tạo kế hoạch sản xuất mới. Bạn sẽ tạo form cho từng đơn sản xuất sau bước này.
           </DialogDescription>
         </DialogHeader>
 
@@ -75,7 +75,7 @@ export function CreatePlanningDialog({ isOpen, onClose, onSubmit, isSubmitting }
             />
 
             <div className="space-y-4">
-              <FormLabel>Số lượng lô sản xuất *</FormLabel>
+              <FormLabel>Số lượng đơn sản xuất *</FormLabel>
               <div className="flex items-center gap-4">
                 <Button type="button" variant="outline" size="sm" onClick={decrementBatch} disabled={batchCount <= 1}>
                   <Minus className="w-4 h-4" />
@@ -100,7 +100,7 @@ export function CreatePlanningDialog({ isOpen, onClose, onSubmit, isSubmitting }
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              <FormDescription>Số lượng lô sản xuất trong kế hoạch này (tối đa 20 lô)</FormDescription>
+              <FormDescription>Số lượng đơn sản xuất trong kế hoạch này (tối đa 20 đơn sản xuất)</FormDescription>
             </div>
 
             <div className="flex justify-end space-x-2">

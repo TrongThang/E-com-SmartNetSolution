@@ -44,8 +44,8 @@ export function StatusUpdateDialog({ isOpen, onClose, onSubmit, batch, isSubmitt
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Cập nhật Trạng thái Lô {batch.production_batch_id}</DialogTitle>
-          <DialogDescription>Chuyển đổi trạng thái lô sản xuất theo quy trình</DialogDescription>
+          <DialogTitle>Cập nhật Trạng thái Đơn sản xuất {batch.production_batch_id}</DialogTitle>
+          <DialogDescription>Chuyển đổi trạng thái đơn sản xuất theo quy trình</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

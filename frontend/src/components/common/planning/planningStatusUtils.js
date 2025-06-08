@@ -186,7 +186,7 @@ export const getNextStatusOptions = (currentStatus) => {
     case "fixproduction":
       return [{ value: "pendingimport", label: "Chờ nhập kho" }]
     case "pending":
-      return [{ value: "cancelled", label: "Hủy lô" }]
+      return [{ value: "cancelled", label: "Hủy đơn sản xuất" }]
     case "completed":
       return []
     case "rejected":
