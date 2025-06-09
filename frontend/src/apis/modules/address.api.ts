@@ -32,7 +32,7 @@ const addressBookApi = {
     },
     async getById(customer_id: number | string): Promise<IApiResponse<IAddressBook>> {
         try {
-            return await axiosPublic.get(`${addressBookEndpoints.common}/customer/${customer_id}`);
+            return await axiosPublic.get(`${addressBookEndpoints.common}/${customer_id}`);
         } catch (error) {
             throw error;
         }
