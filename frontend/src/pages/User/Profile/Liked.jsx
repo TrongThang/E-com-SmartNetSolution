@@ -13,7 +13,7 @@ export default function LikedPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await LikedApi.getById("CUST0001");
+      const res = await LikedApi.getById("CUST001");
       if (res.status_code === 200) {
         setLikeds(res?.data?.data || []);
       }
