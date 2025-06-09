@@ -24,9 +24,9 @@ export function BatchDetailsDialog({ isOpen, onClose, batch }) {
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle className="text-xl font-semibold text-gray-900">Chi tiết Lô Sản xuất</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-gray-900">Chi tiết Đơn Sản xuất</DialogTitle>
               <DialogDescription className="text-sm text-gray-500 mt-1">
-                Thông tin chi tiết về lô sản xuất {batch.production_batch_id}
+                Thông tin chi tiết về đơn sản xuất {batch.production_batch_id}
               </DialogDescription>
             </div>
             <Badge className={getStatusColor(batch.status)}>

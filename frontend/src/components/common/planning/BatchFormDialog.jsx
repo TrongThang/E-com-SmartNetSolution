@@ -75,7 +75,7 @@ export function BatchFormDialog({
     } catch (error) {
       setError("root", {
         type: "manual",
-        message: error.message || "Có lỗi xảy ra khi tạo lô",
+        message: error.message || "Có lỗi xảy ra khi tạo đơn sản xuất",
       });
     }
   };
@@ -91,21 +91,21 @@ export function BatchFormDialog({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Tạo Lô {currentBatch}/{totalBatches}</DialogTitle>
+          <DialogTitle>Tạo Đơn Sản xuất {currentBatch}/{totalBatches}</DialogTitle>
           <DialogDescription>
             {planningNote && (
               <div className="mb-2">
                 <strong>Kế hoạch:</strong> {planningNote}
               </div>
             )}
-            Nhập thông tin cho lô sản xuất số {currentBatch}
+            Nhập thông tin cho đơn sản xuất số {currentBatch}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Tiến độ tạo lô</span>
+              <span>Tiến độ tạo đơn sản xuất</span>
               <span>{currentBatch - 1}/{totalBatches}</span>
             </div>
             <Progress value={progress} className="w-full" />
@@ -178,7 +178,7 @@ export function BatchFormDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>Chọn firmware cho lô sản xuất (không bắt buộc)</FormDescription>
+                      <FormDescription>Chọn firmware cho đơn sản xuất (không bắt buộc)</FormDescription>
                       <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
@@ -234,11 +234,11 @@ export function BatchFormDialog({
                 name="batch_note"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ghi chú lô</FormLabel>
+                    <FormLabel>Ghi chú đơn sản xuất</FormLabel>
                     <FormControl>
                       <Textarea placeholder="Ghi chú..." className="resize-none" {...field} />
                     </FormControl>
-                    <FormDescription>Thông tin bổ sung về lô sản xuất</FormDescription>
+                    <FormDescription>Thông tin bổ sung về đơn sản xuất</FormDescription>
                     <FormMessage className="text-red-500" />
                   </FormItem>
                 )}

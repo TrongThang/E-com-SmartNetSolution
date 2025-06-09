@@ -49,7 +49,7 @@ export function PlanningTable({
             <TableRow className="bg-gray-50">
               <TableHead className="w-10"></TableHead>
               <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Mã Kế hoạch</TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Số lô</TableHead>
+              <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Số đơn sản xuất</TableHead>
               <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng SL</TableHead>
               <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</TableHead>
               <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Người tạo</TableHead>
@@ -81,7 +81,7 @@ export function PlanningTable({
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Package className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-900">{planning.batches?.length || 0} lô</span>
+                        <span className="text-sm text-gray-900">{planning.batches?.length || 0} đơn sản xuất</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -132,14 +132,14 @@ export function PlanningTable({
                             <div className="bg-gray-50 p-4">
                               <h4 className="font-medium mb-3 flex items-center gap-2 text-gray-900">
                                 <Package className="w-4 h-4" />
-                                Danh sách lô sản xuất
+                                Danh sách đơn sản xuất
                               </h4>
                               <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
                                 <Table>
                                   <TableHeader>
                                     <TableRow className="bg-gray-50">
                                       <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Mã Lô
+                                        Mã Đơn Sản xuất
                                       </TableHead>
                                       <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Thiết bị
@@ -232,7 +232,7 @@ export function PlanningTable({
                                     }) || (
                                       <TableRow>
                                         <TableCell colSpan={7} className="text-center text-gray-500 py-4">
-                                          Chưa có lô nào trong kế hoạch này
+                                          Chưa có đơn sản xuất nào trong kế hoạch này
                                         </TableCell>
                                       </TableRow>
                                     )}
