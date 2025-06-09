@@ -147,7 +147,10 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      if (e.target.value.length === 1 && e.target.value[0] === " ") return;
+                      setFormData({ ...formData, name: e.target.value })
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -157,7 +160,10 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
                   <input
                     type="text"
                     value={formData.supplier}
-                    onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                    onChange={(e) => {
+                      if (e.target.value.length === 1 && e.target.value[0] === " ") return;
+                      setFormData({ ...formData, supplier: e.target.value })
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   />
