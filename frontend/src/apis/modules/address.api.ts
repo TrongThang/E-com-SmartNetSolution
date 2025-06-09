@@ -1,9 +1,11 @@
 import axiosPrivate from "../clients/private.client";
 import axiosPublic from "../clients/public.client";
-import { IApiResponse,  IAddressBook } from "@/models/interfaces";
+import { requestGHN } from "@/utils/requestGHN";
+import { IApiResponse, IAddressBook } from "@/models/interfaces";
 
 const addressBookEndpoints = {
     common: "address-book",
+    customer: "address-book/customer",
 };
 
 const addressBookApi = {
@@ -16,7 +18,7 @@ const addressBookApi = {
     },
     async delete(customer_id: number | string, id: number | string): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.delete(addressBookEndpoints.common + "/" + customer_id + "/" + id);
+            return await axiosPrivate.delete(`${addressBookEndpoints.common}/${customer_id}/${id}`);
         } catch (error) {
             throw error;
         }

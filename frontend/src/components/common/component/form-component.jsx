@@ -30,10 +30,10 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
       console.log("Creating component with data:", formData); // Debug
       const res = await axiosIOTPublic.post("component", formData);
       console.log("API response:", res); // Debug
-      if (res.data.success === 201) {
+      if (res.success === 201) {
         Swal.fire({
           title: "Thành công",
-          text: "Linh kiện đã được tạo thành công",
+          text: res.message,
           icon: "success",
         });
         fetchComponent();
@@ -68,10 +68,10 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
       console.log("Updating component with data:", formData); // Debug
       const res = await axiosIOTPublic.put(`component/${component.component_id}`, formData);
       console.log("API response:", res); // Debug
-      if (res.data.success === 200) {
+      if (res.success === 200) {
         Swal.fire({
           title: "Thành công",
-          text: "Linh kiện đã được cập nhật thành công",
+          text: res.message,
           icon: "success",
         });
         setFormData({
@@ -110,7 +110,25 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
   const handleSubmit = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Form submitted in ComponentFormModal"); // Debug
+    console.log("Form submitted in ComponentFormModal");
+
+    if (!formData.name.trim()) {
+      Swal.fire({
+        title: "Lỗi",
+        text: "Tên linh kiện không được để trống",
+        icon: "error",
+      });
+      return;
+    }
+    if (!formData.supplier.trim()) {
+      Swal.fire({
+        title: "Lỗi",
+        text: "Nhà cung cấp không được để trống",
+        icon: "error",
+      });
+      return;
+    }
+
     isEdit ? updateComponent() : createComponent();
   };
 
@@ -129,7 +147,10 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      if (e.target.value.length === 1 && e.target.value[0] === " ") return;
+                      setFormData({ ...formData, name: e.target.value })
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -139,7 +160,10 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
                   <input
                     type="text"
                     value={formData.supplier}
-                    onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                    onChange={(e) => {
+                      if (e.target.value.length === 1 && e.target.value[0] === " ") return;
+                      setFormData({ ...formData, supplier: e.target.value })
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   />

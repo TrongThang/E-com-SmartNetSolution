@@ -13,7 +13,7 @@ export default function ComponentManager({ components, setComponents, fetchCompo
     const [isEdit, setIsEdit] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [page, setPage] = useState(1)
-    const componentsPerPage = 2
+    const componentsPerPage = 7
     const [totalPage, setTotalPage] = useState(1)
 
     // Tải dữ liệu components khi component mount
