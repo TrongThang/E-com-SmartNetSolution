@@ -1,5 +1,5 @@
 const { ERROR_CODES, STATUS_CODE, ERROR_MESSAGES } = require("../contants/errors");
-const { ORDER } = require("../contants/info");
+const { ORDER, ROLE, IMPORT_WAREHOUSE, EXPORT_WAREHOUSE } = require("../contants/info");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
 const { prisma, isExistId } = require("../helpers/query.helper");
@@ -7,6 +7,7 @@ const { get_error_response } = require("../helpers/response.helper");
 const { getExportNumber } = require("../helpers/import.warehouse.helper");
 const { generateExportNumber } = require("../helpers/generate.helper");
 const { executeSelectData } = require("../helpers/sql_query");
+const queryHelper = require("../helpers/query.helper");
 
 function configDataExportWarehouse(rows) {
     const result = [];
@@ -97,6 +98,10 @@ function configDataExportWarehouseDetail(rows) {
 }
 
 async function getExportWarehouseService(filter, limit, sort, order) {
+    console.log('filter', filter)
+    console.log('limit', limit)
+    console.log('sort', sort)
+    console.log('order', order)
     let get_attr = `
         export_warehouse.id,
         CONCAT(employee.surname, ' ',employee.lastname) AS employee_name,
@@ -192,28 +197,81 @@ async function getExportWarehouseDetailService(id) {
     }
 }
 
+async function getProcessExportWarehouseService(exportWarehouseId) {
+    const queryProductNeed = `
+        SELECT 
+            de.product_id, product.name as product_name, de.quantity as total_serial_need
+        FROM detail_export de
+            LEFT JOIN product ON product.id = de.product_id
+        WHERE de.export_id = '${exportWarehouseId}' AND de.deleted_at IS NULL
+    `
+
+    const queryProductExported = `
+        SELECT de.product_id, CAST(COUNT(serial_number) AS CHAR) AS total_serial_exported
+            FROM detail_export de
+            LEFT JOIN batch_product_detail ON batch_product_detail.exp_batch_id = de.batch_code
+        WHERE de.export_id = '${exportWarehouseId}' AND de.deleted_at IS NULL
+        GROUP BY de.product_id
+    `
+
+    console.log("queryProductNeed", queryProductNeed)
+    console.log("queryProductExported", queryProductExported)
+
+    const resultProductNeed = await queryHelper.queryRaw(queryProductNeed)
+    const resultProductExported = await queryHelper.queryRaw(queryProductExported)
+
+    const result = []
+    for (const item of resultProductNeed) {
+        const product = resultProductExported.find(product => product.product_id === item.product_id)
+        result.push({
+            product_id: item.product_id,
+            product_name: item.product_name,
+            total_serial_need: item.total_serial_need,
+            total_serial_exported: product ? product.total_serial_exported : 0
+        })
+    }
+
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, result);
+}
+
 /**
  * Tạo bản ghi xuất kho và xử lý các đơn hàng liên quan
  * @param {Object} exportWarehouse - Dữ liệu xuất kho
+ * @param {string} account_id - ID tài khoản của nhân viên
  * @returns {Object} - Phản hồi thành công hoặc lỗi
  */
-async function createExportWarehouse(exportWarehouse) {
+async function createExportWarehouse(exportWarehouse, account_id) {
+    const { employee_id, export_date, note, orders } = exportWarehouse;
+
     // Kiểm tra sự tồn tại của nhân viên
-    const employee = await prisma.employee.findFirst({
+    const account = await prisma.account.findFirst({
         where: {
-            id: exportWarehouse.employee_id,
+            account_id: account_id,
             deleted_at: null
         }
     })
+    if (!account) {
+        return get_error_response(ERROR_CODES.ACCOUNT_UNAUTHORIZED, STATUS_CODE.BAD_REQUEST);
+    }
+
+    if(account.role_id !== ROLE.MANAGER_WAREHOUSE) {
+        return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_MANAGER_NOT_AUTHORIZED, STATUS_CODE.BAD_REQUEST);
+    }
+    
+    const employee = await prisma.account.findFirst({
+        where: {
+            employee_id: employee_id,
+            deleted_at: null
+        }
+    })
+
     if (!employee) {
         return get_error_response(ERROR_CODES.EMPLOYEE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
-    
-    // Kiểm tra tính hợp lệ của total_profit
-    // const error = validateNumber(exportWarehouse.total_profit);
-    // if (error) {
-    //     return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_TOTAL_PROFIT_INVALID, STATUS_CODE.BAD_REQUEST);
-    // }
+
+    if (employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
+        return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE, STATUS_CODE.BAD_REQUEST);
+    }
 
     // Mảng để lưu kết quả kiểm tra của tất cả orders
     const orderResults = [];
@@ -222,11 +280,9 @@ async function createExportWarehouse(exportWarehouse) {
     const exportWarehouseData = await prisma.$transaction(async (tx) => {
         const data = await prisma.export_warehouse.create({
             data: {
-                employee_id: exportWarehouse.employee_id,
-                export_date: exportWarehouse.export_date,
-                file_authenticate: exportWarehouse.file_authenticate,
-                total_profit: exportWarehouse.total_profit,
-                note: exportWarehouse.note,
+                employee_id: employee_id,
+                export_date: export_date,
+                note: note,
                 created_at: new Date()
             }
         })
@@ -236,12 +292,12 @@ async function createExportWarehouse(exportWarehouse) {
         }
 
         // Xử lý các đơn hàng
-        for (const order of exportWarehouse.orders) {
+        for (const order of orders) {
             const orderResult = await addProductionForOrderWarehouse(
                 tx,
                 data.id,
                 order,
-                exportWarehouse.export_date
+                export_date
             );
         
         
@@ -278,14 +334,6 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
                     ORDER.PENDING, ORDER.PREPARING
                 ]
             }
-        },
-        include: {
-            detail_export: {
-                select: {
-                    product_id: true,
-                    quantity: true
-                }
-            }
         }
     })
 
@@ -298,12 +346,15 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
 
     // Kiểm tra tất cả sản phẩm trong một truy vấn
     const productIds = order.products.map((p) => p.id);
+
     const products = await tx.product.findMany({
         where: {
             id: { in: productIds },
             deleted_at: null,
         },
     });
+
+
     if (products.length !== productIds.length) {
         return get_error_response(
             ERROR_CODES.PRODUCT_NOT_FOUND,
@@ -313,39 +364,13 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
 
     // Xử lý từng sản phẩm trong đơn hàng
     for (const product of order.products) {
-        // Kiểm tra số lượng và giá bán
-        const fields = [
-            {
-                value: product.quantity,
-                error: ERROR_CODES.EXPORT_WAREHOUSE_PRODUCT_QUANTITY_INVALID
-            },
-            {
-                value: product.sale_price,
-                error: ERROR_CODES.EXPORT_WAREHOUSE_PRODUCT_QUANTITY_INVALID
-            },
-        ]
-
-        for (const field of fields) {
-            const error = validateNumber(field.value);
-            if (error) {
-                return get_error_response(field.error, STATUS_CODE.BAD_REQUEST);
-            }
-        }
-
-        // Kiểm tra số lượng batch_product_details khớp với quantity
-        if (product.batch_product_details.length !== product.quantity) {
-            return get_error_response(
-                ERROR_CODES.BATCH_PRODUCT_QUANTITY_MISMATCH,
-                STATUS_CODE.BAD_REQUEST
-            );
-        }
 
         const exportDetailNumber = await getExportNumber(export_date)
         const exportNumber = exportDetailNumber + 1
 
         const batchCode = generateExportNumber(exportNumber)
-
         // Tạo chi tiết xuất kho
+        // console.log('product', product)
         const detail = await tx.detail_export.create({
             data: {
                 batch_code: batchCode,
@@ -357,6 +382,7 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
             }
         })
 
+        
         if (!detail) {
             return get_error_response(
                 ERROR_CODES.EXPORT_WAREHOUSE_CREATE_FAILED,
@@ -364,192 +390,291 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
             );
         }
 
-        const productToExport = {
-            id: product.id,
-            quantity: product.quantity
-        }
-        // Xử lý chi tiết lô sản phẩm
-        let batchDetailResult = await processBatchDetailsForExport(
-            tx,
-            detail.batch_code,
-            productToExport,
-            product.batch_product_details
-        )
+        // Cập nhật trạng thái đơn hàng
+        const updateOrder = await tx.order.update({
+            where: { id: order.id },
+            data: {
+                status: ORDER.PENDING_SHIPPING,
+                updated_at: new Date()
+            }
+        })
 
-        if (typeof batchDetailResult != "number") {
-            return batchDetailResult;
-        }
+        if (!updateOrder) {
 
-        if (product.quantity != batchDetailResult) {
             return get_error_response(
-                ERROR_CODES.BATCH_PRODUCT_QUANTITY_MISMATCH,
+                ERROR_CODES.ORDER_UPDATE_FAILED,
                 STATUS_CODE.BAD_REQUEST
             );
         }
     }
-
-    // Cập nhật trạng thái đơn hàng
-    await tx.order.update({
-        where: { id: order.id },
-        data: { status: ORDER.SHIPPING },
-    });
 
     return undefined;
 }
 
-/**
- * Xử lý chi tiết lô sản phẩm cho xuất kho
- * @param {Object} tx - Transaction Prisma
- * @param {number} detail_export_batch_code - Mã lô của bản ghi chi tiết xuất kho
- * @param {Object} productToExport - Thông tin sản phẩm cần xuất
- * @param {Array} batch_product_details - Danh sách chi tiết lô sản phẩm
- * @returns {number|Object} - Số lượng sản phẩm hoặc phản hồi lỗi
- */
-async function processBatchDetailsForExport(
-    tx,
-    detail_export_batch_code,
-    productToExport,
-    batch_product_details
-) {
-    // Kiểm tra số lượng lô khớp với số lượng sản phẩm
-    if (batch_product_details.length !== productToExport.quantity) {
-        return get_error_response(
-            ERROR_CODES.BATCH_PRODUCT_QUANTITY_MISMATCH,
-            STATUS_CODE.BAD_REQUEST
-        );
-    }
+async function startExportWarehouseService(exportWarehouse, account_id) {
+    const { import_id } = exportWarehouse;
 
-    // Kiểm tra tất cả chi tiết lô trong một truy vấn
-    const serialNumbers = batch_product_details.map((b) => b.serial_number);
-    const batchItems = await tx.batch_product_detail.findMany({
+    const importWarehouse = await prisma.import_warehouse.findFirst({
         where: {
-            serial_number: { in: serialNumbers },
-            deleted_at: null,
-        },
-    });
-
-    if (batchItems.length !== serialNumbers.length) {
-        return get_error_response(
-            ERROR_CODES.BATCH_PRODUCT_DETAIL_NOT_FOUND,
-            STATUS_CODE.NOT_FOUND
-        );
-    }
-
-    // Kiểm tra các lô đã được xuất kho chưa
-    const alreadyExported = batchItems.some((item) => item.exp_batch_id);
-    if (alreadyExported) {
-        return get_error_response(
-            ERROR_CODES.BATCH_PRODUCT_DETAIL_IS_EXPORT,
-            STATUS_CODE.BAD_REQUEST
-        );
-    }
-
-    // Kiểm tra chi tiết nhập kho
-    const importBatchIds = batchItems.map((item) => item.imp_batch_id);
-    const importDetails = await tx.detail_import.findMany({
-        where: {
-            batch_code: { in: importBatchIds },
-        },
-    });
-
-    if (importDetails.length !== importBatchIds.length) {
-        return get_error_response(
-            ERROR_CODES.IMPORT_DETAIL_BATCH_NOT_FOUND,
-            STATUS_CODE.NOT_FOUND
-        );
-    }
-
-    // Kiểm tra giá nhập kho -- [Tạm thời chưa cần]
-    // for (const batchDetail of batch_product_details) {
-    //     const item = batchItems.find(
-    //         (i) => i.serial_number === batchDetail.serial_number
-    //     );
-    //     const importDetail = importDetails.find(
-    //         (d) => d.batch_code === item.imp_batch_id
-    //     );
-    //     // if (importDetail.import_price !== batchDetail.import_price) {
-    //     //     return get_error_response(
-    //     //         ERROR_CODES.BATCH_PRODUCT_DETAIL_IMPORT_PRICE_NOT_MATCH,
-    //     //         STATUS_CODE.BAD_REQUEST
-    //     //     );
-    //     // }
-    // }
-
-    // Cập nhật tất cả chi tiết lô
-    for (const item of batchItems) {
-        console.log('Cập nhật chi tiết lô')
-        const batchResult = await tx.batch_product_detail.update({
-            where: { id: item.id },
-            data: { exp_batch_id: detail_export_batch_code },
-        });
-
-        console.log('batchResult', batchResult)
-        if (!batchResult) {
-            return get_error_response(
-                ERROR_CODES.BATCH_PRODUCT_DETAIL_UPDATED_FAILED,
-                STATUS_CODE.BAD_REQUEST
-            );
-        }
-
-        console.log('Xử lý sau xuất kho')
-        // Cập nhật tồn kho cho từng serial_number
-        const inventoryResult = await processAfterExport(
-            tx,
-            productToExport,
-            item,
-        );
-        if (inventoryResult) {
-            return inventoryResult;
-        }
-    }
-
-    return batch_product_details.length;
-} 
-
-/**
- * Cập nhật tồn kho sau khi xuất kho
- * @param {Object} tx - Transaction Prisma
- * @param {Object} productToExport - Thông tin sản phẩm cần xuất
- * @param {Object} batch_product_detail - Chi tiết lô sản phẩm
- * @returns {Object|undefined} - Phản hồi lỗi hoặc undefined nếu thành công
- */
-const processAfterExport = async (tx, productToExport, batch_product_detail) => {
-    console.log('productToExport', productToExport.id)
-    // Kiểm tra tồn kho
-    console.log('batch_product_detail', batch_product_detail.imp_batch_id)
-    const warehouse_inventory = await tx.warehouse_inventory.findFirst({
-        where: {
-            batch_code: batch_product_detail.imp_batch_id,
-            product_id: productToExport.id,
+            id: import_id,
             deleted_at: null
         }
     })
-    console.log('warehouse_inventory', warehouse_inventory)
-    if (!warehouse_inventory || warehouse_inventory.stock < 1) {
-        return get_error_response(
-            ERROR_CODES.EXPORT_WAREHOUSE_INSUFFICIENT_INVENTORY,
-            STATUS_CODE.BAD_REQUEST
-        );
+
+    if (!importWarehouse) { 
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
-    // Giảm tồn kho đi 1 đơn vị cho serial_number này
-    const warehouseResult = await tx.warehouse_inventory.update({
-        where: { id: warehouse_inventory.id },
-        data: { stock: warehouse_inventory.stock - 1 },
-    });
-
-    if (!warehouseResult) {
-        return get_error_response(
-            ERROR_CODES.WAREHOUSE_INVENTORY_UPDATE_FAILED,
-            STATUS_CODE.BAD_REQUEST
-        );
+    if (importWarehouse.status !== IMPORT_WAREHOUSE.PENDING) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_PENDING, STATUS_CODE.BAD_REQUEST);
     }
 
-    return undefined;
+    const employee = await prisma.account.findFirst({
+        where: {
+            id: account_id,
+            deleted_at: null
+        }
+    })
+    
+    if (!employee) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+    }
+
+    if (employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_HAVE_PERMISSION, STATUS_CODE.BAD_REQUEST);
+    }
+
+    const importWarehouseUpdate = await prisma.import_warehouse.update({
+        where: { id: import_id },
+        data: { status: IMPORT_WAREHOUSE.PROCESSING }
+    })
+
+    if (!importWarehouseUpdate) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_UPDATE_FAILED, STATUS_CODE.BAD_REQUEST);
+    }
+
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, importWarehouseUpdate);
+}
+
+/**
+ * Hàm xuất kho cho một sản phẩm theo serial number
+ * @param {string} export_id - Mã phiếu xuất kho
+ * @param {string} batch_production_id - Mã lô sản xuất
+ * @param {string} template_id - Mã sản phẩm
+ * @param {string} serial_number - Số serial của sản phẩm
+ * @param {string} account_id - ID của tài khoản thực hiện
+ * @returns {Object} Response object chứa kết quả và thông báo
+ */
+async function exportProductService(export_id, batch_production_id, template_id, serial_number, account_id) {
+    try {
+        // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. KIỂM TRA PHIẾU XUẤT KHO
+            const exportWarehouse = await tx.export_warehouse.findFirst({
+                where: {
+                    id: export_id,
+                    deleted_at: null
+                }
+            });
+
+            if (!exportWarehouse) {
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_NOT_FOUND);
+            }
+
+            if (exportWarehouse.status !== EXPORT_WAREHOUSE.PENDING) {
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_NOT_PENDING);
+            }
+
+            // 2. KIỂM TRA QUYỀN NGƯỜI DÙNG
+            const account = await tx.account.findFirst({
+                where: {
+                    id: account_id,
+                    deleted_at: null
+                }
+            });
+
+            if (!account) {
+                throw new Error(ERROR_CODES.ACCOUNT_NOT_FOUND);
+            }
+
+            if (account.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
+                throw new Error(ERROR_CODES.ACCOUNT_NOT_HAVE_PERMISSION);
+            }
+
+            // 3. KIỂM TRA TRẠNG THÁI SẢN PHẨM
+            const productionSerial = await queryHelper.queryRaw(`
+                SELECT 
+                    production_tracking.serial_number,
+                    production_batches.template_id,
+                    production_tracking.status
+                FROM production_tracking 
+                    LEFT JOIN production_batches ON production_tracking.batch_id = production_batches.production_batch_id
+                WHERE
+                    serial_number = '${serial_number}' 
+                    AND production_tracking.is_deleted IS false
+                    AND production_batches.template_id = '${template_id}'
+            `);
+
+            if (!productionSerial || productionSerial.length === 0) {
+                throw new Error(ERROR_CODES.SERIAL_NUMBER_NOT_FOUND);
+            }
+
+            if (productionSerial[0].status !== 'in_stock') {
+                throw new Error(ERROR_CODES.SERIAL_NUMBER_NOT_IN_STOCK);
+            }
+
+            // 4. KIỂM TRA VÀ LẤY RA CÁC CHI TIẾT XUẤT KHO CHƯA XUẤT ĐỦ
+            const detailExportNotEnough = await queryHelper.queryRaw(`
+                SELECT 
+                    batch_product_detail.exp_batch_id,
+                    COUNT(batch_product_detail.id) AS total_exported,
+                    list_detail_export.total_need_export
+                FROM batch_product_detail
+                LEFT JOIN (
+                    SELECT 
+                        batch_code, 
+                        export_id, 
+                        SUM(quantity) AS total_need_export
+                    FROM detail_export
+                    WHERE export_id = '${export_id}' 
+                        AND product_id = '${template_id}' 
+                        AND deleted_at IS NULL
+                    GROUP BY batch_code, export_id
+                ) list_detail_export 
+                    ON list_detail_export.batch_code = batch_product_detail.exp_batch_id
+                WHERE list_detail_export.export_id = '${export_id}'
+                GROUP BY batch_product_detail.exp_batch_id, list_detail_export.total_need_export
+                HAVING COUNT(batch_product_detail.id) < list_detail_export.total_need_export;
+            `)
+            
+
+            if (!detailExportNotEnough) {
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_DETAIL_EXPORT_NOT_FOUND);
+            }
+
+            // 5. KIỂM TRA BATCH PRODUCT DETAIL
+            const batchProductDetail = await tx.batch_product_detail.findFirst({
+                where: {
+                    batch_production_id: batch_production_id,
+                    serial_number: serial_number,
+                    deleted_at: null
+                }
+            });
+
+            if (!batchProductDetail) {
+                throw new Error(ERROR_CODES.SERIAL_NUMBER_NOT_FOUND);
+            }
+
+            if (batchProductDetail.exp_batch_id) {
+                throw new Error(ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED);
+            }
+
+            if (batchProductDetail.exp_batch_id === detailExportNotEnough[0].batch_code) {
+                throw new Error(ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED);
+            }
+
+            // 6. CẬP NHẬT THÔNG TIN XUẤT KHO
+            // 6.1. Cập nhật batch_product_detail
+            const batchProductDetailUpdate = await tx.batch_product_detail.update({
+                where: {
+                    id: batchProductDetail.id,
+                    deleted_at: null,
+                },
+                data: {
+                    exp_batch_id: detailExportNotEnough[0].batch_code,
+                    updated_at: new Date()
+                }
+            });
+
+            if (!batchProductDetailUpdate) {
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_UPDATE_FAILED);
+            }
+
+            // 6.2. Cập nhật tồn kho
+            const warehouseInventory = await tx.warehouse_inventory.findFirst({
+                where: {
+                    batch_code: batchProductDetail.imp_batch_id,
+                    product_id: template_id,
+                    deleted_at: null
+                }
+            });
+
+            if (!warehouseInventory) {
+                throw new Error(ERROR_CODES.WAREHOUSE_INVENTORY_NOT_FOUND);
+            }
+
+            if (warehouseInventory.stock <= 0) {
+                throw new Error(ERROR_CODES.INSUFFICIENT_STOCK);
+            }
+
+            const warehouseInventoryUpdate = await tx.warehouse_inventory.update({
+                where: {
+                    id: warehouseInventory.id
+                },
+                data: {
+                    stock: warehouseInventory.stock - 1,
+                    updated_at: new Date()
+                }
+            });
+
+            if (!warehouseInventoryUpdate) {
+                throw new Error(ERROR_CODES.WAREHOUSE_INVENTORY_UPDATE_FAILED);
+            }
+
+            // 6.3. Cập nhật trạng thái sản phẩm
+            const productionTrackingUpdate = await tx.production_tracking.update({
+                where: {
+                    batch_id: batch_production_id,
+                    serial_number: serial_number,
+                    deleted_at: null
+                },
+                data: {
+                    status: 'stock_out'
+                }
+            });
+
+            // Log thành công
+            console.log(`[Export Product] Successfully exported product: ${serial_number}`);
+            
+            return {
+                warehouseInventory: warehouseInventoryUpdate,
+                batchProductDetail: batchProductDetailUpdate,
+                productionTracking: productionTrackingUpdate
+            };
+        });
+
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, result);
+
+    } catch (error) {
+        // Log lỗi
+        console.error(`[Export Product] Error exporting product: ${serial_number}`, {
+            error: error.message,
+            export_id,
+            batch_production_id,
+            template_id,
+            serial_number,
+            account_id
+        });
+
+        // Xử lý các loại lỗi khác nhau
+        if (error.message in ERROR_CODES) {
+            return get_error_response(error.message, STATUS_CODE.BAD_REQUEST);
+        }
+
+        // Lỗi không xác định
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR, 
+            STATUS_CODE.INTERNAL_SERVER_ERROR,
+            { message: 'An unexpected error occurred during export process' }
+        );
+    }
 }
 
 module.exports = {
     createExportWarehouseService: createExportWarehouse,
     getExportWarehouseService,
-    getExportWarehouseDetailService
+    getExportWarehouseDetailService,
+    startExportWarehouseService,
+    exportProductService,
+    getProcessExportWarehouseService
 }

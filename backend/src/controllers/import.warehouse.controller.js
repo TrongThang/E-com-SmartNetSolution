@@ -42,7 +42,7 @@ class ImportWarehouseController {
         const { import_id, serial_number } = req.body;
         const response = await importProductService(import_id, serial_number, employee_id);
         return res.status(response.status_code).json(response);
-    }
+    }    
 }
 
 module.exports = new ImportWarehouseController();

@@ -53,7 +53,7 @@ export default function ReviewSection({ device }) {
     return (
         <div className="py-6">
             <div className="max-w-4xl mx-auto">
-                {userId && (
+                {/* {userId && ( */}
                     <ReviewForm
                         userReview={userReview}
                         deviceId={device.idDevice}
@@ -61,7 +61,7 @@ export default function ReviewSection({ device }) {
                         hasPurchased={hasPurchased}
                         onSubmitSuccess={handleReviewSubmitted}
                     />
-                )}
+                {/* )} */}
 
                 <div className="mt-10">
                     <ReviewList reviews={reviews} isLoading={isLoading} />

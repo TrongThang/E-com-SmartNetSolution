@@ -8,8 +8,6 @@ const colors = [
 ];
 
 export default function ProgressBar({ title, target, current, index }) {
-    console.log("target", target)
-    console.log("current", current)
 
     const percentage = Math.min((current / target) * 100, 100); 
     const [fillWidth, setFillWidth] = useState(0);

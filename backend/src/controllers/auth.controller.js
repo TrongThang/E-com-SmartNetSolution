@@ -39,9 +39,9 @@ class AuthController {
     }
 
     async login(req, res) {
-        const { username, password, type } = req.body;
+        const { username, password, remember_me } = req.body;
 
-        const response = await loginAPI(username, password, type);
+        const response = await loginAPI(username, password, remember_me);
 
         return res.status(response.status_code).json(response);
     }

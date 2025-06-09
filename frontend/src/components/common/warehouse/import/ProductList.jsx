@@ -21,10 +21,10 @@ export function ProductList({
             {products.length > 0 ? (
                 <>
                     <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium">Danh sách lô sản xuất đã chọn</h3>
+                        <h3 className="text-lg font-medium">Danh sách sản phẩm đã chọn</h3>
                         <Button onClick={() => setShowProductDialog(true)}>
                             <Plus className="h-4 w-4 mr-1" />
-                            Thêm lô sản xuất
+                            Thêm sản phẩm
                         </Button>
                     </div>
 
@@ -38,10 +38,10 @@ export function ProductList({
                 </>
             ) : (
                 <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">Chưa có lô nào được thêm vào phiếu nhập kho</p>
+                    <p className="text-muted-foreground mb-4">Chưa có sản phẩm nào được thêm vào phiếu nhập kho</p>
                     <Button onClick={() => setShowProductDialog(true)}>
                         <Plus className="h-4 w-4 mr-1" />
-                        Thêm lô sản xuất
+                        Thêm sản phẩm
                     </Button>
                 </div>
             )}

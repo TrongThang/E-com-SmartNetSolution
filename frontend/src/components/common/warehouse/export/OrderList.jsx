@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { OrderProductList } from "@/components/common/warehouse/export/orderProductList"
 
-export function OrderList({ orders, onRemoveOrder, onBatchDetailUpdate }) {
+export function OrderList({ orders, onRemoveOrder }) {
     return (
         <Card>
             <CardHeader>
@@ -37,9 +37,6 @@ export function OrderList({ orders, onRemoveOrder, onBatchDetailUpdate }) {
 
                                 <OrderProductList
                                     order={order}
-                                    onBatchDetailUpdate={(productId, batchDetails) =>
-                                        onBatchDetailUpdate(order.id, productId, batchDetails)
-                                    }
                                 />
                             </div>
                         ))}

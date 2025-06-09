@@ -20,8 +20,8 @@ model account {
   report                                                     Int?                  @default(0) @db.TinyInt
   is_new                                                     Boolean?
   status                                                     Int?                  @db.TinyInt
-  created_at                                                 DateTime?             @db.Timestamp(0)
-  updated_at                                                 DateTime?             @db.Timestamp(0)
+  created_at                                                 DateTime?             @db.Timestamp(0) @default(now())
+  updated_at                                                 DateTime?             @db.Timestamp(0) @updatedAt
   deleted_at                                                 DateTime?             @db.Timestamp(0)
   is_locked                                                  Boolean?              @default(false)
   locked_at                                                  DateTime?             @db.DateTime(0)
@@ -33,9 +33,6 @@ model account {
   notification                                               notification[]
   ownership_history_ownership_history_from_user_idToaccount  ownership_history[]   @relation("ownership_history_from_user_idToaccount")
   ownership_history_ownership_history_to_user_idToaccount    ownership_history[]   @relation("ownership_history_to_user_idToaccount")
-  production_batches_production_batches_created_byToaccount  production_batches[]  @relation("production_batches_created_byToaccount")
-  production_batches_production_batches_approved_byToaccount production_batches[]  @relation("production_batches_approved_byToaccount")
-  production_tracking                                        production_tracking[]
   share_requests_share_requests_from_user_idToaccount        share_requests[]      @relation("share_requests_from_user_idToaccount")
   share_requests_share_requests_to_user_idToaccount          share_requests[]      @relation("share_requests_to_user_idToaccount")
   shared_permissions                                         shared_permissions[]
@@ -51,20 +48,20 @@ model account {
 }
 
 model address_book {
-  id          Int       @id @default(autoincrement())
-  customer_id String?   @db.VarChar(32)
+  id            Int       @id @default(autoincrement())
+  customer_id   String?   @db.VarChar(32)
   receiver_name String?   @db.VarChar(255)
   phone         String?   @db.VarChar(10)
-  district    String?   @db.VarChar(500)
-  city        String?   @db.VarChar(500)
-  ward        String?   @db.VarChar(500)
-  street      String?   @db.VarChar(500)
-  detail      String?   @db.VarChar(500)
-  is_default  Boolean?
-  created_at  DateTime? @db.Timestamp(0) @default(now())
-  updated_at  DateTime? @db.Timestamp(0) @updatedAt
-  deleted_at  DateTime? @db.Timestamp(0)
-  customer    customer? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "address_book_ibfk_1")
+  district      String?   @db.VarChar(500)
+  city          String?   @db.VarChar(500)
+  ward          String?   @db.VarChar(500)
+  street        String?   @db.VarChar(500)
+  detail        String?   @db.VarChar(500)
+  is_default    Boolean?
+  created_at    DateTime? @db.Timestamp(0) @default(now())
+  updated_at    DateTime? @db.Timestamp(0) @updatedAt
+  deleted_at    DateTime? @db.Timestamp(0)
+  customer      customer? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "address_book_ibfk_1")
 
   @@index([customer_id], map: "customer_id")
 }
@@ -158,14 +155,14 @@ model attribute_product {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model batch_product_detail {
-  id            Int            @id @default(autoincrement())
-  exp_batch_id  String?        @db.VarChar(50)
-  imp_batch_id  String         @db.VarChar(50)
-  serial_number  String?        @db.VarChar(50)
-  created_at    DateTime?      @db.Timestamp(0)
-  updated_at    DateTime?      @db.Timestamp(0)
-  deleted_at    DateTime?      @db.Timestamp(0)
-  detail_import detail_import  @relation(fields: [imp_batch_id], references: [batch_code], onDelete: NoAction, onUpdate: NoAction, map: "batch_product_detail_ibfk_1")
+  id                    Int            @id @default(autoincrement())
+  exp_batch_id          String?        @db.VarChar(50)
+  imp_batch_id          String         @db.VarChar(50)
+  batch_production_id   String         @db.VarChar(50)
+  serial_number         String?        @db.VarChar(50)
+  created_at            DateTime?      @db.Timestamp(0) @default(now())
+  updated_at            DateTime?      @db.Timestamp(0) @updatedAt
+  deleted_at            DateTime?      @db.Timestamp(0)
   detail_export detail_export? @relation(fields: [exp_batch_id], references: [batch_code], onDelete: NoAction, onUpdate: NoAction, map: "batch_product_detail_ibfk_2")
 
   @@index([exp_batch_id], map: "exp_batch_id")
@@ -235,16 +232,15 @@ model categories {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model components {
-  component_id          Int                     @id @default(autoincrement())
-  name                  String                  @db.VarChar(100)
-  supplier              String?                 @db.VarChar(100)
-  quantity_in_stock     Int?                    @default(0)
-  unit_cost             Decimal?                @db.Decimal(10, 2)
-  created_at            DateTime?               @default(dbgenerated("(now())")) @db.DateTime(0)
-  updated_at            DateTime?               @default(dbgenerated("(now())")) @db.DateTime(0)
-  is_deleted            Boolean?                @default(false)
-  production_components production_components[]
-  template_components   template_components[]
+  component_id        Int                   @id @default(autoincrement())
+  name                String                @db.VarChar(100)
+  supplier            String?               @db.VarChar(100)
+  unit_cost           Decimal?              @db.Decimal(10, 2)
+  created_at          DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
+  updated_at          DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
+  is_deleted          Boolean?              @default(false)
+  status              Boolean?              @default(false)
+  template_components template_components[]
 }
 
 model contact {
@@ -270,8 +266,8 @@ model customer {
   email_verified Boolean?         @default(false)
   birthdate      DateTime?        @db.Date
   gender         Boolean?
-  created_at     DateTime? @db.Timestamp(0) @default(now())
-  updated_at     DateTime? @db.Timestamp(0) @updatedAt
+  created_at     DateTime?        @db.Timestamp(0) @default(now())
+  updated_at     DateTime?        @db.Timestamp(0) @updatedAt
   deleted_at     DateTime?        @db.Timestamp(0)
   account        account[]
   address_book   address_book[]
@@ -306,18 +302,13 @@ model detail_export {
 
 model detail_import {
   batch_code           String                 @id @db.VarChar(50)
-  import_id            Int
+  import_id            String
   product_id           Int
   quantity             Int?
   import_price         Float?
-  discount             Int?
-  amount               Int?
-  is_gift              Boolean?
-  note                 String?                @db.VarChar(500)
   created_at           DateTime? @db.Timestamp(0) @default(now())
   updated_at           DateTime? @db.Timestamp(0) @updatedAt
   deleted_at           DateTime?              @db.Timestamp(0)
-  batch_product_detail batch_product_detail[]
   import_warehouse     import_warehouse       @relation(fields: [import_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_import_ibfk_1")
   product              product                @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_import_ibfk_2")
 
@@ -327,19 +318,21 @@ model detail_import {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model device_templates {
-  template_id         Int                   @id @default(autoincrement())
-  device_type_id      Int?
-  name                String                @db.VarChar(100)
-  created_by          String?               @db.VarChar(32)
-  created_at          DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
-  updated_at          DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
-  is_deleted          Boolean?              @default(false)
-  categories          categories?           @relation(fields: [device_type_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "device_templates_ibfk_1")
-  account             account?              @relation(fields: [created_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "device_templates_ibfk_2")
-  devices             devices[]
-  firmware            firmware[]
-  production_batches  production_batches[]
-  template_components template_components[]
+  template_id          Int                   @id @default(autoincrement())
+  device_type_id       Int?
+  name                 String                @db.VarChar(100)
+  created_by           String?               @db.VarChar(32)
+  created_at           DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
+  updated_at           DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
+  is_deleted           Boolean?              @default(false)
+  status               String?               @default("pending") @db.VarChar(20)
+  production_cost      Float?                @default(0)
+  categories           categories?           @relation(fields: [device_type_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "device_templates_ibfk_1")
+  account              account?              @relation(fields: [created_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "device_templates_ibfk_2")
+  devices              devices[]
+  firmware             firmware[]
+  production_batches   production_batches[]
+  template_components  template_components[]
 
   @@index([created_by], map: "created_by")
   @@index([device_type_id], map: "device_type_id")
@@ -379,7 +372,6 @@ model devices {
   firmware_update_history firmware_update_history[]
   hourly_values           hourly_values[]
   ownership_history       ownership_history[]
-  production_tracking     production_tracking[]
   share_requests          share_requests[]
   shared_permissions      shared_permissions[]
   tickets                 tickets[]
@@ -423,6 +415,7 @@ model export_warehouse {
   file_authenticate String?         @db.MediumText
   total_profit      Float?
   note              String?         @db.VarChar(500)
+  status            Int             @default(0)
   created_at        DateTime?       @db.Timestamp(0) @default(now())
   updated_at        DateTime?       @db.Timestamp(0) @updatedAt
   deleted_at        DateTime?       @db.Timestamp(0)
@@ -436,18 +429,21 @@ model export_warehouse {
 model firmware {
   firmware_id             Int                       @id @default(autoincrement())
   version                 String                    @db.VarChar(50)
-  file_path               String                    @db.VarChar(255)
+  file_path               String                    @db.LongText
   template_id             Int?
   is_mandatory            Boolean?                  @default(false)
   created_at              DateTime?                 @default(dbgenerated("(now())")) @db.DateTime(0)
-  tested_at               DateTime?                 @db.DateTime(0)
-  is_approved             Boolean?                  @default(false)
   updated_at              DateTime?                 @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted              Boolean?                  @default(false)
   note                    String?                   @db.Text
+  name                    String                    @db.VarChar(500)
+  is_approved             Boolean?                  @default(false)
+  logs                    Json?
+  tested_at               DateTime?                 @db.DateTime(0)
   devices                 devices[]
   device_templates        device_templates?         @relation(fields: [template_id], references: [template_id], onDelete: NoAction, onUpdate: NoAction, map: "firmware_ibfk_1")
   firmware_update_history firmware_update_history[]
+  production_batches      production_batches[]
 
   @@index([template_id], map: "template_id")
 }
@@ -527,7 +523,7 @@ model image_product {
 }
 
 model import_warehouse {
-  id                Int             @id @default(autoincrement())
+  id                String          @id
   import_number     Int?
   employee_id       String?         @db.VarChar(32)
   warehouse_id      Int?
@@ -582,7 +578,6 @@ model notification {
 model order {
   id                                  String          @id @db.VarChar(32)
   order_number                        Int?
-  order_id                            String?         @db.VarChar(12)
   customer_id                         String?         @db.VarChar(32)
   saler_id                            String?         @db.VarChar(32)
   shipper_id                          String?         @db.VarChar(32)
@@ -593,8 +588,6 @@ model order {
   total_money                         Float?
   shipping_fee                        Int?
   amount                              Float?
-  prepaid                             Float?
-  remaining                           Float?
   profit                              Float?
   address                             String?         @db.VarChar(500)
   payment_method                      String?         @db.VarChar(50)
@@ -604,6 +597,7 @@ model order {
   note                                String?         @db.VarChar(500)
   platform_order                      String?         @db.VarChar(50)
   status                              Int?            @default(0) @db.TinyInt
+  image_shipped                       String?          @db.MediumText
   created_at                          DateTime?       @db.Timestamp(0) @default(now())
   updated_at                          DateTime?       @db.Timestamp(0) @updatedAt
   deleted_at                          DateTime?       @db.Timestamp(0)
@@ -623,13 +617,13 @@ model order_detail {
   order_id       String?   @db.VarChar(32)
   product_id     Int?
   unit           String?   @db.VarChar(30)
+  warrenty_time  Int? 
   sale_price     Float?
   discount       Float?
   quantity_sold  Float?
   amount         Float?
   delivery_date  DateTime? @db.DateTime(0)
   receiving_date DateTime? @db.DateTime(0)
-  is_gift        Boolean?
   created_at     DateTime? @db.Timestamp(0) @default(now())
   updated_at     DateTime? @db.Timestamp(0) @updatedAt
   deleted_at     DateTime? @db.Timestamp(0)
@@ -742,27 +736,43 @@ model product {
   @@index([warrenty_time_id], map: "warrenty_time_id")
 }
 
+model planning {
+  planning_id        String               @id @db.VarChar(32)
+  status             String               @default("pending") @db.VarChar(20)
+  logs               Json?
+  created_by         String               @db.VarChar(32)
+  created_at         DateTime             @default(dbgenerated("(now())")) @db.DateTime(0)
+  updated_at         DateTime             @default(dbgenerated("(now())")) @db.DateTime(0)
+  is_deleted         Boolean              @default(false)
+  planning_note      String?              @db.VarChar(500)
+  production_batches production_batches[]
+
+  @@index([created_by], map: "created_by")
+}
+
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model production_batches {
-  batch_id                                        Int @unique
-  production_batch_id                             String                @db.VarChar(255)
-  template_id                                     Int?
-  quantity                                        Int
-  status                                          String?               @default("pending") @db.VarChar(20)
-  created_by                                      String?               @db.VarChar(32)
-  created_at                                      DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
-  approved_by                                     String?               @db.VarChar(32)
-  approved_at                                     DateTime?             @db.DateTime(0)
-  updated_at                                      DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
-  is_deleted                                      Boolean?              @default(false)
-  device_templates                                device_templates?     @relation(fields: [template_id], references: [template_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_1")
-  account_production_batches_created_byToaccount  account?              @relation("production_batches_created_byToaccount", fields: [created_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_2")
-  account_production_batches_approved_byToaccount account?              @relation("production_batches_approved_byToaccount", fields: [approved_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_3")
+  batch_id            Int                   @default(autoincrement())
+  production_batch_id String                @unique @db.VarChar(255)
+  template_id         Int?
+  quantity            Int
+  status              String                @default("pending") @db.VarChar(20)
+  created_at          DateTime              @default(dbgenerated("(now())")) @db.DateTime(0)
+  updated_at          DateTime              @default(dbgenerated("(now())")) @db.DateTime(0)
+  is_deleted          Boolean               @default(false)
+  batch_note          String?               @db.VarChar(500)
+  logs                Json?
+  planning_id         String                @db.VarChar(32)
+  firmware_id         Int?
+  device_templates    device_templates?     @relation(fields: [template_id], references: [template_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_1")
+  planning            planning              @relation(fields: [planning_id], references: [planning_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_2")
+  firmware            firmware?             @relation(fields: [firmware_id], references: [firmware_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_3")
+  production_tracking production_tracking[]
 
-  @@id([batch_id, production_batch_id])
-  @@index([approved_by], map: "approved_by")
-  @@index([created_by], map: "created_by")
+  @@id([batch_id, planning_id, production_batch_id])
   @@index([template_id], map: "template_id")
+  @@index([planning_id], map: "planning_id")
+  @@index([firmware_id], map: "firmware_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -774,8 +784,6 @@ model production_components {
   created_at              DateTime?            @default(dbgenerated("(now())")) @db.DateTime(0)
   updated_at              DateTime?            @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted              Boolean?             @default(false)
-  production_tracking     production_tracking? @relation(fields: [production_id], references: [production_id], onDelete: NoAction, onUpdate: NoAction, map: "production_components_ibfk_1")
-  components              components?          @relation(fields: [component_id], references: [component_id], onDelete: NoAction, onUpdate: NoAction, map: "production_components_ibfk_2")
 
   @@index([component_id], map: "component_id")
   @@index([production_id], map: "production_id")
@@ -783,27 +791,18 @@ model production_components {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model production_tracking {
-  production_id         Int                     @id @default(autoincrement())
-  batch_id              Int?
-  device_serial         String?                 @db.VarChar(50)
-  serial_number         String                  @db.VarChar(50)
-  stage                 String                  @db.VarChar(50)
-  status                String?                 @default("pending") @db.VarChar(20)
-  employee_id           String?                 @db.VarChar(32)
-  started_at            DateTime?               @db.DateTime(0)
-  completed_at          DateTime?               @db.DateTime(0)
-  cost                  Decimal?                @db.Decimal(10, 2)
-  created_at            DateTime?               @default(dbgenerated("(now())")) @db.DateTime(0)
-  updated_at            DateTime?               @default(dbgenerated("(now())")) @db.DateTime(0)
-  is_deleted            Boolean?                @default(false)
-  production_components production_components[]
- 
-  devices               devices?                @relation(fields: [device_serial], references: [serial_number], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_2")
-  account               account?                @relation(fields: [employee_id], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_3")
+  production_id       Int                @id @default(autoincrement())
+  device_serial       String?            @db.VarChar(50)
+  stage               String             @db.VarChar(50)
+  status              String             @default("pending") @db.VarChar(20)
+  created_at          DateTime           @default(dbgenerated("(now())")) @db.DateTime(0)
+  updated_at          DateTime           @default(dbgenerated("(now())")) @db.DateTime(0)
+  is_deleted          Boolean            @default(false)
+  production_batch_id String             @db.VarChar(255)
+  state_logs          Json?
+  production_batches  production_batches @relation(fields: [production_batch_id], references: [production_batch_id], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_1")
 
-  @@index([batch_id], map: "batch_id")
-  @@index([device_serial], map: "device_serial")
-  @@index([employee_id], map: "employee_id")
+  @@index([production_batch_id], map: "production_batch_id")
 }
 
 model review_product {

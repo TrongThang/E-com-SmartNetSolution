@@ -24,7 +24,14 @@ export default function ExportWarehousePage() {
     const fetchExportWarehouse = async () => {
         setLoading(true)
         try {
-            const response = await axiosPublic.get("/export-warehouse")
+            const sort = "export_warehouse.created_at"
+            const order = "desc"
+            const response = await axiosPublic.get("/export-warehouse", {
+                params: {
+                    sort,
+                    order
+                }
+            })
             console.log('response', response)
             if (response.status_code === 200) {
                 setExportWarehouse(response.data.data)
@@ -106,7 +113,7 @@ export default function ExportWarehousePage() {
                     </p>
                 </div>
                 <Button asChild>
-                    <Link to="/admin/warehouse/export/create">
+                    <Link to="/admin/warehouses/export/create">
                         <Plus className="mr-2 h-4 w-4" />
                         Tạo phiếu xuất kho mới
                     </Link>

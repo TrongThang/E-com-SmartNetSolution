@@ -20,7 +20,7 @@ const getLikedService = async (id) => {
     }
 
     // Các cột cần lấy từ liked và product
-    let get_attr = `product.name, product.image, product.selling_price, product.description`
+    let get_attr = `liked.product_id, product.name, product.image, product.selling_price, product.description`
     
     let get_table = `liked`
 
@@ -86,7 +86,6 @@ const createLikedService = async (customer_id, product_id) => {
                 customer_id,
                 product_id: productId,
                 created_at: new Date(),
-                updated_at: new Date()
             }
         });
 

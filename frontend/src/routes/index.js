@@ -247,14 +247,6 @@ export const router = createBrowserRouter([
         element: <EditCategoryPage />
       },
       {
-        path: 'warehouse/import/create',
-        element: <CreateImportWarehousePage />
-      },
-      {
-        path: 'warehouse/export/create',
-        element: <CreateExportWarehousePage />
-      },
-      {
         path: 'customers',
         element: <UserManagerPage />,
       },
@@ -347,9 +339,17 @@ export const router = createBrowserRouter([
         element: <ExportWarehousePage />
       },
       {
+        path: 'warehouse/import/create',
+        element: <CreateImportWarehousePage />
+      },
+      {
         path: 'warehouses/export/detail/:id',
         element: <ExportWarehouseDetailPage />
-      }
+      },
+      {
+        path: 'warehouses/export/create',
+        element: <CreateExportWarehousePage />
+      },
     ],
   },
 ]);

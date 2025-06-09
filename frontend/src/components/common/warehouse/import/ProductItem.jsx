@@ -1,21 +1,15 @@
 "use client"
 
-import { ChevronDown, ChevronRight, Trash2 } from "lucide-react"
+import { Trash2 } from "lucide-react"
 import PropTypes from 'prop-types'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
 import { TableCell, TableRow } from "@/components/ui/table"
-import { ProductDetails } from "@/components/common/warehouse/import/ProductDetail"
 
 export function ProductItem({
     product,
-    isExpanded,
-    onToggleExpand,
     onUpdateProduct,
     onRemoveProduct,
-    onUpdateSerialNumbers,
-    onUpdateBarcode,
 }) {
     // Handle quantity change
     const handleQuantityChange = (value) => {
@@ -27,26 +21,10 @@ export function ProductItem({
 
     return (
         <>
-            <TableRow className="cursor-pointer hover:bg-muted/50">
-                <TableCell className="w-[30px] p-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={onToggleExpand}
-                    >
-                        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </Button>
-                </TableCell>
-                <TableCell className="font-medium" onClick={onToggleExpand}>
-                    {product.production_batch_id}
-                </TableCell>
-                <TableCell className="font-medium" onClick={onToggleExpand}>
-                    <img src={product.product_image} alt={product.product_name} className="w-10 h-10 rounded-md" />
-                </TableCell>
-                <TableCell className="font-medium" onClick={onToggleExpand}>
-                    {product.product_name}
-                    <div className="text-xs text-muted-foreground">{product.product_code}</div>
+            <TableRow className="hover:bg-muted/50">
+                <TableCell className="font-medium" >
+                    {product.name}
+                    <div className="text-xs text-muted-foreground">{product.code}</div>
                 </TableCell>
                 <TableCell className="w-[100px] text-right">
                     <Input
@@ -58,11 +36,11 @@ export function ProductItem({
                         onClick={(e) => e.stopPropagation()}
                     />
                 </TableCell>
-                <TableCell className="w-[80px]">
+                <TableCell className="">
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive hover:text-destructive"
+                        className="text-red-500 hover:text-white hover:bg-red-500"
                         onClick={(e) => {
                             e.stopPropagation()
                             onRemoveProduct(product.id)
@@ -72,18 +50,6 @@ export function ProductItem({
                     </Button>
                 </TableCell>
             </TableRow>
-            {isExpanded && (
-                <TableRow>
-                    <TableCell colSpan={7} className="p-0">
-                        <ProductDetails
-                            product={product}
-                            onUpdateProduct={onUpdateProduct}
-                            onUpdateSerialNumbers={onUpdateSerialNumbers}
-                            onUpdateBarcode={onUpdateBarcode}
-                        />
-                    </TableCell>
-                </TableRow>
-            )}
         </>
     )
 }
@@ -95,16 +61,10 @@ ProductItem.propTypes = {
         name: PropTypes.string.isRequired,
         code: PropTypes.string.isRequired,
         quantity: PropTypes.number.isRequired,
-        import_price: PropTypes.number.isRequired,
-        amount: PropTypes.number,
-        is_gift: PropTypes.bool.isRequired
     }).isRequired,
-    isExpanded: PropTypes.bool.isRequired,
     onToggleExpand: PropTypes.func.isRequired,
     onUpdateProduct: PropTypes.func.isRequired,
     onRemoveProduct: PropTypes.func.isRequired,
-    onUpdateSerialNumbers: PropTypes.func.isRequired,
-    onUpdateBarcode: PropTypes.func.isRequired
 }
 
 // Default props if needed

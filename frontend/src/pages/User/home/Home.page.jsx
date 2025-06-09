@@ -49,8 +49,8 @@ export default function HomePage() {
 	}
 	const fetchCategories = async () => {
 		try {
-			const res = await categoryApi.list({ limit: 10 });
-			if (res.status_code === 200) {
+			const res = await categoryApi.list({ limit: 6 });
+			if (res.status_code === 200) {	
 				setCategories(res.data?.categories || []);
 			}
 		} catch (error) {
@@ -104,7 +104,7 @@ export default function HomePage() {
 						<div className="mb-8 flex items-center justify-between">
 							<h2 className="text-2xl font-bold text-gray-800">Danh mục sản phẩm</h2>
 						</div>
-						<CategoryGrid categories={categories} columns={5} />
+						<CategoryGrid categories={categories} columns={6} />
 					</div>
 				</section>
 

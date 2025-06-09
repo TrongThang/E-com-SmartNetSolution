@@ -72,8 +72,8 @@ const OrderDetailPage = () => {
 
 
     if (loading) {
-        return <div>
-            <Loader2 className="w-10 h-10 animate-spin" />
+        return <div className="flex justify-center items-center h-screen text-blue-500 font-bold">
+            <Loader2 className="w-20 h-20 animate-spin" />
         </div>
     }
     return (

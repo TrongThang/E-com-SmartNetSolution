@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
-import { ArrowLeft, ChevronDown, ChevronUp, Package, Printer, Undo2 } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Loader2, Package, Printer, Undo2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
@@ -12,23 +12,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency, formatDate } from "@/utils/format"
 import QRCode from "react-qr-code"
 import ProgressBar from "@/components/common/ProgressBar"
+import { Badge } from "@/components/ui/badge"
+import { useManufacturing } from "@/hooks/useManufacturing"
 
 export default function ImportWarehouseDetailPage() {
     const { id } = useParams()
     const [warehouseData, setWarehouseData] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [productTracking, setProductTracking] = useState([]);
     const [isProgressCollapsed, setIsProgressCollapsed] = useState(true);
     const [showToggleButton, setShowToggleButton] = useState(false);
     const contentRef = useRef(null);
+    const [expandedProducts, setExpandedProducts] = useState(new Set())
+    const { importProductTracking, setImportProductTracking } = useManufacturing()
 
     useEffect(() => {
         const fetchProductionTracking = async () => {
             const result = await axiosPublic.get(`import-warehouse/process/${id}`)
 
             if (result.status_code === 200) {
-                console.log('result', result.data)
-                setProductTracking(result.data)
+                setImportProductTracking(result.data)
             }
         }
         fetchProductionTracking()
@@ -61,7 +63,7 @@ export default function ImportWarehouseDetailPage() {
             clearTimeout(timer);
             window.removeEventListener('resize', handleResize);
         };
-    }, [productTracking, isProgressCollapsed]);
+    }, [importProductTracking, isProgressCollapsed]);
 
 
     const fetchWarehouseDetail = async () => {
@@ -89,17 +91,22 @@ export default function ImportWarehouseDetailPage() {
         setIsProgressCollapsed(!isProgressCollapsed);
     };
 
+    const toggleProductExpand = (productId) => {
+        setExpandedProducts(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(productId)) {
+                newSet.delete(productId);
+            } else {
+                newSet.add(productId);
+            }
+            return newSet;
+        });
+    };
+
     if (loading) {
-        return (
-            <div className="container mx-auto p-6 space-y-6">
-                <Skeleton className="h-10 w-48" />
-                <div className="grid gap-6 md:grid-cols-2">
-                    <Skeleton className="h-[200px]" />
-                    <Skeleton className="h-[200px]" />
-                </div>
-                <Skeleton className="h-[400px]" />
-            </div>
-        )
+        return <div className="flex justify-center items-center h-screen text-blue-500 font-bold">
+            <Loader2 className="w-20 h-20 animate-spin" />
+        </div>
     }
 
     if (!warehouseData) {
@@ -217,6 +224,7 @@ export default function ImportWarehouseDetailPage() {
                         )}
                     </div>
                 </CardHeader>
+                {/* THANH TIẾN TRÌNH NẠP KHO */}
                 <CardContent>
                     <div
                         ref={contentRef}
@@ -227,7 +235,7 @@ export default function ImportWarehouseDetailPage() {
                             maxHeight: isProgressCollapsed ? '200px' : 'none'
                         }}
                     >
-                        {productTracking.map((item, index) => {
+                        {importProductTracking.map((item, index) => {
                             return (
                             <ProgressBar
                                 key={index}
@@ -262,31 +270,69 @@ export default function ImportWarehouseDetailPage() {
                                 <TableHead className="text-right">Số lượng</TableHead>
                                 <TableHead className="text-right">Đơn giá</TableHead>
                                 <TableHead className="text-right">Thành tiền</TableHead>
-                                <TableHead>Ghi chú</TableHead>
-                                <TableHead>Quà tặng</TableHead>
                                 <TableHead>Thao tác</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {warehouseData.products?.map((item, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <img src={item.product_image} alt={item.product_name} className="w-10 h-10 rounded-md" />
-                                            <span>{item.product_name}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right">{item.quantity}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(item.import_price)}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                                    <TableCell>{item.detail_import_note || '-'}</TableCell>
-                                    <TableCell>{item.is_gift ? 'Có' : 'Không'}</TableCell>
-                                    <TableCell>
-                                        <Button variant="outline" size="icon" className="bg-red-500 hover:bg-red-600 text-white">
-                                            <Undo2 className="w-4 h-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
+                                <>
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <img 
+                                                    src={item.product_image || '/placeholder-image.png'} 
+                                                    alt={item.product_name} 
+                                                    className="w-10 h-10 rounded-md object-cover" 
+                                                />
+                                                <span>{item.product_name}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right">{item.quantity}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(item.import_price)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(item.import_price * item.quantity)}</TableCell>
+                                        <TableCell>
+                                            <Button 
+                                                variant="outline" 
+                                                size="icon" 
+                                                onClick={() => toggleProductExpand(item.product_id)}
+                                                className="bg-blue-500 hover:bg-blue-600 text-white"
+                                            >
+                                                {expandedProducts.has(item.product_id) ? (
+                                                    <ChevronUp className="w-4 h-4" />
+                                                ) : (
+                                                    <ChevronDown className="w-4 h-4" />
+                                                )}
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                    {/* Hiển thị danh sách batch và serial khi mở rộng */}
+                                    {expandedProducts.has(item.product_id) && (
+                                        <TableRow key={`details-${index}`}>
+                                            <TableCell colSpan={5}>
+                                                <div className="pl-8 py-2 space-y-4">
+                                                    {item.batch_product_detail.map((batch, batchIndex) => (
+                                                        <div key={batchIndex} className="space-y-2">
+                                                            <div className="text-sm font-medium text-muted-foreground">
+                                                                Lô sản xuất: {batch.id}
+                                                            </div>
+                                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                                                                {batch.serials.map((serial, serialIndex) => (
+                                                                    <Badge
+                                                                        key={serialIndex}
+                                                                        variant="outline"
+                                                                        className="flex items-center justify-center py-1 bg-blue-500 text-white"
+                                                                    >
+                                                                        {serial.serial_number}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </>
                             ))}
                         </TableBody>
                     </Table>

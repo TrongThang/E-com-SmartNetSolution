@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -31,72 +32,48 @@ export default function CreateImportWarehousePage() {
         products: [], // Removed TypeScript type annotation
     })
 
-       // Handle form field changes
-       const handleChange = (field, value) => {
+    // Handle form field changes
+    const handleChange = (field, value) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
         }))
     }
 
-    // Handle adding a product from batch
-    const handleAddProduct = (batch) => {
+    // Handle adding a product
+    const handleAddProduct = (product) => {
         setFormData((prev) => {
-            // Check if batch already exists in products
-            const existingProductIndex = prev.products.findIndex(
-                (p) => p.production_batch === batch.batch_id
-            )
+            // Check if product already exists
+            const existingProductIndex = prev.products.findIndex((p) => p.id === product.id)
 
             if (existingProductIndex >= 0) {
-                // Nếu batch đã tồn tại, tăng số lượng lên 1
+                // Update existing product
                 const updatedProducts = [...prev.products]
                 updatedProducts[existingProductIndex] = {
                     ...updatedProducts[existingProductIndex],
                     quantity: updatedProducts[existingProductIndex].quantity + 1,
-                    amount: (updatedProducts[existingProductIndex].quantity + 1) * 
-                            updatedProducts[existingProductIndex].import_price
                 }
-
-                // Tính lại tổng tiền
-                const totalMoney = updatedProducts.reduce(
-                    (sum, product) => sum + product.amount, 
-                    0
-                )
 
                 return {
                     ...prev,
                     products: updatedProducts,
-                    total_money: totalMoney
                 }
             } else {
-                console.log("batch", batch)
-                // Thêm sản phẩm mới từ batch
+                // Add new product
                 const newProduct = {
-                    id: batch.batch_id, // Sử dụng batch_id làm id
-                    production_batch_id: batch.production_batch_id,
-                    product_name: batch.product_name,
-                    quantity: batch.quantity,
-                    product_image: batch.product_image,
-                    amount: batch.product_price || 0,
-                    is_gift: false,
-                    production_batch: batch.batch_id, // Lưu thông tin batch
-                    image: batch.product_image,
-                    serial_numbers: [], // Chuẩn bị cho serial numbers nếu cần
-                    note: "" // Ghi chú cho sản phẩm nếu cần
+                    ...product,
+                    quantity: 1,
+                    note: product.note || "",
                 }
-
-                // Tính lại tổng tiền
-                const totalMoney = prev.total_money + newProduct.amount
 
                 return {
                     ...prev,
                     products: [...prev.products, newProduct],
-                    total_money: totalMoney
                 }
             }
         })
 
-        // Chuyển sang tab products sau khi thêm
+        // Move to products tab after adding
         setActiveTab("products")
     }
 
@@ -106,29 +83,14 @@ export default function CreateImportWarehousePage() {
             const updatedProducts = prev.products.map((product) => {
                 if (product.id === productId) {
                     const updatedProduct = { ...product, [field]: value }
-
-                    // Tính lại amount nếu quantity hoặc import_price thay đổi
-                    if (field === "quantity" || field === "import_price") {
-                        const quantity = field === "quantity" ? value : product.quantity
-                        const importPrice = field === "import_price" ? value : product.import_price
-                        updatedProduct.amount = quantity * importPrice
-                    }
-
                     return updatedProduct
                 }
                 return product
             })
 
-            // Tính lại tổng tiền
-            const totalMoney = updatedProducts.reduce(
-                (sum, product) => sum + product.amount, 
-                0
-            )
-
             return {
                 ...prev,
                 products: updatedProducts,
-                total_money: totalMoney
             }
         })
     }
@@ -136,57 +98,13 @@ export default function CreateImportWarehousePage() {
     // Handle product removal
     const handleRemoveProduct = (productId) => {
         setFormData((prev) => {
-            const updatedProducts = prev.products.filter(
-                (product) => product.id !== productId
-            )
-
-            // Tính lại tổng tiền
-            const totalMoney = updatedProducts.reduce(
-                (sum, product) => sum + product.amount, 
-                0
-            )
+            const updatedProducts = prev.products.filter((product) => product.id !== productId)
 
             return {
                 ...prev,
                 products: updatedProducts,
-                total_money: totalMoney
             }
         })
-    }
-
-    // Handle serial number update
-    const handleSerialNumberUpdate = (productId, serialNumbers) => {
-        setFormData((prev) => ({
-            ...prev,
-            products: prev.products.map((product) => {
-                if (product.id === productId) {
-                    const newSerials = typeof serialNumbers === 'function'
-                        ? serialNumbers(product.serial_numbers || [])
-                        : serialNumbers
-                    return {
-                        ...product,
-                        serial_numbers: Array.isArray(newSerials) ? newSerials : []
-                    }
-                }
-                return product
-            })
-        }))
-    }
-
-    // Handle barcode update
-    const handleBarcodeUpdate = (productId, barcode) => {
-        setFormData((prev) => ({
-            ...prev,
-            products: prev.products.map((product) => {
-                if (product.id === productId) {
-                    return {
-                        ...product,
-                        barcode,
-                    }
-                }
-                return product
-            }),
-        }))
     }
 
     // Submit form
@@ -203,17 +121,9 @@ export default function CreateImportWarehousePage() {
                 total_money: formData.total_money,
                 note: formData.note,
                 detail_import: formData.products.map((product) => ({
-                    batch_code: product.batch_code,
                     product_id: product.id,
                     quantity: product.quantity,
-                    import_price: product.import_price,
-                    amount: product.amount,
-                    is_gift: product.is_gift,
                     note: product.note || "",
-                    barcode: product.barcode || "",
-                    batch_product_detail: product.serial_numbers.map((serial) => ({
-                        seral_number: serial,
-                    })),
                 })),
             }
             
@@ -229,7 +139,7 @@ export default function CreateImportWarehousePage() {
             } else {
                 Swal.fire({
                     title: "Lỗi",
-                    text: response,
+                    text: response.errors[0].message,
                     icon: "error",
                 })
             }
@@ -249,7 +159,6 @@ export default function CreateImportWarehousePage() {
         // Check if all products have valid quantity and price
         for (const product of formData.products) {
             if (!product.quantity || product.quantity <= 0) return false
-            if (!product.import_price || product.import_price <= 0) return false
 
             // Check if all serial numbers are provided for products that require them
             if (product.requires_serial && product.serial_numbers.length !== product.quantity) {
@@ -275,7 +184,7 @@ export default function CreateImportWarehousePage() {
     const { totalProducts, totalItems, totalSerialNumbers } = getTotalStats()
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto py-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-3xl font-bold">Tạo Phiếu Nhập Kho</h1>
@@ -311,7 +220,7 @@ export default function CreateImportWarehousePage() {
                 <TabsList>
                     <TabsTrigger value="basic-info">Thông tin cơ bản</TabsTrigger>
                     <TabsTrigger value="products">
-                        Lô sản xuất
+                        Sản phẩm
                         {formData.products.length > 0 && (
                             <Badge variant="outline" className="ml-2">
                                 {formData.products.length}
@@ -330,8 +239,6 @@ export default function CreateImportWarehousePage() {
                         onAddProduct={handleAddProduct}
                         onUpdateProduct={handleProductUpdate}
                         onRemoveProduct={handleRemoveProduct}
-                        onUpdateSerialNumbers={handleSerialNumberUpdate}
-                        onUpdateBarcode={handleBarcodeUpdate}
                         onBack={() => setActiveTab("basic-info")}
                         onSubmit={() => setShowConfirmDialog(true)}
                         isSubmitDisabled={!validateForm() || isSubmitting}
@@ -370,8 +277,6 @@ ProductsTab.propTypes = {
     onAddProduct: PropTypes.func.isRequired,
     onUpdateProduct: PropTypes.func.isRequired,
     onRemoveProduct: PropTypes.func.isRequired,
-    onUpdateSerialNumbers: PropTypes.func.isRequired,
-    onUpdateBarcode: PropTypes.func.isRequired,
     onBack: PropTypes.func.isRequired,
     onSubmit: PropTypes.func.isRequired,
     isSubmitDisabled: PropTypes.bool.isRequired,

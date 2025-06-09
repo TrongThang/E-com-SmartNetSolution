@@ -41,7 +41,6 @@ export default function CreateExportWarehousePage() {
                         ...order,
                         products: order.products.map((p) => ({
                             ...p,
-                            batch_product_details: [],
                         })),
                     },
                 ],
@@ -57,58 +56,16 @@ export default function CreateExportWarehousePage() {
         }))
     }
 
-    // Handle batch product detail update
-    const handleBatchDetailUpdate = (orderId, productId, batchDetails) => {
-        setFormData((prev) => ({
-            ...prev,
-            orders: prev.orders.map((order) => {
-                if (order.id === orderId) {
-                    return {
-                        ...order,
-                        products: order.products.map((product) => {
-                            if (product.id === productId) {
-                                return {
-                                    ...product,
-                                    batch_product_details: batchDetails,
-                                }
-                            }
-                            return product
-                        }),
-                    }
-                }
-                return order
-            }),
-        }))
-    }
-
-    // Calculate total profit
-    const calculateTotalProfit = () => {
-        let total = 0
-        formData.orders.forEach((order) => {
-            order.products.forEach((product) => {
-                const profit = product.batch_product_details.reduce((sum, detail) => {
-                    return sum + (detail.sale_price - detail.import_price)
-                }, 0)
-                total += profit
-            })
-        })
-        return total
-    }
-
     // Submit form
     const handleSubmit = async () => {
         setIsSubmitting(true)
 
         try {
-            const totalProfit = calculateTotalProfit()
             const dataToSubmit = {
-                ...formData,
-                total_profit: totalProfit,
+                ...formData
             }
 
             // API call would go here
-            console.log("Submitting data:", dataToSubmit)
-            
             const response = await axiosPublic.post("/export-warehouse", { data: dataToSubmit })
 
             if (response.status_code === 200) {
@@ -141,44 +98,31 @@ export default function CreateExportWarehousePage() {
         if (!formData.employee_id) return false
         if (formData.orders.length === 0) return false
 
-        // Check if all products have batch details
-        for (const order of formData.orders) {
-            for (const product of order.products) {
-                if (product.batch_product_details.length !== product.quantity) {
-                    return false
-                }
-            }
-        }
-
         return true
     }
 
     // Calculate total products and scanned products
     const getTotalStats = () => {
         let totalProducts = 0
-        let totalScanned = 0
 
         formData.orders.forEach((order) => {
             order.products.forEach((product) => {
                 totalProducts += product.quantity
-                totalScanned += product.batch_product_details.length
             })
         })
 
-        return { totalProducts, totalScanned }
+        return { totalProducts }
     }
 
-    const { totalProducts, totalScanned } = getTotalStats()
+    const { totalProducts } = getTotalStats()
 
     return (
         <div className="container mx-auto p-4">
             <ExportHeader 
                 orders={formData.orders}
                 totalProducts={totalProducts}
-                totalScanned={totalScanned}
                 isSubmitting={isSubmitting}
                 validateForm={validateForm}
-                onCancel={() => router.push("/warehouse/export")}
                 onConfirm={() => setShowConfirmDialog(true)}
             />
 
@@ -200,7 +144,6 @@ export default function CreateExportWarehousePage() {
                     <OrderList 
                         orders={formData.orders}
                         onRemoveOrder={handleRemoveOrder}
-                        onBatchDetailUpdate={handleBatchDetailUpdate}
                     />
                 </div>
             </div>

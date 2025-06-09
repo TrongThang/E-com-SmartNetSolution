@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { useState, useEffect } from "react"
-import axiosPrivate from "@/apis/clients/private.client"
 import axiosPublic from "@/apis/clients/public.client"
 import { formatDate } from "@/utils/format"
 
@@ -82,11 +81,6 @@ export function BasicInfoForm({ formData, onChange }) {
                             />
                         </PopoverContent>
                     </Popover>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="file">File xác thực (nếu có)</Label>
-                    <Input id="file" type="file" onChange={(e) => onChange("file_authenticate", e.target.files?.[0])} />
                 </div>
 
                 <div className="space-y-2">

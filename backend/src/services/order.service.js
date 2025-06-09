@@ -1,5 +1,5 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
-const { ORDER } = require("../contants/info");
+const { ORDER, ROLE } = require("../contants/info");
 const { generateOrderID } = require("../helpers/generate.helper");
 const { getOrderNumber } = require("../helpers/import.warehouse.helper");
 const { validateNumber } = require("../helpers/number.helper");
@@ -324,6 +324,7 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
                         payment_method: row.payment_method,
                         payment_account: row.payment_account,
                         phone: row.phone,
+                        name_recipient: row.name_recipient,
                         platform_order: row.platform_order,
                         note: row.note,
                         status: row.status,
@@ -368,7 +369,7 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
     }
 }
 
-async function createOrder(orderData) {
+async function createOrder(orderData, platform_order) {
     const { shipping, payment, order, products } = orderData;
 
     // 1. Kiểm tra thông tin sản phẩm
@@ -464,8 +465,8 @@ async function createOrder(orderData) {
                     payment_method: payment.payment_method,
                     payment_account: payment.payment_account || null,
                     phone: shipping.phone,
-                    name_recipient: shipping.name_recipient,
-                    platform_order: order.platform_order || 'WEB',
+                    name_recipient: shipping.fullName,
+                    platform_order: platform_order || 'WEB',
                     note: order.note || '',
                     status: order.status || 0,
                 }
@@ -589,7 +590,7 @@ async function createOrderDetail(orderId, product) {
 
 async function cancelOrderService(order_id) {
     try {
-        const orderId = Number(order_id)
+        const orderId = order_id
         const order = await prisma.order.findUnique({
             where: { id: orderId }
         });
@@ -601,7 +602,7 @@ async function cancelOrderService(order_id) {
             );
         }
 
-        if (order.status === -1) {
+        if (order.status === ORDER.PENDING || order.status === ORDER.PREPARING) {
             return get_error_response(
                 errors=ERROR_CODES.ORDER_ALREADY_CANCELLED,
                 status_code=STATUS_CODE.BAD_REQUEST
@@ -611,7 +612,7 @@ async function cancelOrderService(order_id) {
         await prisma.order.update({
             where: { id: orderId },
             data: {
-                status: -1
+                status: ORDER.CANCELLED
             }
         });
 
@@ -788,7 +789,136 @@ async function checkProductInWarehouse(listProduct) {
     }
 
     return undefined;
-    
+}
+
+async function StartShippingOrderService(order_id, account_id) {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: order_id }
+        });
+
+        if (!order) {
+            return get_error_response(
+                errors=ERROR_CODES.ORDER_NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (order.status !== ORDER.PREPARING) {
+            return get_error_response(
+                errors=ERROR_CODES.ORDER_REQUIRE_STATUS_SHIPPING,
+                status_code=STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        const employee = await prisma.account.findUnique({
+            where: { id: account_id, deleted_at: null }
+        });
+
+        if (!employee) {
+            return get_error_response(
+                errors=ERROR_CODES.EMPLOYEE_NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (employee.role_id !== ROLE.SHIPPER && employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE && employee.role_id !== ROLE.MANAGER_WAREHOUSE && employee.role_id !== ROLE.SALER) {
+            return get_error_response(
+                errors=ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED,
+                status_code=STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.update({
+            where: { id: order_id },
+            data: {
+                status: ORDER.SHIPPING,
+                shipper_id: employee.id
+            }
+        });
+
+        // Firebase notification
+
+        return get_error_response(
+            errors=ERROR_CODES.SUCCESS,
+            status_code=STATUS_CODE.OK
+        );
+    }
+    catch (error) {
+        console.log('Start shipping order error:', error);
+        return get_error_response(
+            errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
+/**
+ * Xác nhận đã giao hàng (chỉ có shipper và manager warehouse mới có quyền xác nhận)
+ * @param {string} order_id - ID của đơn hàng
+ * @param {string} image_proof - Ảnh chứng minh đã giao hàng
+ * @param {string} account_id - ID tài khoản của nhân viên
+ * @returns {Promise<Response>} - Kết quả xác nhận đã giao hàng
+ */
+async function confirmShippingOrderService(order_id, image_proof, account_id) {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: order_id }
+        });
+
+        if (!order) {
+            return get_error_response(
+                errors = ERROR_CODES.ORDER_NOT_FOUND,
+                status_code = STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (order.status !== ORDER.SHIPPING) {
+            return get_error_response(
+                errors = ERROR_CODES.ORDER_REQUIRE_STATUS_SHIPPING,
+                status_code = STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        const employee = await prisma.account.findUnique({
+            where: { id: account_id, deleted_at: null }
+        });
+
+        if (!employee) {
+            return get_error_response(
+                errors = ERROR_CODES.EMPLOYEE_NOT_FOUND,
+                status_code = STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (employee.role_id !== ROLE.SHIPPER && employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE && employee.role_id !== ROLE.MANAGER_WAREHOUSE && employee.role_id !== ROLE.SALER) {
+            return get_error_response(
+                errors=ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED,
+                status_code=STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.update({
+            where: { id: order_id },
+            data: {
+                status: ORDER.DELIVERED,
+                image_shipped: image_proof
+            }
+        });
+
+        // Firebase notification
+
+        return get_error_response(
+            errors = ERROR_CODES.SUCCESS,
+            status_code = STATUS_CODE.OK
+        );
+    } catch (error) {
+        console.log('Confirm shipping order error:', error);
+        return get_error_response(
+            errors = ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
 }
 
 module.exports = {
@@ -798,5 +928,7 @@ module.exports = {
     cancelOrderService,
     getOrderDetailService,
     respondListOrderService,
-    getOrderForWarehouseEmployee
+    getOrderForWarehouseEmployee,
+    StartShippingOrderService,
+    confirmShippingOrderService
 }

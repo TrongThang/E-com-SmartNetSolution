@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import axiosPublic from "@/apis/clients/public.client"
+import { ORDER_STATUS } from "@/constants/status.constants"
 
 export function OrderSelection({ onOrderSelect, selectedOrders }) {
     const [searchTerm, setSearchTerm] = useState("")
@@ -17,8 +18,13 @@ export function OrderSelection({ onOrderSelect, selectedOrders }) {
     useEffect(() => {
         const fetchOrders = async () => {
             const filter = [
-                { field: "order.status", condition: ">=", value: 0 },
-                { field: "order.status", condition: "<=", value: 1 }
+                {
+                    logic: "AND",
+                    conditions: [
+                        { field: "order.status", condition: ">=", value: ORDER_STATUS.PENDING },
+                        { field: "order.status", condition: "<=", value: ORDER_STATUS.PREPARING }
+                    ]
+                }
             ]
             const response = await axiosPublic.get(`/order/admin/warehouse`, {    
                 params: {

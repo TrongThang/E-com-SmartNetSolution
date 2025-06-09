@@ -200,7 +200,7 @@ export default function EcommerceSidebar() {
 												asChild
 												className="text-blue-100 hover:bg-blue-600/50 hover:text-white transition-all duration-200 py-2.5"
 											>
-												<Link to="/admin/roles">
+												<Link to="/admin/role">
 													<UserLock className="h-4 w-4" />
 													<span>Chức vụ & Quyền</span>
 												</Link>

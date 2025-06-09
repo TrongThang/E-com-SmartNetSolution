@@ -3,16 +3,20 @@ import ActionsColumn from './ActionsColumn';
 import { formatCurrency, formatDate } from "@/utils/format";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const ExportWarehouseTable = ({ exportWarehouse, onEdit, onDelete, onView }) => {
     const columns = [
         {
-            key: "id",
-            label: "Mã xuất kho",
+            key: "status",
+            label: "Trạng thái",
+            render: (row) => {
+                return <Badge variant="outline">{row.status}</Badge>
+            }
         },
         {
-            key: "file_authenticate",
-            label: "File xác thực",
+            key: "id",
+            label: "Mã xuất kho",
         },
         {
             key: "employee_name",

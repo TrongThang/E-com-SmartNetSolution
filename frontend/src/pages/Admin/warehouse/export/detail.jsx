@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Package, Printer, ExternalLink, ChevronDown, ChevronRight } from "lucide-react"
+import { ArrowLeft, Package, Printer, ExternalLink, ChevronDown, ChevronRight, ChevronUp, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
@@ -13,6 +13,9 @@ import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatDate } from "@/utils/format"
 import { Link } from "react-router-dom"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import ProgressBar from "@/components/common/ProgressBar"
+import { useManufacturing } from "@/hooks/useManufacturing"
+import QRCode from "react-qr-code"
 
 export default function ExportWarehouseDetailPage() {
     const { id } = useParams()
@@ -20,10 +23,15 @@ export default function ExportWarehouseDetailPage() {
     const [loading, setLoading] = useState(true)
     const [expandedOrders, setExpandedOrders] = useState(new Set())
     const [expandedProducts, setExpandedProducts] = useState(new Set())
+    const [isProgressCollapsed, setIsProgressCollapsed] = useState(true);
+    const [showToggleButton, setShowToggleButton] = useState(false);
+    const { exportProductTracking, setExportProductTracking } = useManufacturing()
+    const contentRef = useRef(null);
     const navigate = useNavigate()
 
     useEffect(() => {
         fetchWarehouseDetail()
+        fetchProductionTracking()
     }, [id])
 
     const fetchWarehouseDetail = async () => {
@@ -46,6 +54,19 @@ export default function ExportWarehouseDetailPage() {
             setLoading(false)
         }
     }
+
+    const fetchProductionTracking = async () => {
+        const result = await axiosPublic.get(`export-warehouse/process/${id}`)
+
+        if (result.status_code === 200) {
+            console.log('result', result.data)
+            setExportProductTracking(result.data)
+        }
+    }
+
+    const toggleCollapse = () => {
+        setIsProgressCollapsed(!isProgressCollapsed);
+    };
 
     const toggleOrder = (orderId) => {
         setExpandedOrders(prev => {
@@ -76,16 +97,9 @@ export default function ExportWarehouseDetailPage() {
     }
 
     if (loading) {
-        return (
-            <div className="container mx-auto p-6 space-y-6">
-                <Skeleton className="h-10 w-48" />
-                <div className="grid gap-6 md:grid-cols-2">
-                    <Skeleton className="h-[200px]" />
-                    <Skeleton className="h-[200px]" />
-                </div>
-                <Skeleton className="h-[400px]" />
-            </div>
-        )
+        return <div className="flex justify-center items-center h-screen text-blue-500 font-bold">
+            <Loader2 className="w-20 h-20 animate-spin" />
+        </div>
     }
 
     if (!warehouseData) {
@@ -100,7 +114,6 @@ export default function ExportWarehouseDetailPage() {
 
     return (
         <div className="container mx-auto p-6 space-y-6">
-            {/* Header - Giữ nguyên như cũ */}
             <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div className="flex items-center space-x-4">
                     <Button variant="outline" onClick={() => navigate("/admin/warehouses/export")}>
@@ -123,8 +136,9 @@ export default function ExportWarehouseDetailPage() {
             {/* Thông tin cơ bản - Giữ nguyên như cũ */}
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
-                    <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Thông tin phiếu xuất</CardTitle>
+                        <QRCode size={100} value={warehouseData.id}  />
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
@@ -151,7 +165,6 @@ export default function ExportWarehouseDetailPage() {
                         )}
                     </CardContent>
                 </Card>
-
                 <Card>
                     <CardHeader>
                         <CardTitle>Thông tin xác thực</CardTitle>
@@ -176,7 +189,62 @@ export default function ExportWarehouseDetailPage() {
                     </CardContent>
                 </Card>
             </div>
+            
+            {/* THANH TIẾN TRÌNH XUẤT KHO */}
+            <Card>
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle>Tiến trình xuất kho</CardTitle>
+                        {showToggleButton && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={toggleCollapse}
+                                className="flex items-center gap-2"
+                            >
+                                {isProgressCollapsed ? (
+                                    <>
+                                        <span>Mở rộng</span>
+                                        <ChevronDown size={16} />
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Thu gọn</span>
+                                        <ChevronUp size={16} />
+                                    </>
+                                )}
+                            </Button>
+                        )}
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div
+                        ref={contentRef}
+                        className={`overflow-y-auto transition-all duration-300 ease-in-out ${isProgressCollapsed ? 'max-h-[200px]' : 'max-h-none'
+                            }`}
+                        style={{
+                            maxHeight: isProgressCollapsed ? '200px' : 'none'
+                        }}
+                    >
+                        {exportProductTracking.map((item, index) => {
+                            return (
+                                <ProgressBar
+                                    key={index}
+                                    title={item.product_name}
+                                    target={Number(item.total_serial_need)}
+                                    current={Number(item.total_serial_exported)}
+                                    index={index}
+                                />
+                            )
+                        })}
+                    </div>
 
+                    {/* Gradient overlay khi thu gọn */}
+                    {isProgressCollapsed && showToggleButton && (
+                        <div className="relative -mt-8 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                    )}
+                </CardContent>
+            </Card>
             {/* Danh sách đơn hàng và sản phẩm */}
             <Card>
                 <CardHeader>

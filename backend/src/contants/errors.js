@@ -149,6 +149,8 @@ const ERROR_CODES = {
     IMPORT_WAREHOUSE_CREATE_SUCCESS: 9008,
     IMPORT_WAREHOUSE_REQUIRE_STATUS_IMPORTING: 9009,
     IMPORT_WAREHOUSE_NOT_ASSIGNED_EMPLOYEE_FOR_RECEIPT: 9010,
+    IMPORT_WAREHOUSE_SERIAL_NUMBER_EXIST: 9011,
+    IMPORT_WAREHOUSE_BATCH_CODE_INVENTORY_IS_EXIST: 9012,
 
     // EMPLOYEE - 11xx
     EMPLOYEE_SUCCESS: 1100,
@@ -408,6 +410,12 @@ const ERROR_CODES = {
     SERIAL_NUMBER_NOT_COMPLETED: 3302,
 
     IMPORT_WAREHOUSE_REQUIRE_STATUS_PENDING: 3401,
+    IMPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED: 3402,
+
+    EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED: 3501,
+    EXPORT_WAREHOUSE_MANAGER_NOT_AUTHORIZED: 3502,
+    EXPORT_WAREHOUSE_EMPLOYEE: 3503,
+
 };
 
 const ERROR_MESSAGES = {
@@ -798,10 +806,18 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.SERIAL_NUMBER_EXIST]: "Serial number đã tồn tại",
     [ERROR_CODES.IMPORT_WAREHOUSE_NOT_FOUND]: "Phiếu nhập kho không tồn tại",
     [ERROR_CODES.IMPORT_WAREHOUSE_REQUIRE_STATUS_PENDING]: "Phiếu nhập kho phải ở trạng thái chờ thực hiện",
+    [ERROR_CODES.IMPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED]: "Chỉ nhân viên kho mới được chỉ định thực hiện phiếu nhập kho này",
+    [ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED]: "Tạo phiếu nhập kho thất bại",
+    [ERROR_CODES.IMPORT_WAREHOUSE_SERIAL_NUMBER_EXIST]: "Serial number đã tồn tại",
+    [ERROR_CODES.IMPORT_WAREHOUSE_BATCH_CODE_INVENTORY_IS_EXIST]: "Mã mặt hàng nhập cho batch code đã tồn tại trong kho",
 
     [ERROR_CODES.SERIAL_NUMBER_NOT_FOUND]: "Serial number không tồn tại",
     [ERROR_CODES.SERIAL_NUMBER_NOT_COMPLETED]: "Serial number chưa hoàn thành",
 
+    // EXPORT_WAREHOUSE
+    [ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED]: "Chỉ nhân viên kho được chỉ định thực hiện phiếu xuất kho này",
+    [ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE]: "Nhân viên được chỉ dịnh thực hiện phiếu xuất kho không phải nhân viên kho",
+    [ERROR_CODES.EXPORT_WAREHOUSE_MANAGER_NOT_AUTHORIZED]: "Chỉ quản lý kho mới thực hiện phiếu xuất kho này",
 };
 
 module.exports = {

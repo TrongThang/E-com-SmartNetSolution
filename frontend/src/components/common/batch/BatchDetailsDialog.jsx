@@ -1,10 +1,16 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Package, Calendar, User, CheckCircle, Clock, Hash } from "lucide-react"
+import { Package, Calendar, User, CheckCircle, Clock, Hash, SquareChartGantt } from "lucide-react"
 import { getStatusColor, getStatusLabel, getStatusIcon } from "../planning/planningStatusUtils"
+import { useNavigate } from "react-router-dom"
+import { Button } from "@/components/ui/button"
 
 export function BatchDetailsDialog({ isOpen, onClose, batch }) {
+  const navigate = useNavigate()
+
+  console.log('batch', batch)
+
   if (!batch) return null
 
   // Tìm firmware tương ứng dựa trên firmware_id
@@ -119,6 +125,15 @@ export function BatchDetailsDialog({ isOpen, onClose, batch }) {
               </p>
             </div>
           )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/admin/production-trackings?batch=${batch.production_batch_id}`)}
+            className="hover:bg-blue-700 hover:text-white bg-blue-600"
+          >
+            <SquareChartGantt className="w-4 h-4" /> Theo dõi
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

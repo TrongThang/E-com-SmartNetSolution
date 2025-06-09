@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Eye, ChevronDown, ChevronRight, Package, User, Settings } from "lucide-react"
+import { Eye, ChevronDown, ChevronRight, Package, User, Settings, SquareChartGantt } from "lucide-react"
 import {
   getPlanningStatusColor,
   getPlanningStatusLabel,
@@ -12,6 +12,7 @@ import {
   getStatusLabel,
   getStatusIcon,
 } from "@/components/common/planning/planningStatusUtils"
+import { useNavigate } from "react-router-dom"
 
 export function PlanningTable({
   plannings,
@@ -23,6 +24,7 @@ export function PlanningTable({
   canUpdateBatchStatus,
 }) {
   const [expandedPlannings, setExpandedPlannings] = useState(new Set())
+  const navigate = useNavigate()
 
   const togglePlanning = (planningId) => {
     const newExpanded = new Set(expandedPlannings)
@@ -204,6 +206,14 @@ export function PlanningTable({
                                               >
                                                 <Eye className="w-4 h-4" />
                                               </Button>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => navigate(`/admin/production-trackings?batch=${batch.production_batch_id}`)}
+                                                className="hover:bg-gray-50"
+                                              >
+                                                <SquareChartGantt className="w-4 h-4" />
+                                              </Button>
                                               {canUpdateBatchStatus(batch) && (
                                                 <Button
                                                   size="sm"
@@ -214,6 +224,7 @@ export function PlanningTable({
                                                   <Settings className="w-4 h-4" />
                                                 </Button>
                                               )}
+
                                             </div>
                                           </TableCell>
                                         </TableRow>

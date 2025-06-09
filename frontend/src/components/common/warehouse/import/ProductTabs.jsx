@@ -10,8 +10,6 @@ export function ProductsTab({
     onAddProduct,
     onUpdateProduct,
     onRemoveProduct,
-    onUpdateSerialNumbers,
-    onUpdateBarcode,
     onBack,
     onSubmit,
     isSubmitDisabled,
@@ -20,9 +18,9 @@ export function ProductsTab({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Danh sách lô sản xuất nhập kho</CardTitle>
+                <CardTitle>Danh sách sản phẩm nhập kho</CardTitle>
                 <CardDescription>
-                    {products.length > 0 ? `${products.length} lô sản xuất được chọn` : "Chưa có lô nào được chọn"}
+                    {products.length > 0 ? `${products.length} sản phẩm được chọn` : "Chưa có sản phẩm nào được chọn"}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -31,8 +29,6 @@ export function ProductsTab({
                     onAddProduct={onAddProduct}
                     onUpdateProduct={onUpdateProduct}
                     onRemoveProduct={onRemoveProduct}
-                    onUpdateSerialNumbers={onUpdateSerialNumbers}
-                    onUpdateBarcode={onUpdateBarcode}
                 />
 
                 <div className="flex justify-between mt-4">

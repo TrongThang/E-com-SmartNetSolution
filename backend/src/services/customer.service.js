@@ -233,10 +233,10 @@ async function updateCustomerService({ id, account_id, surname, lastname, image,
                     updateMany: {
                         where: { account_id: account_id },
                         data: {
-                          status: 0
+                            status: 0
                         }
-                      }
-                  }
+                    }
+                }
             }
         });
 

@@ -12,7 +12,7 @@ model account {
   account_id                                                 String                @id @db.VarChar(32)
   customer_id                                                String?               @db.VarChar(32)
   employee_id                                                String?               @db.VarChar(32)
-  role_id                                                    String?               @db.VarChar(12)
+  role_id                                                    Int?                  
   username                                                   String                @db.VarChar(50)
   password                                                   String?               @db.VarChar(255)
   verification_code                                          String?               @db.VarChar(6)
@@ -53,14 +53,16 @@ model account {
 model address_book {
   id          Int       @id @default(autoincrement())
   customer_id String?   @db.VarChar(32)
+  receiver_name String?   @db.VarChar(255)
+  phone         String?   @db.VarChar(10)
   district    String?   @db.VarChar(500)
   city        String?   @db.VarChar(500)
   ward        String?   @db.VarChar(500)
   street      String?   @db.VarChar(500)
   detail      String?   @db.VarChar(500)
   is_default  Boolean?
-  created_at  DateTime? @db.Timestamp(0)
-  updated_at  DateTime? @db.Timestamp(0)
+  created_at  DateTime? @db.Timestamp(0) @default(now())
+  updated_at  DateTime? @db.Timestamp(0) @updatedAt
   deleted_at  DateTime? @db.Timestamp(0)
   customer    customer? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "address_book_ibfk_1")
 
@@ -73,8 +75,8 @@ model alert_types {
   alert_type_name String    @db.VarChar(500)
   priority        Int?      @default(1)
   is_deleted      Boolean?  @default(false)
-  created_at      DateTime? @default(dbgenerated("(now())")) @db.DateTime(0)
-  updated_at      DateTime? @default(dbgenerated("(now())")) @db.DateTime(0)
+  created_at      DateTime? @db.Timestamp(0) @default(now())
+  updated_at      DateTime? @db.Timestamp(0) @updatedAt
   alerts          alerts[]
 }
 
@@ -87,8 +89,8 @@ model alerts {
   timestamp     DateTime?   @default(dbgenerated("(now())")) @db.DateTime(0)
   status        String?     @default("unread") @db.VarChar(20)
   alert_type_id Int
-  created_at    DateTime?   @default(dbgenerated("(now())")) @db.DateTime(0)
-  updated_at    DateTime?   @default(dbgenerated("(now())")) @db.DateTime(0)
+  created_at    DateTime?   @db.Timestamp(0) @default(now())
+  updated_at    DateTime?   @db.Timestamp(0) @updatedAt
   is_deleted    Boolean?    @default(false)
   devices       devices?    @relation(fields: [device_serial], references: [serial_number], onDelete: NoAction, onUpdate: NoAction, map: "alerts_ibfk_1")
   spaces        spaces?     @relation(fields: [space_id], references: [space_id], onDelete: NoAction, onUpdate: NoAction, map: "alerts_ibfk_2")
@@ -106,8 +108,8 @@ model attribute {
   required           Boolean?
   group_attribute_id Int?
   is_hide            Boolean?
-  created_at         DateTime?            @db.Timestamp(0)
-  updated_at         DateTime?            @db.Timestamp(0)
+  created_at         DateTime?            @db.Timestamp(0) @default(now())
+  updated_at         DateTime?            @db.Timestamp(0) @updatedAt
   deleted_at         DateTime?            @db.Timestamp(0)
   attribute_group    attribute_group?     @relation(fields: [group_attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_ibfk_1")
   attribute_category attribute_category[]
@@ -133,8 +135,8 @@ model attribute_category {
 model attribute_group {
   id         Int         @id @default(autoincrement())
   name       String?     @db.VarChar(500)
-  created_at DateTime?   @db.Timestamp(0)
-  updated_at DateTime?   @db.Timestamp(0)
+  created_at DateTime?   @db.Timestamp(0) @default(now())
+  updated_at DateTime?   @db.Timestamp(0) @updatedAt
   deleted_at DateTime?   @db.Timestamp(0)
   attribute  attribute[]
 }
@@ -144,8 +146,8 @@ model attribute_product {
   attribute_id Int
   is_hide      Boolean?
   value        String?   @db.VarChar(500)
-  created_at   DateTime? @db.Timestamp(0)
-  updated_at   DateTime? @db.Timestamp(0)
+  created_at   DateTime? @db.Timestamp(0) @default(now())
+  updated_at   DateTime? @db.Timestamp(0) @updatedAt
   deleted_at   DateTime? @db.Timestamp(0)
   product      product   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_1")
   attribute    attribute @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attribute_product_ibfk_2")
@@ -156,14 +158,14 @@ model attribute_product {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model batch_product_detail {
-  id            Int            @id
+  id            Int            @id @default(autoincrement())
   exp_batch_id  String?        @db.VarChar(50)
   imp_batch_id  String         @db.VarChar(50)
-  seral_number  String?        @db.VarChar(20)
+  batch_production_id  String         @db.VarChar(50)
+  serial_number  String?        @db.VarChar(50)
   created_at    DateTime?      @db.Timestamp(0)
   updated_at    DateTime?      @db.Timestamp(0)
   deleted_at    DateTime?      @db.Timestamp(0)
-  detail_import detail_import  @relation(fields: [imp_batch_id], references: [batch_code], onDelete: NoAction, onUpdate: NoAction, map: "batch_product_detail_ibfk_1")
   detail_export detail_export? @relation(fields: [exp_batch_id], references: [batch_code], onDelete: NoAction, onUpdate: NoAction, map: "batch_product_detail_ibfk_2")
 
   @@index([exp_batch_id], map: "exp_batch_id")
@@ -181,8 +183,8 @@ model blog {
   image          String?     @db.MediumText
   score          Int?
   is_hide        Boolean?
-  created_at     DateTime?   @db.Timestamp(0)
-  updated_at     DateTime?   @db.Timestamp(0)
+  created_at     DateTime?   @db.Timestamp(0) @default(now())
+  updated_at     DateTime?   @db.Timestamp(0) @updatedAt
   deleted_at     DateTime?   @db.Timestamp(0)
   categories     categories? @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "blog_ibfk_1")
   product        product?    @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blog_ibfk_2")
@@ -194,12 +196,13 @@ model blog {
 }
 
 model cart {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   customer_id String    @db.VarChar(32)
   product_id  Int?
   quantity    Int?
-  created_at  DateTime? @db.Timestamp(0)
-  updated_at  DateTime? @db.Timestamp(0)
+  selected    Boolean   @db.Bit(1)
+  created_at  DateTime? @db.Timestamp(0) @default(now())
+  updated_at  DateTime? @db.Timestamp(0) @updatedAt
   deleted_at  DateTime? @db.Timestamp(0)
   customer    customer  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cart_ibfk_1")
   product     product?  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cart_ibfk_2")
@@ -217,8 +220,8 @@ model categories {
   image              String?              @db.MediumText
   description        String?              @db.Text
   is_hide            Boolean?             @db.Bit(1)
-  created_at         DateTime?            @db.Timestamp(0)
-  updated_at         DateTime?            @db.Timestamp(0)
+  created_at         DateTime?            @db.Timestamp(0) @default(now())
+  updated_at         DateTime?            @db.Timestamp(0) @updatedAt
   deleted_at         DateTime?            @db.Timestamp(0)
   attribute_category attribute_category[]
   blog               blog[]
@@ -250,9 +253,9 @@ model contact {
   title      String?   @db.VarChar(500)
   content    String?   @db.Text
   email      String?   @db.VarChar(100)
-  status     Int?     @db.TinyInt @default(1)
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
+  status     Int?      @db.TinyInt @default(1)
+  created_at DateTime? @db.Timestamp(0) @default(now())
+  updated_at DateTime? @db.Timestamp(0) @updatedAt
   deleted_at DateTime? @db.Timestamp(0)
 }
 
@@ -267,8 +270,8 @@ model customer {
   email_verified Boolean?         @default(false)
   birthdate      DateTime?        @db.Date
   gender         Boolean?
-  created_at     DateTime?        @db.Timestamp(0)
-  updated_at     DateTime?        @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0) @default(now())
+  updated_at     DateTime? @db.Timestamp(0) @updatedAt
   deleted_at     DateTime?        @db.Timestamp(0)
   account        account[]
   address_book   address_book[]
@@ -283,18 +286,19 @@ model customer {
 model detail_export {
   batch_code           String                 @id @db.VarChar(50)
   export_id            Int
-  order_id             Int?
+  order_id             String?                @db.VarChar(50)
   product_id           Int
   quantity             Int?
   note                 String?                @db.VarChar(500)
-  created_at           DateTime?              @db.Timestamp(0)
-  updated_at           DateTime?              @db.Timestamp(0)
+  created_at           DateTime? @db.Timestamp(0) @default(now())
+  updated_at           DateTime? @db.Timestamp(0) @updatedAt
   deleted_at           DateTime?              @db.Timestamp(0)
   batch_product_detail batch_product_detail[]
   export_warehouse     export_warehouse       @relation(fields: [export_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_export_ibfk_1")
   order                order?                 @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_export_ibfk_2")
   product              product                @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_export_ibfk_3")
 
+  @@index([order_id], map: "detail_export_ibfk_2")
   @@index([export_id], map: "export_id")
   @@index([order_id], map: "order_id")
   @@index([product_id], map: "product_id")
@@ -302,18 +306,13 @@ model detail_export {
 
 model detail_import {
   batch_code           String                 @id @db.VarChar(50)
-  import_id            Int
+  import_id            String
   product_id           Int
   quantity             Int?
   import_price         Float?
-  discount             Int?
-  amount               Int?
-  is_gift              Boolean?
-  note                 String?                @db.VarChar(500)
-  created_at           DateTime?              @db.Timestamp(0)
-  updated_at           DateTime?              @db.Timestamp(0)
+  created_at           DateTime? @db.Timestamp(0) @default(now())
+  updated_at           DateTime? @db.Timestamp(0) @updatedAt
   deleted_at           DateTime?              @db.Timestamp(0)
-  batch_product_detail batch_product_detail[]
   import_warehouse     import_warehouse       @relation(fields: [import_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_import_ibfk_1")
   product              product                @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_import_ibfk_2")
 
@@ -399,8 +398,8 @@ model employee {
   gender                           Boolean?
   phone                            String?            @db.VarChar(12)
   status                           Int?               @db.TinyInt
-  created_at                       DateTime?          @db.Timestamp(0)
-  updated_at                       DateTime?          @db.Timestamp(0)
+  created_at                       DateTime?          @db.Timestamp(0) @default(now())
+  updated_at                       DateTime?          @db.Timestamp(0) @updatedAt
   deleted_at                       DateTime?          @db.Timestamp(0)
   account                          account[]
   export_warehouse                 export_warehouse[]
@@ -411,7 +410,7 @@ model employee {
 }
 
 model export_warehouse {
-  id                Int             @id
+  id                Int             @id @default(autoincrement())
   export_code       String?         @db.VarChar(12)
   export_number     Int?
   employee_id       String?         @db.VarChar(32)
@@ -419,8 +418,8 @@ model export_warehouse {
   file_authenticate String?         @db.MediumText
   total_profit      Float?
   note              String?         @db.VarChar(500)
-  created_at        DateTime?       @db.Timestamp(0)
-  updated_at        DateTime?       @db.Timestamp(0)
+  created_at        DateTime?       @db.Timestamp(0) @default(now())
+  updated_at        DateTime?       @db.Timestamp(0) @updatedAt
   deleted_at        DateTime?       @db.Timestamp(0)
   detail_export     detail_export[]
   employee          employee?       @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "export_warehouse_ibfk_1")
@@ -511,11 +510,11 @@ model houses {
 }
 
 model image_product {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   product_id Int?
-  image        String?   @db.MediumText
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
+  image      String?   @db.MediumText
+  created_at DateTime? @db.Timestamp(0) @default(now())
+  updated_at DateTime? @db.Timestamp(0) @updatedAt
   deleted_at DateTime? @db.Timestamp(0)
   product    product?  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "image_product_ibfk_1")
 
@@ -523,19 +522,17 @@ model image_product {
 }
 
 model import_warehouse {
-  id                Int             @id
+  id                String          @id
   import_number     Int?
-  import_id         String?         @db.VarChar(12)
   employee_id       String?         @db.VarChar(32)
   warehouse_id      Int?
   import_date       DateTime?       @db.Date
   file_authenticate String?         @db.MediumText
   total_money       Float?
-  prepaid           Float?
-  remaining         Float?
   note              String?         @db.VarChar(500)
-  created_at        DateTime?       @db.Timestamp(0)
-  updated_at        DateTime?       @db.Timestamp(0)
+  status            Int?
+  created_at        DateTime? @db.Timestamp(0) @default(now())
+  updated_at        DateTime? @db.Timestamp(0) @updatedAt
   deleted_at        DateTime?       @db.Timestamp(0)
   detail_import     detail_import[]
   employee          employee?       @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "import_warehouse_ibfk_1")
@@ -545,22 +542,12 @@ model import_warehouse {
   @@index([warehouse_id], map: "warehouse_id")
 }
 
-model info_website {
-  id         Int       @id
-  KEY_NAME   String?   @db.VarChar(500)
-  VALUE      String?   @db.VarChar(500)
-  ID_PAGE    Int?      @db.TinyInt
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
-  deleted_at DateTime? @db.Timestamp(0)
-}
-
 model liked {
   id          Int       @id @default(autoincrement())
   customer_id String    @db.VarChar(32)
   product_id  Int?
-  created_at  DateTime? @db.Timestamp(0)
-  updated_at  DateTime? @db.Timestamp(0)
+  created_at  DateTime? @db.Timestamp(0) @default(now())
+  updated_at  DateTime? @db.Timestamp(0) @updatedAt
   deleted_at  DateTime? @db.Timestamp(0)
   customer    customer  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "liked_ibfk_1")
   product     product?  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "liked_ibfk_2")
@@ -571,14 +558,14 @@ model liked {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model notification {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   account_id String?   @db.VarChar(32)
-  role_id    String?   @db.VarChar(5)
+  role_id    Int? 
   text       String?   @db.VarChar(255)
   type       String?   @db.VarChar(200)
   is_read    Boolean?
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0) @default(now())
+  updated_at DateTime? @db.Timestamp(0) @updatedAt
   deleted_at DateTime? @db.Timestamp(0)
   account    account?  @relation(fields: [account_id], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "notification_ibfk_1")
   role       role?     @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "notification_ibfk_2")
@@ -588,7 +575,7 @@ model notification {
 }
 
 model order {
-  id                                  Int             @id
+  id                                  String          @id @db.VarChar(32)
   order_number                        Int?
   order_id                            String?         @db.VarChar(12)
   customer_id                         String?         @db.VarChar(32)
@@ -599,6 +586,7 @@ model order {
   discount                            Float?
   vat                                 Float?          @db.Float
   total_money                         Float?
+  shipping_fee                        Int?
   amount                              Float?
   prepaid                             Float?
   remaining                           Float?
@@ -611,8 +599,8 @@ model order {
   note                                String?         @db.VarChar(500)
   platform_order                      String?         @db.VarChar(50)
   status                              Int?            @default(0) @db.TinyInt
-  created_at                          DateTime?       @db.Timestamp(0)
-  updated_at                          DateTime?       @db.Timestamp(0)
+  created_at                          DateTime?       @db.Timestamp(0) @default(now())
+  updated_at                          DateTime?       @db.Timestamp(0) @updatedAt
   deleted_at                          DateTime?       @db.Timestamp(0)
   detail_export                       detail_export[]
   customer                            customer?       @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "order_ibfk_1")
@@ -626,8 +614,8 @@ model order {
 }
 
 model order_detail {
-  id             Int       @id
-  order_id       Int?
+  id             Int       @id @default(autoincrement())
+  order_id       String?   @db.VarChar(32)
   product_id     Int?
   unit           String?   @db.VarChar(30)
   sale_price     Float?
@@ -637,13 +625,13 @@ model order_detail {
   delivery_date  DateTime? @db.DateTime(0)
   receiving_date DateTime? @db.DateTime(0)
   is_gift        Boolean?
-  created_at     DateTime? @db.Timestamp(0)
-  updated_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0) @default(now())
+  updated_at     DateTime? @db.Timestamp(0) @updatedAt
   deleted_at     DateTime? @db.Timestamp(0)
   product        product?  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "order_detail_ibfk_1")
   order          order?    @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "order_detail_ibfk_2")
 
-  @@index([order_id], map: "order_id")
+  @@index([order_id], map: "order_detail_ibfk_2")
   @@index([product_id], map: "product_id")
 }
 
@@ -673,14 +661,14 @@ model ownership_history {
 }
 
 model payment_info {
-  id             Int       @id
+  id             Int       @id @default(autoincrement())
   customer_id    String?   @db.VarChar(32)
   account_number String?   @db.VarChar(30)
   bank           String?   @db.VarChar(50)
   name_account   String?   @db.VarChar(150)
   is_default     Boolean?
-  created_at     DateTime? @db.Timestamp(0)
-  updated_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0) @default(now())
+  updated_at     DateTime? @db.Timestamp(0) @updatedAt
   deleted_at     DateTime? @db.Timestamp(0)
   customer       customer? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_info_ibfk_1")
 
@@ -693,18 +681,18 @@ model permission {
   code            String?           @db.VarChar(500)
   type            String?           @db.VarChar(500)
   show_in_menu    String?           @db.VarChar(500)
-  created_at      DateTime?         @db.Timestamp(0)
-  updated_at      DateTime?         @db.Timestamp(0)
+  created_at      DateTime? @db.Timestamp(0) @default(now())
+  updated_at      DateTime? @db.Timestamp(0) @updatedAt
   deleted_at      DateTime?         @db.Timestamp(0)
   permission_role permission_role[]
 }
 
 model permission_role {
-  id            Int        @id @default(autoincrement())
-  role_id       String     @db.VarChar(5)
+  id            Int         @id @default(autoincrement())
+  role_id       Int        
   permission_id Int
-  created_at    DateTime?  @db.Timestamp(0)
-  updated_at    DateTime?  @db.Timestamp(0)
+  created_at    DateTime? @db.Timestamp(0) @default(now())
+  updated_at    DateTime? @db.Timestamp(0) @updatedAt
   deleted_at    DateTime?  @db.Timestamp(0)
   permission    permission @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "permission_role_ibfk_1")
   role          role       @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "permission_role_ibfk_2")
@@ -714,7 +702,7 @@ model permission_role {
 }
 
 model product {
-  id                  Int                   @id
+  id                  Int                   @id @default(autoincrement())
   name                String?               @db.VarChar(500)
   slug                String?               @db.VarChar(500)
   description         String?               @db.Text
@@ -727,8 +715,8 @@ model product {
   views               Int?
   is_hide             Boolean?
   status              Int?                  @db.TinyInt
-  created_at          DateTime?             @db.Timestamp(0)
-  updated_at          DateTime?             @db.Timestamp(0)
+  created_at          DateTime? @db.Timestamp(0) @default(now())
+  updated_at          DateTime? @db.Timestamp(0) @updatedAt
   deleted_at          DateTime?             @db.Timestamp(0)
   attribute_product   attribute_product[]
   blog                blog[]
@@ -751,7 +739,7 @@ model product {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model production_batches {
-  batch_id                                        Int
+  batch_id                                        Int @unique
   production_batch_id                             String                @db.VarChar(255)
   template_id                                     Int?
   quantity                                        Int
@@ -765,7 +753,6 @@ model production_batches {
   device_templates                                device_templates?     @relation(fields: [template_id], references: [template_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_1")
   account_production_batches_created_byToaccount  account?              @relation("production_batches_created_byToaccount", fields: [created_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_2")
   account_production_batches_approved_byToaccount account?              @relation("production_batches_approved_byToaccount", fields: [approved_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_batches_ibfk_3")
-  production_tracking                             production_tracking[]
 
   @@id([batch_id, production_batch_id])
   @@index([approved_by], map: "approved_by")
@@ -794,6 +781,7 @@ model production_tracking {
   production_id         Int                     @id @default(autoincrement())
   batch_id              Int?
   device_serial         String?                 @db.VarChar(50)
+  serial_number         String                  @db.VarChar(50)
   stage                 String                  @db.VarChar(50)
   status                String?                 @default("pending") @db.VarChar(20)
   employee_id           String?                 @db.VarChar(32)
@@ -804,7 +792,7 @@ model production_tracking {
   updated_at            DateTime?               @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted            Boolean?                @default(false)
   production_components production_components[]
-  production_batches    production_batches?     @relation(fields: [batch_id], references: [batch_id], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_1")
+ 
   devices               devices?                @relation(fields: [device_serial], references: [serial_number], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_2")
   account               account?                @relation(fields: [employee_id], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_3")
 
@@ -823,8 +811,8 @@ model review_product {
   rating      Int?      @db.TinyInt
   response    String?   @db.VarChar(500)
   note        String?   @db.VarChar(500)
-  created_at  DateTime? @db.Timestamp(0)
-  updated_at  DateTime? @db.Timestamp(0)
+  created_at  DateTime? @db.Timestamp(0) @default(now())
+  updated_at  DateTime? @db.Timestamp(0) @updatedAt
   deleted_at  DateTime? @db.Timestamp(0)
   customer    customer? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "review_product_ibfk_1")
   product     product?  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "review_product_ibfk_2")
@@ -834,10 +822,10 @@ model review_product {
 }
 
 model role {
-  id              String            @id @db.VarChar(12)
+  id              Int               @id @default(autoincrement())
   name            String?           @db.VarChar(500)
-  created_at      DateTime?         @db.Timestamp(0)
-  updated_at      DateTime?         @db.Timestamp(0)
+  created_at      DateTime?         @db.Timestamp(0) @default(now())
+  updated_at      DateTime?         @db.Timestamp(0) @updatedAt
   deleted_at      DateTime?         @db.Timestamp(0)
   account         account[]
   notification    notification[]
@@ -986,8 +974,8 @@ model tickets {
 model unit {
   id         Int       @id @default(autoincrement())
   name       String?   @db.VarChar(50)
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0) @default(now())
+  updated_at DateTime? @db.Timestamp(0) @updatedAt
   deleted_at DateTime? @db.Timestamp(0)
   product    product[]
 }
@@ -1030,19 +1018,19 @@ model warehouse {
   id               Int                @id @default(autoincrement())
   name             String?            @db.VarChar(500)
   address          String?            @db.VarChar(500)
-  created_at       DateTime?          @db.Timestamp(0)
-  updated_at       DateTime?          @db.Timestamp(0)
+  created_at       DateTime?          @db.Timestamp(0) @default(now())
+  updated_at       DateTime?          @db.Timestamp(0) @updatedAt
   deleted_at       DateTime?          @db.Timestamp(0)
   import_warehouse import_warehouse[]
 }
 
 model warehouse_inventory {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   product_id Int?
   batch_code String?   @db.VarChar(50)
   stock      Int?
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0) @default(now())
+  updated_at DateTime? @db.Timestamp(0) @updatedAt
   deleted_at DateTime? @db.Timestamp(0)
   product    product?  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "warehouse_inventory_ibfk_1")
 
@@ -1053,8 +1041,8 @@ model warrenty_time {
   id         Int       @id @default(autoincrement())
   name       String?   @db.VarChar(150)
   time       Int?
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0) @default(now())
+  updated_at DateTime? @db.Timestamp(0) @updatedAt
   deleted_at DateTime? @db.Timestamp(0)
   product    product[]
 }
