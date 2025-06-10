@@ -1,7 +1,7 @@
 import { ESortOrderValue } from "@/models/enums/option";
-import { FilterSearch, IApiResponse, ICategories } from "@/models/interfaces";
 import axiosPrivate from "../clients/private.client";
 import axiosPublic from "../clients/public.client";
+import { IApiResponse, ICategories, FilterSearch } from "@/models/interfaces/index";
 
 const categoryEndpoints = {
     list: "/categories",

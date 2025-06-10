@@ -170,7 +170,7 @@ export const CartProvider = ({ children }) => {
                     const latestProducts = await fetchLatestProductInfo(
                         cookieCart.items.map(item => item.id)
                     );
-                    
+
                     const updatedItems = cookieCart.items.map(item => {
                         const latestProduct = latestProducts.find(p => p.id === item.id);
                         return latestProduct ? {
@@ -339,8 +339,8 @@ export const CartProvider = ({ children }) => {
                 ...prevCart,
                 items: prevCart.items.map(item =>
                     item.id === id
-                    ? { ...item, selected: !item.selected }
-                    : item
+                        ? { ...item, selected: !item.selected }
+                        : item
                 )
             };
 

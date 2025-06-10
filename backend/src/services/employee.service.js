@@ -61,7 +61,7 @@ const getEmployeeDetailService = async (id) => {
 
         let get_attr = `employee.surname, employee.lastname, employee.image, 
         employee.birthdate, employee.gender, employee.email, employee.phone, 
-        employee.status, role.name as role_name, employee.created_at, employee.updated_at`;
+        employee.status, role.id as role_id, role.name as role_name, employee.created_at, employee.updated_at`;
         let get_table = "employee";
         let query_join = `LEFT JOIN account ON employee.id = account.employee_id
         LEFT JOIN role ON account.role_id = role.id`;
@@ -193,20 +193,26 @@ const createEmployeeService = async (surname, lastname, image, birthdate, gender
 };
 const updateEmployeeService = async (id, surname, lastname, image, birthdate, gender, email, phone, status, role) => {
     try {
-        // Kiểm tra email có tồn tại hay không
+        // Kiểm tra email đã tồn tại (trừ chính nó)
         const emailExists = await prisma.employee.findFirst({
-            where: { email: email },
-        });
+            where: {
+                email: email,
+                NOT: { id: id }
+            }
+        })
         if (emailExists) {
             return get_error_response(
                 ERROR_CODES.EMPLOYEE_EMAIL_ALREADY_EXISTS,
-                STATUS_CODE.BAD_REQUEST,
-            );
+                STATUS_CODE.BAD_REQUEST
+            )
         }
 
         // Kiểm tra số điện thoại có tồn tại hay không
         const phoneExists = await prisma.employee.findFirst({
-            where: { phone: phone },
+            where: { 
+                phone: phone,
+                NOT: { id: id } // Trừ chính nhân viên đang cập nhật
+            },
         });
         if (phoneExists) {
             return get_error_response(
@@ -232,7 +238,7 @@ const updateEmployeeService = async (id, surname, lastname, image, birthdate, ge
                 lastname,
                 image,
                 birthdate: new Date(birthdate),
-                gender, // 1 là nam, 0 là nữ
+                gender, // true là nam, false là nữ
                 email, // email riêng
                 phone,
                 status, // 1 là hoạt động, 0 là không hoạt động
@@ -289,20 +295,25 @@ const updateEmployeeService = async (id, surname, lastname, image, birthdate, ge
 const updateProfileEmployeeService = async (id, surname, lastname, image, birthdate, gender, email, phone) => {
     try {
 
-        // Kiểm tra email có tồn tại hay không
+        // Kiểm tra email đã tồn tại (trừ chính nó)
         const emailExists = await prisma.employee.findFirst({
-            where: { email: email },
-        });
+            where: {
+                email: email,
+                NOT: { id: id }
+            }
+        })
         if (emailExists) {
             return get_error_response(
                 ERROR_CODES.EMPLOYEE_EMAIL_ALREADY_EXISTS,
-                STATUS_CODE.BAD_REQUEST,
-            );
+                STATUS_CODE.BAD_REQUEST
+            )
         }
 
         // Kiểm tra số điện thoại có tồn tại hay không
         const phoneExists = await prisma.employee.findFirst({
-            where: { phone: phone },
+            where: { phone: phone,
+                NOT: { id: id } // Trừ chính nhân viên đang cập nhật
+             },
         });
         if (phoneExists) {
             return get_error_response(

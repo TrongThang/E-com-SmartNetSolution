@@ -2,17 +2,7 @@
 import GenericTable from "@/components/common/GenericTable";
 import ActionsColumn from './ActionsColumn';
 
-const EmployeesTable = ({ employees }) => {
-    const handleEditEmployee = (row) => {
-        console.log("Edit employee:", row);
-        // Thêm logic xử lý sửa employee ở đây
-    };
-
-    const handleDeleteEmployee = (row) => {
-        console.log("Delete employee:", row);
-        // Thêm logic xử lý xóa employee ở đây
-    };
-
+const EmployeesTable = ({ employees, onEdit, onDelete }) => {
     const columns = [
         {
             key: "sst",
@@ -70,8 +60,8 @@ const EmployeesTable = ({ employees }) => {
             render: (row) => (
                 <ActionsColumn
                     row={row}
-                    onEdit={handleEditEmployee}
-                    onDelete={handleDeleteEmployee}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                 />
             ),
         },

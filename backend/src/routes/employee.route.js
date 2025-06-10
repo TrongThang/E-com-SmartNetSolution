@@ -3,7 +3,7 @@ const { validateMiddleware } = require('../middleware/validate.middleware');
 const employeeRouter = express.Router();
 const { getEmployees, getEmployeeDetails,
     createEmployee, updateEmployee,
-    updateProfileEmployee, toggleDeleteRestoreEmployee 
+    updateProfileEmployee, toggleDeleteRestoreEmployee
 } = require('../controllers/employee.controller');
 const { CreateEmployeeSchema, UpdateEmployeeSchema } = require('../schemas/employee.schema');
 
