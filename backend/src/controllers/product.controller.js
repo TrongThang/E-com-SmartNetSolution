@@ -7,7 +7,7 @@ const {
     deleteProductService,
     getProductsByCategoryIdService,
     getProductsByCategoryIdAndStatusService,
-    getProductsByCategoryIdAndStatusAndIsHideService
+    getProductsByCategoryIdAndStatusAndIsHideService,
 } = require('../services/product.service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
@@ -27,10 +27,17 @@ class ProductController {
     }
 
     async getProductDetail(req, res) {
-        console.log('Xem chi tiết sản phẩm!');
         const { id } = req.params;
 
         const response = await getProductDetailService(Number(id))
+
+        return res.status(response.status_code).json(response);
+    }
+
+    async getProductDetailBySlug(req, res) {
+        const { slug } = req.params;
+
+        const response = await getProductDetailService(null, slug)
 
         return res.status(response.status_code).json(response);
     }
@@ -64,17 +71,10 @@ class ProductController {
 
     async checkListInfoProduct(req, res) {
         const { products } = req.body;
-
         const response = await check_list_info_product(products)
 
-        if (response) {
-            return response
-        }
-
-        return res.status(STATUS_CODE.OK).json({
-            status_code: STATUS_CODE.OK,
-            message: 'Sản phẩm đã được kiểm tra thành công!'
-        });
+        console.log('response --- checkListInfoProduct', response)
+        return res.status(response.status_code).json(response);
     }
 }
 

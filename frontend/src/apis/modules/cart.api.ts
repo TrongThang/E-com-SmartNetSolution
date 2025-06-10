@@ -13,24 +13,6 @@ const productEndpoints = {
     common: "product",
 };
 
-interface DecodedToken {
-    customer_id: number;
-}
-
-const userInfo = (): number | string | null => {
-    try {
-        const token = localStorage.getItem("authToken");
-        if (!token) return null;
-
-        const decoded = jwtDecode<DecodedToken>(token);
-        return decoded.customer_id;
-    } catch (error) {
-        console.error("Invalid or expired token", error);
-        return null;
-    }
-};
-const customer_id = userInfo();
-
 const cartApi = {
     async getCart(params: {
         page?: number;
@@ -42,9 +24,9 @@ const cartApi = {
             params: { ...params, filters: JSON.stringify(params.filters) },
         });
     },
-    async addToCart(product_id: number | string, quantity: number): Promise<IApiResponse> {
+    async addToCart(customer_id: number | string, product_id: number | string, quantity: number): Promise<IApiResponse> {
         try {
-            return await axiosPublic.post(cartEndpoints.common, { customer_id, product_id, quantity });
+            return await axiosPublic.post(cartEndpoints.common + "/customer/" + customer_id, { product_id, quantity });
         } catch (error) {
             throw error;
         }
@@ -82,22 +64,22 @@ const cartApi = {
         
         return response;
     },
-    async deleteAll(): Promise<IApiResponse> {
-        return await axiosPublic.delete(cartEndpoints.common);
+    async deleteAll(customer_id: number | string): Promise<IApiResponse> {
+        return await axiosPublic.delete(cartEndpoints.common + "/all/" + customer_id);
     },
     async updateCart(customer_id: number | string, cart: any): Promise<IApiResponse> {
         return await axiosPublic.put(cartEndpoints.common + "/update", { customer_id, items: cart.items });
     },
-    async removeFromCart(productId: number | string): Promise<IApiResponse> {
+    async removeFromCart(customer_id: number | string, productId: number | string): Promise<IApiResponse> {
         return await axiosPublic.delete(cartEndpoints.common + "/customer/" + customer_id + "/product/" + productId);
     },
-    async removeAllFromCart(): Promise<IApiResponse> {
+    async removeAllFromCart(customer_id: number | string): Promise<IApiResponse> {
         return await axiosPublic.delete(cartEndpoints.common + "/all/" + customer_id);
     },
     async updateQuantity(customer_id: number | string, product_id: number | string, quantity: number): Promise<IApiResponse> {
         return await axiosPublic.put(cartEndpoints.common + "/update-quantity", { customer_id, product_id, quantity });
     },
-    async removeSelected(items: any): Promise<IApiResponse> {
+    async removeSelected(customer_id: number | string, items: any): Promise<IApiResponse> {
         return await axiosPublic.delete(cartEndpoints.common + "/selected/" + customer_id, { data: { items } });
     }
 };

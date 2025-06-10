@@ -13,7 +13,7 @@ cartRouter.get('/customer/:customer_id',
     asyncHandler(getCart)
 );
 
-cartRouter.post('/',
+cartRouter.post('/customer/:customer_id',
     asyncHandler(addToCart)
 );
 

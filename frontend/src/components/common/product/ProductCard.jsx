@@ -10,7 +10,7 @@ export function ProductCard({ product }) {
     const navigate = useNavigate();
 
     const handleClick = () => {
-        navigate(`/products/${id}`);
+        navigate(`/products/${slug}`);
     }
 
     return (
@@ -26,7 +26,7 @@ export function ProductCard({ product }) {
                 />
             </div>
             <CardContent className="p-4">
-                <Link to={`/products/${id}`}>
+                <Link to={`/products/${slug}`}>
                     <h3 className="line-clamp-2 h-[2.5rem] text-sm font-medium text-gray-900 hover:text-blue-600">{name}</h3>
                 </Link>
                 <p className="mt-1 text-base font-bold text-gray-900">{ formatCurrency(selling_price) }</p>
@@ -43,7 +43,7 @@ export function ProductCard({ product }) {
                     className="w-full bg-blue-600 text-white transition-all duration-300 hover:bg-blue-700 hover:shadow-md"
                     asChild
                 >
-                    <Link to={`/products/${id}`}>Chi tiết</Link>
+                    <Link to={`/products/${slug}`}>Chi tiết</Link>
                 </Button>
             </CardFooter>
         </Card>

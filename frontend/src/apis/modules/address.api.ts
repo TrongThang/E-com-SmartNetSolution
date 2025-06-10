@@ -32,7 +32,51 @@ const addressBookApi = {
     },
     async getById(customer_id: number | string): Promise<IApiResponse<IAddressBook>> {
         try {
-            return await axiosPublic.get(`${addressBookEndpoints.common}/${customer_id}`);
+            return await axiosPublic.get(`${addressBookEndpoints.customer}/${customer_id}`);
+        } catch (error) {
+            throw error;
+        }
+    },
+    async getCity(): Promise<IApiResponse> {
+        try {
+            const response = await requestGHN('/province', {
+                method: 'GET',
+            });
+            return {
+                success: true,  
+                status_code: 200,
+                data: response.data,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+    async getDistrict(provinceId: number | string): Promise<IApiResponse> {
+        try {
+            const response = await requestGHN('/district', {
+                method: 'GET',
+                params: { province_id: provinceId },
+            });
+            return {
+                success: true,
+                status_code: 200,
+                data: response.data,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+    async getWard(districtId: number | string): Promise<IApiResponse> {
+        try {
+            const response = await requestGHN('/ward', {
+                method: 'GET',
+                params: { district_id: districtId },
+            });
+            return {
+                success: true,
+                data: response.data,
+                status_code: 200,
+            };
         } catch (error) {
             throw error;
         }

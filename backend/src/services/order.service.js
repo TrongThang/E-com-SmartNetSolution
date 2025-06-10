@@ -266,10 +266,7 @@ async function getOrderDetailService(order_id) {
 async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
     const get_attr = `
         order.id,
-        order.order_id,
         order.total_money,
-        order.prepaid,
-        order.remaining,
         order.discount,
         order.vat,
         order.amount,
@@ -374,7 +371,7 @@ async function createOrder(orderData, platform_order) {
 
     // 1. Kiểm tra thông tin sản phẩm
     const checkProduct = await check_list_info_product(products);
-    if (checkProduct) return checkProduct;
+    if (checkProduct.status_code !== STATUS_CODE.OK) return checkProduct;
 
     // 2. Kiểm tra thông tin saler (nếu có)
     if (order.saler_id) {
@@ -440,18 +437,18 @@ async function createOrder(orderData, platform_order) {
     const result_order_number = await getOrderNumber(new Date());
     const orderNumber = Number(result_order_number) + 1;
     const order_id = generateOrderID(orderNumber);
-
     // 10. Transaction: tạo đơn hàng và chi tiết đơn hàng
     try {
         const result = await prisma.$transaction(async (tx) => {
             // Tạo đơn hàng
+            console.log('Customer', order.customer_id)
             const newOrder = await tx.order.create({
                 data: {
                     id: order_id,
                     order_number: orderNumber,
-                    customer_id: order.customer_id,
-                    saler_id: order.saler_id || null,
-                    shipper_id: order.shipper_id || null,
+                    customer: {
+                        connect: { id: order.customer_id }
+                    },
                     export_date: order.export_date || new Date(),
                     total_import_money: orderTotals.totalImportMoney,
                     discount: order.discount || 0,
@@ -459,8 +456,6 @@ async function createOrder(orderData, platform_order) {
                     total_money: orderTotals.totalMoney,
                     shipping_fee: shippingFee,
                     amount: orderTotals.amount,
-                    prepaid: payment.prepaid || 0,
-                    remaining: payment.remaining || orderTotals.totalMoney,
                     address: fullAddress,
                     payment_method: payment.payment_method,
                     payment_account: payment.payment_account || null,
@@ -480,14 +475,17 @@ async function createOrder(orderData, platform_order) {
 
                 await tx.order_detail.create({
                     data: {
-                        order_id: newOrder.id,
-                        product_id: product.id,
+                        order: {
+                            connect: { id: newOrder.id }
+                        },
+                        product: {
+                            connect: { id: product.id }
+                        },
                         unit: product.unit,
                         sale_price: product.price,
                         discount: product.discount || 0,
                         quantity_sold: product.quantity,
                         amount: product.price * product.quantity * (1 - product.discount / 100),
-                        is_gift: product.is_gift || false
                     }
                 });
             }

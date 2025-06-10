@@ -481,7 +481,7 @@ async function exportProductService(export_id, batch_production_id, template_id,
                 throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_NOT_FOUND);
             }
 
-            if (exportWarehouse.status !== EXPORT_WAREHOUSE.PENDING) {
+            if (exportWarehouse.status !== EXPORT_WAREHOUSE.PROCESSING) {
                 throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_NOT_PENDING);
             }
 
@@ -569,9 +569,9 @@ async function exportProductService(export_id, batch_production_id, template_id,
                 throw new Error(ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED);
             }
 
-            if (batchProductDetail.exp_batch_id === detailExportNotEnough[0].batch_code) {
-                throw new Error(ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED);
-            }
+            // if (batchProductDetail.exp_batch_id === detailExportNotEnough[0].batch_code) {
+            //     throw new Error(ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED);
+            // }
 
             // 6. CẬP NHẬT THÔNG TIN XUẤT KHO
             // 6.1. Cập nhật batch_product_detail

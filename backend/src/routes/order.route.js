@@ -2,6 +2,7 @@ const express = require('express');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, canceledOrder, getOrderDetailForAdministrator, respondListOrder, getOrdersForWarehouseEmployee } = require('../controllers/order.controller');
 const orderRouter = express.Router();
+const { create_payment_url, vnpay_return } = require('../services/vnpay.service');
 
 const asyncHandler = (fn) => {
     return (req, res, next) => {
@@ -22,6 +23,9 @@ orderRouter.patch('/admin/respond-orders', asyncHandler(respondListOrder));
 // orderRouter.patch('/admin/finish-shipping-order', asyncHandler(finishShippingOrder));
 // orderRouter.patch('/admin/cancel-order', asyncHandler(canceledOrder));
 
+// VNPAY
+orderRouter.post('/create_payment_url', create_payment_url);
+orderRouter.get('/vnpay_return', vnpay_return);
 
 module.exports = orderRouter;
 

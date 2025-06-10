@@ -7,9 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Package, Eye, Truck, CheckCircle, AlertCircle, Clock, ChevronUp } from "lucide-react"
 import orderApi from "@/apis/modules/order.api.ts"
 import { toast } from "sonner"
-
+import { useAuth } from "@/contexts/AuthContext"
+import { formatCurrency, formatDate } from "@/utils/format"
 
 export default function OrdersPage() {
+  const { user } = useAuth();
+
   // State để theo dõi đơn hàng nào đang được mở rộng
   const [expandedOrders, setExpandedOrders] = useState({})
 
@@ -48,12 +51,14 @@ export default function OrdersPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await orderApi.getById("CUST0001");
+      const res = await orderApi.getById(user.customer_id);
+      console.log('res --- fetchData', res)
       if (res.status_code === 200) {
         const dataWithStatus = res.data.data.map(order => ({
           ...order,
           ...getStatusInfo(order.status)
         }));
+        console.log('dataWithStatus --- fetchData', dataWithStatus)
         setOrders(dataWithStatus);
       }
       else {
@@ -112,23 +117,30 @@ export default function OrdersPage() {
     const StatusIcon = order.statusIcon
     return (
       <div key={order.id} className="rounded-lg border p-4">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div className="space-y-1">
+        <div className="flex flex-col justify-between gap-4 md:flex-row">
+          {/* Left section */}
+          <div className="flex flex-col justify-between">
             <div className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              <span className="font-medium">{order.order_id}</span>
+              <img
+                src={order.details[0]?.image?.startsWith("data:")
+                  ? order.details[0]?.image
+                  : `data:image/jpeg;base64,${order.details[0]?.image}`}
+                alt="logo"
+                className="h-[10vh] w-[10vh] object-cover"
+              />
+              <span className="font-medium">{order.details[0]?.product_name}</span>
             </div>
-            <div className="text-sm text-muted-foreground">
-              Ngày đặt: {new Date(order.created_at).toLocaleDateString('vi-VN', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-              })} | {order.count_product} sản phẩm
+
+            {/* Ngày đặt hàng */}
+            <div className="mt-2 text-sm text-muted-foreground">
+              Ngày đặt: { formatDate(order.created_at)} | {order.count_product} sản phẩm
             </div>
           </div>
+
+          {/* Right section */}
           <div className="flex flex-col items-start gap-2 md:items-end">
             <div className="text-lg font-bold">
-              {Number(order.total_money).toLocaleString('vi-VN')}đ
+              {formatCurrency(order.total_money)}
             </div>
 
             <div className={`flex items-center gap-1 ${order.statusColor}`}>
@@ -138,7 +150,7 @@ export default function OrdersPage() {
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => toggleOrderDetails(order.id)}>
+          <Button variant="outline" size="sm" onClick={() => toggleOrderDetails(order.id)} className="bg-blue-600 hover:bg-blue-400 text-white">
             {expandedOrders[order.id] ? (
               <>
                 <ChevronUp className="mr-2 h-4 w-4" />
@@ -152,24 +164,24 @@ export default function OrdersPage() {
             )}
           </Button>
           {(order.status === "Chờ xác nhận" || order.status === "Chuẩn bị hàng") && (
-            <Button className="ml-3" size="sm" onClick={() => confirmCancel(order.id, order.order_id)}>Hủy đơn</Button>
+            <Button className="ml-3 bg-red-600 hover:bg-red-400 text-white" size="sm" onClick={() => confirmCancel(order.id, order.order_id)}>Hủy đơn</Button>
           )}
         </div>
 
         {/* Chi tiết đơn hàng - hiển thị khi được mở rộng */}
         {expandedOrders[order.id] && (
-          <div className="mt-4 rounded-md border bg-muted/20 p-4">
+          <div className="mt-4 rounded-md border bg-blue-200/50 p-4">
             <h3 className="mb-3 font-medium">Chi tiết đơn hàng</h3>
             <div className="space-y-3">
               {order.details.map((product) => (
                 <div
                   key={product.id}
-                  className="flex flex-col rounded-md border bg-background p-3 sm:flex-row sm:items-center"
+                  className="flex flex-col rounded-md border bg-white p-3 sm:flex-row sm:items-center"
                 >
                   <div className="flex flex-1 items-center gap-3">
                     <div className="relative h-16 w-16 overflow-hidden rounded-md">
                       <img
-                        src={product.image.startsWith("data:") ? product.image : `data:image/jpeg;base64,${product.image}`}
+                        src={product?.image?.startsWith("data:") ? product.image : `data:image/jpeg;base64,${product.image}`}
                         alt={product.product_name}
                         fill
                         className="object-cover"
@@ -178,7 +190,7 @@ export default function OrdersPage() {
                     </div>
                     <div>
                       <h4 className="font-medium">{product.product_name}</h4>
-                      <p className="text-sm text-muted-foreground">Đơn giá: {Number(product.price).toLocaleString('vi-VN')}đ</p>
+                      <p className="text-sm text-muted-foreground">Đơn giá: {formatCurrency(product.price)} </p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-4 sm:mt-0 sm:justify-end">
@@ -188,7 +200,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground">Thành tiền</p>
-                      <p className="font-medium">{Number(product.price * product.quantity).toLocaleString('vi-VN')}đ</p>
+                      <p className="font-medium">{formatCurrency(product.price * product.quantity)}</p>
                     </div>
                   </div>
                 </div>

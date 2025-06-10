@@ -26,29 +26,31 @@ export default function PaymentSummary() {
         }
 
         try {
-            console.log(getItemSelected())
             const response = await axiosPublic.post('product/check-list-info', {
-                products: getItemSelected() // Thay đổi ở đây
+                products: getItemSelected()
             });
+
+            console.log('response --- checkListInfoProduct', response)
 
             if (response.status_code === 200) {
                 navigate("/checkout");
             } else {
-                const { nameDevice, stockDeviceRemaining, quantityInitial } = response.data;
-                
+                const errorInfo = response.data_errors[0];
+                const productName = errorInfo.product_name;
+                const errorMessage = errorInfo.errors[0]?.message || "Đã xảy ra lỗi";
+            
                 const result = await Swal.fire({
                     title: 'Thông báo',
                     html: `
-                        Sản phẩm <b class="text-danger">${nameDevice}</b> mà bạn muốn mua hiện không đủ số lượng bán 
-                        (${quantityInitial} / <b class="text-danger">${stockDeviceRemaining}</b> còn lại). 
-                        Thanh toán mà không có sản phẩm này?
+                        Sản phẩm <b class="text-danger">${productName}</b>: ${errorMessage}.
+                        <br>Bạn có muốn tiếp tục thanh toán mà không có sản phẩm này?
                     `,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Xác nhận',
                     cancelButtonText: 'Huỷ',
                 });
-
+            
                 if (result.isConfirmed) {
                     navigate('/checkout');
                 } else {

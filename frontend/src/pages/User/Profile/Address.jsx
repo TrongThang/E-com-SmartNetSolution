@@ -16,9 +16,9 @@ import { useAuth } from "@/contexts/AuthContext"
 import { Home, MapPin, Plus, Edit, Trash } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"; 
 
 export default function AddressesPage() {
+    const { user } = useAuth();
     const [addresses, setAddresses] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -54,8 +54,7 @@ export default function AddressesPage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await addressBookApi.getById("CUST001");
-            console.log("Addresses:", res.data.data.address_books); // Debug
+            const res = await addressBookApi.getById(user.customer_id);
             if (res.status_code === 200) {
                 setAddresses(res?.data?.data?.address_books || []);
             } else {

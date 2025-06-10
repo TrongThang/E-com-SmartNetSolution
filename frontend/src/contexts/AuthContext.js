@@ -11,76 +11,102 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+    const [authInitialized, setAuthInitialized] = useState(false);
 
-    // const fetchUserInfo = async (token) => {
-    //     try {
-    //         const response = await axios.get('http://localhost:8081/api/auth/getme', {
-    //             headers: {
-    //                 Authorization: `${token}`,
-    //             },
-    //         });
-    //         if (response.data.status_code === 200) {
-    //             setUser(response.data.data);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error fetching user info:', error);
-    //     }
-    // };
+    const fetchUserInfo = async (token) => {
+        try {
+            const response = await axiosPublic.get('auth/getme', {
+                headers: {
+                    Authorization: `BEARER ${token}`,
+                },
+            });
+            
+            if (response.status_code === 200) {
+                setUser(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+        }
+    };
 
-    useEffect(() => {
-        // Kiểm tra token khi component mount
-        const token = localStorage.getItem('authToken');
-        if (token) {
+    const fetchEmployeeInfo = async (token) => {
+        try {
+            const response = await axiosPublic.get('auth/getme-employee', {
+                headers: {
+                    Authorization: `BEARER ${token}`,
+                },
+            });
+
+            if (response.status_code === 200) {
+                console.log('response Employee', response)
+                setEmployee(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching employee info:', error);
+        }
+    }
+
+        // Hàm khởi tạo authentication
+        const initializeAuth = async () => {
+            setLoading(true);
+            
             try {
-                const decoded = jwtDecode(token);
-                if (decoded.exp * 1000 > Date.now()) {
-                    // fetchUserInfo(decoded);
-                    setIsAuthenticated(true);
-                    setUser(decoded);
-                } else {
-                    // Token hết hạn
-                    localStorage.removeItem('authToken');
+                // Kiểm tra user token
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    try {
+                        const decoded = jwtDecode(token);
+                        if (decoded.exp * 1000 > Date.now()) {
+                            setIsAuthenticated(true);
+                            await fetchUserInfo(token);
+                        } else {
+                            localStorage.removeItem('authToken');
+                        }
+                    } catch (error) {
+                        console.error('Error decoding user token:', error);
+                        localStorage.removeItem('authToken');
+                    }
+                }
+    
+                // Kiểm tra employee token
+                const employeeToken = localStorage.getItem('employeeToken');
+                if (employeeToken) {
+                    try {
+                        const decoded = jwtDecode(employeeToken);
+                        if (decoded.exp * 1000 > Date.now()) {
+                            setIsAdminAuthenticated(true);
+                            await fetchEmployeeInfo(employeeToken);
+                        } else {
+                            localStorage.removeItem('employeeToken');
+                        }
+                    } catch (error) {
+                        console.error('Error decoding employee token:', error);
+                        localStorage.removeItem('employeeToken');
+                    }
                 }
             } catch (error) {
-                console.error('Error decoding token:', error);
-                localStorage.removeItem('authToken');
+                console.error('Error initializing auth:', error);
+            } finally {
+                setLoading(false);
+                setAuthInitialized(true); // Đánh dấu đã khởi tạo xong
             }
-        }
-
-        const employeeToken = localStorage.getItem('employeeToken');
-        
-        if(employeeToken){
-            try {
-                const decoded = jwtDecode(employeeToken);
-                if (decoded.exp * 1000 > Date.now()) {
-                    // fetchUserInfo(decoded);
-                    setIsAdminAuthenticated(true);
-                    setEmployee(decoded);
-                } else {
-                    // Token hết hạn
-                    localStorage.removeItem('employeeToken');
-                }
-            } catch (error) {
-                console.error('Error decoding token:', error);
-                localStorage.removeItem('employeeToken');
-            }
-        }
-
-        setLoading(false);
-    }, []);
+        };
+    
+        useEffect(() => {
+            initializeAuth();
+        }, []);
 
     const login = async (username, password) => {
         try {
             const response = await axiosPublic.post('auth/login', {
                 username,
-                password,
-                type: "CUSTOMER"
+                password
             });
             
             if (response.status_code === 200) {
                 const token = response.data.accessToken;
                 localStorage.setItem('authToken', token);
-                
+
                 const decoded = jwtDecode(token);
                 
                 setUser(decoded);
@@ -110,11 +136,9 @@ export const AuthProvider = ({ children }) => {
             if (response.data.accessToken) {
                 const token = response.data.accessToken;
                 localStorage.setItem('employeeToken', token);
-                
-                const decoded = jwtDecode(token);
-                console.log('decoded', decoded);
+
                 setIsAdminAuthenticated(true);
-                setEmployee(decoded);
+                fetchEmployeeInfo(token);
                 return { success: true };
             } else {
                 return {
@@ -247,6 +271,7 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         user,
+        employee,
         isAuthenticated,
         isAdminAuthenticated,
         loading,

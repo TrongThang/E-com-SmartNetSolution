@@ -17,9 +17,13 @@ import { useCart } from "@/contexts/CartContext"
 import Swal from "sweetalert2"
 import axiosPublic from "@/apis/clients/public.client"
 import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import { useAuth } from "@/contexts/AuthContext"
+import handleVnpayPayment from "@/utils/vnpay.util"
+
 export default function CheckoutPage() {
     const { getItemSelected, removeSelected } = useCart()
     const products = getItemSelected()
+    const { user } = useAuth()
 
     const [currentStep, setCurrentStep] = useState("shipping")
     const [shippingData, setShippingData] = useState(null)
@@ -42,22 +46,19 @@ export default function CheckoutPage() {
 
     const handleCompleteCheckout = async () => {
         try {
-            console.log("products:", products);
-         
 
             const cartTotal = products.reduce((total, item) => total + item.price * item.quantity, 0)
             const shippingFee = shippingData?.shippingMethod === 'standard' ? 30000 : 50000
 
             // Kiểm tra sản phẩm có status = 5
             const preOrderProducts = products.filter(item => Number(item.status) === 5);
-            console.log("preOrderProducts:", preOrderProducts);
 
             const payload = {
                 shipping: shippingData,
                 payment: paymentData,
                 products: products,
-                order: {
-                    customer_id: "CUST001",
+                order: {    
+                    customer_id: user.customer_id,
                     export_date: new Date(),
                     total_money: cartTotal,
                     discount: 0,
@@ -65,6 +66,15 @@ export default function CheckoutPage() {
                     amount: cartTotal + shippingFee,
                     status: 0, // PENDING
                 }
+            }
+
+            if (paymentData.paymentMethod === "vnpay") {
+                const res = await axiosPublic.post("/order/checkout", payload)
+
+                if (res.status_code === 200) {
+                    await handleVnpayPayment(cartTotal + shippingFee, "VNBANK");
+                }
+                return;
             }
 
             const res = await axiosPublic.post("/order/checkout", payload)

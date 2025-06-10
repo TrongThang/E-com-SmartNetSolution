@@ -85,17 +85,15 @@ async function addToCart(customer_id, product_id, quantity) {
 
             if (!existingItem) {
                 cart = await tx.cart.create({
-                    data: { customer_id, product_id, quantity },
+                    data: { customer_id, product_id, quantity, selected: true },
                 });
             } else {
                 // Cập nhật số lượng nếu sản phẩm đã tồn tại
-                cartItem = await tx.cart.update({
+                const cartItem = await tx.cart.update({
                     where: { id: existingItem.id },
-                    data: { quantity: existingItem.quantity + quantity },
+                    data: { quantity: existingItem.quantity + quantity, selected: existingItem.selected },
                 });
             }
-            
-            return { cartItem };
         });
 
         return get_error_response(
@@ -149,7 +147,7 @@ async function updateQuantityCartItem(cartItem) {
             // Cập nhật số lượng
             const updatedItem = await tx.cart.update({
                 where: { id: cart.id },
-                data: { quantity: quantity },
+                data: { quantity: quantity, selected: cart.selected },
             });
 
             return { cart, updatedItem };
@@ -268,7 +266,7 @@ async function getCart(customer_id) {
 
             const productCart = await getProductService(filters = filters)
 
-            productCartConfig = productCart.data.data.map(item => ({
+            const productCartConfig = productCart.data.data.map(item => ({
                 id: item.id,
                 image: item.image,
                 name: item.name,
@@ -279,16 +277,18 @@ async function getCart(customer_id) {
                 quantity: cart.find(cartItem => cartItem.product_id === item.id)?.quantity || 0,
                 selected: cart.find(cartItem => cartItem.product_id === item.id)?.selected || 1
             }))
+
             return get_error_response(
                 ERROR_CODES.CART_SUCCESS,
                 STATUS_CODE.OK,
                 productCartConfig
             );
         }
-        
+
         return get_error_response(
-            ERROR_CODES.CART_SUCCESS,
+            ERROR_CODES.SUCCESS,
             STATUS_CODE.OK,
+            []
         );
     } catch (err) {
         console.log('err', err)

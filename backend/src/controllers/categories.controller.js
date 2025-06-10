@@ -14,8 +14,8 @@ class CategoriesController {
     }
 
     async getCategories(req, res) {
-        console.log("getCategories");
-        const { filter = null, limit = null, sort = null, order = null } = req.body || {};
+        const { filter, limit, sort, order } = req.query  || {};
+
         const response = await getCategoriesService(filter, limit, sort, order);
         return res.status(response.status_code).json(response);
     }

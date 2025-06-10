@@ -37,6 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Link } from "react-router-dom"
 
 export default function EcommerceSidebar() {
+
 	return (
 		<SidebarProvider>
 			<Sidebar className="bg-gradient-to-b from-slate-950 to-blue-800 text-white w-[14vw] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">

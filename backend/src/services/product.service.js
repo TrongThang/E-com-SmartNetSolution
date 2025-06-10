@@ -88,10 +88,18 @@ const getProductService = async (filters, logic, limit, sort, order, role, type,
     }
 };
 
-const getProductDetailService = async (id, role = null, type = null) => {
-    const product = await prisma.product.findUnique({
-        where: { id: id }
-    })
+const getProductDetailService = async (id = null, slug = null, role = null, type = null) => {
+
+    let product = null;
+    if (slug) {
+        product = await prisma.product.findFirst({
+            where: { slug: slug }
+        })
+    } else {
+        product = await prisma.product.findFirst({
+            where: { id: Number(id) }
+        })
+    }
 
     if (!product) {
         return get_error_response(
@@ -104,7 +112,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
         {
             field: "product.id",
             condition: "contains",
-            value: id
+            value: product.id
         }
     ])
     let get_attr = `product.name, product.slug, product.description, description_normal, product.image, selling_price, views, status, product.is_hide,
@@ -149,7 +157,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
     })
 
     const images = await prisma.image_product.findMany({
-        where: { product_id: id },
+        where: { product_id: product.id },
         select: {
             id: true,
             product_id: true,

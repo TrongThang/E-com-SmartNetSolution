@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 
 const formSchema = z.object({
-    paymentMethod: z.enum(["cod", "card", "banking"]),
+    paymentMethod: z.enum(["cod", "card", "banking", "vnpay"]),
     sameAsShipping: z.boolean().default(true),
     cardNumber: z.string().optional(),
     cardName: z.string().optional(),
@@ -72,6 +72,15 @@ export function PaymentForm({ onComplete, onBack }) {
                                         <FormLabel className="font-normal flex items-center">
                                             <CreditCard className="mr-2 h-5 w-5" />
                                             Thẻ tín dụng/ghi nợ
+                                        </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
+                                        <FormControl>
+                                            <RadioGroupItem value="vnpay" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal flex items-center">
+                                            <img src="/images/logo/v-vnpay-svgrepo-com.svg" alt="VNPay" className="mr-2 h-5 w-5" />
+                                            Thanh toán qua VNPay
                                         </FormLabel>
                                     </FormItem>
                                     <FormItem className="flex items-center space-x-3 space-y-0 rounded-md border p-4">

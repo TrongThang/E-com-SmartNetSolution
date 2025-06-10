@@ -44,8 +44,7 @@ class OrderController {
 
     async createOrder(req, res) {
         const result = await createOrder(req.body);
-        
-        console.log("result", result)
+        console.log('Chuẩn bị vào createOrder')
         const response = res.status(result.status_code).json(result);
         return response;
     }

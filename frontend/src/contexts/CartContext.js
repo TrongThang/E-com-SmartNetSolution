@@ -114,13 +114,13 @@ export const CartProvider = ({ children }) => {
                 ]
             };
 
-            if (user && user.customer_id) {
+            if (user && user.customer.customer_id) {
                 filters.filters.push({
                     "field": "customer_id",
                     "condition": "=",
-                    "value": user.customer_id
+                    "value": user.customer.customer_id
                 })
-                const response = await cartApi.getByIdCustomer(user.customer_id);
+                const response = await cartApi.getByIdCustomer(user.customer.customer_id);
                 
                 return response.data || [];
             } else {
@@ -206,7 +206,7 @@ export const CartProvider = ({ children }) => {
     const handleAddToCart = async (product) => {
         try {
             if (isAuthenticated) {
-                const response = await cartApi.addToCart(product.id, product.quantity);
+                const response = await cartApi.addToCart(user.customer_id, product.id, product.quantity);
                 if (response.status_code !== 200) {
                     Swal.fire({
                         icon: 'info',
@@ -291,7 +291,7 @@ export const CartProvider = ({ children }) => {
     const handleRemoveFromCart = async (productId) => {
         try {
             if (isAuthenticated) {
-                const response = await cartApi.removeFromCart(productId);
+                const response = await cartApi.removeFromCart(user.customer_id, productId);
                 
             }
 
@@ -321,7 +321,7 @@ export const CartProvider = ({ children }) => {
     const handleClearCart = async () => {
         try {
             if (isAuthenticated) {
-                await cartApi.removeAllFromCart();
+                await cartApi.removeAllFromCart(user.customer_id);
             } else {
                 Cookies.remove('cart');
                 imageStorage.clearImages();
@@ -390,7 +390,7 @@ export const CartProvider = ({ children }) => {
         if (!isAuthenticated) {
             saveCartToCookie(cart);
         } else {
-            cartApi.removeSelected(cart.items);
+            cartApi.removeSelected(user.customer_id, cart.items);
         }
     };
 
@@ -402,7 +402,7 @@ export const CartProvider = ({ children }) => {
     // Tính toán các thống kê từ cart
     const cartStats = useMemo(() => (
         {
-        totalItems: cart?.items?.reduce((total, item) => total + item.quantity, 0),
+        totalItems: cart?.items?.length || 0,
         totalAmount: cart?.total,
         itemCount: cart?.items?.length,
     }), [cart]);

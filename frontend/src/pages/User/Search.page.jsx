@@ -94,7 +94,6 @@ export default function SearchPage() {
 
     // Initialize page and selectedCategories from URL
     useEffect(() => {
-        console.log("Initializing from URL:", { pageParam, categoryParam })
         const parsedPage = parseInt(pageParam)
         const validPage = isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage
         setPage(validPage)

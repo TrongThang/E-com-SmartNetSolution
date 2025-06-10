@@ -6,7 +6,9 @@ const axiosIOTPublic = axios.create({
     headers: {
         // 'ngrok-skip-browser-warning': 'true',
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`, // Nếu bạn cần thêm token sau này
         charset: 'UTF-8',
     },
     // Cho phép xử lý các status code từ 200-499

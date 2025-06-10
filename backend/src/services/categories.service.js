@@ -23,13 +23,6 @@ const getCategoriesService = async (filter, limit, sort, order) => {
         LEFT JOIN attribute ON attribute_category.attribute_id = attribute.id
         LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id`;
 
-        const filter = JSON.stringify([
-            {
-                field: "categories.deleted_at",
-                condition: "is",
-                value: null
-            }
-        ]);
         // Execute query
         const result = await executeSelectData({
             strGetColumn: get_attr,

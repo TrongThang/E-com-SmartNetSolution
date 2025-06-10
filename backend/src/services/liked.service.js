@@ -20,7 +20,7 @@ const getLikedService = async (id) => {
     }
 
     // Các cột cần lấy từ liked và product
-    let get_attr = `liked.product_id, product.name, product.image, product.selling_price, product.description`
+    let get_attr = `liked.product_id, product.name, product.image, product.selling_price, product.description, product.slug`
     
     let get_table = `liked`
 
@@ -52,7 +52,24 @@ const getLikedService = async (id) => {
     }
 }
 
-const createLikedService = async (customer_id, product_id) => {
+const checkLikedService = async (customer_id, product_id) => {
+    const liked = await prisma.liked.findFirst({
+        where: {
+            customer_id: customer_id,
+            product_id: Number(product_id),
+            deleted_at: null
+        }
+    })
+
+    console.log("liked: ", liked ? true : false)
+
+    return {
+        status_code: STATUS_CODE.OK,
+        data: liked ? true : false
+    }
+}
+
+const createLikedService = async (product_id, customer_id) => {
     try {
         // Chuyển đổi product_id từ chuỗi sang số nguyên
         const productId = parseInt(product_id);
@@ -111,22 +128,11 @@ const createLikedService = async (customer_id, product_id) => {
     }
 }
 
-const deleteLikedService = async (customer_id, id) => {
+const deleteLikedService = async (customer_id, product_id) => {
     try {
-        // Chuyển đổi id từ chuỗi sang số nguyên
-        const likedId = parseInt(id);
-        
-        if (isNaN(likedId)) {
-            return get_error_response(
-                errors=ERROR_CODES.LIKED_NOT_FOUND,
-                status_code=STATUS_CODE.BAD_REQUEST,
-                data="Invalid liked ID format"
-            );
-        }
-
         // Kiểm tra xem liked có tồn tại không
-        const likedToDelete = await prisma.liked.findUnique({
-            where: { id: likedId }
+        const likedToDelete = await prisma.liked.findFirst({
+            where: { customer_id: customer_id, product_id: Number(product_id), deleted_at: null }
         });
 
         if (!likedToDelete) {
@@ -136,9 +142,12 @@ const deleteLikedService = async (customer_id, id) => {
             );
         }
 
-        // Xóa liked
-        await prisma.liked.delete({
-            where: { id: likedId, customer_id: customer_id }
+        // Xóa mềm liked 
+        await prisma.liked.update({
+            where: { id: likedToDelete.id },
+            data: {
+                deleted_at: new Date()
+            }
         });
 
         return get_error_response(
@@ -159,6 +168,7 @@ const deleteLikedService = async (customer_id, id) => {
 module.exports = {
     getLikedService,
     createLikedService,
-    deleteLikedService
+    deleteLikedService,
+    checkLikedService
 };
 

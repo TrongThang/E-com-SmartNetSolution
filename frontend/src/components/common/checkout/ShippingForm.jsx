@@ -10,6 +10,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { SavedAddressForm } from "@/components/common/checkout/addressBook/SavedAddressForm"
 import { NewAddressForm } from "@/components/common/checkout/addressBook/NewAddressForm"
+import addressBookApi from "@/apis/modules/address.api.ts"
+import { toast } from "sonner"
+import { useAuth } from "@/contexts/AuthContext"
 
 const formSchema = z.object({
     addressType: z.enum(["new", "saved"]),
@@ -31,6 +34,7 @@ export function ShippingForm({ onComplete }) {
         address_books: []
     })
     const [isLoading, setIsLoading] = useState(true)
+    const { user } = useAuth()
 
     useEffect(() => {
         const fetchAddressBook = async () => {
@@ -142,6 +146,35 @@ export function ShippingForm({ onComplete }) {
             onComplete(values);
         }
     }
+
+    const saveNewAddress = async (addressData) => {
+        try {
+            const createData = {
+                customer_id: user.customer_id,
+                receiver_name: addressData.fullName,
+                phone: addressData.phone,
+                city: addressData.city,
+                district: addressData.district,
+                ward: addressData.ward,
+                street: addressData.address,
+                detail: "",
+                is_default: false
+            };
+            
+            const res = await addressBookApi.add(createData);
+            if (res.status_code === 201) {
+                toast.success("Đã lưu địa chỉ mới vào sổ địa chỉ");
+                return true;
+            } else {
+                toast.error("Không thể lưu địa chỉ mới");
+                return false;
+            }
+        } catch (error) {
+            console.error("Error saving new address:", error);
+            toast.error("Đã xảy ra lỗi khi lưu địa chỉ");
+            return false;
+        }
+    };
 
     if (isLoading) {
         return <div>Đang tải...</div>
