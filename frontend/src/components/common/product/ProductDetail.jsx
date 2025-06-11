@@ -7,6 +7,7 @@ import { formatCurrency } from "@/utils/format"
 import { useCart } from "@/contexts/CartContext"
 import LikedApi from "@/apis/modules/liked.api.ts"
 import { useAuth } from "@/contexts/AuthContext"
+import Swal from "sweetalert2"
 
 export default function ProductDetails({ device }) {
     const { user } = useAuth();
@@ -18,8 +19,7 @@ export default function ProductDetails({ device }) {
     const [quantity, setQuantity] = useState(1)
 
     useEffect(() => {
-        console.log("device.id: ", device.id)
-        if (user.customer_id && device.id) {
+        if (user?.customer_id && device?.id) {
             const checkLiked = async () => {
                 const res = await LikedApi.checkLiked({
                     customer_id: user.customer_id,
@@ -31,7 +31,7 @@ export default function ProductDetails({ device }) {
             }
             checkLiked()
         }
-    }, [user.customer_id, device.id])
+    }, [user?.customer_id, device?.id])
 
     const handleAddToCart = async () => {
         try {
@@ -41,7 +41,7 @@ export default function ProductDetails({ device }) {
                 price: device.selling_price,
                 quantity: quantity // Kiểm tra giá trị này
             };
-            await addToCart(productData);
+            addToCart(productData);
         } catch (error) {
             console.log("Lỗi: ", error)
         }

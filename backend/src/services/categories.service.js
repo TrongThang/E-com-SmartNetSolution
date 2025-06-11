@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 
 
 //Lấy danh sách danh mục và danh mục con và thuộc tính của danh mục [được lọc theo deleted_at = null]
-const getCategoriesService = async (filter, limit, sort, order) => {
+const getCategoriesService = async (filters, limit, sort, order) => {
     try {
         // Build SQL query to get categories with attributes
         let get_attr = `categories.category_id, categories.name, categories.slug, categories.description, 
@@ -28,7 +28,7 @@ const getCategoriesService = async (filter, limit, sort, order) => {
             strGetColumn: get_attr,
             table: get_table,
             queryJoin: query_join,
-            filter: filter,
+            filter: filters,
             limit: limit,
             sort: sort,
             order: order

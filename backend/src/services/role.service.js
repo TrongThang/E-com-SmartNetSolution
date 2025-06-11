@@ -32,8 +32,8 @@ const getRoleService = async (filter, limit, sort, order) => {
         const result = await executeSelectData({
             strGetColumn: get_attr,
             table: get_table,
-            queryJoin: query_join,
-            filter: filterCondition,
+            queryJoin: query_join,  
+            filter: filter,
             limit: limit,
             sort: sort,
             order: order

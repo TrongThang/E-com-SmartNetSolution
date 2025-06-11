@@ -88,7 +88,6 @@ export default function SearchPage() {
             })
         }
 
-        console.log("Filters sent to API:", JSON.stringify(filters, null, 2))
         return filters.length === 0 ? null : filters.length === 1 ? filters : { logic: "AND", filters }
     }, [keyword, selectedCategories, priceRange, allCategories])
 
@@ -125,7 +124,6 @@ export default function SearchPage() {
         }
         const newUrl = `/search?${newSearchParams.toString()}`
         if (newUrl !== window.location.pathname + window.location.search) {
-            console.log("Updating URL to:", newUrl)
             navigate(newUrl, { replace: true })
         }
     }, [keyword, selectedCategories, page, navigate])
@@ -155,7 +153,6 @@ export default function SearchPage() {
         const fetchProducts = async () => {
             setIsLoading(true)
             setError(null)
-            console.log("Starting fetchProducts for page:", page, "keyword:", keyword)
 
             const categoryMap = {}
             allCategories.forEach(category => {
@@ -177,7 +174,6 @@ export default function SearchPage() {
                     ...(sort.order && { order: sort.order }),
                 }
                 const res = await productApi.search(params)
-                console.log("API response:", JSON.stringify(res, null, 2))
 
                 if (res.status_code === 200) {
                     const productsData = res.data?.data || []
@@ -232,7 +228,6 @@ export default function SearchPage() {
                 setFilterCategories(allCategories.filter(category => !category.parent_id))
             } finally {
                 setIsLoading(false)
-                console.log("fetchProducts completed, isLoading:", false)
             }
         }
 
@@ -242,7 +237,6 @@ export default function SearchPage() {
     }, [page, keyword, selectedCategories, priceRange, sort, allCategories, buildFilters])
 
     const handleCategoryChange = useCallback((categories) => {
-        console.log("Category change:", categories)
         setSelectedCategories(categories)
         setPage(1)
         setProducts([]) // Clear products when filters change
@@ -255,7 +249,6 @@ export default function SearchPage() {
     }, [])
 
     const handleSortChange = useCallback((sortValue) => {
-        console.log("Sort change:", sortValue)
         if (sortValue === "default") {
             setSort({ field: "", order: "" })
         } else {
@@ -267,7 +260,6 @@ export default function SearchPage() {
     }, [])
 
     const handleReset = useCallback(() => {
-        console.log("Reset filters")
         setSelectedCategories([])
         setPriceRange({ min: 0, max: 20000000 })
         setSort({ field: "", order: "" })
@@ -277,7 +269,6 @@ export default function SearchPage() {
     }, [])
 
     const handlePageChange = useCallback((pageNumber) => {
-        console.log("Page change requested:", pageNumber)
         if (pageNumber >= 1 && pageNumber <= totalPage && pageNumber !== page) {
             setPage(pageNumber)
             window.scrollTo({ top: 0, behavior: "smooth" })
@@ -317,7 +308,6 @@ export default function SearchPage() {
             pageNumbers.push(totalPage)
         }
 
-        console.log("Page numbers generated:", pageNumbers)
         return pageNumbers
     }
 

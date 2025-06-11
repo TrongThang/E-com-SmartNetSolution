@@ -61,7 +61,7 @@ const getEmployeeDetailService = async (id) => {
 
         let get_attr = `employee.surname, employee.lastname, employee.image, 
         employee.birthdate, employee.gender, employee.email, employee.phone, 
-        employee.status, role.id as role_id, role.name as role_name, employee.created_at, employee.updated_at`;
+        employee.status, role.id as role_id, role.name as role_name, employee.created_at, employee.updated_at, account.username`;
         let get_table = "employee";
         let query_join = `LEFT JOIN account ON employee.id = account.employee_id
         LEFT JOIN role ON account.role_id = role.id`;

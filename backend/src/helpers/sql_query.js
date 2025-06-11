@@ -17,12 +17,10 @@ function buildWhereQuery(filter, table = null) {
             if (subConditions.length === 0) return "";
             return `(${subConditions.join(` ${obj.logic} `)})`;
         }
-        console.log("obj", obj) 
+
         // Nếu là filter đơn
         const { field, condition, value } = obj;
-        console.log("field", field)
-        console.log("condition", condition)
-        console.log("value", value)
+
         switch (condition) {
             case 'contains':
                 return value ? `(${field} IS NOT NULL AND ${field} LIKE '%${value}%')` : `(${field} LIKE '%%' OR ${field} IS NULL)`;
@@ -75,7 +73,7 @@ function buildWhereQuery(filter, table = null) {
         if (conditions.length > 0) {
             whereClause = `WHERE ${conditions.join(' AND ')} AND ${table}.deleted_at IS NULL`;
         }
-    }else if (filterObj.field && filterObj.condition && filterObj.value) {
+    } else if (filterObj.field && filterObj.condition && (filterObj.value || filterObj.value === false)) {
         whereClause = `WHERE ${filterObj.field} ${filterObj.condition} '${filterObj.value}' AND ${table}.deleted_at IS NULL`;
     }
 

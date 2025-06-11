@@ -69,6 +69,7 @@ import ExportWarehouseDetailPage from "@/pages/Admin/warehouse/export/detail";
 import OrderDetailPage from "@/pages/Admin/orderManager/detail";
 import AddEmployeeForm from "@/pages/Admin/employeeManager/AddEmployee";
 import EditEmployeeForm from "@/pages/Admin/employeeManager/EditEmployee";
+import SalesDashboard from "@/pages/Admin/SalesDashboard";
 
 export const router = createBrowserRouter([
   {
@@ -146,6 +147,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <div>Admin Dashboard</div>,
+      },
+      {
+        path: "dashboard",
+        element: <SalesDashboard />,
       },
       {
         path: "categories",

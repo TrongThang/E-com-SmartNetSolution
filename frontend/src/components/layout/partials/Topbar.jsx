@@ -49,6 +49,16 @@ export default function Topbar() {
         return () => clearInterval(interval) // cleanup khi component unmount
     }, [])
 
+    if(loading) {
+        return (
+            <div className="h-[10vh] w-full bg-gradient-to-r from-slate-950 to-blue-900 text-slate-100 shadow-md flex items-center justify-between px-4 border-b border-slate-700">
+                <div className="flex items-center gap-4">
+                    <div className="h-8 w-8 bg-slate-700 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="h-[10vh] w-full bg-gradient-to-r from-slate-950 to-blue-900 text-slate-100 shadow-md flex items-center justify-between px-4 border-b border-slate-700">
         {/* Left side - Sidebar trigger */}

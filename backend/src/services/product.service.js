@@ -561,10 +561,45 @@ const checkNameExcludingCurrent = async (name, excludeId = null) => {
     return check_name;
 };
 
+const checkWarehouseInventory = async (product_id) => {
+
+    const product = await prisma.product.findFirst({
+        where: { id: Number(product_id) },
+        select: {
+            id: true,
+            name: true,
+        }
+    });
+
+    if (!product) {
+        return get_error_response(
+            ERROR_CODES.PRODUCT_NOT_FOUND,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+
+    const warehouse_inventory = await prisma.warehouse_inventory.aggregate({
+        where: { product_id: Number(product_id), deleted_at: null },
+        _sum: { stock: true }
+    });
+
+    return {
+        status_code: STATUS_CODE.OK,
+        data: {
+            is_enough: warehouse_inventory._sum.stock > 0,
+            stock: warehouse_inventory._sum.stock,
+            product_id: product_id,
+            product_name: product.name
+        }
+    };
+}
+
+
 module.exports = {
     getProductService,
     getProductDetailService,
     createProductService,
     updateProductService,
     deleteProductService,
+    checkWarehouseInventory
 };

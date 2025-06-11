@@ -1,11 +1,10 @@
 import Topbar from "./partials/Topbar";
 import { Navigate, Outlet } from "react-router-dom";
 import EcommerceSidebar from "./partials/EcommerceSidebar";
+import { AdminBreadcrumb } from "@/components/ui/smart-net-breacdcrumb";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-
-
 
 const AdminLayout = () => {
 	const { isAdminAuthenticated } = useAuth()
@@ -31,8 +30,12 @@ const AdminLayout = () => {
 				<EcommerceSidebar />
 			</div>
 			<div className="flex-1 flex flex-col">
-				{/* chỉnh sửa giao diện bên trong */}
-				<main className="mt-20 flex-1 p-6 ml-[14vw] mt-[10vh]">
+				{/* Breadcrumb */}
+				<div className="ml-[14vw] mt-[10vh] p-6 pb-0">
+					<AdminBreadcrumb />
+				</div>
+				{/* Main content */}
+				<main className="flex-1 p-6 ml-[14vw]">
 					<Outlet />
 				</main>
 			</div>

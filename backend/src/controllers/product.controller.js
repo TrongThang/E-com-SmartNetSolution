@@ -8,6 +8,7 @@ const {
     getProductsByCategoryIdService,
     getProductsByCategoryIdAndStatusService,
     getProductsByCategoryIdAndStatusAndIsHideService,
+    checkWarehouseInventory,
 } = require('../services/product.service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
@@ -74,6 +75,13 @@ class ProductController {
         const response = await check_list_info_product(products)
 
         console.log('response --- checkListInfoProduct', response)
+        return res.status(response.status_code).json(response);
+    }
+
+    async checkWarehouseInventory(req, res) {
+        const { product_id } = req.params;
+        const response = await checkWarehouseInventory(product_id)
+    
         return res.status(response.status_code).json(response);
     }
 }

@@ -69,6 +69,13 @@ const productApi = {
             throw error;
         }
     },
+    async checkWarehouseInventory(product_id: number): Promise<IApiResponse> {
+        try {
+            return await axiosPublic.get(`${productPublic.common}/check-warehouse-inventory/${product_id}`);
+        } catch (error) {
+            throw error;
+        }
+    }
 };
 
 export default productApi;

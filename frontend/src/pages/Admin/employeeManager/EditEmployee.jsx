@@ -37,7 +37,7 @@ export default function EditEmployeeForm() {
         email: "",
         phone: "",
         birthdate: "",
-        gender: true, // true = male, false = female
+        gender: -1, // true = male, false = female
         status: 1, // 1 = active, 0 = inactive
         username: "",
         role: "", // This will hold the role ID
@@ -123,7 +123,7 @@ export default function EditEmployeeForm() {
                     birthdate: employee.birthdate ? new Date(employee.birthdate).toISOString().split('T')[0] : "",
                     gender: employee.gender , 
                     status: employee.status || 1, // Map 0 to inactive, 1 to active
-                    username: employee.email.split('@')[0] || "", // Fallback to email prefix since username is not provided
+                    username: employee.username, // Fallback to email prefix since username is not provided
                     role: employee.role_id || "", // Use the matched role ID
                     image: employee.image || "",
                 })
@@ -436,15 +436,15 @@ export default function EditEmployeeForm() {
                                                 Giới tính <span className="text-red-500">*</span>
                                             </Label>
                                             <Select
-                                                onValueChange={(value) => handleInputChange("gender", value === "true")}
-                                                value={formData.gender.toString()}
+                                                onValueChange={(value) => handleInputChange("gender", parseInt(value))}
+                                                value={formData.gender}
                                             >
                                                 <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="Chọn giới tính" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="true">Nam</SelectItem>
-                                                    <SelectItem value="false">Nữ</SelectItem>
+                                                    <SelectItem value={1}>Nam</SelectItem>
+                                                    <SelectItem value={0}>Nữ</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -465,7 +465,7 @@ export default function EditEmployeeForm() {
                                                 Vai trò <span className="text-red-500">*</span>
                                             </Label>
                                             <Select
-                                                onValueChange={(value) => handleInputChange("role", value)}
+                                                onValueChange={(value) => handleInputChange("role", parseInt(value))}
                                                 value={formData.role}
                                                 disabled={loading || roles.length === 0}
                                             >

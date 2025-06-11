@@ -24,6 +24,10 @@ export function formatDate(date) {
     }).format(new Date(date))
 }
 
+export function formatNumber(num) {
+    return new Intl.NumberFormat('vi-VN').format(num);
+};
+
 export function removeVietnameseTones(str) {
     return str
         .normalize("NFD")                    // chuyển thành tổ hợp ký tự (dấu tách riêng)

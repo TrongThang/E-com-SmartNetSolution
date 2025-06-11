@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-console.log("process.env.REACT_APP_SMART_NET_IOT_API_URL:", process.env.REACT_APP_SMART_NET_IOT_API_URL);
 const axiosIOTPublic = axios.create({
     baseURL: process.env.REACT_APP_SMART_NET_IOT_API_URL || "http://localhost:9999/api/admin/", // Địa chỉ API public
     headers: {
@@ -8,7 +7,7 @@ const axiosIOTPublic = axios.create({
         'Accept': 'application/json',
         'Content-Type': 'application/json; charset=UTF-8',
         'X-Requested-With': 'XMLHttpRequest',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`, // Nếu bạn cần thêm token sau này
+        'Authorization': `Bearer ${localStorage.getItem('employeeToken')}`, // Nếu bạn cần thêm token sau này
         charset: 'UTF-8',
     },
     // Cho phép xử lý các status code từ 200-499
@@ -19,7 +18,6 @@ const axiosIOTPublic = axios.create({
 
 axiosIOTPublic.interceptors.request.use(
     (config) => {
-         // Log thông tin request
         console.log('🚀 Sending Request:', {
             method: config.method.toUpperCase(),
             url: config.url,

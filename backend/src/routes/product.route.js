@@ -1,5 +1,5 @@
 const express = require('express');
-const { getProduct, getProductDetail, createProduct, updateProduct, checkListInfoProduct, deleteProduct, getProductDetailBySlug } = require('../controllers/product.controller');
+const { getProduct, getProductDetail, createProduct, updateProduct, checkListInfoProduct, deleteProduct, getProductDetailBySlug, checkWarehouseInventory } = require('../controllers/product.controller');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const productRouter = express.Router();
 
@@ -19,5 +19,6 @@ productRouter.post('/check-list-info', asyncHandler(checkListInfoProduct));
 productRouter.post('/', validateMiddleware(CreateProductSchema), asyncHandler(createProduct));
 productRouter.put('/', validateMiddleware(UpdateProductSchema), asyncHandler(updateProduct));
 productRouter.delete('/:product_id', asyncHandler(deleteProduct));
+productRouter.get('/check-warehouse-inventory/:product_id', asyncHandler(checkWarehouseInventory));
 
 module.exports = productRouter;

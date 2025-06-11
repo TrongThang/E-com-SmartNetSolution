@@ -1,5 +1,5 @@
 const express = require('express');
-const { getCart, addToCart, updateQuantityCartItem, removeFromCart, confirmCart, updateCart, removeAllFromCart, removeSelected } = require('../controllers/cart.controller');
+const { getCart, addToCart, updateQuantityCartItem, removeFromCart, confirmCart, updateCart, removeAllFromCart, removeSelected, fetchLatestProductInfo } = require('../controllers/cart.controller');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const cartRouter = express.Router();
 
@@ -11,6 +11,10 @@ const asyncHandler = (fn) => {
 
 cartRouter.get('/customer/:customer_id',
     asyncHandler(getCart)
+);
+
+cartRouter.get('/latest-product-info',
+    asyncHandler(fetchLatestProductInfo)
 );
 
 cartRouter.post('/customer/:customer_id',

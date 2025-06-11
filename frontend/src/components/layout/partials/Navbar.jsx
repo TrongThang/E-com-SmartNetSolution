@@ -1,5 +1,7 @@
 "use client"
 
+// import logo from "@/assets/images/logo/logo_smatnet_ecom.png"
+import logo from "@/assets/images/logo/ecom_logo.png"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, ShoppingCart, User, ChevronDown, Menu } from "lucide-react"
@@ -88,7 +90,8 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold text-blue-500">SmartNet Solution Shop</span>
+            <img src={logo} alt="logo" className={`rounded-full hover:scale-110 transition-all duration-300 ${isScrolled ? "w-10 h-10":"w-14 h-14"}`} />
+            <span className="text-xl font-bold text-blue-500 ml-2">SmartNet Ecom</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-10">
@@ -233,7 +236,7 @@ export default function Navbar() {
                           : null}
                       </div>
                     </div>
-                    <Link to="/categories" className="text-xs text-blue-600 hover:text-blue-700 flex items-center">
+                    <Link to="/search" className="text-xs text-blue-600 hover:text-blue-700 flex items-center">
                       Xem tất cả danh mục
                       <ChevronDown className="h-3 w-3 ml-1 -rotate-90" />
                     </Link>

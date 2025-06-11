@@ -10,12 +10,9 @@ const EmployeesTable = ({ employees, onEdit, onDelete }) => {
             render: (_row, index) => index + 1,
         },
         {
-            key: "surname",
-            label: "Họ",
-        },
-        {
-            key: "lastname",
+            key: "fullname",
             label: "Tên",
+            render: (row) => `${row.surname} ${row.lastname}`,
         },
         {
             key: "email",

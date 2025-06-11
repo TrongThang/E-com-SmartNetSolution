@@ -39,7 +39,7 @@ export default function AddEmployeeForm() {
         gender: true, // true = nam, false = nữ  
         status: 1, // 1 = hoạt động, 0 = không hoạt động
         username: "",
-        role: "",
+        role: -1,
         image: "",
     })
 
@@ -102,6 +102,7 @@ export default function AddEmployeeForm() {
     }
 
     const handleInputChange = (field, value) => {
+        console.log(field, value)
         setFormData((prev) => ({
             ...prev,
             [field]: value,
@@ -417,7 +418,10 @@ export default function AddEmployeeForm() {
                                             <Label htmlFor="role" className="text-sm font-medium flex items-center gap-2">
                                                 Vai trò <span className="text-red-500">*</span>
                                             </Label>
-                                            <Select onValueChange={(value) => handleInputChange("role", value)} disabled={loading || roles.length === 0}>
+                                            <Select
+                                                value={formData.role}
+                                                onValueChange={(value) => handleInputChange("role", parseInt(value))} disabled={loading || roles.length === 0}
+                                            >
                                                 <SelectTrigger className="h-11 w-full">
                                                     <SelectValue placeholder={loading ? "Đang tải vai trò..." : roles.length === 0 ? "Không có vai trò" : "Chọn vai trò"} />
                                                 </SelectTrigger>

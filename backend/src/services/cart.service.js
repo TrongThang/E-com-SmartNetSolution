@@ -84,7 +84,20 @@ async function addToCart(customer_id, product_id, quantity) {
             });
 
             if (!existingItem) {
-                cart = await tx.cart.create({
+
+                const ware_house_inventory = await tx.warehouse_inventory.aggregate({
+                    where: { product_id, deleted_at: null },
+                    _sum: { stock: true },
+                });
+
+                if (!ware_house_inventory._sum.stock || ware_house_inventory._sum.stock < quantity) {
+                    return get_error_response(
+                        ERROR_CODES.CART_PRODUCT_INSUFFICIENT_INVENTORY,
+                        STATUS_CODE.BAD_REQUEST
+                    );
+                }
+
+                await tx.cart.create({
                     data: { customer_id, product_id, quantity, selected: true },
                 });
             } else {
@@ -238,7 +251,7 @@ async function removeFromCart(cartItem) {
  * @param {number} customer_id - ID của khách hàng
  * @returns {Object} - Phản hồi chứa thông tin giỏ hàng
  */
-async function getCart(customer_id) {
+async function getCart(customer_id = null) {
     try {
         // Kiểm tra sự tồn tại của khách hàng
         const customer = await prisma.customer.findFirst({
@@ -297,6 +310,26 @@ async function getCart(customer_id) {
             STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
+}
+
+async function fetchLatestProductInfo(filters) {
+    const product = await getProductService(filters = filters)
+
+    const productCartConfig = product.data.data.map(item => ({
+        id: item.id,
+        image: item.image,
+        name: item.name,
+        selling_price: item.selling_price,
+        status: item.status,
+        stock: item.stock,
+        delta: item.delta,
+    }))
+
+    return get_error_response(
+        ERROR_CODES.CART_SUCCESS,
+        STATUS_CODE.OK,
+        productCartConfig
+    );
 }
 
 /**
@@ -460,6 +493,8 @@ const removeSelected = async (customer_id, items) => {
     }
 }
 
+
+
 module.exports = {
     addToCart,
     updateQuantityCartItem,
@@ -468,5 +503,6 @@ module.exports = {
     confirmCart,
     updateCart,
     removeAllFromCart,
-    removeSelected
+    removeSelected,
+    fetchLatestProductInfo
 };

@@ -58,9 +58,17 @@ const cartApi = {
         order?: ESortOrderValue;
     }): Promise<any> {
         const response = await axiosPublic.get(cartEndpoints.common, {
-        params: { ...params, filters: JSON.stringify(params.filters) },
+            params: { ...params, filters: JSON.stringify(params.filters) },
         });
         
+        return response;
+    },
+    async fetchLatestProductInfo(params: {
+        filters?: FilterSearch[];
+    }): Promise<any> {
+        const response = await axiosPublic.get(cartEndpoints.common + "/latest-product-info", {
+            params: { ...params, filters: JSON.stringify(params.filters) },
+        });
         return response;
     },
     async deleteAll(customer_id: number | string): Promise<IApiResponse> {

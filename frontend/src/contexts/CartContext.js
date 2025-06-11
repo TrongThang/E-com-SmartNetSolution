@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import cartApi from '@/apis/modules/cart.api.ts';
 import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
+import productApi from '@/apis/modules/product.api.ts';
 
 const CartContext = createContext();
 
@@ -124,7 +125,8 @@ export const CartProvider = ({ children }) => {
                 
                 return response.data || [];
             } else {
-                const response = await cartApi.getList({
+                console.log('filters', filters)
+                const response = await cartApi.fetchLatestProductInfo({
                     filters: filters
                 });
                 return response.data.data || [];
@@ -205,8 +207,22 @@ export const CartProvider = ({ children }) => {
     // Thêm sản phẩm vào giỏ hàng
     const handleAddToCart = async (product) => {
         try {
+            const check_warehouse_inventory = await productApi.checkWarehouseInventory(product.id);
+
+            if (check_warehouse_inventory.data.stock < product.quantity + cart.items.reduce((total, item) => total + item.quantity, 0)) {
+                const htmlText = `Sản phẩm <b class="text-red-500">${check_warehouse_inventory.data.product_name.toUpperCase()}</b> ${check_warehouse_inventory.data.stock <= 0 ? "đã hết hàng" : `chỉ còn <b class="text-red-500">${check_warehouse_inventory.data.stock || 0}</b> sản phẩm và bạn đã thêm đủ <b class="text-red-500">${product.quantity}</b> sản phẩm`}`
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    html: htmlText
+                })
+                return;
+            }
+
             if (isAuthenticated) {
                 const response = await cartApi.addToCart(user.customer_id, product.id, product.quantity);
+
                 if (response.status_code !== 200) {
                     Swal.fire({
                         icon: 'info',
