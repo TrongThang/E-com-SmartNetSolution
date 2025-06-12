@@ -1,7 +1,5 @@
-import { Link } from "react-router-dom"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import ProductGrid from "@/components/common/product/ProductGrid.jsx"
 import productApi from "@/apis/modules/product.api.ts"
 import categoryApi from "@/apis/modules/categories.api.ts"

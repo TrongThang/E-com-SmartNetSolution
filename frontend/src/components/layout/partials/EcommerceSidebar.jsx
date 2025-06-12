@@ -114,17 +114,6 @@ export default function EcommerceSidebar() {
 												</Link>
 											</SidebarMenuButton>
 										</SidebarMenuItem>
-										<SidebarMenuItem>
-											<SidebarMenuButton
-												asChild
-												className={`${getActiveClass('/admin/reports')} transition-all duration-200 py-2.5`}
-											>
-												<Link to="/admin/reports">
-													<FileText className="h-4 w-4" />
-													<span>Báo cáo</span>
-												</Link>
-											</SidebarMenuButton>
-										</SidebarMenuItem>
 									</SidebarMenu>
 								</SidebarGroupContent>
 							</CollapsibleContent>

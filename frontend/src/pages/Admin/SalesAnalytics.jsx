@@ -8,144 +8,91 @@ import {
   Users, 
   Package,
   Menu,
-  X,
-  Home,
-  BarChart3,
-  Settings,
-  LogOut,
-  Bell,
-  Search,
-  Calendar,
   Download,
-  Filter,
   RefreshCw
 } from 'lucide-react';
 import { formatCurrency, formatNumber } from '@/utils/format';
+import axiosPublic from '@/apis/clients/public.client';
 
 
-const SalesDashboard = () => {
+const SalesStatistic = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('7days');
+  const [selectedPeriod, setSelectedPeriod] = useState('7d');
+  const [statsData, setStatsData] = useState([]);
+  const [salesData, setSalesData] = useState([]);
+  const [monthlyTrend, setMonthlyTrend] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Dữ liệu mẫu
-  const salesData = [
-    { name: 'T2', revenue: 12000000, orders: 45, customers: 38, products: 156 },
-    { name: 'T3', revenue: 19000000, orders: 67, customers: 52, products: 234 },
-    { name: 'T4', revenue: 15000000, orders: 58, customers: 43, products: 198 },
-    { name: 'T5', revenue: 22000000, orders: 78, customers: 65, products: 287 },
-    { name: 'T6', revenue: 28000000, orders: 95, customers: 78, products: 345 },
-    { name: 'T7', revenue: 35000000, orders: 125, customers: 98, products: 456 },
-    { name: 'CN', revenue: 31000000, orders: 108, customers: 87, products: 389 }
-  ];
+  // const salesData = [
+  //   { name: 'T2', revenue: 12000000, orders: 45, customers: 38, products: 156 },
+  //   { name: 'T3', revenue: 19000000, orders: 67, customers: 52, products: 234 },
+  //   { name: 'T4', revenue: 15000000, orders: 58, customers: 43, products: 198 },
+  //   { name: 'T5', revenue: 22000000, orders: 78, customers: 65, products: 287 },
+  //   { name: 'T6', revenue: 28000000, orders: 95, customers: 78, products: 345 },
+  //   { name: 'T7', revenue: 35000000, orders: 125, customers: 98, products: 456 },
+  //   { name: 'CN', revenue: 31000000, orders: 108, customers: 87, products: 389 }
+  // ];
 
-  // Dữ liệu cho 8 thẻ thống kê
-  const statsData = [
-    {
-      title: "Tổng doanh thu",
-      value: formatCurrency(162000000, "VND"),
-      change: 12.5,
-      icon: DollarSign,
-      color: "blue",
-      subtitle: "Tuần này"
-    },
-    {
-      title: "Đơn hàng",
-      value: formatNumber(576),
-      change: 8.2,
-      icon: ShoppingCart,
-      color: "green",
-      subtitle: "Đơn hàng mới"
-    },
-    {
-      title: "Khách hàng",
-      value: formatNumber(461),
-      change: 15.3,
-      icon: Users,
-      color: "purple",
-      subtitle: "Khách hàng hoạt động"
-    },
-    {
-      title: "Sản phẩm bán",
-      value: formatNumber(1247),
-      change: -2.1,
-      icon: Package,
-      color: "orange",
-      subtitle: "Sản phẩm"
-    },
-    {
-      title: "Tỷ lệ chuyển đổi",
-      value: "4.2%",
-      change: 0.8,
-      icon: TrendingUp,
-      color: "blue",
-      subtitle: "Conversion rate"
-    },
-    {
-      title: "Giá trị đơn hàng TB",
-      value: formatCurrency(281250),
-      change: 5.4,
-      icon: DollarSign,
-      color: "green",
-      subtitle: "AOV"
-    },
-    {
-      title: "Khách hàng mới",
-      value: formatNumber(89),
-      change: 22.1,
-      icon: Users,
-      color: "purple",
-      subtitle: "Tuần này"
-    },
-    {
-      title: "Tồn kho",
-      value: formatNumber(2854),
-      change: -1.2,
-      icon: Package,
-      color: "orange",
-      subtitle: "Sản phẩm còn lại"
-    }
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosPublic.get(`/statistics/card?period=${selectedPeriod}`);
+      
+        if (response.status_code === 200) {
+          setStatsData(response.data);
+        }
 
-  const productCategories = [
-    { name: 'Điện thoại', value: 45, color: '#3b82f6', sales: 1250000000 },
-    { name: 'Laptop', value: 25, color: '#10b981', sales: 890000000 },
-    { name: 'Phụ kiện', value: 20, color: '#f59e0b', sales: 456000000 },
-    { name: 'Tablet', value: 10, color: '#ef4444', sales: 234000000 }
-  ];
+        const responseChart = await axiosPublic.get(`/statistics/chart?period=${selectedPeriod}`);
 
-  const monthlyTrend = [
-    { month: 'Tháng 1', revenue: 4500000000, growth: 5.2 },
-    { month: 'Tháng 2', revenue: 5200000000, growth: 8.1 },
-    { month: 'Tháng 3', revenue: 4800000000, growth: -2.3 },
-    { month: 'Tháng 4', revenue: 6100000000, growth: 12.5 },
-    { month: 'Tháng 5', revenue: 7200000000, growth: 15.8 },
-    { month: 'Tháng 6', revenue: 8500000000, growth: 18.2 }
-  ];
-
-  const topProducts = [
-    { name: 'iPhone 15 Pro', sales: 234, revenue: 587000000, growth: 12.5 },
-    { name: 'MacBook Air M2', sales: 156, revenue: 468000000, growth: 8.2 },
-    { name: 'Samsung Galaxy S24', sales: 189, revenue: 378000000, growth: -2.1 },
-    { name: 'iPad Pro', sales: 123, revenue: 246000000, growth: 15.6 },
-    { name: 'AirPods Pro', sales: 345, revenue: 172500000, growth: 22.3 }
-  ];
-
-
+        if (responseChart.status_code === 200) {
+          setSalesData(responseChart.data.resultRevenueAvgWeekday);
+          setMonthlyTrend(responseChart.data.resultRevenueByMonth);
+          setProductCategories(responseChart.data.resultTop4Categories);
+          setTopProducts(responseChart.data.resultTop5ProductsBestSeller);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [selectedPeriod]);
 
   const handleRefresh = () => {
     setLoading(true);
     setTimeout(() => setLoading(false), 1500);
   };
 
-  const StatCard = ({ title, value, change, icon: Icon, trend, color = "blue", subtitle }) => {
+  const StatCard = ({ title, value, change, icon, trend, color = "blue", subtitle, type = 'number' }) => {
     const isPositive = change > 0;
+
     const colorClasses = {
       blue: "from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
       green: "from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
       purple: "from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700",
-      orange: "from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+      orange: "from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700",
+      yellow: "from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700"
     };
+
+    const Icon = () => {
+      switch (icon) {
+        case 'product':
+          return <Package className="w-5 h-5 mr-2 opacity-80" />;
+        case 'order':
+          return <ShoppingCart className="w-5 h-5 mr-2 opacity-80" />;
+        case 'customer':
+          return <Users className="w-5 h-5 mr-2 opacity-80" />;
+        case 'revenue':
+          return <DollarSign className="w-5 h-5 mr-2 opacity-80" />;
+        default:
+          return <Package className="w-5 h-5 mr-2 opacity-80" />;
+      }
+    }
 
     return (
       <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${colorClasses[color]} p-6 text-white shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer`}>
@@ -155,7 +102,7 @@ const SalesDashboard = () => {
               <Icon className="w-5 h-5 mr-2 opacity-80" />
               <p className="text-sm font-medium text-white/90">{title}</p>
             </div>
-            <p className="text-3xl font-bold mb-1">{value}</p>
+            <p className="text-3xl font-bold mb-1">{type === 'currency' ? formatCurrency(value) : formatNumber(value)}</p>
             {subtitle && <p className="text-sm text-white/70 mb-3">{subtitle}</p>}
             <div className="flex items-center">
               {isPositive ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
@@ -170,6 +117,14 @@ const SalesDashboard = () => {
       </div>
     );
   };
+
+  const getPeriodText = () => {
+    if (selectedPeriod === '7d') return '7 ngày';
+    if (selectedPeriod === '30d') return '30 ngày';
+    if (selectedPeriod === '3m') return '3 tháng';
+    if (selectedPeriod === '6m') return '6 tháng';
+    if (selectedPeriod === '1y') return '1 năm';
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -186,51 +141,29 @@ const SalesDashboard = () => {
                 <Menu className="w-6 h-6 text-gray-600" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard Bán Hàng</h1>
-                <p className="text-sm text-gray-600">Chào mừng trở lại, Admin!</p>
+                <h1 className="text-2xl font-bold text-gray-900">Thống kê bán hàng</h1>
               </div>
             </div>
-            
             <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm..."
-                  className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <select 
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="7d">7 ngày qua</option>
+                  <option value="30d">30 ngày qua</option>
+                  <option value="3m">3 tháng qua</option>
+                  <option value="6m">6 tháng qua</option>
+                  <option value="1y">1 năm qua</option>
+                </select>
               </div>
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-                <Bell className="w-5 h-5" />
-              </button>
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-white">A</span>
-              </div>
-            </div>
           </div>
         </header>
 
         {/* Main Dashboard Content */}
         <main className="flex-1 overflow-y-auto p-6">
           {/* Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
-            <div className="flex items-center space-x-4">
-              <select 
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                <option value="7days">7 ngày qua</option>
-                <option value="30days">30 ngày qua</option>
-                <option value="3months">3 tháng qua</option>
-                <option value="6months">6 tháng qua</option>
-              </select>
-              <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <Filter className="w-4 h-4 mr-2" />
-                Bộ lọc
-              </button>
-            </div>
-            
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">            
             <div className="flex items-center space-x-3">
               <button 
                 onClick={handleRefresh}
@@ -260,6 +193,7 @@ const SalesDashboard = () => {
                   icon={stat.icon}
                   color={stat.color}
                   subtitle={stat.subtitle}
+                  type={stat.type}
                 />
               ))}
             </div>
@@ -275,6 +209,7 @@ const SalesDashboard = () => {
                   icon={stat.icon}
                   color={stat.color}
                   subtitle={stat.subtitle}
+                  type={stat.type}
                 />
               ))}
             </div>
@@ -287,7 +222,7 @@ const SalesDashboard = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">Doanh thu hàng ngày</h3>
-                  <p className="text-sm text-gray-600">Xu hướng doanh thu 7 ngày qua</p>
+                  <p className="text-sm text-gray-600">Xu hướng doanh thu {getPeriodText()} qua</p>
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center">
@@ -343,7 +278,6 @@ const SalesDashboard = () => {
                     cy="50%"
                     innerRadius={60}
                     outerRadius={100}
-                    paddingAngle={5}
                     dataKey="value"
                   >
                     {productCategories.map((entry, index) => (
@@ -380,7 +314,7 @@ const SalesDashboard = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">Xu hướng theo tháng</h3>
-                  <p className="text-sm text-gray-600">Doanh thu 6 tháng gần nhất</p>
+                  <p className="text-sm text-gray-600">Doanh thu {getPeriodText()} gần nhất</p>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
@@ -390,7 +324,7 @@ const SalesDashboard = () => {
                   <YAxis 
                     axisLine={false} 
                     tickLine={false}
-                    tickFormatter={(value) => `${value / 1000000000}B`}
+                    tickFormatter={(value) => `${value / 1000000}M`}
                   />
                   <Tooltip 
                     formatter={(value) => [formatCurrency(value), 'Doanh thu']}
@@ -449,4 +383,4 @@ const SalesDashboard = () => {
   );
 };
 
-export default SalesDashboard;
+export default SalesStatistic;
