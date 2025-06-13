@@ -2,7 +2,9 @@
 import { ChevronDown, ChevronUp, Edit, Package, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import TemplateComponentDetails from "./template-component-details";
-import PlanPagination from "@/components/common/planning/PlanPagination"; // Giả sử bạn có component này
+import PlanPagination from "@/components/common/planning/PlanPagination";
+import { formatCurrency } from "@/utils/format";
+import Swal from "sweetalert2";
 
 export default function TemplateList({ templates, onEdit, onDelete, onChangeStatus, handleCostChange }) {
     const [expandedTemplate, setExpandedTemplate] = useState([]);
@@ -12,13 +14,6 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
     const [page, setPage] = useState(1);
     const templatesPerPage = 7;
     const [totalPage, setTotalPage] = useState(1);
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat("vi-VN", {
-            style: "currency",
-            currency: "VND",
-        }).format(amount);
-    };
 
     // Tính totalCost cho tất cả templates
     useEffect(() => {
@@ -63,20 +58,41 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
     };
 
     const handleInputChange = (templateId, value) => {
-        setTempCosts((prev) => ({
-            ...prev,
-            [templateId]: value,
-        }));
+        // Chỉ chấp nhận giá trị từ 0 đến 100
+        const parsedValue = parseFloat(value);
+        if ((parsedValue >= 0 && parsedValue <= 100)) {
+            setTempCosts((prev) => ({
+                ...prev,
+                [templateId]: value,
+            }));
+        }
+        else {
+            setTempCosts((prev) => ({
+                ...prev,
+                [templateId]: 0,
+            }));
+        }
     };
 
     const handleInputBlur = (template, value) => {
-        const parsedValue = parseFloat(value) || 0;
-        if (parsedValue >= 0 && parsedValue <= 100) {
+        const parsedValue = parseFloat(value);
+        if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue <= 100) {
             const updatedTemplate = {
                 ...template,
                 production_cost: parsedValue,
             };
             handleCostChange(updatedTemplate);
+        }else {
+            // Nếu giá trị không hợp lệ, đặt lại về giá trị ban đầu
+            setTempCosts((prev) => ({
+                ...prev,
+                [template.template_id]: template.production_cost ?? 0,
+            }));
+            Swal.fire({
+                title: "Chú ý",
+                text: "Chi phí chỉ phải từ 0 đến 100",
+                icon: "warning",
+            })
         }
     };
 
@@ -146,7 +162,7 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
     return (
         <div>
             <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="overflow-x-auto">
+                <div>
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -333,6 +349,7 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                                                     min={0}
                                                     max={100}
                                                     step={1}
+                                                    title="Chi phí sản xuất phải từ 0 đến 100%"
                                                 />
                                                 <span>%</span>
                                             </div>
@@ -387,14 +404,14 @@ export default function TemplateList({ templates, onEdit, onDelete, onChangeStat
                 )}
 
             </div>
-                {/* Phân trang */}
-                {sortedTemplates.length > 0 && (
-                    <PlanPagination
-                        page={page}
-                        totalPage={totalPage}
-                        onPageChange={handlePageChange}
-                    />
-                )}
+            {/* Phân trang */}
+            {sortedTemplates.length > 0 && (
+                <PlanPagination
+                    page={page}
+                    totalPage={totalPage}
+                    onPageChange={handlePageChange}
+                />
+            )}
         </div>
     );
 }

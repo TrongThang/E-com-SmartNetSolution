@@ -140,6 +140,7 @@ export default function FirmwareDetailPage() {
 					}
 				}
 			}).catch((error) => {
+				console.error("Error confirming test:", error)
 				Swal.fire({
 					title: "Lỗi",
 					text: "Có lỗi xảy ra khi xác nhận kiểm tra \n" + error,

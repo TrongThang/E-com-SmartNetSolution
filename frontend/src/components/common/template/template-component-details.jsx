@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Package, Truck, Hash, User, X, DollarSign } from "lucide-react"
 import { useEffect, useState } from "react"
+import Swal from "sweetalert2"
 
 export default function TemplateComponentDetails({ components, template, onStatusChange }) {
     const [statusTemplate, setStatusTemplate] = useState(template.status)
@@ -10,15 +11,52 @@ export default function TemplateComponentDetails({ components, template, onStatu
         { value: "pause", label: "Tạm ngưng" },
     ]
 
-    const handleStatusChange = (template, value) => {
-        if (onStatusChange) {
-            const updatedTemplate = {
-                ...template,
-                status: value,
-            };
-            onStatusChange(updatedTemplate);
+    const statusActions = {
+        production: {
+            title: "Bạn có chắc chắn đưa vào sản xuất thiết bị?",
+            text: "Thiết bị sẽ chuyển sang sản xuất!",
+            icon: "question",
+            confirmText: "Xác nhận",
+        },
+        rejected: {
+            title: "Bạn có chắc muốn từ chối thiết bị?",
+            text: "Thiết bị sẽ chuyển sang bị từ chối",
+            icon: "question",
+            confirmText: "Từ chối",
+        },
+        pause: {
+            title: "Bạn có chắc muốn chuyển tạm ngừng sản xuất thiết bị?",
+            text: "Thiết bị sẽ chuyển sang tạm ngưng",
+            icon: "warning",
+            confirmText: "Tạm ngưng",
         }
-        setStatusTemplate(value)
+    };
+
+    const handleStatusChange = async (template_id, status) => {
+        const action = statusActions[status];
+        if (!action) return; // nếu status không có trong danh sách, thì không làm gì
+
+        const result = await Swal.fire({
+            title: action.title,
+            text: action.text,
+            icon: action.icon,
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: action.confirmText,
+            cancelButtonText: "Hủy",
+        });
+
+        if (result.isConfirmed) {
+            if (onStatusChange) {
+                const updatedTemplate = {
+                    template_id: template_id,
+                    status: status,
+                };
+                onStatusChange(updatedTemplate);
+            }
+            setStatusTemplate(status);
+        }
     }
 
     const formatCurrency = (amount) => {
@@ -32,7 +70,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
         (sum, component) =>
             sum + (component.quantity_required || 0) * (component.unit_cost || 0),
         0
-    );  
+    );
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -158,7 +196,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     <select
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         value={statusTemplate}
-                        onChange={(e) => handleStatusChange(template, e.target.value)}
+                        onChange={(e) => handleStatusChange(template.template_id, e.target.value)}
                     >
                         {statusOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -173,7 +211,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     <Button
                         size="sm"
                         className="bg-red-600 hover:bg-red-700"
-                        onClick={() => handleStatusChange(template, "rejected")}
+                        onClick={() => handleStatusChange(template.template_id, "rejected")}
                     >
                         <X className="w-4 h-4 mr-2" />
                         Từ chối
@@ -181,7 +219,7 @@ export default function TemplateComponentDetails({ components, template, onStatu
                     <Button
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
-                        onClick={() => { handleStatusChange(template, "production") }}
+                        onClick={() => { handleStatusChange(template.template_id, "production") }}
                     >
                         <User className="w-4 h-4 mr-2" />
                         Duyệt
