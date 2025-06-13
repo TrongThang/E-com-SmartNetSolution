@@ -89,8 +89,7 @@ export default function GenericTable({
   const getPageNumbers = () => {
     const pages = [];
 
-    if (totalPages <= 3) {
-      // Nếu tổng số trang <= 3, hiển thị tất cả
+    if (totalPages <= 4) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
@@ -107,7 +106,7 @@ export default function GenericTable({
         pages.push(currentPage);
       }
 
-      if (currentPage < totalPages - 1) {
+      if (currentPage < totalPages - 2) {
         pages.push("...");
       }
 
@@ -119,7 +118,7 @@ export default function GenericTable({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="">
       <Input
         type="text"
         placeholder="Tìm kiếm..."
@@ -128,13 +127,14 @@ export default function GenericTable({
         className="w-full max-w-sm"
       />
 
-      <Table>
+      <Table className="mt-4 overflow-y-auto">
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-gray-50">
             {columns.map((col) => (
               <TableHead
                 key={col.key}
                 className={cn(
+                  "text-xs font-medium text-gray-500 uppercase tracking-wider",
                   col.alignRight ? "text-right" : "",
                   col.sortName ? "cursor-pointer hover:bg-gray-100" : ""
                 )}
@@ -150,7 +150,7 @@ export default function GenericTable({
             ))}
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="bg-white divide-y divide-gray-200">
           {currentData.map((row, index) => (
             <TableRow key={index}>
               {columns.map((col) => (
@@ -176,12 +176,12 @@ export default function GenericTable({
       </Table>
 
       {/* Pagination */}
-      <Pagination className="justify-start">
+      <Pagination className="justify-center mt-4">
         <PaginationContent>
           <PaginationItem>
             <PaginationLink
               onClick={() => handlePageChange(currentPage - 1)}
-              className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              className={currentPage === 1 ? "pointer-events-none opacity-50" : "hover:bg-blue-400 hover:text-white"}
             >
               <ChevronLeft className="h-4 w-4" />
             </PaginationLink>
@@ -192,7 +192,8 @@ export default function GenericTable({
               {page === "..." ? (
                 <PaginationEllipsis />
               ) : (
-                <PaginationLink
+                  <PaginationLink
+                  className={currentPage === page ? "bg-blue-600 text-white" : "hover:bg-blue-400 hover:text-white"}
                   onClick={() => handlePageChange(page)}
                   isActive={currentPage === page}
                 >
@@ -206,7 +207,7 @@ export default function GenericTable({
             <PaginationLink
               onClick={() => handlePageChange(currentPage + 1)}
               className={
-                currentPage === totalPages ? "pointer-events-none opacity-50" : ""
+                currentPage === totalPages ? "pointer-events-none opacity-50" : "hover:bg-blue-400 hover:text-white"
               }
             >
               <ChevronRight className="h-4 w-4" />

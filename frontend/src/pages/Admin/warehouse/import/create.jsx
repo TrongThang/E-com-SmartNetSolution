@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -62,12 +63,7 @@ export default function CreateImportWarehousePage() {
                 const newProduct = {
                     ...product,
                     quantity: 1,
-                    import_price: product.price || 0,
-                    amount: product.price || 0,
-                    is_gift: false,
-                    batch_code: `BATCH-${product.id}-${Date.now().toString().slice(-6)}`,
-                    serial_numbers: [],
-                    barcode: product.barcode || "",
+                    note: product.note || "",
                 }
 
                 return {
@@ -87,27 +83,14 @@ export default function CreateImportWarehousePage() {
             const updatedProducts = prev.products.map((product) => {
                 if (product.id === productId) {
                     const updatedProduct = { ...product, [field]: value }
-
-                    // Recalculate amount if quantity or import_price changes
-                    if (field === "quantity" || field === "import_price") {
-                        const quantity = field === "quantity" ? value : product.quantity
-                        const importPrice = field === "import_price" ? value : product.import_price
-
-                        updatedProduct.amount = quantity * importPrice
-                    }
-
                     return updatedProduct
                 }
                 return product
             })
 
-            // Recalculate total_money
-            const totalMoney = updatedProducts.reduce((sum, product) => sum + (product.amount || 0), 0)
-
             return {
                 ...prev,
                 products: updatedProducts,
-                total_money: totalMoney,
             }
         })
     }
@@ -117,51 +100,11 @@ export default function CreateImportWarehousePage() {
         setFormData((prev) => {
             const updatedProducts = prev.products.filter((product) => product.id !== productId)
 
-            // Recalculate total_money
-            const totalMoney = updatedProducts.reduce((sum, product) => sum + (product.amount || 0), 0)
-
             return {
                 ...prev,
                 products: updatedProducts,
-                total_money: totalMoney,
             }
         })
-    }
-
-    // Handle serial number update
-    const handleSerialNumberUpdate = (productId, serialNumbers) => {
-        setFormData((prev) => ({
-            ...prev,
-            products: prev.products.map((product) => {
-                if (product.id === productId) {
-                    // Hỗ trợ cả callback và mảng
-                    const newSerials = typeof serialNumbers === 'function'
-                        ? serialNumbers(product.serial_numbers || [])
-                        : serialNumbers;
-                    return {
-                        ...product,
-                        serial_numbers: Array.isArray(newSerials) ? newSerials : [],
-                    }
-                }
-                return product
-            }),
-        }))
-    }
-
-    // Handle barcode update
-    const handleBarcodeUpdate = (productId, barcode) => {
-        setFormData((prev) => ({
-            ...prev,
-            products: prev.products.map((product) => {
-                if (product.id === productId) {
-                    return {
-                        ...product,
-                        barcode,
-                    }
-                }
-                return product
-            }),
-        }))
     }
 
     // Submit form
@@ -178,17 +121,9 @@ export default function CreateImportWarehousePage() {
                 total_money: formData.total_money,
                 note: formData.note,
                 detail_import: formData.products.map((product) => ({
-                    batch_code: product.batch_code,
                     product_id: product.id,
                     quantity: product.quantity,
-                    import_price: product.import_price,
-                    amount: product.amount,
-                    is_gift: product.is_gift,
                     note: product.note || "",
-                    barcode: product.barcode || "",
-                    batch_product_detail: product.serial_numbers.map((serial) => ({
-                        seral_number: serial,
-                    })),
                 })),
             }
             
@@ -204,7 +139,7 @@ export default function CreateImportWarehousePage() {
             } else {
                 Swal.fire({
                     title: "Lỗi",
-                    text: response,
+                    text: response.errors[0].message,
                     icon: "error",
                 })
             }
@@ -224,7 +159,6 @@ export default function CreateImportWarehousePage() {
         // Check if all products have valid quantity and price
         for (const product of formData.products) {
             if (!product.quantity || product.quantity <= 0) return false
-            if (!product.import_price || product.import_price <= 0) return false
 
             // Check if all serial numbers are provided for products that require them
             if (product.requires_serial && product.serial_numbers.length !== product.quantity) {
@@ -250,7 +184,7 @@ export default function CreateImportWarehousePage() {
     const { totalProducts, totalItems, totalSerialNumbers } = getTotalStats()
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto py-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-3xl font-bold">Tạo Phiếu Nhập Kho</h1>
@@ -305,8 +239,6 @@ export default function CreateImportWarehousePage() {
                         onAddProduct={handleAddProduct}
                         onUpdateProduct={handleProductUpdate}
                         onRemoveProduct={handleRemoveProduct}
-                        onUpdateSerialNumbers={handleSerialNumberUpdate}
-                        onUpdateBarcode={handleBarcodeUpdate}
                         onBack={() => setActiveTab("basic-info")}
                         onSubmit={() => setShowConfirmDialog(true)}
                         isSubmitDisabled={!validateForm() || isSubmitting}
@@ -345,8 +277,6 @@ ProductsTab.propTypes = {
     onAddProduct: PropTypes.func.isRequired,
     onUpdateProduct: PropTypes.func.isRequired,
     onRemoveProduct: PropTypes.func.isRequired,
-    onUpdateSerialNumbers: PropTypes.func.isRequired,
-    onUpdateBarcode: PropTypes.func.isRequired,
     onBack: PropTypes.func.isRequired,
     onSubmit: PropTypes.func.isRequired,
     isSubmitDisabled: PropTypes.bool.isRequired,

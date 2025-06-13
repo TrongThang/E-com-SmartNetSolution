@@ -168,7 +168,7 @@ const PlanningPDF = ({ planning }) => (
                 </View>
             </View>
 
-            {/* Danh sách các lô */}
+            {/* Danh sách các đơn sản xuất */}
             {planning.production_batches?.map((batch, batchIndex) => {
                 // Tìm firmware dựa trên firmware_id
                 const firmware = batch.device_templates?.firmware?.find(
@@ -177,13 +177,13 @@ const PlanningPDF = ({ planning }) => (
 
                 return (
                     <View key={batch.production_batch_id} style={styles.batchBox}>
-                        <Text style={styles.sectionTitle}>Lô {batchIndex + 1}</Text>
+                        <Text style={styles.sectionTitle}>Đơn sản xuất {batchIndex + 1}</Text>
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Mã lô:</Text>
+                            <Text style={styles.infoLabel}>Mã đơn sản xuất:</Text>
                             <Text style={styles.infoValue} wrap>{batch.production_batch_id}</Text>
                         </View>
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Template:</Text>
+                            <Text style={styles.infoLabel}>Thiết bị:</Text>
                             <Text style={styles.infoValue} wrap>{batch.device_templates?.name || '-'}</Text>
                         </View>
                         <View style={styles.infoRow}>
@@ -205,7 +205,7 @@ const PlanningPDF = ({ planning }) => (
                             <Text style={styles.infoValue} wrap>{convertStatus(batch.status)}</Text>
                         </View>
 
-                        {/* Danh sách sản phẩm trong lô */}
+                        {/* Danh sách sản phẩm trong đơn sản xuất */}
                         <Text style={[styles.sectionTitle, { marginTop: 10, fontSize: 13 }]}>Danh sách Sản phẩm</Text>
                         <View style={styles.productTable}>
                             <View style={styles.tableHeader}>

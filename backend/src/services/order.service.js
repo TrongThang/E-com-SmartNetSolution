@@ -1,9 +1,11 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
+const { ORDER, ROLE } = require("../contants/info");
 const { generateOrderID } = require("../helpers/generate.helper");
 const { getOrderNumber } = require("../helpers/import.warehouse.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
-const { prisma, isExistId } = require("../helpers/query.helper");
+const queryHelper = require("../helpers/query.helper");
+const { prisma, isExistId, queryRaw } = require("../helpers/query.helper");
 
 const { get_error_response } = require("../helpers/response.helper");
 const { executeSelectData } = require("../helpers/sql_query");
@@ -45,7 +47,7 @@ function configOrderData(dbResults) {
     return Array.from(orderMap.values());
 }
 
-async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
+async function getOrderForWarehouseEmployee(filters, logic, limit, sort, order) {
     let get_attr = `
         order.id, 
         order.name_recipient,
@@ -91,13 +93,180 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     }
 }
 
+async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
+    let get_attr = `
+        order.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS saler_name,
+        CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
+        order.name_recipient,
+        order.address,
+        order.phone,
+        order.amount,
+        order.status,
+        order.note
+    `;
+
+    let get_table = `\`order\``;
+    let query_join = `
+        LEFT JOIN customer ON order.customer_id = customer.id
+        LEFT JOIN employee ON order.saler_id = employee.id
+    `;
+
+    try {
+        const orders = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: filters,
+            logic: logic,
+            sort: sort,
+            order: order,
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            orders
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+function configOrderDetailData(dbResults) {
+    if (!dbResults || dbResults.length === 0) {
+        return [];
+    }
+
+    const orderMap = new Map();
+
+    dbResults.forEach(record => {
+        if (!orderMap.has(record.id)) {
+            orderMap.set(record.id, {
+                id: record.id,
+                saler_name: record.saler_name,
+                shipper_name: record.shipper_name,
+                customer_name: record.customer_name,
+                export_date: record.export_date,
+                total_import_money: record.total_import_money,
+                discount: record.discount,
+                vat: record.vat,
+                shipping_fee: record.shipping_fee,
+                amount: record.amount,
+                payment_method: record.payment_method,
+                phone: record.phone,
+                platform_order: record.platform_order,
+                note: record.note,
+                status: record.status,
+                address: record.address,
+                name_recipient: record.name_recipient,
+                products: []
+            });
+        }
+
+        if (record.product_id) {
+            const order = orderMap.get(record.id);
+            order.products.push({
+                id: record.product_id,  
+                name: record.product_name,
+                image: record.product_image,
+                quantity: record.quantity,
+                price: record.sale_price,
+                unit: record.unit,
+                delivery_date: record.delivery_date,
+                receiving_date: record.receiving_date,
+                is_gift: record.is_gift,
+                discount: record.discount,
+                amount: record.amount,
+                note: record.note,
+                // status: record.status,
+            });
+        }
+    });
+
+    return Array.from(orderMap.values());
+}
+
+async function getOrderDetailService(order_id) {
+    const get_attr = `
+        order.id,
+        CONCAT(saler.surname, ' ',saler.lastname) AS saler_name,
+        CONCAT(shipper.surname, ' ',shipper.lastname) AS shipper_name,
+        CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
+        order.export_date,
+        order.total_import_money,
+        order.discount,
+        order.vat,
+        order.shipping_fee,
+        order.amount,
+        order.payment_method,
+        order.phone,
+        order.platform_order,
+        order.note,
+        order.status,
+        order.address,
+        order.name_recipient,
+        order_detail.product_id,
+        product.name as product_name,
+        product.image as product_image,
+        order_detail.unit,
+        product.image,
+        order_detail.quantity_sold,
+        order_detail.sale_price,
+        order_detail.delivery_date,
+        order_detail.receiving_date,
+        order_detail.is_gift,
+        order_detail.discount,
+        order_detail.amount
+    `;
+
+    const get_table = '`order`';
+    const query_join = `
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN product ON order_detail.product_id = product.id
+        LEFT JOIN employee shipper ON order.shipper_id = shipper.id
+        LEFT JOIN employee saler ON order.saler_id = saler.id
+        LEFT JOIN customer ON order.customer_id = customer.id
+    `;
+    console.log('order_id', order_id)
+    const filter = {
+        field: "order.id",
+        condition: "=",
+        value: order_id
+    };
+
+    try {
+        const result = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            filter: filter, 
+            configData: configOrderDetailData
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            result
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
 async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
     const get_attr = `
         order.id,
-        order.order_id,
         order.total_money,
-        order.prepaid,
-        order.remaining,
         order.discount,
         order.vat,
         order.amount,
@@ -152,6 +321,7 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
                         payment_method: row.payment_method,
                         payment_account: row.payment_account,
                         phone: row.phone,
+                        name_recipient: row.name_recipient,
                         platform_order: row.platform_order,
                         note: row.note,
                         status: row.status,
@@ -196,12 +366,12 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
     }
 }
 
-async function createOrder(orderData) {
+async function createOrder(orderData, platform_order) {
     const { shipping, payment, order, products } = orderData;
 
     // 1. Kiểm tra thông tin sản phẩm
     const checkProduct = await check_list_info_product(products);
-    if (checkProduct) return checkProduct;
+    if (checkProduct.status_code !== STATUS_CODE.OK) return checkProduct;
 
     // 2. Kiểm tra thông tin saler (nếu có)
     if (order.saler_id) {
@@ -267,18 +437,18 @@ async function createOrder(orderData) {
     const result_order_number = await getOrderNumber(new Date());
     const orderNumber = Number(result_order_number) + 1;
     const order_id = generateOrderID(orderNumber);
-
     // 10. Transaction: tạo đơn hàng và chi tiết đơn hàng
     try {
         const result = await prisma.$transaction(async (tx) => {
             // Tạo đơn hàng
+            console.log('Customer', order.customer_id)
             const newOrder = await tx.order.create({
                 data: {
                     id: order_id,
                     order_number: orderNumber,
-                    customer_id: order.customer_id,
-                    saler_id: order.saler_id || null,
-                    shipper_id: order.shipper_id || null,
+                    customer: {
+                        connect: { id: order.customer_id }
+                    },
                     export_date: order.export_date || new Date(),
                     total_import_money: orderTotals.totalImportMoney,
                     discount: order.discount || 0,
@@ -286,14 +456,12 @@ async function createOrder(orderData) {
                     total_money: orderTotals.totalMoney,
                     shipping_fee: shippingFee,
                     amount: orderTotals.amount,
-                    prepaid: payment.prepaid || 0,
-                    remaining: payment.remaining || orderTotals.totalMoney,
                     address: fullAddress,
                     payment_method: payment.payment_method,
                     payment_account: payment.payment_account || null,
                     phone: shipping.phone,
-                    name_recipient: shipping.name_recipient,
-                    platform_order: order.platform_order || 'WEB',
+                    name_recipient: shipping.fullName,
+                    platform_order: platform_order || 'WEB',
                     note: order.note || '',
                     status: order.status || 0,
                 }
@@ -307,14 +475,17 @@ async function createOrder(orderData) {
 
                 await tx.order_detail.create({
                     data: {
-                        order_id: newOrder.id,
-                        product_id: product.id,
+                        order: {
+                            connect: { id: newOrder.id }
+                        },
+                        product: {
+                            connect: { id: product.id }
+                        },
                         unit: product.unit,
                         sale_price: product.price,
                         discount: product.discount || 0,
                         quantity_sold: product.quantity,
                         amount: product.price * product.quantity * (1 - product.discount / 100),
-                        is_gift: product.is_gift || false
                     }
                 });
             }
@@ -417,7 +588,7 @@ async function createOrderDetail(orderId, product) {
 
 async function cancelOrderService(order_id) {
     try {
-        const orderId = Number(order_id)
+        const orderId = order_id
         const order = await prisma.order.findUnique({
             where: { id: orderId }
         });
@@ -429,7 +600,7 @@ async function cancelOrderService(order_id) {
             );
         }
 
-        if (order.status === -1) {
+        if (order.status === ORDER.PENDING || order.status === ORDER.PREPARING) {
             return get_error_response(
                 errors=ERROR_CODES.ORDER_ALREADY_CANCELLED,
                 status_code=STATUS_CODE.BAD_REQUEST
@@ -439,7 +610,7 @@ async function cancelOrderService(order_id) {
         await prisma.order.update({
             where: { id: orderId },
             data: {
-                status: -1
+                status: ORDER.CANCELLED
             }
         });
 
@@ -456,9 +627,306 @@ async function cancelOrderService(order_id) {
     }
 }
 
+async function respondListOrderService(orderIds) {
+    try {
+        const listOrder = await prisma.order.findMany({
+            where: { id: { in: orderIds }, deleted_at: null, status: ORDER.PENDING },
+            include: {
+                order_detail: true
+            }
+        });
+
+        if (listOrder.length !== orderIds.length) {
+            return get_error_response(
+                errors=ERROR_CODES.ORDER_NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        // Lấy danh sách số lượng sản phẩm trong kho và kiểm tra
+        const listProduct = []; // Danh sách sản phẩm trong kho
+        /**
+         * [
+         *      {
+         *          product_id: 1,
+         *          quantity: 10
+         *      },
+         *      {
+         *          product_id: 2,
+         *          quantity: 20
+         *      }
+         * ]
+         */
+        for (const order of listOrder) {
+            for (const product of order.order_detail) {
+                const productId = product.product_id;
+                const quantity = product.quantity_sold;
+
+                const productIndex = listProduct.findIndex(item => item.product_id === productId);
+                if (productIndex !== -1) {
+                    listProduct[productIndex].quantity += quantity;
+                } else {
+                    listProduct.push({ product_id: productId, quantity: quantity });
+                }
+            }
+        }
+
+        const resultCheckProductInWarehouse = await checkProductInWarehouse(listProduct)
+        if (resultCheckProductInWarehouse) return resultCheckProductInWarehouse;
+
+        await prisma.$transaction(async (tx) => {
+
+            // Cập nhật trạng thái đơn hàng
+            await tx.order.updateMany({
+                where: { id: { in: orderIds } },
+                data: { status: ORDER.PREPARING }
+            });
+
+
+            // if (result.count !== orderIds.length) {
+            //     return get_error_response(
+            //         errors=ERROR_CODES.ORDER_CONFIRM_ORDER_FAILED,
+            //         status_code=STATUS_CODE.BAD_REQUEST
+            //     );
+            // }
+
+            // Cập nhật số lượng sản phẩm trong kho
+
+
+            for (const item of listProduct) {
+                const quantityToDecrease = item.quantity;
+            
+                // Lấy các lô hàng còn tồn kho theo product_id (và deleted_at = null nếu cần)
+                const lots = await tx.warehouse_inventory.findMany({
+                    where: {
+                        product_id: item.product_id,
+                        stock: { gt: 0 }
+                    },
+                    orderBy: { created_at: 'asc' } // FIFO dùng created_at để lấy lô hàng lâu nhất
+                });
+                
+                let remaining = quantityToDecrease; // Số lượng cần giảm
+            
+                for (const lot of lots) {
+                    if (remaining <= 0) break;
+            
+                    const decrement = Math.min(lot.stock, remaining);
+            
+                    await prisma.warehouse_inventory.update({
+                        where: { id: lot.id },
+                        data: { stock: { decrement } }
+                    });
+            
+                    remaining -= decrement;
+
+                    // Nếu không đủ tồn kho → throw để rollback
+                    if (decrement === 0 && remaining > 0) {
+                        throw new Error(`Insufficient stock for product ${item.product_id}`);
+                    }
+                }
+                if (remaining > 0) {
+                    throw new Error(`Insufficient total stock for product ${item.product_id}`);
+                }
+            }
+        });
+
+        return get_error_response(
+            errors=ERROR_CODES.ORDER_CONFIRM_ORDER_SUCCESS,
+            status_code=STATUS_CODE.OK
+        );
+    } catch (error) {
+        console.log('Respond list order error:', error);
+        return get_error_response(
+            errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
+
+async function checkProductInWarehouse(listProduct) {
+    const productIds = listProduct.map(item => item.product_id);
+
+    const result = await prisma.$queryRaw`
+        SELECT 
+            wi.product_id, 
+            p.name AS product_name, 
+            SUM(wi.stock) AS total_stock
+        FROM warehouse_inventory wi
+        JOIN product p ON wi.product_id = p.id
+        WHERE wi.product_id IN (${productIds.join(',')}) AND wi.deleted_at IS NULL
+        GROUP BY wi.product_id, p.name
+    `;
+
+    const warehouseData = result.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        stock: item.total_stock
+    }));
+    
+    const errorsData = [];
+
+    const validProducts = warehouseData.filter(w => {
+        const match = listProduct.find(p => p.product_id === w.product_id);
+        console.log('match', match)
+        if (w.stock < match.quantity) {
+            errorsData.push({
+                type: 'product_stock_not_enough',
+                message: `Sản phẩm ${w.product_name} không đủ số lượng. Còn lại ${w.stock} sản phẩm`
+            });
+        }
+        return match && w.stock >= match.quantity;
+    });
+
+    if (validProducts.length !== listProduct.length) {
+        return get_error_response(
+            errors=ERROR_CODES.WAREHOUSE_INVENTORY_PRODUCT_STOCK_NOT_ENOUGH,
+            status_code = STATUS_CODE.BAD_REQUEST,
+            data = errorsData
+        );
+    }
+
+    return undefined;
+}
+
+async function StartShippingOrderService(order_id, account_id) {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: order_id }
+        });
+
+        if (!order) {
+            return get_error_response(
+                errors=ERROR_CODES.ORDER_NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (order.status !== ORDER.PREPARING) {
+            return get_error_response(
+                errors=ERROR_CODES.ORDER_REQUIRE_STATUS_SHIPPING,
+                status_code=STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        const employee = await prisma.account.findUnique({
+            where: { id: account_id, deleted_at: null }
+        });
+
+        if (!employee) {
+            return get_error_response(
+                errors=ERROR_CODES.EMPLOYEE_NOT_FOUND,
+                status_code=STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (employee.role_id !== ROLE.SHIPPER && employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE && employee.role_id !== ROLE.MANAGER_WAREHOUSE && employee.role_id !== ROLE.SALER) {
+            return get_error_response(
+                errors=ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED,
+                status_code=STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.update({
+            where: { id: order_id },
+            data: {
+                status: ORDER.SHIPPING,
+                shipper_id: employee.id
+            }
+        });
+
+        // Firebase notification
+
+        return get_error_response(
+            errors=ERROR_CODES.SUCCESS,
+            status_code=STATUS_CODE.OK
+        );
+    }
+    catch (error) {
+        console.log('Start shipping order error:', error);
+        return get_error_response(
+            errors=ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code=STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
+/**
+ * Xác nhận đã giao hàng (chỉ có shipper và manager warehouse mới có quyền xác nhận)
+ * @param {string} order_id - ID của đơn hàng
+ * @param {string} image_proof - Ảnh chứng minh đã giao hàng
+ * @param {string} account_id - ID tài khoản của nhân viên
+ * @returns {Promise<Response>} - Kết quả xác nhận đã giao hàng
+ */
+async function confirmShippingOrderService(order_id, image_proof, account_id) {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: order_id }
+        });
+
+        if (!order) {
+            return get_error_response(
+                errors = ERROR_CODES.ORDER_NOT_FOUND,
+                status_code = STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (order.status !== ORDER.SHIPPING) {
+            return get_error_response(
+                errors = ERROR_CODES.ORDER_REQUIRE_STATUS_SHIPPING,
+                status_code = STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        const employee = await prisma.account.findUnique({
+            where: { id: account_id, deleted_at: null }
+        });
+
+        if (!employee) {
+            return get_error_response(
+                errors = ERROR_CODES.EMPLOYEE_NOT_FOUND,
+                status_code = STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (employee.role_id !== ROLE.SHIPPER && employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE && employee.role_id !== ROLE.MANAGER_WAREHOUSE && employee.role_id !== ROLE.SALER) {
+            return get_error_response(
+                errors=ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED,
+                status_code=STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.update({
+            where: { id: order_id },
+            data: {
+                status: ORDER.DELIVERED,
+                image_shipped: image_proof
+            }
+        });
+
+        // Firebase notification
+
+        return get_error_response(
+            errors = ERROR_CODES.SUCCESS,
+            status_code = STATUS_CODE.OK
+        );
+    } catch (error) {
+        console.log('Confirm shipping order error:', error);
+        return get_error_response(
+            errors = ERROR_CODES.INTERNAL_SERVER_ERROR,
+            status_code = STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
 module.exports = {
     createOrder,
     getOrdersForAdministrator,
     getOrdersForCustomer,
-    cancelOrderService
+    cancelOrderService,
+    getOrderDetailService,
+    respondListOrderService,
+    getOrderForWarehouseEmployee,
+    StartShippingOrderService,
+    confirmShippingOrderService
 }

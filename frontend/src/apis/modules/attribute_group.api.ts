@@ -1,5 +1,5 @@
 import { ESortOrderValue } from "@/models/enums/option";
-import { FilterSearch, IAttributeGroup, IApiResponse } from "@/models/interfaces";
+import { FilterSearch, IAttributeGroup, IApiResponse } from "@/models/interfaces/index";
 import axiosPrivate from "../clients/private.client";
 import { add } from "date-fns";
 

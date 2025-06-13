@@ -1,8 +1,10 @@
 import { Loader2, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useNavigate } from "react-router-dom"
 
-export function ExportHeader({ orders, totalProducts, totalScanned, isSubmitting, validateForm, onCancel, onConfirm }) {
+export function ExportHeader({ orders, totalProducts, isSubmitting, validateForm, onConfirm }) {
+    const navigate = useNavigate()
     return (
         <div className="flex items-center justify-between mb-6">
             <div>
@@ -10,14 +12,11 @@ export function ExportHeader({ orders, totalProducts, totalScanned, isSubmitting
                 {orders.length > 0 && (
                     <div className="flex gap-2 mt-2">
                         <Badge variant="outline">{orders.length} đơn hàng</Badge>
-                        <Badge variant="outline">
-                            {totalScanned}/{totalProducts} sản phẩm đã quét
-                        </Badge>
                     </div>
                 )}
             </div>
             <div className="flex gap-2">
-                <Button variant="outline" onClick={onCancel} className="border-red-500 text-red-500">
+                <Button variant="outline" onClick={() => navigate("/admin/warehouses/export")} className="border-red-500 text-red-500">
                     Hủy
                 </Button>
                 <Button onClick={onConfirm} disabled={!validateForm() || isSubmitting} className="bg-blue-500 text-white">

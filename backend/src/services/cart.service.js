@@ -60,18 +60,17 @@ async function checkQuantityAndInventory(product_id, quantity) {
  * @param {Object} cartItem - Thông tin sản phẩm trong giỏ hàng (customer_id, product_id, quantity)
  * @returns {Object} - Phản hồi thành công hoặc lỗi
  */
-async function addToCart(cartItem) {
-    const { customer_id, product_id, quantity } = cartItem;
+async function addToCart(customer_id, product_id, quantity) {
 
     try {
         // Kiểm tra sự tồn tại của khách hàng và sản phẩm
-        const isErrorCustomerOrProduct = checkCustomerAndProduct(customer_id, product_id);
+        const isErrorCustomerOrProduct = await checkCustomerAndProduct(customer_id, product_id);
         if (isErrorCustomerOrProduct) {
             return isErrorCustomerOrProduct;
         }
 
         // Kiểm tra số lượng hợp lệ và tồn kho
-        const isQuantityError = checkQuantityAndInventory(product_id, quantity);
+        const isQuantityError = await checkQuantityAndInventory(product_id, quantity);
         if (isQuantityError) {
             return isQuantityError;
         }
@@ -85,27 +84,37 @@ async function addToCart(cartItem) {
             });
 
             if (!existingItem) {
-                cart = await tx.cart.create({
-                    data: { customer_id, product_id, quantity },
+
+                const ware_house_inventory = await tx.warehouse_inventory.aggregate({
+                    where: { product_id, deleted_at: null },
+                    _sum: { stock: true },
+                });
+
+                if (!ware_house_inventory._sum.stock || ware_house_inventory._sum.stock < quantity) {
+                    return get_error_response(
+                        ERROR_CODES.CART_PRODUCT_INSUFFICIENT_INVENTORY,
+                        STATUS_CODE.BAD_REQUEST
+                    );
+                }
+
+                await tx.cart.create({
+                    data: { customer_id, product_id, quantity, selected: true },
                 });
             } else {
                 // Cập nhật số lượng nếu sản phẩm đã tồn tại
-                cartItem = await tx.cart.update({
+                const cartItem = await tx.cart.update({
                     where: { id: existingItem.id },
-                    data: { quantity: existingItem.quantity + quantity },
+                    data: { quantity: existingItem.quantity + quantity, selected: existingItem.selected },
                 });
             }
-
-            return { cart, cartItem };
         });
 
-        logger.info(`Added product ${product_id} to cart for customer ${customer_id}`);
-        return get_success_response(
+        return get_error_response(
             ERROR_CODES.CART_SUCCESS,
             STATUS_CODE.OK
         );
     } catch (err) {
-        logger.error(`Error adding to cart: ${err.message}`);
+        console.log("err", err)
         return get_error_response(
             ERROR_CODES.INTERNAL_SERVER_ERROR,
             STATUS_CODE.INTERNAL_SERVER_ERROR
@@ -120,9 +129,6 @@ async function addToCart(cartItem) {
  */
 async function updateQuantityCartItem(cartItem) {
     const { customer_id, product_id, quantity } = cartItem;
-    console.log("customer_id", customer_id)
-    console.log("product_id", product_id)
-    console.log("quantity", quantity)
     try {
         // Kiểm tra sự tồn tại của khách hàng và sản phẩm
         const isErrorCustomerOrProduct = await checkCustomerAndProduct(customer_id, product_id);
@@ -154,7 +160,7 @@ async function updateQuantityCartItem(cartItem) {
             // Cập nhật số lượng
             const updatedItem = await tx.cart.update({
                 where: { id: cart.id },
-                data: { quantity: quantity },
+                data: { quantity: quantity, selected: cart.selected },
             });
 
             return { cart, updatedItem };
@@ -245,7 +251,7 @@ async function removeFromCart(cartItem) {
  * @param {number} customer_id - ID của khách hàng
  * @returns {Object} - Phản hồi chứa thông tin giỏ hàng
  */
-async function getCart(customer_id) {
+async function getCart(customer_id = null) {
     try {
         // Kiểm tra sự tồn tại của khách hàng
         const customer = await prisma.customer.findFirst({
@@ -273,7 +279,7 @@ async function getCart(customer_id) {
 
             const productCart = await getProductService(filters = filters)
 
-            productCartConfig = productCart.data.data.map(item => ({
+            const productCartConfig = productCart.data.data.map(item => ({
                 id: item.id,
                 image: item.image,
                 name: item.name,
@@ -284,16 +290,18 @@ async function getCart(customer_id) {
                 quantity: cart.find(cartItem => cartItem.product_id === item.id)?.quantity || 0,
                 selected: cart.find(cartItem => cartItem.product_id === item.id)?.selected || 1
             }))
+
             return get_error_response(
                 ERROR_CODES.CART_SUCCESS,
                 STATUS_CODE.OK,
                 productCartConfig
             );
         }
-        
+
         return get_error_response(
-            ERROR_CODES.CART_SUCCESS,
+            ERROR_CODES.SUCCESS,
             STATUS_CODE.OK,
+            []
         );
     } catch (err) {
         console.log('err', err)
@@ -302,6 +310,26 @@ async function getCart(customer_id) {
             STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
+}
+
+async function fetchLatestProductInfo(filters) {
+    const product = await getProductService(filters = filters)
+
+    const productCartConfig = product.data.data.map(item => ({
+        id: item.id,
+        image: item.image,
+        name: item.name,
+        selling_price: item.selling_price,
+        status: item.status,
+        stock: item.stock,
+        delta: item.delta,
+    }))
+
+    return get_error_response(
+        ERROR_CODES.CART_SUCCESS,
+        STATUS_CODE.OK,
+        productCartConfig
+    );
 }
 
 /**
@@ -465,6 +493,8 @@ const removeSelected = async (customer_id, items) => {
     }
 }
 
+
+
 module.exports = {
     addToCart,
     updateQuantityCartItem,
@@ -473,5 +503,6 @@ module.exports = {
     confirmCart,
     updateCart,
     removeAllFromCart,
-    removeSelected
+    removeSelected,
+    fetchLatestProductInfo
 };

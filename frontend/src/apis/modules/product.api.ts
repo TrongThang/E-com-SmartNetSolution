@@ -62,6 +62,20 @@ const productApi = {
             throw error;
         }
     },
+    async getBySlug(slug: string): Promise<IApiResponse<IProductDetail>> {
+        try {
+            return await axiosPublic.get(`${productPublic.common}/detail-by-slug/${slug}`);
+        } catch (error) {
+            throw error;
+        }
+    },
+    async checkWarehouseInventory(product_id: number): Promise<IApiResponse> {
+        try {
+            return await axiosPublic.get(`${productPublic.common}/check-warehouse-inventory/${product_id}`);
+        } catch (error) {
+            throw error;
+        }
+    }
 };
 
 export default productApi;

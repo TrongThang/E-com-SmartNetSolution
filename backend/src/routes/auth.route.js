@@ -4,7 +4,8 @@ const { login, getMe, register,
     ChangedPasswordForgot,
     ChangedPassword,
     verifyOtpEmailForChangeEmail,
-    loginEmployee
+    loginEmployee,
+    getMeEmployee
 } = require('../controllers/auth.controller');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const authRouter = express.Router();
@@ -36,7 +37,8 @@ authRouter.post('/account/change-password-forgot', asyncHandler(ChangedPasswordF
 authRouter.patch('/account/changed-password', asyncHandler(ChangedPassword));
 
 // Lấy thông tin tài khoản hiện tại
-authRouter.post('/account/get-me', getMe);
+authRouter.get('/getme', getMe);
+authRouter.get('/getme-employee', getMeEmployee);
 
 
 module.exports = authRouter;

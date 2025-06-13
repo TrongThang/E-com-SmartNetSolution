@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 
 
 //Lấy danh sách danh mục và danh mục con và thuộc tính của danh mục [được lọc theo deleted_at = null]
-const getCategoriesService = async (filter, limit, sort, order) => {
+const getCategoriesService = async (filters, limit, sort, order) => {
     try {
         // Build SQL query to get categories with attributes
         let get_attr = `categories.category_id, categories.name, categories.slug, categories.description, 
@@ -23,19 +23,12 @@ const getCategoriesService = async (filter, limit, sort, order) => {
         LEFT JOIN attribute ON attribute_category.attribute_id = attribute.id
         LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id`;
 
-        const filter = JSON.stringify([
-            {
-                field: "categories.deleted_at",
-                condition: "is",
-                value: null
-            }
-        ]);
         // Execute query
         const result = await executeSelectData({
             strGetColumn: get_attr,
             table: get_table,
             queryJoin: query_join,
-            filter: filter,
+            filter: filters,
             limit: limit,
             sort: sort,
             order: order
@@ -294,9 +287,8 @@ const getCategoriesDetailService = async (id) => {
 //Tạo danh mục mới và danh mục con và thuộc tính của danh mục => nếu chưa tạo thì thuộc tính để rỗng [], 
 // nếu tạo danh mục con thì parent_id = id_category cha
 //khi tạo mới danh mục thì created_at = now() còn update_at = null
-const createCategoriesService = async ({ name, description, image, parent_id, attribute_id }) => {
+const createCategoriesService = async ({ name, slug, description, image, is_hide, parent_id, attribute_id }) => {
     try {
-
         // Kiểm tra tên danh mục đã tồn tại chưa
         const existed = await prisma.categories.findFirst({
             where: { name }
@@ -333,10 +325,10 @@ const createCategoriesService = async ({ name, description, image, parent_id, at
         const category = await prisma.categories.create({
             data: {
                 name,
-                slug: convertToSlug(name),
+                slug: slug,
                 description: description || "",
                 image: image || "",
-                is_hide: true,
+                is_hide: is_hide || false,
                 parent_id: parent_id,
                 created_at: getVietnamTimeNow(),
             }
@@ -377,7 +369,7 @@ const createCategoriesService = async ({ name, description, image, parent_id, at
 
 //Cập nhật danh mục và danh mục con và thuộc tính của danh mục, nếu cập nhật is_hide = true thì cập nhật is_hide = true cho các bảng liên quan như product và blog và ngược lại
 //khi update thì mới cập nhật update_at = now()
-const updateCategoriesService = async ({ id, name, description, image, is_hide, parent_id, attribute_id }) => {
+const updateCategoriesService = async ({ id, name, slug, description, image, is_hide, parent_id, attribute_id }) => {
     try {
         // 1. Kiểm tra xem category có tồn tại không và tên danh mục có tồn tại không
         const category = await prisma.categories.findUnique({
@@ -424,7 +416,7 @@ const updateCategoriesService = async ({ id, name, description, image, is_hide, 
             where: { category_id: parseInt(id) },
             data: {
                 name,
-                slug: convertToSlug(name),
+                slug: slug,
                 description: description || "",
                 image: image || "",
                 is_hide: is_hide || false,

@@ -43,17 +43,14 @@ export function BatchFormDialog({
     clearErrors();
 
     if (!data.template_id) {
-      setError("template_id", { message: "Vui lòng chọn template" });
+      setError("template_id", { message: "Vui lòng chọn thiết bị" });
       isValid = false;
     }
 
-    if (!data.firmware_id) {
-      setError("firmware_id", { message: "Vui lòng chọn firmware" });
-      isValid = false;
-    } else if (selectedTemplate?.firmware?.length > 0) {
+    if (data.firmware_id && data.firmware_id !== "none" && selectedTemplate?.firmware?.length > 0) {
       const firmwareExists = selectedTemplate.firmware.some(f => f.firmware_id.toString() === data.firmware_id);
       if (!firmwareExists) {
-        setError("firmware_id", { message: "Firmware không thuộc template này" });
+        setError("firmware_id", { message: "Firmware không thuộc thiết bị này" });
         isValid = false;
       }
     }
@@ -78,7 +75,7 @@ export function BatchFormDialog({
     } catch (error) {
       setError("root", {
         type: "manual",
-        message: error.message || "Có lỗi xảy ra khi tạo lô",
+        message: error.message || "Có lỗi xảy ra khi tạo đơn sản xuất",
       });
     }
   };
@@ -94,21 +91,21 @@ export function BatchFormDialog({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Tạo Lô {currentBatch}/{totalBatches}</DialogTitle>
+          <DialogTitle>Tạo Đơn Sản xuất {currentBatch}/{totalBatches}</DialogTitle>
           <DialogDescription>
             {planningNote && (
               <div className="mb-2">
                 <strong>Kế hoạch:</strong> {planningNote}
               </div>
             )}
-            Nhập thông tin cho lô sản xuất số {currentBatch}
+            Nhập thông tin cho đơn sản xuất số {currentBatch}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Tiến độ tạo lô</span>
+              <span>Tiến độ tạo đơn sản xuất</span>
               <span>{currentBatch - 1}/{totalBatches}</span>
             </div>
             <Progress value={progress} className="w-full" />
@@ -126,7 +123,7 @@ export function BatchFormDialog({
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Chọn template" />
+                            <SelectValue placeholder="Chọn thiết bị" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -141,55 +138,51 @@ export function BatchFormDialog({
                             ))
                           ) : (
                             <SelectItem value="no-templates" disabled>
-                              Không có template
+                              Không có thiết bị
                             </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
-                      <FormDescription>Chọn template sản xuất</FormDescription>
+                      <FormDescription>Chọn thiết bị sản xuất</FormDescription>
                       <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
 
-                {selectedTemplate && (
-                  <FormField
-                    control={form.control}
-                    name="firmware_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Firmware *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          disabled={availableFirmwares.length === 0}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={
-                                availableFirmwares.length > 0
-                                  ? "Chọn firmware"
-                                  : "Không có firmware"
-                              } />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {availableFirmwares.map((firmware) => (
-                              <SelectItem
-                                key={firmware.firmware_id}
-                                value={firmware.firmware_id.toString()}
-                              >
-                                {firmware.name} (v{firmware.version})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>Chọn firmware cho lô sản xuất</FormDescription>
-                        <FormMessage className="text-red-500" />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                <FormField
+                  control={form.control}
+                  name="firmware_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Firmware</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn firmware (không bắt buộc)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            Không có firmware
+                          </SelectItem>
+                          {availableFirmwares.map((firmware) => (
+                            <SelectItem
+                              key={firmware.firmware_id}
+                              value={firmware.firmware_id.toString()}
+                            >
+                              {firmware.name} (v{firmware.version})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Chọn firmware cho đơn sản xuất (không bắt buộc)</FormDescription>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField
@@ -241,11 +234,11 @@ export function BatchFormDialog({
                 name="batch_note"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ghi chú lô</FormLabel>
+                    <FormLabel>Ghi chú đơn sản xuất</FormLabel>
                     <FormControl>
                       <Textarea placeholder="Ghi chú..." className="resize-none" {...field} />
                     </FormControl>
-                    <FormDescription>Thông tin bổ sung về lô sản xuất</FormDescription>
+                    <FormDescription>Thông tin bổ sung về đơn sản xuất</FormDescription>
                     <FormMessage className="text-red-500" />
                   </FormItem>
                 )}

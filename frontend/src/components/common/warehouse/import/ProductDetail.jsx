@@ -44,4 +44,4 @@ export function ProductDetails({
             </div>
         </div>
     )
-}
+}   

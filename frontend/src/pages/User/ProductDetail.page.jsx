@@ -17,8 +17,8 @@ export default function ProductDetailPage() {
         const fetchDevice = async () => {
             try {
                 setIsLoading(true)
-                console.log('ID:', params.id);
-                const response = await productApi.getById(params.id);
+                const response = await productApi.getBySlug(params.slug);
+                console.log("response: ", response)
                 setDevice(response.data.data[0])
             } catch (error) {
                 console.error("Error fetching device:", error)
@@ -27,10 +27,10 @@ export default function ProductDetailPage() {
             }
         }
 
-        if (params.id) {
+        if (params.slug) {
             fetchDevice()
         }
-    }, [params.id])
+    }, [params.slug])
 
     if (isLoading) {
         return (

@@ -88,10 +88,18 @@ const getProductService = async (filters, logic, limit, sort, order, role, type,
     }
 };
 
-const getProductDetailService = async (id, role = null, type = null) => {
-    const product = await prisma.product.findUnique({
-        where: { id: id }
-    })
+const getProductDetailService = async (id = null, slug = null, role = null, type = null) => {
+
+    let product = null;
+    if (slug) {
+        product = await prisma.product.findFirst({
+            where: { slug: slug }
+        })
+    } else {
+        product = await prisma.product.findFirst({
+            where: { id: Number(id) }
+        })
+    }
 
     if (!product) {
         return get_error_response(
@@ -104,7 +112,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
         {
             field: "product.id",
             condition: "contains",
-            value: id
+            value: product.id
         }
     ])
     let get_attr = `product.name, product.slug, product.description, description_normal, product.image, selling_price, views, status, product.is_hide,
@@ -149,7 +157,7 @@ const getProductDetailService = async (id, role = null, type = null) => {
     })
 
     const images = await prisma.image_product.findMany({
-        where: { product_id: id },
+        where: { product_id: product.id },
         select: {
             id: true,
             product_id: true,
@@ -553,10 +561,45 @@ const checkNameExcludingCurrent = async (name, excludeId = null) => {
     return check_name;
 };
 
+const checkWarehouseInventory = async (product_id) => {
+
+    const product = await prisma.product.findFirst({
+        where: { id: Number(product_id) },
+        select: {
+            id: true,
+            name: true,
+        }
+    });
+
+    if (!product) {
+        return get_error_response(
+            ERROR_CODES.PRODUCT_NOT_FOUND,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+
+    const warehouse_inventory = await prisma.warehouse_inventory.aggregate({
+        where: { product_id: Number(product_id), deleted_at: null },
+        _sum: { stock: true }
+    });
+
+    return {
+        status_code: STATUS_CODE.OK,
+        data: {
+            is_enough: warehouse_inventory._sum.stock > 0,
+            stock: warehouse_inventory._sum.stock,
+            product_id: product_id,
+            product_name: product.name
+        }
+    };
+}
+
+
 module.exports = {
     getProductService,
     getProductDetailService,
     createProductService,
     updateProductService,
     deleteProductService,
+    checkWarehouseInventory
 };

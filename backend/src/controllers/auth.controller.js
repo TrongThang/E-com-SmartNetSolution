@@ -5,7 +5,9 @@ const {
     register_service,
     ChangedPasswordAccountForgot,
     ChangedPasswordAccount,
-    loginEmployee
+    loginEmployee,
+    getMe,
+    getMeEmployee
 } = require('../services/auth.service');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -39,9 +41,9 @@ class AuthController {
     }
 
     async login(req, res) {
-        const { username, password, type } = req.body;
+        const { username, password, remember_me } = req.body;
 
-        const response = await loginAPI(username, password, type);
+        const response = await loginAPI(username, password, remember_me);
 
         return res.status(response.status_code).json(response);
     }
@@ -61,87 +63,19 @@ class AuthController {
     }
 
     async getMe(req, res) {
-        try {
-            const token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const token = req.headers.authorization.split(' ')[1];
 
-            const user = await this.prisma.user.findUnique({
-                where: {
-                    id: decoded.id
-                },
-                select: {
-                    account_id: true,
-                    id: true,
-                    username: true,
-                    role: true,
-                },
-                include: {
-                    customer: {
-                        select: {
-                            id: true,
-                            name: true,
-                            phone: true,
-                            email: true,
-                        }
-                    }
-                }
-            });
+        const response = await getMe(token);
 
-            return get_error_response(
-                ERROR_CODES.SUCCESS,
-                STATUS_CODE.OK,
-                user
-            );
-        } catch (error) {
-            console.error(error);
-            return get_error_response(
-                ERROR_CODES.INTERNAL_SERVER_ERROR,
-                STATUS_CODE.INTERNAL_SERVER_ERROR,
-            );
-        }
+        return res.status(response.status_code).json(response);
     }
 
     async getMeEmployee(req, res) {
-        try {
-            const token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const token = req.headers.authorization.split(' ')[1];
+        console.log('TOKEN',token)
+        const response = await getMeEmployee(token);
 
-            const user = await this.prisma.employee.findUnique({
-                where: {
-                    id: decoded.employeeId
-                },
-                select: {
-                    account_id: true,
-                    id: true,
-                    username: true,
-                    role: true,
-                },
-                include: {
-                    employee: {
-                        select: {
-                            id: true,
-                            name: true,
-                            surname: true,
-                            lastname: true,
-                            phone: true,
-                            email: true,
-                        }
-                    }
-                }
-            });
-
-            return get_error_response(
-                ERROR_CODES.SUCCESS,
-                STATUS_CODE.OK,
-                user
-            );
-        } catch (error) {
-            console.error(error);
-            return get_error_response(
-                ERROR_CODES.INTERNAL_SERVER_ERROR,
-                STATUS_CODE.INTERNAL_SERVER_ERROR,
-            );
-        }
+        return res.status(response.status_code).json(response);
     }
 
     async sendOtpEmail(req, res) {

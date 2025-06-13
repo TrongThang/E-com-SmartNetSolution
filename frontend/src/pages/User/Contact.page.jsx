@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import ContactForm from "@/components/common/contact/ContactForm";
-import INQContact from "@/components/common/contact/INQContact.png";
+import logo from "@/assets/images/logo/ecom_logo.png";
 
 export default function ContactPage() {
     return (
@@ -12,9 +12,9 @@ export default function ContactPage() {
             <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex-1 flex items-center justify-center min-h-[260px]">
                     <img
-                        src={INQContact}
-                        alt="INQ Logo"
-                        className="w-[260px] h-[260px] object-contain"
+                        src={logo}
+                        alt="SmartNet Logo"
+                        className="w-[260px] h-[260px] object-contain rounded-xl"
                         style={{ aspectRatio: "1/1" }}
                     />
                 </div>

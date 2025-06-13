@@ -294,7 +294,11 @@ async function check_list_info_product(list_product) {
             data_errors: errors
         }
     }
-    return null;
+    return {
+        status_code: STATUS_CODE.OK,
+        message: 'Sản phẩm đã được kiểm tra thành công!',
+        data: []
+    };
 }
 
 module.exports = {

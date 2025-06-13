@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./partials/Navbar";
+import Footer from "./partials/Footer";
 
 export default function DefaultLayout() {
     return (
@@ -8,7 +9,7 @@ export default function DefaultLayout() {
             <main className="flex-grow pt-20">
                 <Outlet />
             </main>
-            {/* <Footer /> */}
+            <Footer />
         </div>
     );
 };

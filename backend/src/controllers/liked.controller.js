@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { getLikedService, createLikedService, deleteLikedService } = require('../services/liked.service');
+const { getLikedService, createLikedService, deleteLikedService, checkLikedService } = require('../services/liked.service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 
@@ -16,18 +16,24 @@ class LikedController {
         return res.status(response.status_code).json(response);
     };
 
-    async createLiked(req, res) {
-        const { customer_id, product_id } = req.body;
+    async checkLiked(req, res) {
+        const { customer_id, product_id } = req.params;
+        const response = await checkLikedService(customer_id, product_id);
+        return res.status(response.status_code).json(response);
+    };
 
-        const response = await createLikedService(customer_id, product_id);
+    async createLiked(req, res) {
+        const { product_id, customer_id } = req.body;
+
+        const response = await createLikedService(product_id, customer_id);
 
         return res.status(response.status_code).json(response);
     };
 
     async deleteLiked(req, res) {
-        const { customer_id, id } = req.params;
+        const { customer_id, product_id } = req.params;
 
-        const response = await deleteLikedService(customer_id, id);
+        const response = await deleteLikedService(customer_id, product_id);
 
         return res.status(response.status_code).json(response);
     };

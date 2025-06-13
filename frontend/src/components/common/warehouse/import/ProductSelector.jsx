@@ -173,13 +173,6 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* <BarcodeScanner
-                isOpen={isScanning}
-                onClose={() => setIsScanning(false)}
-                onScanSuccess={handleScanResult}
-                scanType="barcode"
-            /> */}
         </>
     )
 }

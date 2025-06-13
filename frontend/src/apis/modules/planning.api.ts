@@ -65,7 +65,7 @@ const PlanningApi = {
 
     async getById(planningId: string): Promise<IApiResponse> {
         try {
-            return await axiosIOTPublic.get(`${planningEndpoints.common}/${planningId}`)
+            return await axiosIOTPublic.get(`${planningEndpoints.common}/detail/${planningId}`)
         } catch (error) {
             throw error
         }

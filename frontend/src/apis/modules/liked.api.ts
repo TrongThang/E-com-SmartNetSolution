@@ -1,29 +1,39 @@
 import axiosPrivate from "../clients/private.client";
 import axiosPublic from "../clients/public.client";
-import { IApiResponse,  ILiked } from "@/models/interfaces";
+import { IApiResponse,  ILiked } from "@/models/interfaces/index";
 
-const likdedEndpoints = {
+const likedEndpoints  = {
     common: "liked",
 };
 
 const LikedApi = {
     async add(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.post(likdedEndpoints.common, data);
+            return await axiosPublic.post(likedEndpoints.common, {
+                product_id: data.product_id,
+                customer_id: data.customer_id,
+            });
         } catch (error) {
             throw error;
         }
     },
-    async delete(id: number | string, customer_id: string): Promise<IApiResponse> {
+    async checkLiked(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.delete(likdedEndpoints.common + "/" + customer_id +"/" + id);
+            return await axiosPublic.get(`${likedEndpoints.common}/${data.customer_id}/${data.product_id}/check`);
+        } catch (error) {
+            throw error;
+        }
+    },
+    async delete(data: any): Promise<IApiResponse> {
+        try {
+            return await axiosPublic.delete(likedEndpoints.common + "/" + data.customer_id +"/" + data.product_id);
         } catch (error) {
             throw error;
         }
     },
     async getById(customer_id: number | string): Promise<IApiResponse<ILiked>> {
         try {
-            return await axiosPublic.get(`${likdedEndpoints.common}/${customer_id}`);
+            return await axiosPublic.get(`${likedEndpoints.common}/detail/${customer_id}`);
         } catch (error) {
             throw error;
         }

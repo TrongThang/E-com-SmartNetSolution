@@ -3,6 +3,7 @@ export interface IApiResponse {
     data?: any
     error?: string
     message?: string
+    status_code?: number
 }
 
 export interface IPlanning {

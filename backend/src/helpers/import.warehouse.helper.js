@@ -71,8 +71,8 @@ async function generateDetailImportBatchCode(import_date, product_id) {
         },
         _count: true
     });
-
-    return `B_PD-${currentYear}-${product_id}-${detailImportCount._count + 1}`
+    
+    return `BATCH_IMP${currentYear}_${product_id}_${detailImportCount._count + 1}`
 }
 
 module.exports = {

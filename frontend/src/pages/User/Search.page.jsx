@@ -88,13 +88,11 @@ export default function SearchPage() {
             })
         }
 
-        console.log("Filters sent to API:", JSON.stringify(filters, null, 2))
-        return filters.length === 0 ? null : filters.length === 1 ? filters[0] : { logic: "AND", filters }
+        return filters.length === 0 ? null : filters.length === 1 ? filters : { logic: "AND", filters }
     }, [keyword, selectedCategories, priceRange, allCategories])
 
     // Initialize page and selectedCategories from URL
     useEffect(() => {
-        console.log("Initializing from URL:", { pageParam, categoryParam })
         const parsedPage = parseInt(pageParam)
         const validPage = isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage
         setPage(validPage)
@@ -126,7 +124,6 @@ export default function SearchPage() {
         }
         const newUrl = `/search?${newSearchParams.toString()}`
         if (newUrl !== window.location.pathname + window.location.search) {
-            console.log("Updating URL to:", newUrl)
             navigate(newUrl, { replace: true })
         }
     }, [keyword, selectedCategories, page, navigate])
@@ -156,7 +153,6 @@ export default function SearchPage() {
         const fetchProducts = async () => {
             setIsLoading(true)
             setError(null)
-            console.log("Starting fetchProducts for page:", page, "keyword:", keyword)
 
             const categoryMap = {}
             allCategories.forEach(category => {
@@ -177,9 +173,7 @@ export default function SearchPage() {
                     ...(sort.field && { sort: sort.field }),
                     ...(sort.order && { order: sort.order }),
                 }
-                console.log("Fetching products with params:", JSON.stringify(params, null, 2))
                 const res = await productApi.search(params)
-                console.log("API response:", JSON.stringify(res, null, 2))
 
                 if (res.status_code === 200) {
                     const productsData = res.data?.data || []
@@ -189,12 +183,8 @@ export default function SearchPage() {
                     setTotalPage(newTotalPage)
 
                     if (page > newTotalPage && newTotalPage > 0) {
-                        console.log(`Adjusting page from ${page} to ${newTotalPage}`)
                         setPage(newTotalPage)
                     }
-
-                    console.log("Products set:", productsData.map(p => ({ id: p.id, name: p.name })))
-                    console.log("Total pages set:", newTotalPage)
 
                     // Xử lý filterCategories
                     if (keyword.trim()) {
@@ -238,7 +228,6 @@ export default function SearchPage() {
                 setFilterCategories(allCategories.filter(category => !category.parent_id))
             } finally {
                 setIsLoading(false)
-                console.log("fetchProducts completed, isLoading:", false)
             }
         }
 
@@ -248,21 +237,18 @@ export default function SearchPage() {
     }, [page, keyword, selectedCategories, priceRange, sort, allCategories, buildFilters])
 
     const handleCategoryChange = useCallback((categories) => {
-        console.log("Category change:", categories)
         setSelectedCategories(categories)
         setPage(1)
         setProducts([]) // Clear products when filters change
     }, [])
 
     const handlePriceChange = useCallback((min, max) => {
-        console.log("Price change:", { min, max })
         setPriceRange({ min, max })
         setPage(1)
         setProducts([]) // Clear products when filters change
     }, [])
 
     const handleSortChange = useCallback((sortValue) => {
-        console.log("Sort change:", sortValue)
         if (sortValue === "default") {
             setSort({ field: "", order: "" })
         } else {
@@ -274,7 +260,6 @@ export default function SearchPage() {
     }, [])
 
     const handleReset = useCallback(() => {
-        console.log("Reset filters")
         setSelectedCategories([])
         setPriceRange({ min: 0, max: 20000000 })
         setSort({ field: "", order: "" })
@@ -284,7 +269,6 @@ export default function SearchPage() {
     }, [])
 
     const handlePageChange = useCallback((pageNumber) => {
-        console.log("Page change requested:", pageNumber)
         if (pageNumber >= 1 && pageNumber <= totalPage && pageNumber !== page) {
             setPage(pageNumber)
             window.scrollTo({ top: 0, behavior: "smooth" })
@@ -324,7 +308,6 @@ export default function SearchPage() {
             pageNumbers.push(totalPage)
         }
 
-        console.log("Page numbers generated:", pageNumbers)
         return pageNumbers
     }
 

@@ -25,7 +25,7 @@ export default function NotificationBar({
   }, [notifications])
 
    // Cập nhật thời gian mỗi giây
-   useEffect(() => {
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date())
     }, 1000)

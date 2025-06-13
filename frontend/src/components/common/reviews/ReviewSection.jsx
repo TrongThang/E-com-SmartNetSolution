@@ -34,34 +34,9 @@ export default function ReviewSection({ device }) {
         }
     }, [device?.id])
 
-    // // Fetch user-specific data (their review and purchase status)
-    // const fetchUserData = useCallback(async () => {
-    //     if (!device?.idDevice || !userId) return
-
-    //     try {
-    //         // Check if user has purchased this device
-    //         // const purchaseResponse = await orderApi.checkUserPurchased(userId, device.idDevice)
-    //         // setHasPurchased(purchaseResponse.data)
-
-    //         // Get user's existing review if any
-    //         const reviewResponse = await reviewApi.getUserReview(device.idDevice, userId)
-    //         setUserReview(reviewResponse.data)
-    //     } catch (error) {
-    //         console.error("Error fetching user data:", error)
-    //     }
-    // }, [device?.idDevice, userId])
-
-    // Initial data loading
     useEffect(() => {
         fetchReviews()
     }, [fetchReviews])
-
-    // Load user-specific data when userId is available
-    // useEffect(() => {
-        // if (userId) {
-        //     fetchUserData()
-        // }
-    // }, [userId, fetchUserData])
 
     // Handle successful review submission
     const handleReviewSubmitted = useCallback(() => {
@@ -78,7 +53,7 @@ export default function ReviewSection({ device }) {
     return (
         <div className="py-6">
             <div className="max-w-4xl mx-auto">
-                {userId && (
+                {/* {userId && ( */}
                     <ReviewForm
                         userReview={userReview}
                         deviceId={device.idDevice}
@@ -86,7 +61,7 @@ export default function ReviewSection({ device }) {
                         hasPurchased={hasPurchased}
                         onSubmitSuccess={handleReviewSubmitted}
                     />
-                )}
+                {/* )} */}
 
                 <div className="mt-10">
                     <ReviewList reviews={reviews} isLoading={isLoading} />

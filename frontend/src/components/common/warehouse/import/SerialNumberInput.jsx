@@ -177,20 +177,9 @@ export function SerialNumberInput({
                         }
                     }}
                 />
-                <Button
-                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    variant="outline"
-                >
-                    <FileSpreadsheet className="h-4 w-4 mr-1 text-green-500" />
-                    Nhập từ Excel
-                </Button>
                 <Button onClick={handleAddSerialNumber} disabled={serialInput.trim() === "" || serialNumbers.length >= quantity}>
                     <Plus className="h-4 w-4 mr-1" />
                     Thêm
-                </Button>
-                <Button variant="outline" onClick={() => setIsShowQR(true)} className="whitespace-nowrap" disabled={isConnecting}>
-                    <Scan className="h-4 w-4 mr-1" />
-                    {isConnecting ? 'Đang kết nối...' : 'Quét mã'}
                 </Button>
             </div>
 

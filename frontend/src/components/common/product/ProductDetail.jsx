@@ -1,18 +1,37 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Heart, Star } from "lucide-react"
 import { formatCurrency } from "@/utils/format"
 import { useCart } from "@/contexts/CartContext"
+import LikedApi from "@/apis/modules/liked.api.ts"
+import { useAuth } from "@/contexts/AuthContext"
+import Swal from "sweetalert2"
 
 export default function ProductDetails({ device }) {
+    const { user } = useAuth();
     const { addToCart } = useCart();
     const [selectedImage, setSelectedImage] = useState(
         { id: "main", url: device.image || "/placeholder.svg", alt: "Main image" }
     );
     const [isLiked, setIsLiked] = useState(false)
     const [quantity, setQuantity] = useState(1)
+
+    useEffect(() => {
+        if (user?.customer_id && device?.id) {
+            const checkLiked = async () => {
+                const res = await LikedApi.checkLiked({
+                    customer_id: user.customer_id,
+                    product_id: device.id
+                });
+                if (res.status_code === 200) {
+                    setIsLiked(res.data)
+                }
+            }
+            checkLiked()
+        }
+    }, [user?.customer_id, device?.id])
 
     const handleAddToCart = async () => {
         try {
@@ -22,12 +41,41 @@ export default function ProductDetails({ device }) {
                 price: device.selling_price,
                 quantity: quantity // Kiểm tra giá trị này
             };
-            await addToCart(productData);
+            addToCart(productData);
         } catch (error) {
             console.log("Lỗi: ", error)
         }
     };
 
+    const handleLike = async () => {
+        try {
+            const res = await LikedApi.add({
+                product_id: device.id,
+                customer_id: user.customer_id
+            });
+
+            if (res.status_code === 200) {
+                setIsLiked(true)
+            }
+        } catch (error) {
+            console.log("Lỗi: ", error)
+        }
+    }
+
+    const handleDeleteLike = async () => {
+        try { 
+            const res = await LikedApi.delete({
+                product_id: device.id,
+                customer_id: user.customer_id
+            });
+
+            if (res.status_code === 200) {
+                setIsLiked(false)
+            }
+        } catch (error) {
+            console.log("Lỗi: ", error)
+        }
+    }
 
     // // Tính giá sau khi giảm giá
     // const discountedPrice = device.discount ? device.price * (1 - device.discount / 100) : device.price
@@ -131,7 +179,7 @@ export default function ProductDetails({ device }) {
                             }`} // Đổi màu viền và text
                         variant="outline"
                         size="icon"
-                        onClick={() => setIsLiked(!isLiked)}
+                        onClick={() => isLiked ? handleDeleteLike() : handleLike()}
                     >
                         <Heart
                             className={`h-4 w-4 ${isLiked ? "text-red-500 fill-red-500" : "text-dark-400 fill-transparent"}`}

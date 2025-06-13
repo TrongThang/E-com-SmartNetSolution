@@ -84,13 +84,13 @@ export default function ReviewForm({ userReview, deviceId, userId, hasPurchased,
         }
     }
 
-    if (!hasPurchased) {
-        return (
-            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 text-amber-800">
-                <p className="font-medium">Vui lòng mua sản phẩm để đánh giá!</p>
-            </div>
-        )
-    }
+    // if (!hasPurchased) {
+    //     return (
+    //         <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 text-amber-800">
+    //             <p className="font-medium">Vui lòng mua sản phẩm để đánh giá!</p>
+    //         </div>
+    //     )
+    // }
 
     return (
         <div className="space-y-4">

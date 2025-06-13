@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import Cookies from 'js-cookie';
 import cartApi from '@/apis/modules/cart.api.ts';
 import { useAuth } from '@/contexts/AuthContext';
+import Swal from 'sweetalert2';
+import productApi from '@/apis/modules/product.api.ts';
 
 const CartContext = createContext();
 
@@ -113,17 +115,18 @@ export const CartProvider = ({ children }) => {
                 ]
             };
 
-            if (user && user.customer_id) {
+            if (user && user.customer.customer_id) {
                 filters.filters.push({
                     "field": "customer_id",
                     "condition": "=",
-                    "value": user.customer_id
+                    "value": user.customer.customer_id
                 })
-                const response = await cartApi.getByIdCustomer(user.customer_id);
+                const response = await cartApi.getByIdCustomer(user.customer.customer_id);
                 
                 return response.data || [];
             } else {
-                const response = await cartApi.getList({
+                console.log('filters', filters)
+                const response = await cartApi.fetchLatestProductInfo({
                     filters: filters
                 });
                 return response.data.data || [];
@@ -169,7 +172,7 @@ export const CartProvider = ({ children }) => {
                     const latestProducts = await fetchLatestProductInfo(
                         cookieCart.items.map(item => item.id)
                     );
-                    
+
                     const updatedItems = cookieCart.items.map(item => {
                         const latestProduct = latestProducts.find(p => p.id === item.id);
                         return latestProduct ? {
@@ -204,8 +207,34 @@ export const CartProvider = ({ children }) => {
     // Thêm sản phẩm vào giỏ hàng
     const handleAddToCart = async (product) => {
         try {
+            const check_warehouse_inventory = await productApi.checkWarehouseInventory(product.id);
+
+            if (check_warehouse_inventory.data.stock < product.quantity + cart.items.reduce((total, item) => total + item.quantity, 0)) {
+                const htmlText = `Sản phẩm <b class="text-red-500">${check_warehouse_inventory.data.product_name.toUpperCase()}</b> ${check_warehouse_inventory.data.stock <= 0 ? "đã hết hàng" : `chỉ còn <b class="text-red-500">${check_warehouse_inventory.data.stock || 0}</b> sản phẩm và bạn đã thêm đủ <b class="text-red-500">${product.quantity}</b> sản phẩm`}`
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    html: htmlText
+                })
+                return;
+            }
+
             if (isAuthenticated) {
-                await cartApi.addToCart(product.id, 1);
+                const response = await cartApi.addToCart(user.customer_id, product.id, product.quantity);
+
+                if (response.status_code !== 200) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Oops...',
+                        text: response.errors[0].message,
+                    })
+                }   
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: 'Thêm sản phẩm vào giỏ hàng thành công',
+                })
             }
 
             setCart(prevCart => {
@@ -278,7 +307,7 @@ export const CartProvider = ({ children }) => {
     const handleRemoveFromCart = async (productId) => {
         try {
             if (isAuthenticated) {
-                const response = await cartApi.removeFromCart(productId);
+                const response = await cartApi.removeFromCart(user.customer_id, productId);
                 
             }
 
@@ -308,7 +337,7 @@ export const CartProvider = ({ children }) => {
     const handleClearCart = async () => {
         try {
             if (isAuthenticated) {
-                await cartApi.removeAllFromCart();
+                await cartApi.removeAllFromCart(user.customer_id);
             } else {
                 Cookies.remove('cart');
                 imageStorage.clearImages();
@@ -326,8 +355,8 @@ export const CartProvider = ({ children }) => {
                 ...prevCart,
                 items: prevCart.items.map(item =>
                     item.id === id
-                    ? { ...item, selected: !item.selected }
-                    : item
+                        ? { ...item, selected: !item.selected }
+                        : item
                 )
             };
 
@@ -377,7 +406,7 @@ export const CartProvider = ({ children }) => {
         if (!isAuthenticated) {
             saveCartToCookie(cart);
         } else {
-            cartApi.removeSelected(cart.items);
+            cartApi.removeSelected(user.customer_id, cart.items);
         }
     };
 
@@ -389,7 +418,7 @@ export const CartProvider = ({ children }) => {
     // Tính toán các thống kê từ cart
     const cartStats = useMemo(() => (
         {
-        totalItems: cart?.items?.reduce((total, item) => total + item.quantity, 0),
+        totalItems: cart?.items?.length || 0,
         totalAmount: cart?.total,
         itemCount: cart?.items?.length,
     }), [cart]);

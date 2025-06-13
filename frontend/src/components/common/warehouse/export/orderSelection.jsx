@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import axiosPublic from "@/apis/clients/public.client"
+import { ORDER_STATUS } from "@/constants/status.constants"
 
 export function OrderSelection({ onOrderSelect, selectedOrders }) {
     const [searchTerm, setSearchTerm] = useState("")
@@ -17,14 +18,21 @@ export function OrderSelection({ onOrderSelect, selectedOrders }) {
     useEffect(() => {
         const fetchOrders = async () => {
             const filter = [
-                { field: "order.status", condition: ">=", value: 0 },
-                { field: "order.status", condition: "<=", value: 1 }
+                {
+                    logic: "AND",
+                    conditions: [
+                        { field: "order.status", condition: ">=", value: ORDER_STATUS.PENDING },
+                        { field: "order.status", condition: "<=", value: ORDER_STATUS.PREPARING }
+                    ]
+                }
             ]
-            const response = await axiosPublic.get(`/order/admin`, {    
+            const response = await axiosPublic.get(`/order/admin/warehouse`, {    
                 params: {
                     filter: JSON.stringify(filter),
                 }
             })
+
+            console.log('response', response)
             
             if (response.status_code === 200) {
                 setOrders(response.data.data)
@@ -95,7 +103,7 @@ export function OrderSelection({ onOrderSelect, selectedOrders }) {
                                                 <p className="text-sm text-muted-foreground">
                                                     {order.customer_name} - {order.order_date}
                                                 </p>
-                                                <p className="text-sm font-medium mt-1">{order.total_amount.toLocaleString()} VNĐ</p>
+                                                <p className="text-sm font-medium mt-1">{order.total_amount?.toLocaleString()} VNĐ</p>
                                             </div>
                                             <div className="flex flex-col items-end">
                                                 <Badge variant="outline" className="mb-2">

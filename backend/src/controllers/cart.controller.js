@@ -6,21 +6,32 @@ const {
     getCart,
     confirmCart,
     updateCart,
-    removeSelected
+    removeSelected,
+    fetchLatestProductInfo
 } = require('../services/cart.service');
 
 class CartController {
     async getCart(req, res) {
         const { customer_id } = req.params;
-        console.log('customer_id', customer_id)
-        const cart = await getCart(customer_id);
+        
+        const cart = await getCart(customer_id, is_customer);
+
+        return res.status(cart.status_code).json(cart);
+    }
+
+    async fetchLatestProductInfo(req, res) {
+        const { filters } = req.query;
+        const cart = await fetchLatestProductInfo(filters);
         return res.status(200).json(cart);
     }
 
     async addToCart(req, res) {
-        const { customer_id, product_id, quantity } = req.body;
+        const { customer_id } = req.params;
+        const { product_id, quantity } = req.body;
+
         const cart = await addToCart(customer_id, product_id, quantity);
-        return res.status(200).json(cart);
+
+        return res.status(cart.status_code).json(cart);
     }
 
     async updateQuantityCartItem(req, res) {

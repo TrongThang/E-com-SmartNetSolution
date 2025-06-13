@@ -28,7 +28,7 @@ export default function AddCategoryPage() {
     description: "",
     parent_id: null,
     image: null,
-    status: true,
+    is_hide: true,
     attributes: []
   })
 
@@ -175,7 +175,7 @@ export default function AddCategoryPage() {
         slug: formData.slug,
         description: formData.description,
         parent_id: formData.parent_id ? parseInt(formData.parent_id) : null,
-        status: formData.status ? "1" : "0",
+        is_hide: formData.status ? true : false,
         attribute_id: selectedAttributes.map(attr => attr.id)
       }
 
@@ -406,7 +406,7 @@ export default function AddCategoryPage() {
                         <SelectValue placeholder="Chọn trạng thái" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
-                        <SelectItem value="1">Đang hoạt động</SelectItem>
+                        <SelectItem value="1">hoạt động</SelectItem>
                         <SelectItem value="0">Không hoạt động</SelectItem>
                       </SelectContent>
                     </Select>

@@ -13,7 +13,7 @@ const asyncHandler = (fn) => {
 }
 
 categoriesRouter.get('/', asyncHandler(getCategories));
-categoriesRouter.get('/:id', asyncHandler(getCategoriesDetail));
+categoriesRouter.get('/detail/:id', asyncHandler(getCategoriesDetail));
 categoriesRouter.post('/', validateMiddleware(createCategoriesSchema), asyncHandler(createCategories));
 categoriesRouter.put('/:id', validateMiddleware(updateCategoriesSchema), asyncHandler(updateCategories));
 categoriesRouter.delete('/:id', asyncHandler(deletedCategories));

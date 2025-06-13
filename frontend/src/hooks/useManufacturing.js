@@ -21,6 +21,39 @@ export const useManufacturing = () => {
             "timestamp": "2025-06-01T11:43:09.878Z"
         },
     ]);
+    const [importProductTracking, setImportProductTracking] = useState([]);
+    const [exportProductTracking, setExportProductTracking] = useState([]);
+
+
+    const [detailImport, setDetailImport] = useState(null);
+
+    function handleSSEUpdateExportWarehouse(data) {
+        setExportProductTracking(prevState => {
+            const updatedState = { ...prevState };
+            const { product_id, batch_production_id, serials } = data;
+
+            updatedState[product_id] = {
+                ...updatedState[product_id],
+                batch_production_id: batch_production_id,
+                serials: serials
+            };
+
+            return updatedState;
+        });
+    }
+
+    function handleSSEUpdateImportWarehouse(data) {
+        setImportProductTracking(prevState => {
+            const updatedState = { ...prevState };
+            const { product_id, batch_production_id, serials } = data;
+
+            updatedState[product_id] = {
+                ...updatedState[product_id],
+                batch_production_id: batch_production_id,
+                serials: serials
+            };
+        });
+    }
 
     // Xử lý SSE message
     useEffect(() => {
@@ -89,6 +122,21 @@ export const useManufacturing = () => {
 
                     setNotifications(prevNotifications => [...prevNotifications, newNotification]);
                 }
+
+                if(data.type === 'update_detail_import') {
+                    setDetailImport(prevState => {
+                        const updatedState = { ...prevState };
+                        const { product_id, batch_production_id, serials } = data;
+
+                        updatedState[product_id] = {
+                            ...updatedState[product_id],
+                            batch_production_id: batch_production_id,
+                            serials: serials
+                        };
+
+                        return updatedState;
+                    });
+                }
             } catch (error) {
                 console.error('Error handling SSE message:', error);
                 toast.error('Có lỗi xảy ra khi cập nhật dữ liệu');
@@ -139,6 +187,12 @@ export const useManufacturing = () => {
         setSerialsByStage,
         rejectQC,
         notifications,
-        setNotifications
+        setNotifications,
+        detailImport,
+        setDetailImport,
+        importProductTracking,
+        setImportProductTracking,
+        exportProductTracking,
+        setExportProductTracking
     };
 };

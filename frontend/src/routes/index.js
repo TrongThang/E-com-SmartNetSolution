@@ -52,16 +52,25 @@ import TemplateManagement from "@/components/common/template/template-management
 import NewFirmwarePage from "@/components/common/firmware/upload-firmware";
 import FirmwareDetailPage from "@/components/common/firmware/detail-firmware";
 import EditFirmwarePage from "@/components/common/firmware/edit-firmware";
-import CategoryManagement from "@/pages/Admin/categoryManager";
 import StatePrimary from "@/components/common/tracking/StatePrimary";
 import AttributeGroupPage from "@/pages/Admin/attribute_groupManager";
-import FirmwarePage from "@/components/common/firmware/firmware-manager";
 import PlanningManagement from "@/pages/Admin/planningManager/page";
 import EmployeeLogin from "@/components/common/auth/EmployeeLogin";
 import Permission from "@/pages/Admin/roleManager/permission";
 import RoleManager from "@/pages/Admin/roleManager";
 import EditRole from "@/pages/Admin/roleManager/edit";
 import CreateRole from "@/pages/Admin/roleManager/create";
+import OrderManagerPage from "@/pages/Admin/orderManager";
+import CreateOrderPage from "@/pages/Admin/orderManager/create";
+import ImportWarehousePage from "@/pages/Admin/warehouse/import";
+import ExportWarehousePage from "@/pages/Admin/warehouse/export";
+import ImportWarehouseDetailPage from "@/pages/Admin/warehouse/import/detail";
+import ExportWarehouseDetailPage from "@/pages/Admin/warehouse/export/detail";
+import OrderDetailPage from "@/pages/Admin/orderManager/detail";
+import AddEmployeeForm from "@/pages/Admin/employeeManager/AddEmployee";
+import EditEmployeeForm from "@/pages/Admin/employeeManager/EditEmployee";
+import SalesAnalytics from "@/pages/Admin/SalesAnalytics";
+import Dashboard from "@/pages/Admin/Dashboard";
 
 export const router = createBrowserRouter([
   {
@@ -77,7 +86,7 @@ export const router = createBrowserRouter([
         element: <SearchPage />,
       },
       {
-        path: "products/:id",
+        path: "products/:slug",
         element: <ProductDetailPage />,
       },
       {
@@ -138,7 +147,15 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <div>Admin Dashboard</div>,
+        element: <Dashboard />,
+      },
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "analytics",
+        element: <SalesAnalytics />,
       },
       {
         path: "categories",
@@ -229,26 +246,6 @@ export const router = createBrowserRouter([
         element: <EditBlog />,
       },
       {
-        path: 'categories',
-        element: <CategoryManagement />
-      },
-      {
-        path: 'categories/create',
-        element: <AddCategoryPage />
-      },
-      {
-        path: 'categories/create',
-        element: <EditCategoryPage />
-      },
-      {
-        path: 'warehouse/import/create',
-        element: <CreateImportWarehousePage />
-      },
-      {
-        path: 'warehouse/export/create',
-        element: <CreateExportWarehousePage />
-      },
-      {
         path: 'customers',
         element: <UserManagerPage />,
       },
@@ -257,7 +254,15 @@ export const router = createBrowserRouter([
         element: <EmployeeManagerPage />,
       },
       {
-        path: 'customers/add',
+        path: 'employees/add',
+        element: <AddEmployeeForm />
+      },
+      {
+        path: 'employees/edit/:id',
+        element: <EditEmployeeForm />
+      },
+      {
+        path: 'users/add',
         element: <AddUserPage />,
       },
       {
@@ -315,6 +320,42 @@ export const router = createBrowserRouter([
       {
         path: 'role/create',
         element: <CreateRole />
+      },
+      {
+        path: 'orders',
+        element: <OrderManagerPage />
+      },
+      {
+        path: 'orders/detail/:id',
+        element: <OrderDetailPage />
+      },
+      {
+        path: 'orders/create',
+        element: <CreateOrderPage />
+      },
+      {
+        path: 'warehouses/import',
+        element: <ImportWarehousePage />
+      },
+      {
+        path: 'warehouses/import/detail/:id',
+        element: <ImportWarehouseDetailPage />
+      },
+      {
+        path: 'warehouses/export',
+        element: <ExportWarehousePage />
+      },
+      {
+        path: 'warehouse/import/create',
+        element: <CreateImportWarehousePage />
+      },
+      {
+        path: 'warehouses/export/detail/:id',
+        element: <ExportWarehouseDetailPage />
+      },
+      {
+        path: 'warehouses/export/create',
+        element: <CreateExportWarehousePage />
       },
     ],
   },

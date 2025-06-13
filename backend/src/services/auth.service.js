@@ -22,9 +22,8 @@ async function getUserAdminInfo(account_id) {
 	return user;
 }
 
-async function loginAPI(username, password, type = null, remember_me = null) {
+async function loginAPI(username, password, remember_me = null) {
 	try {
-		include_clause = type === null ? { employee: true } : { customer: true };
 
 		const user = await prisma.account.findFirst({
 			where: {
@@ -40,15 +39,12 @@ async function loginAPI(username, password, type = null, remember_me = null) {
 			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
 		}
 
-		let infoUser = null;
-		if (type === 'CUSTOMER') {
-			infoUser = await prisma.customer.findFirst({
-				where: {
-					id: user.customer_id,
-					deleted_at: null
-				},
-			})
-		}
+		infoUser = await prisma.customer.findFirst({
+			where: {
+				id: user.customer_id,
+				deleted_at: null
+			},
+		})
 
 		// Tạo token JWT khi đăng nhập thành công
 		accessToken = jwt.sign(
@@ -56,31 +52,17 @@ async function loginAPI(username, password, type = null, remember_me = null) {
 				account_id: user.account_id,
 				username: user.username,
 				customer_id: infoUser.id || undefined,
-				employee_id: infoUser.employee_id || undefined,
-				name: infoUser.lastname || infoUser.surname || undefined,
+				name: infoUser.lastname + ' ' + infoUser.surname || undefined,
 				role_id: user.role_id
 			},
 			process.env.SECRET_KEY,
-			{ expiresIn: '3h' }
+			{ expiresIn: remember_me ? '30d' : '3h' }
 		);
 
 		const response = {
 			accessToken: accessToken,
 			data: user
 		};
-
-		if (type === 'CUSTOMER' && remember_me) {
-			const refreshToken = jwt.sign(
-				{
-					user_id: user.customer_id,
-					username: user.username
-				},
-				process.env.REFRESH_SECRET_KEY || process.env.SECRET_KEY,
-				{ expiresIn: '30d' }
-			);
-
-			response.refreshToken = refreshToken;
-		}
 
 		return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, response);
 
@@ -315,10 +297,100 @@ const ChangedPasswordAccount = async (payload) => {
 	return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, null);
 }
 
+const getMe = async (token) => {
+	try {
+		const decoded = jwt.verify(token, process.env.SECRET_KEY);
+
+		const user = await prisma.account.findFirst({
+			where: {
+				account_id: decoded.account_id,
+				deleted_at: null
+			},
+			include: {
+				customer: {
+					select: {
+						id: true,
+						lastname: true,
+						surname: true,
+						phone: true,
+						email: true,
+						gender: true,
+						image: true,
+					}
+				}
+			}
+		})
+
+		return get_error_response(
+			ERROR_CODES.SUCCESS,
+			STATUS_CODE.OK,
+			user
+		);
+	} catch (error) {
+		console.error(error);
+		return get_error_response(
+			ERROR_CODES.INTERNAL_SERVER_ERROR,
+			STATUS_CODE.INTERNAL_SERVER_ERROR,
+		);
+	}
+}
+
+const getMeEmployee = async (token) => {
+	try {
+		const decoded = jwt.verify(token, process.env.SECRET_KEY);
+
+		const user_employee = await prisma.account.findFirst({
+			where: {
+				account_id: decoded.account_id,
+				deleted_at: null
+			},
+			select: {
+				account_id: true,
+				username: true,
+				employee: {
+					select: {
+						id: true,
+						lastname: true,
+						surname: true,
+						phone: true,
+						email: true,
+						image: true,
+					}
+				},
+				role: {
+					select: {
+						id: true,
+						name: true
+					}
+				}
+			}
+		})
+
+		if (!user_employee.employee.id) {
+			return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
+		}
+
+		return get_error_response(
+			ERROR_CODES.SUCCESS,
+			STATUS_CODE.OK,
+			user_employee
+		);
+	} catch (error) {
+		console.error(error);
+		return get_error_response(
+			ERROR_CODES.INTERNAL_SERVER_ERROR,
+			STATUS_CODE.INTERNAL_SERVER_ERROR,
+		);
+	}
+}
+
+
 module.exports = {
 	loginAPI, register_service: register,
 	refreshTokenAPI,
 	ChangedPasswordAccountForgot,
 	ChangedPasswordAccount,
-	loginEmployee
+	loginEmployee,
+	getMe,
+	getMeEmployee
 }

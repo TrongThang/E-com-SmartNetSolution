@@ -1,5 +1,6 @@
 "use client"
 
+import logo from "@/assets/images/logo/HomeConnect.png"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, ShoppingCart, User, ChevronDown, Menu } from "lucide-react"
@@ -83,12 +84,12 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "h-[11.5vh] py-4 bg-white "}`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "h-[11.5vh] py-4 bg-white "} border-b-2 border-blue-400`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold text-blue-500">SmartNet Solution Shop</span>
+            <img src={logo} alt="logo" className={`hover:scale-110 transition-all duration-300 ${isScrolled ? "w-30 h-14":"w-14 h-14"}`} />
           </Link>
 
           <nav className="hidden md:flex items-center space-x-10">
@@ -233,7 +234,7 @@ export default function Navbar() {
                           : null}
                       </div>
                     </div>
-                    <Link to="/categories" className="text-xs text-blue-600 hover:text-blue-700 flex items-center">
+                    <Link to="/search" className="text-xs text-blue-600 hover:text-blue-700 flex items-center">
                       Xem tất cả danh mục
                       <ChevronDown className="h-3 w-3 ml-1 -rotate-90" />
                     </Link>
@@ -300,7 +301,7 @@ export default function Navbar() {
                     Tài khoản của tôi
                   </Link>
                   <Link
-                    to="/orders"
+                    to="/profile/orders"
                     className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-500 rounded-md"
                   >
                     Đơn hàng

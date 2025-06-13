@@ -43,6 +43,7 @@ const addressBookApi = {
                 method: 'GET',
             });
             return {
+                success: true,  
                 status_code: 200,
                 data: response.data,
             };
@@ -57,6 +58,7 @@ const addressBookApi = {
                 params: { province_id: provinceId },
             });
             return {
+                success: true,
                 status_code: 200,
                 data: response.data,
             };
@@ -71,8 +73,9 @@ const addressBookApi = {
                 params: { district_id: districtId },
             });
             return {
-                status_code: 200,
+                success: true,
                 data: response.data,
+                status_code: 200,
             };
         } catch (error) {
             throw error;

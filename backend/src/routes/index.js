@@ -23,6 +23,7 @@ const importWarehouseRouter = require('./import.warehouse.route');
 const socketQRRouter = require('./socketQR.route');
 const cartRouter = require('./cart.route');
 const permissionRoleRouter = require('./permission_role.route');
+const dashboardRouter = require('./dashboard.route');
 
 router.use('/auth', authRouter)
 router.use('/product', productRouter)
@@ -46,5 +47,6 @@ router.use('/export-warehouse', exportWarehouseRouter)
 router.use('/import-warehouse', importWarehouseRouter)
 router.use('/socket-qr', socketQRRouter)
 router.use('/permission', permissionRoleRouter)
+router.use('/statistics', dashboardRouter)
 
 module.exports = router

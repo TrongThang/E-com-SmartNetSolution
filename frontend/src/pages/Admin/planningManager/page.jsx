@@ -196,7 +196,7 @@ export default function ProductionPlanningManagement() {
         template_id: Number(data.template_id),
         quantity: Number(data.quantity),
         batch_note: data.batch_note || "",
-        firmware_id: data.firmware_id !== "none" && data.firmware_id ? Number(data.firmware_id) : null,
+        firmware_id: data.firmware_id && data.firmware_id !== "none" ? Number(data.firmware_id) : null,
       };
 
       const updatedTempBatches = [...tempBatches, batchData];
@@ -214,7 +214,7 @@ export default function ProductionPlanningManagement() {
           });
 
           if (!response.success) {
-            throw new Error(response.error || "Không thể tạo kế hoạch và lô");
+            throw new Error(response.error || "Không thể tạo kế hoạch và đơn sản xuất");
           }
 
           // Đóng dialog trước
@@ -227,7 +227,7 @@ export default function ProductionPlanningManagement() {
             html: `
                 <div class="text-left">
                     <p><strong>Mã kế hoạch:</strong> ${response.data.planning_id}</p>
-                    <p><strong>Số lô đã tạo:</strong> ${updatedTempBatches.length}</p>
+                    <p><strong>Số đơn sản xuất đã tạo:</strong> ${updatedTempBatches.length}</p>
                 </div>
             `,
             confirmButtonText: "OK",
@@ -248,7 +248,7 @@ export default function ProductionPlanningManagement() {
           await Swal.fire({
             icon: "error",
             title: "Lỗi!",
-            text: "Có lỗi xảy ra khi tạo kế hoạch và lô",
+            text: "Có lỗi xảy ra khi tạo kế hoạch và đơn sản xuất",
             confirmButtonText: "OK",
             confirmButtonColor: "#ef4444",
             allowOutsideClick: false,
@@ -257,7 +257,7 @@ export default function ProductionPlanningManagement() {
           handleCancel();
         }
       } else {
-        // Chuyển sang lô tiếp theo
+        // Chuyển sang đơn sản xuất tiếp theo
         setCurrentBatchCreation({
           ...currentBatchCreation,
           currentBatch: currentBatchCreation.currentBatch + 1,
@@ -265,14 +265,14 @@ export default function ProductionPlanningManagement() {
         });
       }
     } catch (error) {
-      console.error("Lỗi khi tạo lô:", error);
+      console.error("Lỗi khi tạo đơn sản xuất:", error);
       // Đóng dialog trước khi hiển thị Swal
       setIsBatchFormDialogOpen(false);
 
       await Swal.fire({
         icon: "error",
         title: "Lỗi!",
-        text: "Có lỗi xảy ra khi tạo lô",
+        text: "Có lỗi xảy ra khi tạo đơn sản xuất",
         confirmButtonText: "OK",
         confirmButtonColor: "#ef4444",
         allowOutsideClick: false,
@@ -337,7 +337,7 @@ export default function ProductionPlanningManagement() {
         await Swal.fire({
           icon: data.status === "approved" ? "success" : "warning",
           title: data.status === "approved" ? "Phê duyệt thành công!" : "Đã từ chối!",
-          text: `Kế hoạch ${selectedPlanningForApproval.planning_id} đã được ${data.status === "approved" ? "phê duyệt và bắt đầu sản xuất" : "từ chối và hủy tất cả lô"}`,
+          text: `Kế hoạch ${selectedPlanningForApproval.planning_id} đã được ${data.status === "approved" ? "phê duyệt và bắt đầu sản xuất" : "từ chối và hủy tất cả đơn sản xuất"}`,
           showConfirmButton: true,
           confirmButtonText: "OK",
         });
@@ -376,14 +376,14 @@ export default function ProductionPlanningManagement() {
           Swal.fire({
             icon: "success",
             title: "Thành công!",
-            text: "Lô đã được cập nhật.",
+            text: "Đơn sản xuất đã được cập nhật.",
             showConfirmButton: true,
             confirmButtonText: "OK",
           });
         }, 100);
         fetchPlannings();
       } else {
-        throw new Error(response.error || "Không thể cập nhật trạng thái lô");
+        throw new Error(response.error || "Không thể cập nhật trạng thái đơn sản xuất");
       }
     } catch (error) {
       console.error("Error updating batch status:", error);
@@ -441,14 +441,14 @@ export default function ProductionPlanningManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Quản lý Kế hoạch Sản xuất</h1>
-          <p className="text-muted-foreground">Tạo và theo dõi các kế hoạch sản xuất với nhiều lô</p>
+          <p className="text-muted-foreground">Tạo và theo dõi các kế hoạch sản xuất với nhiều đơn sản xuất</p>
         </div>
         <Button onClick={() => {
           if (templates.length === 0) {
             Swal.fire({
               icon: "warning",
-              title: "Không có template khả dụng",
-              text: "Hiện không có template nào đủ điều kiện để tạo kế hoạch",
+              title: "Không có thiết bị khả dụng",
+              text: "Hiện không có thiết bị nào đủ điều kiện để tạo kế hoạch",
             });
             return;
           }

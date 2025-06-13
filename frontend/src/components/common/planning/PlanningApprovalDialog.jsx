@@ -69,8 +69,8 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
               </div>
             </div>
             <div>
-              <Label className="text-xs text-gray-500">Số lô</Label>
-              <p className="font-medium">{totalBatches} lô</p>
+              <Label className="text-xs text-gray-500">Số đơn sản xuất</Label>
+              <p className="font-medium">{totalBatches} đơn sản xuất</p>
             </div>
             <div>
               <Label className="text-xs text-gray-500">Tổng số lượng</Label>
@@ -94,14 +94,14 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
             </div>
           )}
 
-          {/* Danh sách lô trong kế hoạch */}
+          {/* Danh sách đơn sản xuất trong kế hoạch */}
           <div>
-            <h4 className="font-medium mb-3">Danh sách lô trong kế hoạch</h4>
+            <h4 className="font-medium mb-3">Danh sách đơn sản xuất trong kế hoạch</h4>
             <div className="border rounded-lg">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Mã Lô</TableHead>
+                    <TableHead>Mã Đơn Sản xuất</TableHead>
                     <TableHead>Template</TableHead>
                     <TableHead>Số lượng</TableHead>
                     <TableHead>Trạng thái</TableHead>
@@ -145,7 +145,7 @@ export function PlanningApprovalDialog({ isOpen, onClose, onSubmit, planning, is
                   }) || (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center text-gray-500">
-                        Chưa có lô nào trong kế hoạch này
+                        Chưa có đơn sản xuất nào trong kế hoạch này
                       </TableCell>
                     </TableRow>
                   )}

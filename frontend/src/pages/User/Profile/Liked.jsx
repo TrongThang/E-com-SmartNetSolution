@@ -1,19 +1,27 @@
 import LikedApi from "@/apis/modules/liked.api.ts";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/contexts/AuthContext";
 import { Eye, Heart } from "lucide-react"
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function LikedPage() {
+  const { user, isAuthenticated } = useAuth();
   const [likeds, setLikeds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await LikedApi.getById("CUST001");
+      if (!isAuthenticated) {
+        navigate("/");
+        return;
+      }
+      const res = await LikedApi.getById(user.customer_id);
       if (res.status_code === 200) {
         setLikeds(res?.data?.data || []);
       }
@@ -37,9 +45,15 @@ export default function LikedPage() {
     fetchData();
   }, []);
 
-  const deleteLiked = async (id) => {
+  const deleteLiked = async (product_id) => {
     try {
-      const res = await LikedApi.delete(id, "CUST0001");
+      console.log("product_id: ", product_id)
+      const res = await LikedApi.delete({
+        customer_id: user.customer_id,
+        product_id: product_id
+      });
+
+      console.log("res: ", res)
       if (res.status_code === 200) {
         console.log("Xóa sản phẩm yêu thích thành công");
         await fetchData();
@@ -84,14 +98,14 @@ export default function LikedPage() {
                           <span className="font-bold">{Number(item.selling_price).toLocaleString('vi-VN')}đ</span>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm">
+                          <Button size="sm" onClick={() => navigate(`/products/${item.slug}`)}>
                             <Eye className="mr-2 h-4 w-4" />
                             Xem chi tiết
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => deleteLiked(item.id)}
+                            onClick={() => deleteLiked(item.product_id)}
                           >
                             <Heart className="h-4 w-4 text-red-500"
                             fill="red" />

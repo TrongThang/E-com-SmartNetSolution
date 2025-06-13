@@ -10,8 +10,6 @@ export function ProductsTab({
     onAddProduct,
     onUpdateProduct,
     onRemoveProduct,
-    onUpdateSerialNumbers,
-    onUpdateBarcode,
     onBack,
     onSubmit,
     isSubmitDisabled,
@@ -31,8 +29,6 @@ export function ProductsTab({
                     onAddProduct={onAddProduct}
                     onUpdateProduct={onUpdateProduct}
                     onRemoveProduct={onRemoveProduct}
-                    onUpdateSerialNumbers={onUpdateSerialNumbers}
-                    onUpdateBarcode={onUpdateBarcode}
                 />
 
                 <div className="flex justify-between mt-4">

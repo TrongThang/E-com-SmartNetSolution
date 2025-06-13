@@ -21,7 +21,7 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Chi tiết Kế hoạch Sản xuất {planning.planning_id}</DialogTitle>
-          <DialogDescription>Thông tin chi tiết về kế hoạch sản xuất và các lô</DialogDescription>
+          <DialogDescription>Thông tin chi tiết về kế hoạch sản xuất và các đơn sản xuất</DialogDescription>
         </DialogHeader>
 
         <div className="flex justify-end mb-4">
@@ -62,8 +62,8 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
                 <p className="text-sm font-medium mt-1">{planning.created_by}</p>
               </div>
               <div>
-                <Label className="text-gray-600">Số lô</Label>
-                <p className="text-sm font-medium mt-1">{planning.production_batches?.length || 0} lô</p>
+                <Label className="text-gray-600">Số đơn sản xuất</Label>
+                <p className="text-sm font-medium mt-1">{planning.production_batches?.length || 0} đơn sản xuất</p>
               </div>
               <div>
                 <Label className="text-gray-600">Cập nhật cuối</Label>
@@ -79,14 +79,14 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
             </div>
           </div>
 
-          {/* Danh sách lô */}
+          {/* Danh sách đơn sản xuất */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Danh sách Lô Sản xuất</h3>
+            <h3 className="text-lg font-semibold mb-4">Danh sách Đơn Sản xuất</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mã Lô</TableHead>
-                  <TableHead>Template</TableHead>
+                  <TableHead>Mã Đơn Sản xuất</TableHead>
+                  <TableHead>Thiết bị</TableHead>
                   <TableHead>Số lượng</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead>Ngày tạo</TableHead>
@@ -133,7 +133,7 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-gray-500">
-                      Chưa có lô nào trong kế hoạch này
+                      Chưa có đơn sản xuất nào trong kế hoạch này
                     </TableCell>
                   </TableRow>
                 )}
