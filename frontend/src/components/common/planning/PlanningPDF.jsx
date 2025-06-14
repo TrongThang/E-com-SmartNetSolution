@@ -219,7 +219,7 @@ const PlanningPDF = ({ planning }) => (
                                 batch.production_tracking.map((product, idx) => (
                                     <View key={product.device_serial} style={styles.tableRow}>
                                         <Text style={styles.tableCellSerial}>{idx + 1}</Text>
-                                        <Text style={[styles.tableCell, { flex: 2 }]} wrap>{product.device_serial}</Text>
+                                        <Text style={[styles.tableCell, { flex: 2, fontSize: 8, maxWidth: '100%', wordBreak: 'break-all' }]} wrap>{product.device_serial}</Text>
                                         <Text style={styles.tableCell} wrap>{convertStatus(product.status)}</Text>
                                         <Text style={styles.tableCell} wrap>{convertStatus(product.stage)}</Text>
                                         <Text style={styles.tableCell} wrap>{product.note || '-'}</Text>

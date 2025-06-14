@@ -129,12 +129,17 @@ export const AuthProvider = ({ children }) => {
 
     const loginEmployee = async (username, password) => {
         try {
-            const response = await axiosPublic.post('auth/login-employee', {
+            // const response = await axiosPublic.post('auth/login-employee', {
+            //     username,
+            //     password,
+            // });
+            const response = await axiosIOTPublic.post('auth/employee/login', {
                 username,
                 password,
             });
-            if (response.data.accessToken) {
-                const token = response.data.accessToken;
+
+            if (response.accessToken) {
+                const token = response.accessToken;
                 localStorage.setItem('employeeToken', token);
 
                 setIsAdminAuthenticated(true);

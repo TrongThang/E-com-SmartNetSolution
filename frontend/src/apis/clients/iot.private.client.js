@@ -7,8 +7,7 @@ const axiosIOTPublic = axios.create({
         'Accept': 'application/json',
         'Content-Type': 'application/json; charset=UTF-8',
         'X-Requested-With': 'XMLHttpRequest',
-        'Authorization': `Bearer ${localStorage.getItem('employeeToken')}`, // Nếu bạn cần thêm token sau này
-        charset: 'UTF-8',
+        'Authorization': `Bearer ${localStorage.getItem('employeeToken')}`
     },
     // Cho phép xử lý các status code từ 200-499
     validateStatus: function (status) {
@@ -18,12 +17,13 @@ const axiosIOTPublic = axios.create({
 
 axiosIOTPublic.interceptors.request.use(
     (config) => {
+        // Log thông tin request
         console.log('🚀 Sending Request:', {
             method: config.method.toUpperCase(),
             url: config.url,
             params: config.params,
         });
-    
+
         return config;
     },
     (error) => {
