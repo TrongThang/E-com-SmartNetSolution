@@ -20,7 +20,7 @@ const PlanningApi = {
     async getAllDeviceTemplates() {
         try {
             const response = await axiosIOTPublic.get(planningEndpoints.devtem);
-            let templates = response;
+            let templates = response.data;
             if (!Array.isArray(templates)) {
                 return [];
             }
@@ -41,6 +41,7 @@ const PlanningApi = {
             });
             return filteredTemplates;
         } catch (error) {
+            console.log('err', error)
             return [];
         }
     },
@@ -65,7 +66,7 @@ const PlanningApi = {
 
     async getById(planningId: string): Promise<IApiResponse> {
         try {
-            return await axiosIOTPublic.get(`${planningEndpoints.common}/${planningId}`)
+            return await axiosIOTPublic.get(`${planningEndpoints.common}/detail/${planningId}`)
         } catch (error) {
             throw error
         }

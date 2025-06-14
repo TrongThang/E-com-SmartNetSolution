@@ -78,6 +78,7 @@ export default function ProductionPlanningManagement() {
     try {
       setLoading(true)
       const response = await PlanningApi.getAll()
+      console.log("response", response)
       if (response.success && response.data) {
         const planningsData = Array.isArray(response.data) ? response.data : [response.data]
         const processedPlannings = planningsData.map(planning => ({
@@ -193,10 +194,10 @@ export default function ProductionPlanningManagement() {
       }
 
       const batchData = {
-        template_id: Number(data.template_id),
+        template_id: data.template_id,
         quantity: Number(data.quantity),
         batch_note: data.batch_note || "",
-        firmware_id: data.firmware_id && data.firmware_id !== "none" ? Number(data.firmware_id) : null,
+        firmware_id: data.firmware_id && data.firmware_id !== "none" ? data.firmware_id : null,
       };
 
       const updatedTempBatches = [...tempBatches, batchData];
@@ -402,7 +403,8 @@ export default function ProductionPlanningManagement() {
     try {
       const response = await PlanningApi.getAllDeviceTemplates();
       console.log("API trả về:", response);
-      if (Array.isArray(response)) {
+
+      if (response) {
         setTemplates(response);
         console.log("Templates sau khi set:", response);
       } else {

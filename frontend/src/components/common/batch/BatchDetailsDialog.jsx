@@ -94,7 +94,7 @@ export function BatchDetailsDialog({ isOpen, onClose, batch }) {
                   <Label className="text-sm text-gray-500">Người duyệt</Label>
                 </div>
                 <p className="text-sm font-medium text-gray-900 ml-6">
-                  {batch.logs?.approved?.employee_id || "Chưa duyệt"}
+                  {batch.logs?.approved?.creator_name || "Chưa duyệt"}
                 </p>
               </div>
 

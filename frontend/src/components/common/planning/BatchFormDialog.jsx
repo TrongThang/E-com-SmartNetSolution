@@ -33,9 +33,10 @@ export function BatchFormDialog({
   const selectedTemplate = templates.find((t) => t.template_id.toString() === selectedTemplateId);
 
   const availableFirmwares = useMemo(() => {
-    return selectedTemplate?.firmware?.filter(firmware => {
+    if (!selectedTemplate?.firmware) return [];
+    return selectedTemplate.firmware.filter(firmware => {
       return firmware.is_approved && !firmware.is_deleted;
-    }) || [];
+    });
   }, [selectedTemplate]);
 
   const validateForm = (data) => {
