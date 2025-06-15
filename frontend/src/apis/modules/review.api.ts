@@ -24,7 +24,7 @@ const reviewApi = {
     },
     async add(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.post(reviewEndpoints.common, data);
+            return await axiosPrivate.post(reviewPublic.common, data);
         } catch (error) {
             throw error;
         }
@@ -38,7 +38,7 @@ const reviewApi = {
     },
     async edit(data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.put(reviewEndpoints.common, data);
+            return await axiosPrivate.put(reviewPublic.common, data);
         } catch (error) {
             throw error;
         }
@@ -60,11 +60,22 @@ const reviewApi = {
     },
     async detail(id: number | string): Promise<IApiResponse<IReview>> {
         try {
-            return await axiosPrivate.get(`${reviewPublic.common}/${id}`);
+            return await axiosPrivate.get(`${reviewPublic.common}/detail/${id}`);
         } catch (error) {
             throw error;
         }
     },
+    async checkCustomerIsOrderAndReview(customer_id: number | string, product_id: number | string): Promise<IApiResponse<{ isOrder: boolean, isReview: boolean }>> {
+        try {
+            console.log('customer_id', customer_id);
+            console.log('product_id', product_id);
+            return await axiosPrivate.get(`${reviewPublic.common}/check-customer-is-order-and-review`, {
+                params: { customer_id, product_id }
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
 };
 
 export default reviewApi;

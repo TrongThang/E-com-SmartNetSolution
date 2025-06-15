@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Badge, PackageCheck, Plus, Shapes } from "lucide-react"
+import { Badge, PackageCheck, Plus, Shapes, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
 import RoleTable from "@/components/common/table/RoleTable"
@@ -39,20 +40,31 @@ function ErrorList({ errors }) {
 export default function OrderManager() {
     const navigate = useNavigate()
     const [orders, setOrders] = useState([])
+    const [filteredOrders, setFilteredOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedIds, setSelectedIds] = useState([]);
     const [isAllSelectedPendingConfirm, setIsAllSelectedPendingConfirm] = useState(true)
-
+    const [statusFilter, setStatusFilter] = useState("all")
 
     useEffect(() => {
         fetchOrders()
     }, [])
 
     useEffect(() => {
-        const selectedOrders = orders.filter(order => selectedIds.includes(order.id));
+        // Filter orders based on status
+        if (statusFilter === "all") {
+            setFilteredOrders(orders)
+        } else {
+            const filtered = orders.filter(order => order.status === statusFilter)
+            setFilteredOrders(filtered)
+        }
+    }, [orders, statusFilter])
+
+    useEffect(() => {
+        const selectedOrders = filteredOrders.filter(order => selectedIds.includes(order.id));
         const isAllPending = selectedOrders.length > 0 && selectedOrders.every(order => order.status === ORDER_STATUS.PENDING);
         setIsAllSelectedPendingConfirm(isAllPending);
-    }, [selectedIds])
+    }, [selectedIds, filteredOrders])
 
     const fetchOrders = async () => {
         setLoading(true)
@@ -164,6 +176,28 @@ export default function OrderManager() {
         }
     }
 
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case ORDER_STATUS.PENDING:
+                return "Chờ xác nhận"
+            case ORDER_STATUS.CONFIRMED:
+                return "Đã xác nhận"
+            case ORDER_STATUS.SHIPPING:
+                return "Đang giao hàng"
+            case ORDER_STATUS.DELIVERED:
+                return "Đã giao hàng"
+            case ORDER_STATUS.CANCELLED:
+                return "Đã hủy"
+            default:
+                return "Không xác định"
+        }
+    }
+
+    const clearFilter = () => {
+        setStatusFilter("all")
+        setSelectedIds([])
+    }
+
     if (loading) {
         return (
             <div className="container mx-auto p-6 space-y-6">
@@ -188,21 +222,55 @@ export default function OrderManager() {
                 <div className="flex space-x-2 ml-auto">
                     <Button disabled={!isAllSelectedPendingConfirm} className="bg-blue-500 hover:bg-blue-600" onClick={handleConfirmOrder}>
                         <PackageCheck className="mr-2 h-4 w-4" />
+                        <span className="text-yellow-400"> ( {selectedIds.length} ) </span>
                         Xác nhận đơn hàng
-                    </Button>
-                    <Button asChild className="bg-green-500 hover:bg-green-600">
-                        <Link to="/admin/orders/create">
-                            <span className="flex items-center">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Tạo đơn hàng mới
-                            </span>
-                        </Link>
                     </Button>
                 </div>
             </div>
 
+            {/* Filter Section */}
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <Filter className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm font-medium text-gray-700">Lọc theo trạng thái:</span>
+                        </div>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-[200px]">
+                                <SelectValue placeholder="Chọn trạng thái" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Tất cả đơn hàng</SelectItem>
+                                <SelectItem value={ORDER_STATUS.PENDING}>Chờ xác nhận</SelectItem>
+                                <SelectItem value={ORDER_STATUS.CONFIRMED}>Đã xác nhận</SelectItem>
+                                <SelectItem value={ORDER_STATUS.SHIPPING}>Đang giao hàng</SelectItem>
+                                <SelectItem value={ORDER_STATUS.DELIVERED}>Đã giao hàng</SelectItem>
+                                <SelectItem value={ORDER_STATUS.CANCELLED}>Đã hủy</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">
+                            Hiển thị: <span className="font-medium">{filteredOrders.length}</span> / <span className="font-medium">{orders.length}</span> đơn hàng
+                        </span>
+                        {statusFilter !== "all" && (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={clearFilter}
+                                className="text-gray-600 hover:text-gray-800"
+                            >
+                                Xóa bộ lọc
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             <OrderTable
-                orders={orders}
+                orders={filteredOrders}
                 onModifyPermission={handleView}
                 onDelete={handleDelete}
                 onEdit={handleEdit}

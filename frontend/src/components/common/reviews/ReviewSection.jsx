@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useAuth } from "@/contexts/AuthContext"
 import reviewApi from "@/apis/modules/review.api.ts"
-// import { getUserId } from "@/utils/auth"
 import ReviewForm from "./ReviewForm"
 import ReviewList from "./ReviewList"
 
@@ -11,13 +11,7 @@ export default function ReviewSection({ device }) {
     const [userReview, setUserReview] = useState(null)
     const [hasPurchased, setHasPurchased] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [userId, setUserId] = useState(null)
-
-    // Get current user ID on component mount
-    // useEffect(() => {
-    //     const currentUserId = getUserId()
-    //     setUserId(currentUserId)
-    // }, [])
+    const { user, isAuthenticated } = useAuth()
 
     // Fetch all reviews for this device
     const fetchReviews = useCallback(async () => {
@@ -34,17 +28,45 @@ export default function ReviewSection({ device }) {
         }
     }, [device?.id])
 
+    // Check if user has purchased and get their review
+    const checkUserPurchaseAndReview = useCallback(async () => {
+        if (!device?.id || !user?.account_id) return
+
+        try {
+            const response = await reviewApi.checkCustomerIsOrderAndReview(user.account_id, device.id)
+            const { isOrder, isReview, review } = response.data
+            
+            setHasPurchased(isOrder)
+            
+            // Nếu user đã review, set userReview
+            if (isReview && review) {
+                setUserReview({
+                    idReview: review.review_id,
+                    rating: review.rating,
+                    comment: review.comment
+                })
+            } else {
+                setUserReview(null)
+            }
+        } catch (error) {
+            console.error("Error checking purchase and review status:", error)
+            setHasPurchased(false)
+            setUserReview(null)
+        }
+    }, [device?.id, user?.account_id])
+
     useEffect(() => {
         fetchReviews()
-    }, [fetchReviews])
+        if (isAuthenticated && user) {
+            checkUserPurchaseAndReview()
+        }
+    }, [fetchReviews, checkUserPurchaseAndReview, isAuthenticated, user])
 
     // Handle successful review submission
     const handleReviewSubmitted = useCallback(() => {
         fetchReviews()
-        // fetchUserData()
-    }, [fetchReviews,
-        // fetchUserData
-    ])
+        checkUserPurchaseAndReview()
+    }, [fetchReviews, checkUserPurchaseAndReview])
 
     if (!device) {
         return <div className="py-8 text-center text-gray-500">Đang tải thông tin sản phẩm...</div>
@@ -53,15 +75,15 @@ export default function ReviewSection({ device }) {
     return (
         <div className="py-6">
             <div className="max-w-4xl mx-auto">
-                {/* {userId && ( */}
+                {isAuthenticated && user && (
                     <ReviewForm
                         userReview={userReview}
-                        deviceId={device.idDevice}
-                        userId={userId}
-                        hasPurchased={hasPurchased}
+                        deviceId={device.id}
+                        userId={user.account_id}
                         onSubmitSuccess={handleReviewSubmitted}
+                        hasPurchased={hasPurchased}
                     />
-                {/* )} */}
+                )}
 
                 <div className="mt-10">
                     <ReviewList reviews={reviews} isLoading={isLoading} />

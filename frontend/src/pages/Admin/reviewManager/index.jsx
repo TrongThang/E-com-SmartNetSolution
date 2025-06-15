@@ -5,6 +5,7 @@ import ReviewTable from "@/components/common/table/ReviewTable";
 import { Button } from "@/components/ui/button.jsx";
 import Swal from 'sweetalert2';
 import GenericTable from "@/components/common/GenericTable";
+import { Star } from "lucide-react";
 
 const ReviewManagerPage = () => {
     const [products, setProducts] = useState([]);
@@ -33,7 +34,13 @@ const ReviewManagerPage = () => {
             key: "average_rating",
             label: "Đánh giá trung bình",
             sortName: "average_rating",
-            render: (row) => `${row.average_rating || 0}/5`
+            render: (row) => {
+                return (
+                    <div className="flex items-center gap-2">
+                        {row.average_rating || 0} <Star className="w-4 h-4 text-yellow-500" />
+                    </div>
+                )
+            }
         },
         {
             key: "total_reviews_today",
@@ -230,7 +237,7 @@ const ReviewManagerPage = () => {
                         <div>
                             <h2 className="text-lg font-semibold">Đánh giá của sản phẩm: {selectedProduct.name}</h2>
                             <p className="text-sm text-gray-500">
-                                Đánh giá trung bình: {selectedProduct.average_rating}/5 ({selectedProduct.total_review} đánh giá)
+                                Đánh giá trung bình: {selectedProduct.average_rating} ({selectedProduct.total_review} đánh giá)
                             </p>
                         </div>
                         <Button

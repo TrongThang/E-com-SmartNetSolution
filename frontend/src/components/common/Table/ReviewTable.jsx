@@ -20,7 +20,13 @@ const ReviewTable = ({ reviews, onView, onDelete }) => {
             key: "rating",
             label: "Đánh giá",
             sortName: "rating",
-            render: (row) => `${row.rating}/5`
+            render: (row) => {
+                return (
+                    <div className="flex items-center gap-2">
+                        {row.rating}⭐
+                    </div>
+                )
+            }
         },
         {
             key: "comment",

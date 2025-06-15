@@ -23,9 +23,12 @@ router.put('/', validateMiddleware(updateReviewSchema), asyncHandler(reviewContr
 router.delete('/:id', validateMiddleware(deleteReviewSchema), asyncHandler(reviewController.deleteReview));
 
 // Lấy chi tiết review theo id
-router.get('/:id', asyncHandler(reviewController.getReviewDetail));
+router.get('/detail/:id', asyncHandler(reviewController.getReviewDetail));
 
 // Lấy review theo product_id
 router.get('/product/:product_id', asyncHandler(reviewController.getReviewByProductId));
+
+// Kiểm tra khách hàng đã mua và đánh giá sản phẩm
+router.get('/check-customer-is-order-and-review', asyncHandler(reviewController.checkCustomerIsOrderAndReview));
 
 module.exports = router;

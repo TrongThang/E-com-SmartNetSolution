@@ -807,7 +807,6 @@ model production_tracking {
 
 model review_product {
   id          Int       @id @default(autoincrement())
-  review_id   Int?
   customer_id String?   @db.VarChar(32)
   product_id  Int?
   comment     String?   @db.Text

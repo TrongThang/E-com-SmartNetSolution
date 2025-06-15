@@ -4,15 +4,14 @@ import { useState, useEffect } from "react"
 import StarRating from "./StarRating"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-// import { toast } from "@/components/ui/use-toast"
-import reviewApi  from "@/apis/modules/review.api.ts" // Import reviewApi
+import reviewApi from "@/apis/modules/review.api.ts"
+import Swal from "sweetalert2"
 
-export default function ReviewForm({ userReview, deviceId, userId, hasPurchased, onSubmitSuccess }) {
+export default function ReviewForm({ userReview, deviceId, userId, onSubmitSuccess, hasPurchased }) {
     const [comment, setComment] = useState("")
     const [rating, setRating] = useState(0)
     const [isEditing, setIsEditing] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
-
     const isExistingReview = Boolean(userReview?.idReview)
 
     // Initialize form when user review data changes
@@ -20,6 +19,9 @@ export default function ReviewForm({ userReview, deviceId, userId, hasPurchased,
         if (userReview) {
             setComment(userReview.comment || "")
             setRating(userReview.rating || 0)
+        } else {
+            setComment("")
+            setRating(0)
         }
     }, [userReview])
 
@@ -35,37 +37,28 @@ export default function ReviewForm({ userReview, deviceId, userId, hasPurchased,
 
     const handleSubmit = async () => {
         if (rating === 0) {
-            // toast({
-            //     title: "Cảnh báo!",
-            //     description: "Vui lòng đánh giá sản phẩm ít nhất 1 ⭐!",
-            //     variant: "destructive",
-            // })
-            return
+            return Swal.fire({
+                title: 'Vui lòng đánh giá sản phẩm ít nhất 1 ⭐!',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            })
         }
 
         try {
             setIsSubmitting(true)
 
             const reviewData = {
-                idCustomer: userId,
-                idDevice: deviceId,
+                customer_id: userId,
+                product_id: deviceId,
                 comment: comment,
                 rating: rating,
             }
 
             if (isExistingReview) {
-                reviewData.idReview = userReview.idReview
-                await reviewApi.updateReview(reviewData)
-                // toast({
-                //     title: "Thành công!",
-                //     description: "Đánh giá của bạn đã được cập nhật.",
-                // })
+                reviewData.id = userReview.idReview
+                await reviewApi.edit(reviewData)
             } else {
-                await reviewApi.createReview(reviewData)
-                // toast({
-                //     title: "Thành công!",
-                //     description: "Cảm ơn bạn đã đánh giá sản phẩm.",
-                // })
+                await reviewApi.add(reviewData)
             }
 
             setIsEditing(false)
@@ -74,26 +67,21 @@ export default function ReviewForm({ userReview, deviceId, userId, hasPurchased,
             }
         } catch (error) {
             console.error("Error submitting review:", error)
-            // toast({
-            //     title: "Lỗi!",
-            //     description: "Không thể gửi đánh giá. Vui lòng thử lại sau.",
-            //     variant: "destructive",
-            // })
         } finally {
             setIsSubmitting(false)
         }
     }
 
-    // if (!hasPurchased) {
-    //     return (
-    //         <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 text-amber-800">
-    //             <p className="font-medium">Vui lòng mua sản phẩm để đánh giá!</p>
-    //         </div>
-    //     )
-    // }
+    if (!hasPurchased) {
+        return (
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 text-amber-800">
+                <p className="font-medium">Vui lòng mua sản phẩm để đánh giá!</p>
+            </div>
+        )
+    }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 border-2 border-blue-600 rounded-lg p-4">
             <h3 className="text-lg font-semibold">Đánh giá của bạn</h3>
 
             <div className="space-y-2">
@@ -137,7 +125,7 @@ export default function ReviewForm({ userReview, deviceId, userId, hasPurchased,
                                 </Button>
                             </>
                         ) : (
-                            <Button variant="outline" onClick={() => setIsEditing(true)}>
+                            <Button variant="outline" className="bg-orange-500 text-white" onClick={() => setIsEditing(true)}>
                                 Chỉnh sửa
                             </Button>
                         )}

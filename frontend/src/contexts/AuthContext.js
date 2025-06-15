@@ -133,13 +133,13 @@ export const AuthProvider = ({ children }) => {
             //     username,
             //     password,
             // });
-            const response = await axiosIOTPublic.post('auth/employee/login', {
+            const response = await axiosPublic.post('auth/login-employee', {
                 username,
                 password,
             });
 
-            if (response.accessToken) {
-                const token = response.accessToken;
+            if (response.status_code === 200) {
+                const token = response.data.accessToken;
                 localStorage.setItem('employeeToken', token);
 
                 setIsAdminAuthenticated(true);

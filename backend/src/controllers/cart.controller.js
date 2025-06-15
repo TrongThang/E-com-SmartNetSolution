@@ -14,7 +14,7 @@ class CartController {
     async getCart(req, res) {
         const { customer_id } = req.params;
         
-        const cart = await getCart(customer_id, is_customer);
+        const cart = await getCart(customer_id);
 
         return res.status(cart.status_code).json(cart);
     }
