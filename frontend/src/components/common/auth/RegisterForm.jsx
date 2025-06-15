@@ -12,9 +12,9 @@ export default function RegisterForm({ onSuccess }) {
     const [registerForm, setRegisterForm] = useState({
         username: "",
         password: "",
-        confirmPassword: "",
-        firstName: "",
-        lastName: "",
+        confirm_password: "",
+        surname: "",
+        lastname: "",
         phone: "",
         email: "",
     })
@@ -22,8 +22,9 @@ export default function RegisterForm({ onSuccess }) {
     const handleRegister = async (e) => {
         e.preventDefault()
         setIsLoading(true)
+        console.log(registerForm)
 
-        if (registerForm.password !== registerForm.confirmPassword) {
+        if (registerForm.password !== registerForm.confirm_password) {
             toast.error("Lỗi", { description: "Mật khẩu xác nhận không khớp" })
             setIsLoading(false)
             return
@@ -33,19 +34,21 @@ export default function RegisterForm({ onSuccess }) {
             const result = await register({
                 username: registerForm.username,
                 password: registerForm.password,
-                firstName: registerForm.firstName,
-                lastName: registerForm.lastName,
+                surname: registerForm.surname,
+                lastname: registerForm.lastname,
                 phone: registerForm.phone,
                 email: registerForm.email,
+                confirm_password: registerForm.confirm_password,
             })
-
+            console.log('result',result)
             if (result.success) {
                 toast.success("Đăng ký thành công", { description: "Vui lòng đăng nhập để tiếp tục" })
                 onSuccess?.()
             } else {
                 toast.error("Đăng ký thất bại", { description: result.message })
             }
-        } catch {
+        } catch (error) {
+            console.log('error',error)
             toast.error("Lỗi", { description: "Có lỗi xảy ra khi đăng ký" })
         } finally {
             setIsLoading(false)
@@ -67,8 +70,8 @@ export default function RegisterForm({ onSuccess }) {
                         required
                         className="w-full rounded-lg border border-gray-300 bg-white px-10 py-2.5 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         placeholder="Họ"
-                        value={registerForm.firstName}
-                        onChange={(e) => setRegisterForm((prev) => ({ ...prev, firstName: e.target.value }))}
+                        value={registerForm.surname}
+                        onChange={(e) => setRegisterForm((prev) => ({ ...prev, surname: e.target.value }))}
                     />
                 </div>
                 <div className="relative">
@@ -82,8 +85,8 @@ export default function RegisterForm({ onSuccess }) {
                         required
                         className="w-full rounded-lg border border-gray-300 bg-white px-10 py-2.5 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         placeholder="Tên"
-                        value={registerForm.lastName}
-                        onChange={(e) => setRegisterForm((prev) => ({ ...prev, lastName: e.target.value }))}
+                        value={registerForm.lastname}
+                        onChange={(e) => setRegisterForm((prev) => ({ ...prev, lastname: e.target.value }))}
                     />
                 </div>
             </div>
@@ -176,14 +179,14 @@ export default function RegisterForm({ onSuccess }) {
                     <KeyRound size={16} />
                 </div>
                 <input
-                    id="confirm-password"
-                    name="confirmPassword"
+                    id="confirm_password"
+                    name="confirm_password"
                     type="password"
                     required
                     className="w-full rounded-lg border border-gray-300 bg-white px-10 py-2.5 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Xác nhận mật khẩu"
-                    value={registerForm.confirmPassword}
-                    onChange={(e) => setRegisterForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                    value={registerForm.confirm_password}
+                    onChange={(e) => setRegisterForm((prev) => ({ ...prev, confirm_password: e.target.value }))}
                 />
             </div>
 

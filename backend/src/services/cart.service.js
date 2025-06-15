@@ -185,9 +185,7 @@ async function updateQuantityCartItem(cartItem) {
  * @param {Object} cartItem - Thông tin xóa (customer_id, product_id)
  * @returns {Object} - Phản hồi thành công hoặc lỗi
  */
-async function removeFromCart(cartItem) {
-    const { customer_id, product_id } = cartItem;
-
+async function removeFromCart(customer_id, product_id) {
     try {
         // Kiểm tra sự tồn tại của khách hàng
         const customer = await prisma.customer.findFirst({
@@ -209,7 +207,7 @@ async function removeFromCart(cartItem) {
             const cart = await tx.cart.findFirst({
                 where: {
                     customer_id,
-                    product_id,
+                    product_id: Number(product_id),
                     deleted_at: null
                 },
             });

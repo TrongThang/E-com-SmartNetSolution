@@ -137,6 +137,7 @@ export const AuthProvider = ({ children }) => {
                 username,
                 password,
             });
+
             if (response.accessToken) {
                 const token = response.accessToken;
                 localStorage.setItem('employeeToken', token);
@@ -158,16 +159,18 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
+    
     const register = async (userData) => {
         try {
-            const response = await axios.post('http://localhost:8081/api/auth/register', userData);
+            console.log('userData', userData)
+            const response = await axiosPublic.post('auth/register', userData);
 
-            if (response.data.errorCode === 0) {
+            if (response.status_code === 200) {
                 return { success: true };
             } else {
                 return {
                     success: false,
-                    message: response.data.message || 'Đăng ký thất bại'
+                    message: response.errors[0].message || 'Đăng ký thất bại'
                 };
             }
         } catch (error) {

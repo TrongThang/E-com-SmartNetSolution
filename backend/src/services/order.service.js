@@ -220,7 +220,6 @@ async function getOrderDetailService(order_id) {
         order_detail.sale_price,
         order_detail.delivery_date,
         order_detail.receiving_date,
-        order_detail.is_gift,
         order_detail.discount,
         order_detail.amount
     `;

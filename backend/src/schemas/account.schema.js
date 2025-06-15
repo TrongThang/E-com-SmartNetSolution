@@ -53,6 +53,14 @@ const loginSchema = z.object({
 
 const registerCustomerSchema = z.object({
     body: z.object({
+        surname: z.string().optional(),
+        lastname: z.string()
+            .min(1, {
+                message: `[${ERROR_CODES.CUSTOMER_LASTNAME_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_LASTNAME_INVALID]}`,
+            })
+            .max(500, {
+                message: `[${ERROR_CODES.CUSTOMER_LASTNAME_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_LASTNAME_INVALID]}`,
+            }),
         username: z.string().min(1, {
             message: `[${ERROR_CODES.ACCOUNT_USERNAME_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_USERNAME_REQUIRED]}`,
         }),
@@ -62,14 +70,6 @@ const registerCustomerSchema = z.object({
         confirm_password: z.string().min(1, {
             message: `[${ERROR_CODES.ACCOUNT_CONFIRM_PASSWORD_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.ACCOUNT_CONFIRM_PASSWORD_REQUIRED]}`,
         }),
-        surname: z.string().optional(),
-        lastname: z.string()
-            .min(1, {
-                message: `[${ERROR_CODES.CUSTOMER_LASTNAME_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_LASTNAME_INVALID]}`,
-            })
-            .max(500, {
-                message: `[${ERROR_CODES.CUSTOMER_LASTNAME_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_LASTNAME_INVALID]}`,
-            }),
         phone: z.string()
             .min(1, {
                 message: `[${ERROR_CODES.CUSTOMER_PHONE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_PHONE_INVALID]}`,
@@ -80,8 +80,6 @@ const registerCustomerSchema = z.object({
         email: z.string().email({
             message: `[${ERROR_CODES.CUSTOMER_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_EMAIL_INVALID]}`,
         }),
-        gender: z.boolean({ message: `[${ERROR_CODES.CUSTOMER_GENDER_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_GENDER_INVALID]}`, })
-        // birthdate:
     }),
 });
 

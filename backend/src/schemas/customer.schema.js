@@ -18,7 +18,6 @@ const BaseCustomerSchema = z.object({
             .max(50, {
                 message: `[${ERROR_CODES.CUSTOMER_LASTNAME_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_LASTNAME_MAX_LENGTH]}`
             }),
-        image: z.string().optional(),
         phone: z.string()
             .regex(REGEX.PHONE, {
                 message: `[${ERROR_CODES.CUSTOMER_PHONE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_PHONE_INVALID]}`
@@ -29,18 +28,6 @@ const BaseCustomerSchema = z.object({
                 message: `[${ERROR_CODES.CUSTOMER_EMAIL_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_EMAIL_INVALID]}`
             })
             .optional(),
-        gender: z.union([
-            z.boolean(),
-            z.string().refine(val => val === "true" || val === "false", {
-                message: `[${ERROR_CODES.CUSTOMER_GENDER_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_GENDER_INVALID]}`
-            })
-        ], {
-            message: `[${ERROR_CODES.CUSTOMER_GENDER_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_GENDER_INVALID]}`
-        }).optional(),
-        birthdate: z.coerce.date({
-                message: `[${ERROR_CODES.CUSTOMER_BIRTHDATE_INVALID}]${ERROR_MESSAGES[ERROR_CODES.CUSTOMER_BIRTHDATE_INVALID]}`
-            })
-            .optional()
     })
 });
 
