@@ -158,7 +158,7 @@ export default function Permission() {
                         <Card key={index}>
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-base font-medium flex items-center gap-2">
-                                    <CircleAlert className="h-4 w-4 text-orange-500" />
+                                    <CircleAlert className="h-4 w-4 text-blue-500" />
                                     {group.show_in_menu}
                                 </CardTitle>
                             </CardHeader>
@@ -168,6 +168,7 @@ export default function Permission() {
                                         <Checkbox
                                             id={`permission-${permission.id}`}
                                             checked={isPermissionActive(permission.id)}
+                                            className="data-[state=checked]:bg-blue-600 data-[state=checked]:hover:bg-blue-800 text-white"
                                             onCheckedChange={(checked) =>
                                                 handleCheckboxChange({
                                                     id: permission.id,
@@ -196,7 +197,7 @@ export default function Permission() {
                     <Link to="/admin/role">Quay lại</Link>
                 </Button>
                 <Button 
-                    className="bg-orange-500 hover:bg-orange-600" 
+                    className="bg-blue-600 hover:bg-blue-800" 
                     onClick={handleSubmit} 
                     disabled={saving}
                 >

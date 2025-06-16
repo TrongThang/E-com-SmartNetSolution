@@ -48,35 +48,6 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
             },
         },
         {
-            key: "id",
-            label: "Mã đặt hàng",
-        },
-        {
-            key: "saler_name",
-            label: "Người bán",
-        },
-        {
-            key: "name_recipient",
-            label: "Người nhận",
-        },
-        {
-            key: "customer_name",
-            label: "Người đặt",
-        },
-        {
-            key: "address",
-            label: "Địa chỉ",
-        },
-        {
-            key: "phone",
-            label: "SĐT",
-        },
-        {
-            key: "amount",
-            label: "Thành tiền",
-            render: (row) => { return formatCurrency(Number(row.amount)) },
-        },
-        {
             key: "status",
             label: "Trạng thái",
             className: "w-[120px] whitespace-nowrap",
@@ -111,6 +82,31 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                     }
                 </span>
             ),
+        },
+        {
+            key: "id",
+            label: "Mã đặt hàng",
+        },
+        {
+            key: "name_recipient",
+            label: "Người nhận",
+        },
+        // {
+        //     key: "customer_name",
+        //     label: "Người đặt",
+        // },
+        {
+            key: "address",
+            label: "Địa chỉ",
+        },
+        {
+            key: "phone",
+            label: "SĐT",
+        },
+        {
+            key: "amount",
+            label: "Thành tiền",
+            render: (row) => { return formatCurrency(Number(row.amount)) },
         },
         {
             key: "note",

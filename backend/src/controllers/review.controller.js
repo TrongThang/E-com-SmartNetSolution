@@ -6,7 +6,8 @@ const { getReviewService,
     updateReviewService,
     deleteReviewService,
     getReviewDetailService,
-    getReviewByProductIdService
+    getReviewByProductIdService,
+    checkCustomerIsOrderAndReview
 } = require('../services/review.service');
 
 class ReviewController {
@@ -49,6 +50,12 @@ class ReviewController {
         const { product_id } = req.params;
         const { filter, limit, sort, order, page } = req.query;
         const result = await getReviewByProductIdService(product_id, filter, limit, sort, order, page);
+        res.status(result.status_code).json(result);
+    }
+
+    async checkCustomerIsOrderAndReview(req, res) {
+        const { customer_id, product_id } = req.query;
+        const result = await checkCustomerIsOrderAndReview(customer_id, product_id);
         res.status(result.status_code).json(result);
     }
 }

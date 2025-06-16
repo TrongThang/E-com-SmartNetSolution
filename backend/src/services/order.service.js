@@ -440,7 +440,6 @@ async function createOrder(orderData, platform_order) {
     try {
         const result = await prisma.$transaction(async (tx) => {
             // Tạo đơn hàng
-            console.log('Customer', order.customer_id)
             const newOrder = await tx.order.create({
                 data: {
                     id: order_id,

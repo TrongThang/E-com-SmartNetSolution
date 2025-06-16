@@ -1,4 +1,5 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
+const queryHelper = require('../helpers/query.helper');
 const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
 const { PrismaClient } = require('@prisma/client');
@@ -37,7 +38,7 @@ const getReviewService = async (filter, limit, sort, order, page = 1) => {
 // Tạo review mới
 const createReviewService = async ({ customer_id, product_id, comment, image, rating }) => {
     try {
-        // Kiểm tra đã mua hàng và hoàn tất đơn chưa
+    // Kiểm tra đã mua hàng và hoàn tất đơn chưa
         const order = await prisma.order.findFirst({
             where: {
                 customer_id,
@@ -67,6 +68,7 @@ const createReviewService = async ({ customer_id, product_id, comment, image, ra
                 updated_at: new Date()
             }
         });
+        console.log('review', review);
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.CREATED, review);
     } catch (error) {
         console.log(error);
@@ -200,11 +202,53 @@ const getReviewByProductIdService = async (product_id, filter, limit, sort, orde
     }
 };
 
+const checkCustomerIsOrderAndReview = async (customer_id, product_id) => {
+    try {
+        const result = await queryHelper.queryRaw(`
+            SELECT 
+                o.id,
+                o.customer_id,
+                od.product_id,
+                rp.id AS review_id,
+                rp.rating,
+                rp.comment
+            FROM \`order\` o
+            LEFT JOIN order_detail od ON o.id = od.order_id
+            LEFT JOIN (
+                SELECT id, customer_id, product_id, rating, comment FROM review_product 
+                WHERE deleted_at IS NULL
+            ) rp
+            ON o.customer_id = rp.customer_id AND od.product_id = rp.product_id
+            WHERE o.customer_id = '${customer_id}' 
+                AND od.product_id = '${product_id}' 
+                AND o.deleted_at IS NULL
+            LIMIT 1
+        `);
+        console.log('result', result);
+        const isOrder = result && result.length > 0;
+        const isReview = result[0].id;
+        
+        return {
+            status_code: STATUS_CODE.OK,
+            message: "Kiểm tra khách hàng đã mua và đánh giá sản phẩm thành công",
+            data: {
+                isOrder,
+                isReview,
+                review: result[0]
+            }
+        };
+    } catch (error) {
+        console.log('error', error);
+        return get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
+    }
+};
+
 module.exports = {
     getReviewService,
     createReviewService,
     updateReviewService,
     deleteReviewService,
     getReviewDetailService,
-    getReviewByProductIdService
+    getReviewByProductIdService,
+    checkCustomerIsOrderAndReview
 };

@@ -13,13 +13,14 @@ const getCategoriesService = async (filters, limit, sort, order) => {
     try {
         // Build SQL query to get categories with attributes
         let get_attr = `categories.category_id, categories.name, categories.slug, categories.description, 
-        categories.parent_id, categories.image, categories.is_hide, 
-        categories.created_at, categories.updated_at, categories.deleted_at,
+        categories.parent_id, parent.name as parent_name,
+        categories.image, categories.is_hide,
         attribute_group.id as group_id, attribute_group.name as group_name, 
         attribute.id as attribute_id, attribute.name as attribute_name, attribute.datatype as attribute_type`;
 
         let get_table = `categories`;
         let query_join = `LEFT JOIN attribute_category ON categories.category_id = attribute_category.category_id
+        LEFT JOIN categories as parent ON categories.parent_id = parent.category_id
         LEFT JOIN attribute ON attribute_category.attribute_id = attribute.id
         LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id`;
 
@@ -51,6 +52,7 @@ const getCategoriesService = async (filters, limit, sort, order) => {
                     slug: item.slug,
                     description: item.description,
                     parent_id: item.parent_id,
+                    parent_name: item.parent_name,
                     image: item.image,
                     is_hide: item.is_hide,
                     created_at: item.created_at,
@@ -92,6 +94,7 @@ const getCategoriesService = async (filters, limit, sort, order) => {
                         slug: category.slug,
                         description: category.description,
                         parent_id: category.parent_id,
+                        parent_name: category.parent_name,
                         image: category.image,
                         is_hide: category.is_hide,
                         created_at: category.created_at,
@@ -139,13 +142,14 @@ const getCategoriesDetailService = async (id) => {
 
         // Build SQL query to get category with attributes  
         let get_attr = `categories.category_id, categories.name, categories.slug, categories.description, 
-        categories.parent_id, categories.image, categories.is_hide, 
+        categories.parent_id, parent.name as parent_name, categories.image, categories.is_hide, 
         categories.created_at, categories.updated_at, categories.deleted_at,
         attribute_group.id as group_id, attribute_group.name as group_name, 
         attribute.id as attribute_id, attribute.name as attribute_name, attribute.datatype as attribute_type, attribute.required as attribute_required`;
 
         let get_table = `categories`;
         let query_join = `LEFT JOIN attribute_category ON categories.category_id = attribute_category.category_id
+        LEFT JOIN categories as parent ON categories.parent_id = parent.category_id
         LEFT JOIN attribute ON attribute_category.attribute_id = attribute.id
         LEFT JOIN attribute_group ON attribute.group_attribute_id = attribute_group.id`;
 
@@ -258,6 +262,7 @@ const getCategoriesDetailService = async (id) => {
             slug: firstItem.slug,
             description: firstItem.description,
             parent_id: firstItem.parent_id,
+            parent_name: firstItem.parent_name,
             image: firstItem.image,
             is_hide: firstItem.is_hide,
             created_at: firstItem.created_at,
