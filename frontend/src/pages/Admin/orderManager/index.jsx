@@ -176,23 +176,6 @@ export default function OrderManager() {
         }
     }
 
-    const getStatusLabel = (status) => {
-        switch (status) {
-            case ORDER_STATUS.PENDING:
-                return "Chờ xác nhận"
-            case ORDER_STATUS.CONFIRMED:
-                return "Đã xác nhận"
-            case ORDER_STATUS.SHIPPING:
-                return "Đang giao hàng"
-            case ORDER_STATUS.DELIVERED:
-                return "Đã giao hàng"
-            case ORDER_STATUS.CANCELLED:
-                return "Đã hủy"
-            default:
-                return "Không xác định"
-        }
-    }
-
     const clearFilter = () => {
         setStatusFilter("all")
         setSelectedIds([])
@@ -242,8 +225,10 @@ export default function OrderManager() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Tất cả đơn hàng</SelectItem>
+                                <SelectItem value={ORDER_STATUS.PENDING_PAYMENT}>Chờ thanh toán</SelectItem>
                                 <SelectItem value={ORDER_STATUS.PENDING}>Chờ xác nhận</SelectItem>
-                                <SelectItem value={ORDER_STATUS.CONFIRMED}>Đã xác nhận</SelectItem>
+                                <SelectItem value={ORDER_STATUS.PREPARING}>Đang chuẩn bị</SelectItem>
+                                <SelectItem value={ORDER_STATUS.PENDING_SHIPPING}>Chờ giao hàng</SelectItem>
                                 <SelectItem value={ORDER_STATUS.SHIPPING}>Đang giao hàng</SelectItem>
                                 <SelectItem value={ORDER_STATUS.DELIVERED}>Đã giao hàng</SelectItem>
                                 <SelectItem value={ORDER_STATUS.CANCELLED}>Đã hủy</SelectItem>

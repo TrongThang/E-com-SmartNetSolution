@@ -104,10 +104,10 @@ async function loginEmployee({ username, password }) {
 
 	const accessToken = jwt.sign(
 		{
-			account_id: account.account_id,
+			accountId: account.account_id,
 			username: account.username,
 			employee_id: employee.id,
-			role: account.role_id || 'employee',
+			roleId: account.role_id || 'employee',
 		},
 		process.env.SECRET_KEY,
 		{ expiresIn: '8h' }

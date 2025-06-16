@@ -287,7 +287,7 @@ export default function AddressesPage() {
         try {
             const updateData = {
                 id: addressId,
-                customer_id: "CUST001",
+                customer_id: user.customer_id,
                 receiver_name: formData.receiver_name,
                 phone: formData.phone,
                 city: formData.provinceName,
@@ -346,7 +346,7 @@ export default function AddressesPage() {
         }
         try {
             const createData = {
-                customer_id: "CUST001",
+                customer_id: user.customer_id,
                 receiver_name: formData.receiver_name,
                 phone: formData.phone,
                 city: formData.provinceName,

@@ -47,7 +47,7 @@ export default function TemplateManagement() {
 	const fetchTemplate = async () => {
 		try {
 			const res = await axiosIOTPublic.get("device-templates");
-			setTemplates(res);
+			setTemplates(res.data);
 		} catch (error) {
 			console.error("Failed to fetch device templates:", error);
 			Swal.fire({

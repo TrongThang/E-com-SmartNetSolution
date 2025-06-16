@@ -17,12 +17,12 @@ export function ProductCard({ product }) {
         <Card className="h-full overflow-hidden border border-gray-200 transition-all duration-300 hover:scale-105 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100"
             onClick={handleClick}
         >
-            <div className="relative aspect-square overflow-hidden bg-gray-100 p-4 max-h-[15vh]">
+            <div className="relative aspect-square overflow-hidden bg-gray-100 p-4 max-h-[30vh]">
                 <img
                     src={image || "/placeholder.svg"}
                     alt={name}
                     className="object-contain p-2"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw 20vh"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw 30vh"
                 />
             </div>
             <CardContent className="p-4">

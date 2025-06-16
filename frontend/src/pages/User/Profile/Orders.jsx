@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Package, Eye, Truck, CheckCircle, AlertCircle, Clock, ChevronUp } from "lucide-react"
+import { Package, Eye, Truck, CheckCircle, AlertCircle, Clock, ChevronUp, TruckElectric, PackageCheck } from "lucide-react"
 import orderApi from "@/apis/modules/order.api.ts"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
@@ -31,10 +31,12 @@ export default function OrdersPage() {
       case 1:
         return { statusIcon: Package, statusColor: "text-muted-foreground", status: "Chuẩn bị hàng" }
       case 2:
-        return { statusIcon: Truck, statusColor: "text-blue-500", status: "Đang giao hàng" }
+        return { statusIcon: Truck, statusColor: "text-blue-500", status: "Chờ giao hàng" }
       case 3:
-        return { statusIcon: Truck, statusColor: "text-blue-500", status: "Đang giao hàng" }
+        return { statusIcon: TruckElectric, statusColor: "text-blue-500", status: "Đang giao hàng" }
       case 4:
+        return { statusIcon: PackageCheck, statusColor: "text-green-500", status: "Đã giao hàng" }
+      case 5:
         return { statusIcon: CheckCircle, statusColor: "text-green-500", status: "Hoàn thành" }
       case -1:
         return { statusIcon: AlertCircle, statusColor: "text-red-500", status: "Đã hủy" }

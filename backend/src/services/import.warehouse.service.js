@@ -515,13 +515,6 @@ async function importProductService(import_id, batch_production_id, template_id,
     if (!warehouseInventoryUpdate) {
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_UPDATE_FAILED, STATUS_CODE.BAD_REQUEST);
     }
-
-    console.log('sendImportWarehouseUpdate', {
-        type: 'update_import_warehouse',
-        import_id: import_id,
-        product_id: productionSerial[0].template_id,
-        serial_number: serial_number
-    })
     
     sseController.sendImportWarehouseUpdate({
         type: 'update_import_warehouse',

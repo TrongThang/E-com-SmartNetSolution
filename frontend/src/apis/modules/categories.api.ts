@@ -20,7 +20,7 @@ const categoryApi = {
         });
     },
     async getById(id: number): Promise<IApiResponse<ICategories>> {
-        return axiosPublic.get(`${categoryEndpoints.list}/${id}`);
+        return axiosPublic.get(`${categoryEndpoints.list}/detail/${id}`);
     },
     async add(data: any): Promise<IApiResponse> {
         try {

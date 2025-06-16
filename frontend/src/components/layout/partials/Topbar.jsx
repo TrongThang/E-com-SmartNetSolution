@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/contexts/AuthContext"
 
 export default function Topbar() {
-    const { employee, loading, authInitialized } = useAuth();
+    const { employee, loading, authInitialized, logoutEmployee } = useAuth();
 
     const [notifications] = useState(3)
 
@@ -140,15 +140,15 @@ export default function Topbar() {
                             <Avatar className="h-8 w-8 ring-2 ring-white/20">
                                 <AvatarImage src="/placeholder.svg?height=32&width=32" />
                                 <AvatarFallback className="bg-slate-600 text-white">
-                                    {employee.username
+                                    {employee?.username
                                         .split(" ")
                                         .map((n) => n[0])
                                         .join("")}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="hidden md:flex flex-col items-start">
-                                <span className="text-sm font-medium">{employee.employee.surname} {employee.employee.lastname}</span>
-                                <span className="text-xs text-slate-300">{employee.role.name}</span>
+                                <span className="text-sm font-medium">{employee?.employee?.surname} {employee?.employee?.lastname}</span>
+                                <span className="text-xs text-slate-300">{employee?.role?.name}</span>
                             </div>
                             <ChevronDown className="h-4 w-4 hidden md:block" />
                         </Button>
@@ -158,17 +158,17 @@ export default function Topbar() {
                             <Avatar className="h-16 w-16 ring-2 ring-slate-200">
                                 <AvatarImage src="/placeholder.svg?height=64&width=64" />
                                 <AvatarFallback className="bg-slate-600 text-white text-lg">
-                                    {employee.username
+                                    {employee?.username
                                         .split(" ")
                                         .map((n) => n[0])
                                         .join("")}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="text-center">
-                                <div className="font-medium text-slate-900">{employee.username}</div>
-                                <div className="text-sm text-slate-600">{employee.email}</div>
+                                <div className="font-medium text-slate-900">{employee?.username}</div>
+                                <div className="text-sm text-slate-600">{employee?.email}</div>
                                 <Badge variant="secondary" className="mt-1">
-                                    {employee.role.name}
+                                    {employee?.role?.name}
                                 </Badge>
                             </div>
                         </div>
@@ -186,7 +186,7 @@ export default function Topbar() {
                             <span className="text-slate-900">Cài đặt tài khoản</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-3 text-red-600 cursor-pointer hover:bg-red-50 p-3">
+                        <DropdownMenuItem className="gap-3 text-red-600 cursor-pointer hover:bg-red-50 p-3" onClick={() => logoutEmployee()}>
                             <LogOut className="h-4 w-4" />
                             <span>Đăng xuất</span>
                         </DropdownMenuItem>

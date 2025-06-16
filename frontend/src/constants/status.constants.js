@@ -1,4 +1,5 @@
 export const ORDER_STATUS = {
+    PENDING_PAYMENT: -2, // Chờ thanh toán
     CANCELLED: -1, // Đã huỷ
     PENDING  : 0, // Chờ xác nhận
     PREPARING: 1,  // Đã xác nhận và đang chuẩn bị hàng

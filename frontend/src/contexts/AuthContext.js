@@ -133,15 +133,15 @@ export const AuthProvider = ({ children }) => {
             //     username,
             //     password,
             // });
-            const response = await axiosPublic.post('auth/login-employee', {
+            const response = await axiosIOTPublic.post('auth/employee/login', {
                 username,
                 password,
             });
 
-            if (response.status_code === 200) {
-                const token = response.data.accessToken;
+            if (response) {
+                const token = response.accessToken;
+                
                 localStorage.setItem('employeeToken', token);
-
                 setIsAdminAuthenticated(true);
                 fetchEmployeeInfo(token);
                 return { success: true };
@@ -186,6 +186,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('authToken');
         setUser(null);
         setIsAuthenticated(false);
+    };
+
+    const logoutEmployee = () => {
+        localStorage.removeItem('employeeToken');
+        setEmployee(null);
+        setIsAdminAuthenticated(false);
     };
 
     const sendOtp = async (email) => {
@@ -286,6 +292,7 @@ export const AuthProvider = ({ children }) => {
         loginEmployee,
         register,
         logout,
+        logoutEmployee,
         sendOtp,
         verifyOtp,
         changePassword

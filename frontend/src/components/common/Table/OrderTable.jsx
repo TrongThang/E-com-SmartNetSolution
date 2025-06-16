@@ -55,8 +55,10 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                 <span
                     className={`
                         px-2 py-1 rounded text-sm whitespace-nowrap min-w-[120px]
-                        ${row.status === ORDER_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : 
+                        ${row.status === ORDER_STATUS.PENDING_PAYMENT ? "bg-rose-100 text-rose-800" : 
+                        row.status === ORDER_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : 
                         row.status === ORDER_STATUS.PREPARING ? "bg-blue-100 text-blue-800" : 
+                        row.status === ORDER_STATUS.PENDING_SHIPPING ? "bg-purple-100 text-purple-800" : 
                         row.status === ORDER_STATUS.SHIPPING ? "bg-green-100 text-green-800" : 
                         row.status === ORDER_STATUS.DELIVERED ? "bg-green-100 text-green-800" : 
                         row.status === ORDER_STATUS.COMPLETED ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
@@ -77,6 +79,12 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                         : 
                         row.status === ORDER_STATUS.COMPLETED ? 
                             <Badge variant="outline"><MapPinCheck className="w-4 h-4 mr-2" /> Hoàn tất</Badge>
+                        : 
+                        row.status === ORDER_STATUS.PENDING_PAYMENT ? 
+                            <Badge variant="outline"><Handshake className="w-4 h-4 mr-2" /> Chờ thanh toán</Badge>
+                        : 
+                        row.status === ORDER_STATUS.PENDING_SHIPPING ? 
+                            <Badge variant="outline"><Truck className="w-4 h-4 mr-2" /> Chờ giao hàng</Badge>
                         : 
                         <Badge variant="outline">Chưa xác định</Badge>
                     }
