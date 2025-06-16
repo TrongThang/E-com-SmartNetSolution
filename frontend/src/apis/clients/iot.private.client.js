@@ -7,7 +7,7 @@ const axiosIOTPublic = axios.create({
         'Accept': 'application/json',
         'Content-Type': 'application/json; charset=UTF-8',
         'X-Requested-With': 'XMLHttpRequest',
-        'Authorization': `Bearer ${localStorage.getItem('employeeToken')}`
+        'Authorization': `Bearer ${localStorage.getItem('employeeToken') || ''}`, // Lấy token từ localStorage
     },
     // Cho phép xử lý các status code từ 200-499
     validateStatus: function (status) {

@@ -28,18 +28,22 @@ import { Link } from "react-router-dom";
 import { formatDate, removeVietnameseTones } from "@/utils/format";
 import Swal from "sweetalert2";
 import axiosIOTPublic from "@/apis/clients/iot.private.client";
+import PlanPagination from "@/components/common/planning/PlanPagination";
 
 export default function FirmwarePage() {
     const [searchTerm, setSearchTerm] = useState("");
-    const [firmwareData, setFirmwareData] = useState([])
-    const [isLoading, setIsLoading] = useState(false)
+    const [firmwareData, setFirmwareData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const componentsPerPage = 7;
+    const [totalPage, setTotalPage] = useState(1);
 
     useEffect(() => {
         const fetchFirmwareData = async () => {
             try {
+                setIsLoading(true);
                 const response = await axiosIOTPublic.get(`firmware`);
-
-                console.log('response', response)
+                console.log('response', response);
                 if (response.success) {
                     setFirmwareData(response.data);
                 }
@@ -51,6 +55,28 @@ export default function FirmwarePage() {
         };
         fetchFirmwareData();
     }, []);
+
+    const filteredFirmware = firmwareData.filter((firmware) =>
+        removeVietnameseTones(firmware.version.toLowerCase()).includes(
+            removeVietnameseTones(searchTerm.toLowerCase())
+        ) ||
+        removeVietnameseTones(firmware.template_name.toLowerCase()).includes(
+            removeVietnameseTones(searchTerm.toLowerCase())
+        )
+    );
+
+    useEffect(() => {
+        const calculatedTotalPage = Math.ceil(filteredFirmware.length / componentsPerPage) || 1;
+        setTotalPage(calculatedTotalPage);
+        if (page > calculatedTotalPage) {
+            setPage(1);
+        }
+    }, [filteredFirmware.length, componentsPerPage, page]);
+
+    const currentFirmware = filteredFirmware.slice(
+        (page - 1) * componentsPerPage,
+        page * componentsPerPage
+    );
 
     const getStatusBadge = (firmware) => {
         if (!firmware.is_approved && !firmware.tested_at) {
@@ -73,12 +99,11 @@ export default function FirmwarePage() {
         return <Badge variant="secondary">Chưa xác định</Badge>;
     };
 
-    if (isLoading) {
-        console.log('firmwareData', firmwareData)
-        return <div className="flex justify-center items-center h-screen">
-            <Loader2 className="h-10 w-10 animate-spin" />
-        </div>
-    }
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPage) {
+            setPage(newPage);
+        }
+    };
 
     const handleDeleteFirmware = async (firmwareId) => {
         try {
@@ -90,26 +115,40 @@ export default function FirmwarePage() {
                 cancelButtonText: 'Hủy bỏ'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    const response = await axiosIOTPublic.delete(`firmware/${firmwareId}`)
-                    console.log('response', response)
+                    const response = await axiosIOTPublic.delete(`firmware/${firmwareId}`);
                     if (response.success) {
                         Swal.fire({
                             title: 'Thành công',
                             text: response.message,
                             icon: 'success'
-                        })
+                        });
+                        // Cập nhật lại danh sách sau khi xóa
+                        setFirmwareData(firmwareData.filter(f => f.firmware_id !== firmwareId));
                     } else {
                         Swal.fire({
                             title: 'Lỗi',
                             text: response.message,
                             icon: 'error'
-                        })
+                        });
                     }
                 }
-            })
+            });
         } catch (error) {
             console.error("Error deleting firmware:", error);
+            Swal.fire({
+                title: 'Lỗi',
+                text: 'Có lỗi xảy ra khi xóa firmware',
+                icon: 'error'
+            });
         }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Loader2 className="h-10 w-10 animate-spin" />
+            </div>
+        );
     }
 
     return (
@@ -149,7 +188,9 @@ export default function FirmwarePage() {
                         <div className="text-2xl font-bold text-green-600">
                             {firmwareData.filter((f) => f.is_approved).length}
                         </div>
-                        <p className="text-xs text-muted-foreground">Sẵn sàng triển khai</p>
+                        <p className="text-xs text-muted-
+
+foreground">Sẵn sàng triển khai</p>
                     </CardContent>
                 </Card>
 
@@ -182,7 +223,6 @@ export default function FirmwarePage() {
 
             {/* Tabs */}
             <Tabs defaultValue="firmware" className="space-y-4">
-
                 {/* Firmware Tab */}
                 <TabsContent value="firmware" className="space-y-4">
                     <Card>
@@ -212,7 +252,7 @@ export default function FirmwarePage() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Phiên bản</TableHead>
-                                            <TableHead>Template</TableHead>
+                                            <TableHead>Firmware</TableHead>
                                             <TableHead>Trạng thái</TableHead>
                                             <TableHead>Loại</TableHead>
                                             <TableHead>Ngày tạo</TableHead>
@@ -221,16 +261,8 @@ export default function FirmwarePage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {firmwareData
-                                            .filter((firmware) =>
-                                                removeVietnameseTones(firmware.version.toLowerCase()).includes(
-                                                    removeVietnameseTones(searchTerm.toLowerCase())
-                                                ) ||
-                                                removeVietnameseTones(firmware.template_name.toLowerCase()).includes(
-                                                    removeVietnameseTones(searchTerm.toLowerCase())
-                                                )
-                                            )
-                                            .map((firmware) => (
+                                        {currentFirmware.length > 0 ? (
+                                            currentFirmware.map((firmware) => (
                                                 <TableRow key={firmware.firmware_id}>
                                                     <TableCell>
                                                         <div className="flex flex-col">
@@ -256,7 +288,6 @@ export default function FirmwarePage() {
                                                     <TableCell>{formatDate(firmware.updated_at)}</TableCell>
                                                     <TableCell className="text-center">
                                                         <div className="flex items-center justify-center gap-2">
-                                                            {/* Quick Actions */}
                                                             <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-yellow-900">
                                                                 <Link to={`/admin/firmware/edit/${firmware.firmware_id}`}>
                                                                     <Pencil className="h-6 w-6" />
@@ -277,7 +308,16 @@ export default function FirmwarePage() {
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
-                                            ))}
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center py-12">
+                                                    <Code className="mx-auto h-12 w-12 text-gray-400" />
+                                                    <h3 className="mt-2 text-sm font-medium text-gray-900">Không có firmware nào</h3>
+                                                    <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách thêm firmware mới.</p>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
                                     </TableBody>
                                 </Table>
                             </div>
@@ -285,6 +325,14 @@ export default function FirmwarePage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+            {/* Phân trang */}
+            {filteredFirmware.length > 0 && (
+                <PlanPagination
+                    page={page}
+                    totalPage={totalPage}
+                    onPageChange={handlePageChange}
+                />
+            )}
         </div>
     );
 }

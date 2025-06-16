@@ -90,20 +90,12 @@ export function ComponentFormModal({ showForm, component, onClose, isEdit, fetch
         });
       }
     } catch (error) {
-      console.error("Failed to update component:", error);
-      if (error.response?.data?.code === "CONFLICT") {
-        Swal.fire({
-          title: "Lưu ý",
-          text: "Tên linh kiện đã tồn tại",
-          icon: "warning",
-        });
-      } else {
-        Swal.fire({
-          title: "Lỗi",
-          text: error.response?.data?.message || "Có lỗi xảy ra",
-          icon: "error",
-        });
-      }
+      console.log("Failed to update component:", error);
+      Swal.fire({
+        title: "Lỗi",
+        text: error.response?.data?.message || "Có lỗi xảy ra",
+        icon: "error",
+      });
     }
   };
 

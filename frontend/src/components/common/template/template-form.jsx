@@ -194,7 +194,7 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                         <X size={24} />
                     </button>
                 </div>
-                <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div className="p-6 max-h-[calc(90vh-140px)]">
                     <form onSubmit={handleSubmit} id="form" className="space-y-6">
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
                             <div>
@@ -357,7 +357,7 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                                     fetchComponent={fetchComponent}
                                 />
                             )}
-                            <div className="space-y-3">
+                            <div className="space-y-3 overflow-y-auto max-h-[calc(60vh-140px)]">
                                 {formData.components.map((component) => (
                                     <div key={component.component_id} className="border rounded-lg p-4">
                                         <div className="flex justify-between items-center">

@@ -28,8 +28,7 @@ export default function TemplateManagement() {
 
 	useEffect(() => {
 		const handleValueTab = async () => {
-			console.log(activeTab)
-			if(activeTab != 'templates' && activeTab != 'firmwares' && activeTab != 'components'){
+			if (activeTab != 'templates' && activeTab != 'firmwares' && activeTab != 'components') {
 				const result = await Swal.fire({
 					title: "Cảnh báo",
 					icon: "error",
@@ -47,7 +46,15 @@ export default function TemplateManagement() {
 	const fetchTemplate = async () => {
 		try {
 			const res = await axiosIOTPublic.get("device-templates");
-			setTemplates(res.data);
+			if (res.status_code !== 200) {
+				Swal.fire({
+					title: "Lỗi",
+					text: res.message || "Không thể tải danh sách thiết bị",
+					icon: "error",
+				});
+				return;
+			}
+			setTemplates(res.data || []);
 		} catch (error) {
 			console.error("Failed to fetch device templates:", error);
 			Swal.fire({
@@ -61,13 +68,13 @@ export default function TemplateManagement() {
 	const fetchComponent = async () => {
 		try {
 			const res = await axiosIOTPublic.get("component");
-			
-			setComponents(res.data);
+
+			setComponents(res.data || []);
 		} catch (error) {
 			console.error("Failed to fetch component:", error);
 			Swal.fire({
 				title: "Lỗi",
-				text: "Không thể tải danh sách linh kiện. Vui lòng thử lại!",
+				text: "Không thể tải danh sách firmware. Vui lòng thử lại!",
 				icon: "error",
 			});
 		}
@@ -79,7 +86,6 @@ export default function TemplateManagement() {
 			if (res.status_code === 200) {
 				const flattenCategories = flattenCategoryTree(res.data?.categories || []);
 				setCategories(flattenCategories);
-				console.log("Flattened categories:", flattenCategories); // Debug dữ liệu
 			}
 		} catch (error) {
 			console.error("Error fetching categories:", error);
@@ -109,7 +115,6 @@ export default function TemplateManagement() {
 	const createTemplate = async (dataTemplate) => {
 		try {
 			const res = await axiosIOTPublic.post("device-templates", dataTemplate);
-			console.log("Create template response:", res);
 			if (res.status_code === 201) {
 				Swal.fire({
 					title: "Thành công",
@@ -120,18 +125,18 @@ export default function TemplateManagement() {
 				setShowTemplateForm(false);
 			} else {
 				Swal.fire({
-					title: "Lỗi",
-					text: res.message || "Có lỗi xảy ra khi tạo thiết bị",
-					icon: "error",
+					title: "Chú ý",
+					text: res.message || "Tạo thiết bị không thành công",
+					icon: "warning",
 				});
 			}
 		} catch (error) {
 			console.error("Failed to create template:", error);
-				Swal.fire({
-					title: "Lỗi",
-					text: error.response?.data?.message || "Có lỗi xảy ra khi tạo thiết bị",
-					icon: "error",
-				});
+			Swal.fire({
+				title: "Lỗi",
+				text: error.response?.data?.message || "Có lỗi xảy ra khi tạo thiết bị",
+				icon: "error",
+			});
 		}
 	};
 
@@ -140,7 +145,6 @@ export default function TemplateManagement() {
 			const res = await axiosIOTPublic.put(`device-templates/${dataTemplate.template_id}`,
 				dataTemplate,
 			);
-			console.log(res)
 			if (res.status_code === 200) {
 				Swal.fire({
 					title: "Thành công",
@@ -151,9 +155,9 @@ export default function TemplateManagement() {
 				setShowTemplateForm(false);
 			} else {
 				Swal.fire({
-					title: "Lỗi",
-					text: res.data.error || "Có lỗi xảy ra khi cập nhật thiết bị",
-					icon: "error",
+					title: "Chú ý",
+					text: res.message || "Cập nhật thiết bị không thành công",
+					icon: "warning",
 				});
 			}
 		} catch (error) {
@@ -171,6 +175,38 @@ export default function TemplateManagement() {
 					icon: "error",
 				});
 			}
+		}
+	};
+
+	const approveTemplate = async (dataTemplate) => {
+		console.log("dataTemplate:",dataTemplate)
+		try {
+			const res = await axiosIOTPublic.put(`device-templates/approveDevice/${dataTemplate.template_id}`,
+				dataTemplate,
+			);
+			console.log("res",res)
+			if (res.status_code === 200) {
+				Swal.fire({
+					title: "Thành công",
+					text: res.message,
+					icon: "success",
+				});
+				fetchTemplate();
+				setShowTemplateForm(false);
+			} else {
+				Swal.fire({
+					title: "Lỗi",
+					text: res.message || "Có lỗi xảy ra khi duyệt thiết bị",
+					icon: "error",
+				});
+			}
+		} catch (error) {
+			console.error("Failed to approve device template:", error);
+			Swal.fire({
+				title: "Lỗi",
+				text: error.response?.data?.message || "Có lỗi xảy ra khi duyệt thiết bị",
+				icon: "error",
+			});
 		}
 	};
 
@@ -205,7 +241,7 @@ export default function TemplateManagement() {
 		if (result.isConfirmed) {
 			try {
 				const res = await axiosIOTPublic.delete(`device-templates/${templateId}`);
-				console.log("res",res)
+				console.log("res", res)
 				if (res.status_code === 204) {
 					Swal.fire({
 						title: "Thành công",
@@ -216,7 +252,7 @@ export default function TemplateManagement() {
 				} else {
 					Swal.fire({
 						title: "Lỗi",
-						text: res.message	 || "Có lỗi xảy ra khi xóa thiết bị",
+						text: res.message || "Có lỗi xảy ra khi xóa thiết bị",
 						icon: "error",
 					});
 				}
@@ -240,7 +276,7 @@ export default function TemplateManagement() {
 	};
 
 	const handleChangeStatus = (dataTemplate) => {
-		updateTemplate(dataTemplate);
+		approveTemplate(dataTemplate);
 	};
 
 	const handleCostChange = (dataTemplate) => {

@@ -129,8 +129,9 @@ export default function NewFirmwarePage() {
             file_path: textFile,
         }
         try {
+            console.log("newFirmware:", newFirmware)
             const response = await axiosIOTPublic.post("firmware", newFirmware)
-
+            console.log("response:", response)
             if (response.success) {
                 const result = await Swal.fire({
                     title: "Thành công",
@@ -139,7 +140,7 @@ export default function NewFirmwarePage() {
                 })
 
                 if (result.isConfirmed) {
-                    navigate("/admin/firmware")
+                    navigate("/admin/templates?tab=firmwares")
                 }
             } else {
                 Swal.fire({
