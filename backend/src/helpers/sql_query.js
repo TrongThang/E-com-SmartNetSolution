@@ -111,7 +111,6 @@ async function executeSelectData({
     const buildSort = sortColumn ? `ORDER BY ${sortColumn} ${optOrder}` : '';
     const buildLimit = parsedLimit ? `LIMIT ${parsedLimit}` : '';
     const buildOffset = skip ? `OFFSET ${skip}` : '';
-
     // Xác định cột ID dựa trên tên bảng
     const idColumn = table === 'categories' ? 'category_id' : 'id';
 

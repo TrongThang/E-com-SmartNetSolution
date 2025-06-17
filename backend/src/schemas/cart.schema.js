@@ -8,7 +8,7 @@ const BaseCartSchema = z.object({
         }).max(12, {
             message: `[${ERROR_CODES.CART_CUSTOMER_ID_MAX_LENGTH}]${ERROR_MESSAGES[ERROR_CODES.CART_CUSTOMER_ID_MAX_LENGTH]}`,
         }),
-        product_id: z.number().int().positive({
+        product_id: z.string().min(1, {
             message: `[${ERROR_CODES.CART_PRODUCT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.CART_PRODUCT_ID_REQUIRED]}`,
         }),
         quantity: z.number().int().min(1, {

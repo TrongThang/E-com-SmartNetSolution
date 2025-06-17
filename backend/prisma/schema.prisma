@@ -139,7 +139,7 @@ model attribute_group {
 }
 
 model attribute_product {
-  product_id   Int
+  product_id   String
   attribute_id Int
   is_hide      Boolean?
   value        String?   @db.VarChar(500)
@@ -172,7 +172,7 @@ model batch_product_detail {
 model blog {
   id             Int         @id @default(autoincrement())
   category_id    Int?
-  product_id     Int?
+  product_id     String?
   title          String?     @db.VarChar(500)
   author         String?     @db.VarChar(32)
   content        String?     @db.VarChar(500)
@@ -195,7 +195,7 @@ model blog {
 model cart {
   id          Int       @id @default(autoincrement())
   customer_id String    @db.VarChar(32)
-  product_id  Int?
+  product_id  String?
   quantity    Int?
   selected    Boolean   @db.Bit(1)
   created_at  DateTime? @db.Timestamp(0) @default(now())
@@ -222,7 +222,7 @@ model categories {
   deleted_at         DateTime?            @db.Timestamp(0)
   attribute_category attribute_category[]
   blog               blog[]
-  categories         categories?          @relation("categoriesTocategories", fields: [parent_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "categories_ibfk_1")
+  categories         categories?          @relation("categoriesTocategories", fields: [parent_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "categories_ibfk_1_v2")
   other_categories   categories[]         @relation("categoriesTocategories")
   device_templates   device_templates[]
   product            product[]
@@ -283,7 +283,7 @@ model detail_export {
   batch_code           String                 @id @db.VarChar(50)
   export_id            Int
   order_id             String?                @db.VarChar(50)
-  product_id           Int
+  product_id           String
   quantity             Int?
   note                 String?                @db.VarChar(500)
   created_at           DateTime? @db.Timestamp(0) @default(now())
@@ -303,7 +303,7 @@ model detail_export {
 model detail_import {
   batch_code           String                 @id @db.VarChar(50)
   import_id            String
-  product_id           Int
+  product_id           String
   quantity             Int?
   import_price         Float?
   created_at           DateTime? @db.Timestamp(0) @default(now())
@@ -512,7 +512,7 @@ model houses {
 
 model image_product {
   id         Int       @id @default(autoincrement())
-  product_id Int?
+  product_id String?
   image      String?   @db.MediumText
   created_at DateTime? @db.Timestamp(0) @default(now())
   updated_at DateTime? @db.Timestamp(0) @updatedAt
@@ -546,7 +546,7 @@ model import_warehouse {
 model liked {
   id          Int       @id @default(autoincrement())
   customer_id String    @db.VarChar(32)
-  product_id  Int?
+  product_id  String?
   created_at  DateTime? @db.Timestamp(0) @default(now())
   updated_at  DateTime? @db.Timestamp(0) @updatedAt
   deleted_at  DateTime? @db.Timestamp(0)
@@ -615,7 +615,7 @@ model order {
 model order_detail {
   id             Int       @id @default(autoincrement())
   order_id       String?   @db.VarChar(32)
-  product_id     Int?
+  product_id     String?
   unit           String?   @db.VarChar(30)
   warrenty_time  Int? 
   sale_price     Float?
@@ -701,7 +701,7 @@ model permission_role {
 }
 
 model product {
-  id                  Int                   @id @default(autoincrement())
+  id                  String                @id
   name                String?               @db.VarChar(500)
   slug                String?               @db.VarChar(500)
   description         String?               @db.Text
@@ -798,17 +798,17 @@ model production_tracking {
   created_at          DateTime           @default(dbgenerated("(now())")) @db.DateTime(0)
   updated_at          DateTime           @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted          Boolean            @default(false)
-  production_batch_id String             @db.VarChar(255)
+  batch_id String             @db.VarChar(255)
   state_logs          Json?
-  production_batches  production_batches @relation(fields: [production_batch_id], references: [production_batch_id], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_1")
+  production_batches  production_batches @relation(fields: [batch_id], references: [production_batch_id], onDelete: NoAction, onUpdate: NoAction, map: "production_tracking_ibfk_1")
 
-  @@index([production_batch_id], map: "production_batch_id")
+  @@index([batch_id], map: "production_batch_id")
 }
 
 model review_product {
   id          Int       @id @default(autoincrement())
   customer_id String?   @db.VarChar(32)
-  product_id  Int?
+  product_id  String?
   comment     String?   @db.Text
   image       String?   @db.MediumText
   rating      Int?      @db.TinyInt
@@ -1029,7 +1029,7 @@ model warehouse {
 
 model warehouse_inventory {
   id         Int       @id @default(autoincrement())
-  product_id Int?
+  product_id String?
   batch_code String?   @db.VarChar(50)
   stock      Int?
   created_at DateTime? @db.Timestamp(0) @default(now())

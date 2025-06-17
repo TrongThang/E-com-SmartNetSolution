@@ -207,7 +207,7 @@ async function removeFromCart(customer_id, product_id) {
             const cart = await tx.cart.findFirst({
                 where: {
                     customer_id,
-                    product_id: Number(product_id),
+                    product_id: product_id,
                     deleted_at: null
                 },
             });

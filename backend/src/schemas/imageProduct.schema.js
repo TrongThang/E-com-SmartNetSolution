@@ -3,7 +3,7 @@ const { ERROR_CODES, ERROR_MESSAGES } = require('../contants/errors');
 
 const BaseImageProductSchema = z.object({
     body: z.object({
-        product_id: z.number().int().positive({
+        product_id: z.string().min(1, {
             message: `[${ERROR_CODES.IMAGE_PRODUCT_PRODUCT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.IMAGE_PRODUCT_PRODUCT_ID_REQUIRED]}`,
         }),
         image: z.string().min(1, {

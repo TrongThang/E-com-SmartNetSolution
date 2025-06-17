@@ -263,6 +263,8 @@ async function getOrderDetailService(order_id) {
 }
 
 async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
+    sort = 'order.created_at';
+    order = 'DESC';
     const get_attr = `
         order.id,
         order.total_money,

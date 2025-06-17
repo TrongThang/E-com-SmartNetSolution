@@ -97,7 +97,7 @@ const getProductDetailService = async (id = null, slug = null, role = null, type
         })
     } else {
         product = await prisma.product.findFirst({
-            where: { id: Number(id) }
+            where: { id: id }
         })
     }
 
@@ -443,7 +443,7 @@ async function updateProductService({ id, name, description, selling_price, cate
     }
 
     return get_error_response(
-        ERROR_CODES.SUCCESS,
+        ERROR_CODES.SUCCESS,    
         STATUS_CODE.OK,
         product
     )
@@ -452,7 +452,7 @@ async function updateProductService({ id, name, description, selling_price, cate
 async function deleteProductService(id) {
     const product = await prisma.product.findUnique({
         where: {
-            id: Number(id),
+            id: id,
         },
     });
 
@@ -463,7 +463,7 @@ async function deleteProductService(id) {
     }
 
     await prisma.product.update({
-        where: { id: parseInt(id) },
+        where: { id: id },
         data: {
             deleted_at: new Date()
         }
@@ -564,7 +564,7 @@ const checkNameExcludingCurrent = async (name, excludeId = null) => {
 const checkWarehouseInventory = async (product_id) => {
 
     const product = await prisma.product.findFirst({
-        where: { id: Number(product_id) },
+        where: { id: product_id },
         select: {
             id: true,
             name: true,
@@ -579,7 +579,7 @@ const checkWarehouseInventory = async (product_id) => {
     }
 
     const warehouse_inventory = await prisma.warehouse_inventory.aggregate({
-        where: { product_id: Number(product_id), deleted_at: null },
+        where: { product_id: product_id, deleted_at: null },
         _sum: { stock: true }
     });
 

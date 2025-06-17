@@ -3,7 +3,7 @@ const { ERROR_CODES, ERROR_MESSAGES } = require('../contants/errors');
 
 const BaseWarehouseInventorySchema = z.object({
     body: z.object({
-        product_id: z.number().int().positive({
+        product_id: z.string().min(1, {
             message: `[${ERROR_CODES.WAREHOUSE_INVENTORY_PRODUCT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.WAREHOUSE_INVENTORY_PRODUCT_ID_REQUIRED]}`,
         }),
         batch_code: z.string().min(3, {

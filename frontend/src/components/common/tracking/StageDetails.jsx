@@ -22,6 +22,7 @@ export default function StageDetails({
     onSelectSerial,
     onSelectAllSerial,
     onReject,
+    onApprove,
     loading = false,
 }) {
     const [searchTerm, setSearchTerm] = useState("")
@@ -74,14 +75,23 @@ export default function StageDetails({
                 )
             case "qc":
                 return (
-                    <Button
-                        variant="destructive"
-                        onClick={onReject}
-                        disabled={loading || selectedSerials.length === 0}
-                        className="w-full"
-                    >
-                        Từ chối ({selectedSerials.length})
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="destructive"
+                            onClick={onReject}
+                            disabled={loading || selectedSerials.length === 0}
+                            className="w-full bg-red-600 hover:bg-red-700"
+                        >
+                            Từ chối ({selectedSerials.length})
+                            </Button>
+                        <Button
+                            className="bg-green-600 hover:bg-green-700 w-full"
+                            onClick={onApprove}
+                            disabled={loading || selectedSerials.length === 0}
+                        >
+                            Duyệt ({selectedSerials.length})
+                        </Button>
+                    </div>
                 )
             default:
                 return null

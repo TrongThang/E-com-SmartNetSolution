@@ -12,13 +12,20 @@ import {
 } from "@/components/common/planning/planningStatusUtils"
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import PlanningPDF from './PlanningPDF';
+import { Button } from "@/components/ui/button"
+import { Eye } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
+  const navigate = useNavigate()
   if (!planning) return null
+  const handleViewBatchDetails = (batchId) => {
+    navigate(`/admin/production-trackings?batch=${batchId}`)
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-[70vw] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Chi tiết Kế hoạch Sản xuất {planning.planning_id}</DialogTitle>
           <DialogDescription>Thông tin chi tiết về kế hoạch sản xuất và các đơn sản xuất</DialogDescription>
@@ -91,6 +98,7 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
                   <TableHead>Trạng thái</TableHead>
                   <TableHead>Ngày tạo</TableHead>
                   <TableHead>Ghi chú</TableHead>
+                  <TableHead>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -127,7 +135,13 @@ export function PlanningDetailsDialog({ isOpen, onClose, planning }) {
                         <TableCell className="max-w-xs whitespace-normal break-words">
                           {batch.batch_note || "-"}
                         </TableCell>
-                      </TableRow>
+                        <TableCell>
+                          <Button variant="outline" className="bg-orange-500 text-white" size="sm" onClick={() => handleViewBatchDetails(batch.production_batch_id)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Theo dõi
+                          </Button>
+                        </TableCell>
+                        </TableRow>
                     );
                   })
                 ) : (

@@ -56,7 +56,7 @@ const checkLikedService = async (customer_id, product_id) => {
     const liked = await prisma.liked.findFirst({
         where: {
             customer_id: customer_id,
-            product_id: Number(product_id),
+            product_id: product_id,
             deleted_at: null
         }
     })
@@ -72,7 +72,7 @@ const checkLikedService = async (customer_id, product_id) => {
 const createLikedService = async (product_id, customer_id) => {
     try {
         // Chuyển đổi product_id từ chuỗi sang số nguyên
-        const productId = parseInt(product_id);
+        const productId = product_id;
         
         if (isNaN(productId)) {
             return get_error_response(
@@ -132,7 +132,7 @@ const deleteLikedService = async (customer_id, product_id) => {
     try {
         // Kiểm tra xem liked có tồn tại không
         const likedToDelete = await prisma.liked.findFirst({
-            where: { customer_id: customer_id, product_id: Number(product_id), deleted_at: null }
+            where: { customer_id: customer_id, product_id: product_id, deleted_at: null }
         });
 
         if (!likedToDelete) {

@@ -23,7 +23,7 @@ const cartApi = {
             params: { ...params, filters: JSON.stringify(params.filters) },
         });
     },
-    async addToCart(customer_id: number | string, product_id: number | string, quantity: number): Promise<IApiResponse> {
+    async addToCart(customer_id: number | string, product_id: string | string, quantity: number): Promise<IApiResponse> {
         try {
             return await axiosPublic.post(cartEndpoints.common + "/customer/" + customer_id, { product_id, quantity });
         } catch (error) {
@@ -83,7 +83,7 @@ const cartApi = {
     async removeAllFromCart(customer_id: number | string): Promise<IApiResponse> {
         return await axiosPublic.delete(cartEndpoints.common + "/all/" + customer_id);
     },
-    async updateQuantity(customer_id: number | string, product_id: number | string, quantity: number): Promise<IApiResponse> {
+    async updateQuantity(customer_id: number | string, product_id: string | string, quantity: number): Promise<IApiResponse> {
         return await axiosPublic.put(cartEndpoints.common + "/update-quantity", { customer_id, product_id, quantity });
     },
     async removeSelected(customer_id: number | string, items: any): Promise<IApiResponse> {

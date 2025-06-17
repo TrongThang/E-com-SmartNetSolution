@@ -139,7 +139,7 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
     try {
         // Chuyển đổi category_id và product_id thành số
         const categoryId = category_id ? parseInt(category_id) : null;
-        const productId = product_id ? parseInt(product_id) : null;
+        const productId = product_id ? product_id : null;
         const Score = score ? parseInt(score) : null;
 
         const isHideBoolean = is_hide === "true" || is_hide === true;

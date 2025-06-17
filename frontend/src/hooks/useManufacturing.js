@@ -178,6 +178,27 @@ export const useManufacturing = () => {
             throw error;
         }
     };
+
+    const approveQC = async (selectedSerials, note) => {
+        try {
+            const response = await axiosIOTPublic.patch('production-tracking/approve-tested-serial', {
+                device_serials: selectedSerials,
+                note,
+            });
+            console.log("response", response);
+
+            if (response.success) {
+                toast.success('Duyệt sản phẩm thành công', response.message);
+            } else {
+                toast.error('Duyệt sản phẩm thất bại', response.message);
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('Error approving QC:', error);
+            throw error;
+        }
+    }
     
 
     return {
@@ -193,6 +214,7 @@ export const useManufacturing = () => {
         importProductTracking,
         setImportProductTracking,
         exportProductTracking,
-        setExportProductTracking
+        setExportProductTracking,
+        approveQC
     };
 };

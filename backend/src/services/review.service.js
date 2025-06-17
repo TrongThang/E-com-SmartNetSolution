@@ -167,7 +167,7 @@ const getReviewByProductIdService = async (product_id, filter, limit, sort, orde
         {
             field: "review_product.product_id",
             condition: "=",
-            value: Number(product_id)
+            value: product_id
         },
         {
             field: "review_product.deleted_at",

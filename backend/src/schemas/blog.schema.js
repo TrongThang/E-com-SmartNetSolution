@@ -4,7 +4,9 @@ const { ERROR_CODES, ERROR_MESSAGES } = require('../contants/errors');
 const BaseBlogSchema = z.object({
     body: z.object({
         category_id: z.coerce.number().int().positive().optional(),
-        product_id: z.coerce.number().int().positive().optional(),
+        product_id: z.coerce.string().min(1, {
+            message: `[${ERROR_CODES.PRODUCT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.PRODUCT_ID_REQUIRED]}`
+        }).optional(),
         title: z.string().max(500, {
             message: `[${ERROR_CODES.BLOG_TITLE_TOO_LONG}]${ERROR_MESSAGES[ERROR_CODES.BLOG_TITLE_TOO_LONG]}`
         }),

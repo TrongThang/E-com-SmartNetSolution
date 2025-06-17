@@ -54,14 +54,14 @@ export default function OrdersPage() {
     setError(null);
     try {
       const res = await orderApi.getById(user.customer_id);
-      console.log('res --- fetchData', res)
       if (res.status_code === 200) {
         const dataWithStatus = res.data.data.map(order => ({
           ...order,
           ...getStatusInfo(order.status)
         }));
-        console.log('dataWithStatus --- fetchData', dataWithStatus)
-        setOrders(dataWithStatus);
+
+        const result = dataWithStatus.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setOrders(result);
       }
       else {
         setError("Không thể tải đơn hàng");
