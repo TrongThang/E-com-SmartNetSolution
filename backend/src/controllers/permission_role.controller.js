@@ -17,7 +17,7 @@ class PermissionRoleController {
     async getPermissionRole(req, res) { 
         const { role_id } = req.query;
 
-        const response = await getPermissionRoleService(Number(role_id))
+        const response = await getPermissionRoleService(role_id)
 
         return res.status(response.status_code).json(response);
     }

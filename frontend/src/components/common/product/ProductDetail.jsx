@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import Swal from "sweetalert2"
 
 export default function ProductDetails({ device }) {
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const { addToCart } = useCart();
     const [selectedImage, setSelectedImage] = useState(
         { id: "main", url: device.image || "/placeholder.svg", alt: "Main image" }
@@ -49,6 +49,14 @@ export default function ProductDetails({ device }) {
 
     const handleLike = async () => {
         try {
+            if (!isAuthenticated) {
+                Swal.fire({
+                    title: "Bạn cần đăng nhập để thực hiện hành động này",
+                    icon: "warning",
+                    confirmButtonText: "Đăng nhập"
+                })
+                return
+            }
             const res = await LikedApi.add({
                 product_id: device.id,
                 customer_id: user.customer_id
@@ -64,6 +72,14 @@ export default function ProductDetails({ device }) {
 
     const handleDeleteLike = async () => {
         try { 
+            if (!isAuthenticated) {
+                Swal.fire({
+                    title: "Bạn cần đăng nhập để thực hiện hành động này",
+                    icon: "warning",
+                    confirmButtonText: "Đăng nhập"
+                })
+                return
+            }
             const res = await LikedApi.delete({
                 product_id: device.id,
                 customer_id: user.customer_id

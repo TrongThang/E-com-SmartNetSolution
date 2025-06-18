@@ -30,7 +30,7 @@ class ProductController {
     async getProductDetail(req, res) {
         const { id } = req.params;
 
-        const response = await getProductDetailService(Number(id))
+        const response = await getProductDetailService(id)
 
         return res.status(response.status_code).json(response);
     }

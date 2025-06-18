@@ -21,7 +21,7 @@ orderRouter.put('/customer', asyncHandler(canceledOrder))
 orderRouter.patch('/admin/respond-orders', asyncHandler(respondListOrder));
 // orderRouter.patch('/admin/shipping-order', asyncHandler(shippingOrder));
 // orderRouter.patch('/admin/finish-shipping-order', asyncHandler(finishShippingOrder));
-// orderRouter.patch('/admin/cancel-order', asyncHandler(canceledOrder));
+// orderRouter.patch('/customer/cancel-order', asyncHandler(canceledOrder));
 
 // VNPAY
 orderRouter.post('/create_payment_url', create_payment_url);

@@ -49,7 +49,8 @@ async function loginAPI(username, password, remember_me = null) {
 		// Tạo token JWT khi đăng nhập thành công
 		accessToken = jwt.sign(
 			{
-				account_id: user.account_id,
+				userId: user.account_id,
+				// account_id: user.account_id,
 				username: user.username,
 				customer_id: infoUser.id || undefined,
 				name: infoUser.lastname + ' ' + infoUser.surname || undefined,
@@ -58,6 +59,8 @@ async function loginAPI(username, password, remember_me = null) {
 			process.env.SECRET_KEY,
 			{ expiresIn: remember_me ? '30d' : '3h' }
 		);
+
+		console.log('accessToken', jwt.decode(accessToken));
 
 		const response = {
 			accessToken: accessToken,
@@ -259,12 +262,13 @@ const ChangedPasswordAccountForgot = async (payload) => {
 	return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, null);
 };
 
-const ChangedPasswordAccount = async (payload) => {
-	const { username, password, newPassword, confirmPassword } = payload;
+const ChangedPasswordAccount = async (payload, userId) => {
+	
+	const { password, newPassword, confirmPassword } = payload;
 
 	const account = await prisma.account.findFirst({
 		where: {
-			username: username
+			account_id: userId
 		}
 	});
 
@@ -272,14 +276,10 @@ const ChangedPasswordAccount = async (payload) => {
 		return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.NOT_FOUND);
 	}
 
-	const user = await prisma.account.findFirst({
-		where: {
-			username: username,
-			// report: { equals: 0 }
-		}
-	})
+	console.log("Raw password:", password);
+	console.log("Hashed password from DB:", account.password);
 
-	if (await verifyPassword(password, user.password) === false) {
+	if (await verifyPassword(password, account.password) === false) {
 		return get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST);
 	}
 	

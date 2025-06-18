@@ -44,7 +44,6 @@ class AuthController {
         const { username, password, remember_me } = req.body;
 
         const response = await loginAPI(username, password, remember_me);
-
         return res.status(response.status_code).json(response);
     }
 
@@ -93,8 +92,12 @@ class AuthController {
     }
 
     async ChangedPassword(req, res) {
-        console.log(1233123)
-        const response = await ChangedPasswordAccount(req.body)
+
+        const userId = req.user.userId;
+        if(!userId) {
+            return res.status(STATUS_CODE.BAD_REQUEST).json(get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST))
+        }
+        const response = await ChangedPasswordAccount(req.body, userId)
 
         return res.status(response.status_code).json(response)
     }

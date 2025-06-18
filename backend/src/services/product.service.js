@@ -5,6 +5,7 @@ const { PrismaClient, sql } = require('@prisma/client');
 const { convertToSlug, removeTagHtml } = require('../helpers/extension.helper');
 const { executeSelectData } = require('../helpers/sql_query')
 const { configDataProductDetail, diffAttributeSets, configDataProduct } = require('../helpers/product.helper')
+const { generateProductId } = require('../helpers/generate.helper');
 
 
 const prisma = new PrismaClient()
@@ -111,7 +112,7 @@ const getProductDetailService = async (id = null, slug = null, role = null, type
     const filter = JSON.stringify([
         {
             field: "product.id",
-            condition: "contains",
+            condition: "=",
             value: product.id
         }
     ])
@@ -280,9 +281,11 @@ async function createProductService({ name, description, images, selling_price, 
         }
     }
 
+    const product_id = generateProductId();
     // Tạo sản phẩm
     const product = await prisma.product.create({
         data: {
+            id: product_id,
             name,
             slug,
             description,

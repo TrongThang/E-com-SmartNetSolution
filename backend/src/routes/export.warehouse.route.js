@@ -1,7 +1,8 @@
 const express = require('express');
 const { validateMiddleware } = require('../middleware/validate.middleware');
-const { getExportWarehouse, createExportWarehouse, getExportWarehouseDetail, startExportWarehouse, exportProduct, getProcessExportWarehouse } = require('../controllers/export.warehouse.controller');
+const { getExportWarehouse, createExportWarehouse, getExportWarehouseDetail, startExportWarehouse, exportProduct, getProcessExportWarehouse, getExportWarehouseNotFinishForEmployee } = require('../controllers/export.warehouse.controller');
 const exportWarehouseRouter = express.Router();
+const authMiddleware = require('../middleware/auth.middleware');
 
 const asyncHandler = (fn) => {
     return (req, res, next) => {
@@ -15,8 +16,10 @@ exportWarehouseRouter.get('/process/:id', asyncHandler(getProcessExportWarehouse
 
 exportWarehouseRouter.post('/', asyncHandler(createExportWarehouse));
 
-exportWarehouseRouter.post('/start', asyncHandler(startExportWarehouse));
-exportWarehouseRouter.patch('/export', asyncHandler(exportProduct));
+exportWarehouseRouter.patch('/start', asyncHandler(startExportWarehouse));
+exportWarehouseRouter.patch('/export-order', asyncHandler(exportProduct));
+
+exportWarehouseRouter.get('/invoice-not-finish', authMiddleware, asyncHandler(getExportWarehouseNotFinishForEmployee));
 
 
 module.exports = exportWarehouseRouter;

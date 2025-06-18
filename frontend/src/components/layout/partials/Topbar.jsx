@@ -13,10 +13,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/contexts/AuthContext"
+import { useNavigate } from "react-router-dom"
 
 export default function Topbar() {
     const { employee, loading, authInitialized, logoutEmployee } = useAuth();
-
+    const navigate = useNavigate();
     const [notifications] = useState(3)
 
     const [time, setTime] = useState("")
@@ -173,7 +174,7 @@ export default function Topbar() {
                             </div>
                         </div>
 
-                        <DropdownMenuItem className="gap-3 cursor-pointer hover:bg-slate-50 p-3">
+                        <DropdownMenuItem className="gap-3 cursor-pointer hover:bg-slate-50 p-3" onClick={() => navigate("/admin/profile")}>
                             <User className="h-4 w-4 text-slate-600" />
                             <span className="text-slate-900">Hồ sơ của tôi</span>
                         </DropdownMenuItem>

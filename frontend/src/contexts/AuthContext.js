@@ -3,6 +3,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import axiosPublic from '@/apis/clients/public.client';
 import axiosIOTPublic from '@/apis/clients/iot.private.client';
+import axiosPrivate from '@/apis/clients/private.client';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -29,15 +30,16 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const fetchEmployeeInfo = async (token) => {
+    const fetchEmployeeInfo = async () => {
         try {
-            const response = await axiosPublic.get('auth/getme-employee', {
+            const token = localStorage.getItem('employeeToken');
+            const response = await axiosIOTPublic.get('auth/employee/get-me', { 
                 headers: {
-                    Authorization: `BEARER ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
 
-            if (response.status_code === 200) {
+            if (response.success) {
                 console.log('response Employee', response)
                 setEmployee(response.data);
             }
@@ -75,7 +77,7 @@ export const AuthProvider = ({ children }) => {
                         const decoded = jwtDecode(employeeToken);
                         if (decoded.exp * 1000 > Date.now()) {
                             setIsAdminAuthenticated(true);
-                            await fetchEmployeeInfo(employeeToken);
+                            await fetchEmployeeInfo();
                         } else {
                             localStorage.removeItem('employeeToken');
                         }
@@ -108,7 +110,6 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('authToken', token);
 
                 const decoded = jwtDecode(token);
-                
                 setUser(decoded);
                 setIsAuthenticated(true);
                 return { success: true };
@@ -143,7 +144,7 @@ export const AuthProvider = ({ children }) => {
                 
                 localStorage.setItem('employeeToken', token);
                 setIsAdminAuthenticated(true);
-                fetchEmployeeInfo(token);
+                fetchEmployeeInfo();
                 return { success: true };
             } else {
                 return {
@@ -244,7 +245,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         try {
-            const response = await axiosIOTPublic.patch('auth/account/changed-password', { email, newPassword, confirmPassword });
+            const response = await axiosPrivate.patch('auth/account/changed-password', { email, newPassword, confirmPassword });
             if (response.data.status_code === 200) {
                 return { success: true };
             } else {
@@ -282,6 +283,27 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    const changePasswordEmployee = async (currentPassword, newPassword, confirmPassword) => {
+
+        try {
+            const response = await axiosIOTPublic.patch('auth/employee/change-password', { currentPassword, newPassword, confirmPassword });
+            if (response.status_code === 200) {
+                return { success: true };
+            } else {
+                return {
+                    success: false,
+                    message: response.message || 'Đổi mật khẩu thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('Change password error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu'
+            };
+        }
+    }
+
     const value = {
         user,
         employee,
@@ -295,7 +317,9 @@ export const AuthProvider = ({ children }) => {
         logoutEmployee,
         sendOtp,
         verifyOtp,
-        changePassword
+        changePassword,
+        fetchEmployeeInfo,
+        changePasswordEmployee
     };
 
     return (

@@ -117,6 +117,7 @@ const ERROR_CODES = {
     ORDER_PROFIT_NOT_SAME: 6018,
     ORDER_ALREADY_CANCELLED: 6019,
     ORDER_CONFIRM_ORDER_SUCCESS: 6020,
+    ORDER_LIST_ASSIGN_SHIPPER_INVALID: 6021,
 
     // PAYMENT - 7xxx
     PAYMENT_FAILED: 7001,
@@ -544,7 +545,8 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.ORDER_PROFIT_NOT_SAME]: "Lợi nhuận không khớp",
     [ERROR_CODES.ORDER_AMOUNT_NOT_SAME]: "Thành tiền tiền không khớp",
     [ERROR_CODES.ORDER_CONFIRM_ORDER_SUCCESS]: "Xác nhận đơn hàng thành công",
-    
+    [ERROR_CODES.ORDER_LIST_ASSIGN_SHIPPER_INVALID]: "Danh sách đơn hàng để giao cho nhân viên giao hàng không hợp lệ",
+
     // PAYMENT
     [ERROR_CODES.PAYMENT_FAILED]: "Thanh toán thất bại",
     [ERROR_CODES.PAYMENT_INVALID_METHOD]: "Phương thức thanh toán không hợp lệ",

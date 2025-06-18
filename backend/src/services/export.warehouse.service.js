@@ -670,11 +670,43 @@ async function exportProductService(export_id, batch_production_id, template_id,
     }
 }
 
+async function getExportWarehouseNotFinishForEmployee(userId) {
+    const account = await prisma.account.findFirst({
+        where: {
+            id: userId,
+            deleted_at: null
+        }
+    })
+
+    if (!account) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
+    if (account.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_AUTHORIZED, STATUS_CODE.BAD_REQUEST);
+    }
+
+    const exportWarehouse = await prisma.export_warehouse.findMany({
+        where: {
+            employee_id: account.employee_id,
+            status: EXPORT_WAREHOUSE.PROCESSING,
+            deleted_at: null
+        }
+    })
+
+    if (!exportWarehouse) {
+        return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, exportWarehouse);
+}
+
 module.exports = {
     createExportWarehouseService: createExportWarehouse,
     getExportWarehouseService,
     getExportWarehouseDetailService,
     startExportWarehouseService,
     exportProductService,
-    getProcessExportWarehouseService
+    getProcessExportWarehouseService,
+    getExportWarehouseNotFinishForEmployee
 }

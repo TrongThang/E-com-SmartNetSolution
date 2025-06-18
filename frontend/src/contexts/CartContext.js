@@ -230,13 +230,14 @@ export const CartProvider = ({ children }) => {
                         text: response.errors[0].message,
                     })
                 }   
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Thành công',
-                    text: 'Thêm sản phẩm vào giỏ hàng thành công',
-                })
             }
-
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công',
+                text: 'Thêm sản phẩm vào giỏ hàng thành công',
+            })
+            
             setCart(prevCart => {
                 const existingItem = prevCart.items.find(item => item.id === product.id);
                 let updatedItems;

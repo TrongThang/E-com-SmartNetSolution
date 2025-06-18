@@ -526,6 +526,38 @@ async function importProductService(import_id, batch_production_id, template_id,
     return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, batchProductDetailInsert);
 }
 
+async function getImportWarehouseNotFinishForEmployee(userId) {
+
+    const account = await prisma.account.findFirst({
+        where: {
+            id: userId,
+            deleted_at: null
+        }
+    })
+
+    if (!account) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
+    if (account.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_AUTHORIZED, STATUS_CODE.BAD_REQUEST);
+    }
+
+    const importWarehouse = await prisma.import_warehouse.findMany({
+        where: {
+            employee_id: account.employee_id,
+            status: IMPORT_WAREHOUSE.IMPORTING,
+            deleted_at: null
+        }
+    })
+
+    if (!importWarehouse) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, importWarehouse);
+}
+
 module.exports = {
     createImportWarehouse,
     getImportWarehouseService,
@@ -533,4 +565,5 @@ module.exports = {
     getProcessImportWarehouseService,
     StartImportWarehouseService,
     importProductService,
+    getImportWarehouseNotFinishForEmployee
 }

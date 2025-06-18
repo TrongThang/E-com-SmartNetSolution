@@ -5,24 +5,45 @@ const { getVietnamTimeNow, formatDateToDDMMYYYY } = require('../helpers/time.hel
 const { PrismaClient } = require('@prisma/client');
 const { generateEmployeeId, generateAccountId } = require('../helpers/generate.helper');
 const { hashPassword } = require('../helpers/auth.helper');
+const { ROLE } = require('../contants/info');
 
 const prisma = new PrismaClient();
 
+const shipper = [
+    {
+        logic: "AND",
+        filters: [
+            {
+                field: "account.role_id",
+                condition: "=",
+                value: ROLE.SHIPPER
+            }
+        ]
+    }
+]
+
+
 const getEmployeeService = async (filter, limit, sort, order) => {
     try {
-        let get_attr = `employee.surname, employee.lastname, employee.image, employee.birthdate, employee.gender, employee.email, employee.phone, 
-    employee.status, role.name as role_name, employee.created_at, employee.updated_at`;
-        let get_table = "employee";
-        let query_join = `LEFT JOIN account ON employee.id = account.employee_id
-        LEFT JOIN role ON account.role_id = role.id`;
+        let get_attr = `
+            employee.surname, employee.lastname, employee.image, employee.birthdate, employee.gender,
+            employee.email, employee.phone, employee.status, role.name as role_name,
+            warehouse.id as warehouse_id,
+            warehouse.name as warehouse_name,
+            CONCAT_WS(', ',
+                warehouse.address,
+                warehouse.ward,
+                warehouse.district,
+                warehouse.province
+            ) AS full_warehouse_address
+        `;
 
-        const filter = JSON.stringify([
-            {
-                field: "employee.deleted_at",
-                condition: "is",
-                value: null
-            }
-        ]);
+        let get_table = "employee";
+        let query_join = `
+            LEFT JOIN account ON employee.id = account.employee_id
+            LEFT JOIN role ON account.role_id = role.id
+            LEFT JOIN warehouse ON employee.warehouse_id = warehouse.id
+        `;
 
         const result = await executeSelectData({
             strGetColumn: get_attr,
@@ -46,6 +67,7 @@ const getEmployeeService = async (filter, limit, sort, order) => {
         );
     }
 }
+
 const getEmployeeDetailService = async (id) => {
     try {
 
@@ -93,6 +115,7 @@ const getEmployeeDetailService = async (id) => {
         );
     }
 }
+
 const createEmployeeService = async (surname, lastname, image, birthdate, gender, email, phone, status, username, role) => {
     try {
         // Kiểm tra email có tồn tại hay không
@@ -294,12 +317,13 @@ const updateEmployeeService = async (id, surname, lastname, image, birthdate, ge
 }
 const updateProfileEmployeeService = async (id, surname, lastname, image, birthdate, gender, email, phone) => {
     try {
-
         // Kiểm tra email đã tồn tại (trừ chính nó)
         const emailExists = await prisma.employee.findFirst({
             where: {
                 email: email,
-                NOT: { id: id }
+                id: {
+                    not: id
+                }
             }
         })
         if (emailExists) {
@@ -311,9 +335,12 @@ const updateProfileEmployeeService = async (id, surname, lastname, image, birthd
 
         // Kiểm tra số điện thoại có tồn tại hay không
         const phoneExists = await prisma.employee.findFirst({
-            where: { phone: phone,
-                NOT: { id: id } // Trừ chính nhân viên đang cập nhật
-             },
+            where: {
+                phone: phone,
+                id: {
+                    not: id
+                }
+            }
         });
         if (phoneExists) {
             return get_error_response(
@@ -327,7 +354,7 @@ const updateProfileEmployeeService = async (id, surname, lastname, image, birthd
         if (!employee) {
             return get_error_response(
                 ERROR_CODES.EMPLOYEE_NOT_FOUND,
-                STATUS_CODE.NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
             );
         }
         const updatedEmployee = await prisma.employee.update({

@@ -5,6 +5,7 @@ const { getEmployeeService, getEmployeeDetailService,
     toggleDeleteRestoreEmployeeService,
 } = require('../services/employee.service');
 const { PrismaClient } = require('@prisma/client');
+const { getImportWarehouseNotFinishForEmployee } = require('../services/import.warehouse.service');
 
 
 class EmployeeController {
@@ -30,6 +31,7 @@ class EmployeeController {
 
     async updateEmployee(req, res) {
         const { id } = req.params;
+
         const { surname, lastname, image, birthdate, gender, email, phone, status, role } = req.body || {};
         const response = await updateEmployeeService(id, surname, lastname, image, birthdate, gender, email, phone, status, role);
         return res.status(response.status_code).json(response);
@@ -44,6 +46,11 @@ class EmployeeController {
         const { id } = req.params;
         const { isRestore } = req.body || {};
         const response = await toggleDeleteRestoreEmployeeService(id, isRestore);
+        return res.status(response.status_code).json(response);
+    }
+
+    async getImportWarehouseNotFinishForEmployee(req, res) {
+        const response = await getImportWarehouseNotFinishForEmployee(req.user.id);
         return res.status(response.status_code).json(response);
     }
 }

@@ -14,11 +14,11 @@ const asyncHandler = (fn) => {
 productRouter.get('/', asyncHandler(getProduct));
 productRouter.get('/detail/:id', asyncHandler(getProductDetail));
 productRouter.get('/detail-by-slug/:slug', asyncHandler(getProductDetailBySlug));
+productRouter.get('/check-warehouse-inventory/:product_id', asyncHandler(checkWarehouseInventory));
 
 productRouter.post('/check-list-info', asyncHandler(checkListInfoProduct));
 productRouter.post('/', validateMiddleware(CreateProductSchema), asyncHandler(createProduct));
 productRouter.put('/', validateMiddleware(UpdateProductSchema), asyncHandler(updateProduct));
 productRouter.delete('/:product_id', asyncHandler(deleteProduct));
-productRouter.get('/check-warehouse-inventory/:product_id', asyncHandler(checkWarehouseInventory));
 
 module.exports = productRouter;

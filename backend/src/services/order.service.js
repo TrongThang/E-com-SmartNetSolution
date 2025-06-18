@@ -919,6 +919,42 @@ async function confirmShippingOrderService(order_id, image_proof, account_id) {
     }
 }
 
+async function assignShipperToOrders(order_ids, shipper_id) {
+    try {
+        const orders = await prisma.order.findMany({
+            where: {
+                id: { in: order_ids }, deleted_at: null,
+                status: {
+                    in: [ORDER.PREPARING, ORDER.PENDING, ORDER.PENDING_SHIPPING]
+                }
+            }
+        });
+
+        if (orders.length !== order_ids.length) {
+            return get_error_response(
+                errors = ERROR_CODES.ORDER_LIST_ASSIGN_SHIPPER_INVALID,
+                status_code = STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.updateMany({
+            where: { id: { in: order_ids } },
+            data: { shipper_id: shipper_id, status: ORDER.PENDING_SHIPPING }
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK    
+        );
+    } catch (error) {
+        console.log('Assign shipper to orders error:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
 module.exports = {
     createOrder,
     getOrdersForAdministrator,
@@ -928,5 +964,6 @@ module.exports = {
     respondListOrderService,
     getOrderForWarehouseEmployee,
     StartShippingOrderService,
-    confirmShippingOrderService
+    confirmShippingOrderService,
+    assignShipperToOrders
 }

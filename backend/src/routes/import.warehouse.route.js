@@ -10,11 +10,11 @@ const asyncHandler = (fn) => {
 }
 
 importWarehouseRouter.get('/', asyncHandler(getImportWarehouse));
-importWarehouseRouter.post('/', asyncHandler(createImportWarehouse));
 importWarehouseRouter.get('/detail/:id', asyncHandler(getImportWarehouseDetail));
 importWarehouseRouter.get('/process/:id', asyncHandler(getProcessImportWarehouse));
 
-importWarehouseRouter.post('/start-import-warehouse', asyncHandler(startImportWarehouse));
-importWarehouseRouter.post('/import-product', asyncHandler(importProduct));
+importWarehouseRouter.post('/', asyncHandler(createImportWarehouse));
+importWarehouseRouter.patch('/start', asyncHandler(startImportWarehouse));
+importWarehouseRouter.post('/import-order', asyncHandler(importProduct));
 
 module.exports = importWarehouseRouter;
