@@ -142,12 +142,9 @@ const deleteLikedService = async (customer_id, product_id) => {
             );
         }
 
-        // Xóa mềm liked 
-        await prisma.liked.update({
-            where: { id: likedToDelete.id },
-            data: {
-                deleted_at: new Date()
-            }
+        // Xóa liked 
+        await prisma.liked.delete({
+            where: { id: likedToDelete.id }
         });
 
         return get_error_response(
