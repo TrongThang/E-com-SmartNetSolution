@@ -30,7 +30,7 @@ const EmployeeApi = {
     },
     async edit(id: string, data: any): Promise<IApiResponse> {
         try {
-            return await axiosPrivate.put(`${employeeEndpoints.list}/${id}`, data);
+            return await axiosPrivate.put(`${employeeEndpoints.list}/admin/${id}`, data);
         } catch (error) {
             throw error;
         }

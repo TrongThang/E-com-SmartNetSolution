@@ -118,6 +118,7 @@ const ERROR_CODES = {
     ORDER_ALREADY_CANCELLED: 6019,
     ORDER_CONFIRM_ORDER_SUCCESS: 6020,
     ORDER_LIST_ASSIGN_SHIPPER_INVALID: 6021,
+    ORDER_REQUIRE_STATUS_DELIVERED: 6022,
 
     // PAYMENT - 7xxx
     PAYMENT_FAILED: 7001,
@@ -174,6 +175,7 @@ const ERROR_CODES = {
     EMPLOYEE_EMAIL_ALREADY_EXISTS: 1117,
     EMPLOYEE_INVALID_EMAIL_FORMAT: 1118,
     EMPLOYEE_ID_REQUIRED: 1119,
+    EMPLOYEE_NOT_AUTHORIZED_SHIPPER: 1120,
 
 
     // SUPPLIER - 12xx
@@ -546,6 +548,7 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.ORDER_AMOUNT_NOT_SAME]: "Thành tiền tiền không khớp",
     [ERROR_CODES.ORDER_CONFIRM_ORDER_SUCCESS]: "Xác nhận đơn hàng thành công",
     [ERROR_CODES.ORDER_LIST_ASSIGN_SHIPPER_INVALID]: "Danh sách đơn hàng để giao cho nhân viên giao hàng không hợp lệ",
+    [ERROR_CODES.ORDER_REQUIRE_STATUS_DELIVERED]: "Đơn hàng phải có trạng thái giao hàng thành công",
 
     // PAYMENT
     [ERROR_CODES.PAYMENT_FAILED]: "Thanh toán thất bại",
@@ -595,6 +598,7 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.EMPLOYEE_INVALID_EMAIL_FORMAT]: "Email không hợp lệ",
     [ERROR_CODES.EMPLOYEE_EMAIL_ALREADY_EXISTS]: "Email đã tồn tại",
     [ERROR_CODES.EMPLOYEE_ID_REQUIRED]: "ID nhân viên là bắt buộc",
+    [ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED_SHIPPER]: "Chỉ dành cho nhân viên có chức vụ giao hàng",
 
     // SUPPLIER
     [ERROR_CODES.SUPPLIER_SUCCESS]: "Thao tác với nhà cung cấp thành công",

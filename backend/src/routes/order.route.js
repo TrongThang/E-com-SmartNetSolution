@@ -1,6 +1,6 @@
 const express = require('express');
 const { validateMiddleware } = require('../middleware/validate.middleware');
-const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, canceledOrder, getOrderDetailForAdministrator, respondListOrder, getOrdersForWarehouseEmployee } = require('../controllers/order.controller');
+const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, canceledOrder, getOrderDetailForAdministrator, respondListOrder, getOrdersForWarehouseEmployee, assignShipperToOrders, shippingOrder, confirmShippingOrder, confirmFinishedOrder } = require('../controllers/order.controller');
 const orderRouter = express.Router();
 const { create_payment_url, vnpay_return } = require('../services/vnpay.service');
 
@@ -16,12 +16,13 @@ orderRouter.get('/admin/detail/:order_id', asyncHandler(getOrderDetailForAdminis
 orderRouter.get('/customer/:customer_id', asyncHandler(getOrdersForCustomer));
 orderRouter.post('/checkout', asyncHandler(createOrder));
 orderRouter.put('/customer', asyncHandler(canceledOrder))
+orderRouter.put('/finished', asyncHandler(confirmFinishedOrder))
 
 // Confirm đơn hàng
 orderRouter.patch('/admin/respond-orders', asyncHandler(respondListOrder));
-// orderRouter.patch('/admin/shipping-order', asyncHandler(shippingOrder));
-// orderRouter.patch('/admin/finish-shipping-order', asyncHandler(finishShippingOrder));
-// orderRouter.patch('/customer/cancel-order', asyncHandler(canceledOrder));
+orderRouter.patch('/admin/assign-shipper', asyncHandler(assignShipperToOrders));
+orderRouter.patch('/admin/shipping-order', asyncHandler(shippingOrder));
+orderRouter.patch('/admin/finish-shipping-order', asyncHandler(confirmShippingOrder));
 
 // VNPAY
 orderRouter.post('/create_payment_url', create_payment_url);

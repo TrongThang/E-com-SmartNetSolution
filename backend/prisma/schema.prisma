@@ -1,10 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = env("AIVEN_URL")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -231,7 +232,7 @@ model categories {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model components {
-  component_id        Int                   @id @default(autoincrement())
+  component_id        String                @id @db.VarChar(32)
   name                String                @db.VarChar(100)
   supplier            String?               @db.VarChar(100)
   unit_cost           Decimal?              @db.Decimal(10, 2)
@@ -239,6 +240,7 @@ model components {
   updated_at          DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted          Boolean?              @default(false)
   status              Boolean?              @default(false)
+  template_components template_components[]
 }
 
 model contact {
@@ -756,7 +758,7 @@ model planning {
   updated_at         DateTime             @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted         Boolean              @default(false)
   planning_note      String?              @db.VarChar(500)
- account            account              @relation("account_planning_created_byToaccount", fields: [created_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "planning_ibfk_2")
+  account            account              @relation("account_planning_created_byToaccount", fields: [created_by], references: [account_id], onDelete: NoAction, onUpdate: NoAction, map: "planning_ibfk_2")
   production_batches production_batches[]
 
   @@index([created_by], map: "created_by")
@@ -909,6 +911,7 @@ model template_components {
   updated_at            DateTime?         @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted            Boolean?          @default(false)
   device_templates      device_templates? @relation(fields: [template_id], references: [template_id], onDelete: NoAction, onUpdate: NoAction, map: "template_components_ibfk_1")
+  components            components?       @relation(fields: [component_id], references: [component_id], onDelete: NoAction, onUpdate: NoAction, map: "template_components_ibfk_2")
 
   @@index([component_id], map: "component_id")
   @@index([template_id], map: "template_id")

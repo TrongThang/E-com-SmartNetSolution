@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ORDER_STATUS } from "@/constants/status.constants";
 import { Badge } from "@/components/ui/badge";
-import { Eye, FolderClock, Handshake, MapPinCheck, PackageSearch, Truck } from "lucide-react";
+import { CheckCheckIcon, CheckCircle, Eye, FolderClock, Handshake, MapPinCheck, PackageSearch, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelectedIds }) => {
     const rowPerPage = 10;
@@ -20,11 +20,33 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
 
     const toggleSelectOne = (id) => {
         setSelectedIds((prev) =>
-            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+            prev?.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
         );
     };
 
-    const isAllSelected = orders.length > 0 && selectedIds.length === orders.length;
+    const getRowClassName = (row) => {
+        switch (row.status) {
+            case ORDER_STATUS.DELIVERED:
+            case ORDER_STATUS.COMPLETED:
+                return "bg-green-50 hover:bg-green-100"; // Xanh nhẹ cho đơn đã giao/hoàn thành
+            case ORDER_STATUS.CANCELLED:
+                return "bg-red-50 hover:bg-red-100"; // Đỏ nhẹ cho đơn đã hủy
+            case ORDER_STATUS.SHIPPING:
+                return "bg-blue-50 hover:bg-blue-100"; // Xanh dương nhẹ cho đơn đang giao
+            case ORDER_STATUS.PREPARING:
+                return "bg-yellow-50 hover:bg-yellow-100"; // Vàng nhẹ cho đơn đang chuẩn bị
+            case ORDER_STATUS.PENDING:
+                return "bg-orange-50 hover:bg-orange-100"; // Cam nhẹ cho đơn chờ xác nhận
+            case ORDER_STATUS.PENDING_PAYMENT:
+                return "bg-purple-50 hover:bg-purple-100"; // Tím nhẹ cho đơn chờ thanh toán
+            case ORDER_STATUS.PENDING_SHIPPING:
+                return "bg-indigo-50 hover:bg-indigo-100"; // Chàm nhẹ cho đơn chờ giao
+            default:
+                return "hover:bg-gray-50"; // Màu mặc định
+        }
+    };
+
+    const isAllSelected = orders.length > 0 && selectedIds?.length === orders.length;
 
     const columns = [
         {
@@ -37,13 +59,17 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                 />
             ),
             render: (row) => {
-                if(row.status === ORDER_STATUS.PENDING) {
-                    return <Input
-                                className="flex items-center justify-center"
-                                type="checkbox"
-                                checked={selectedIds.includes(row.id)}
-                                onChange={() => toggleSelectOne(row.id)}
-                            />
+                if(row.status === ORDER_STATUS.PENDING_SHIPPING || row.status === ORDER_STATUS.PENDING || row.status === ORDER_STATUS.PREPARING) {
+                    return (
+                        <Input
+                            className="flex items-center justify-center"
+                            type="checkbox"
+                            checked={selectedIds.includes(row.id)}
+                            onChange={() => toggleSelectOne(row.id)}
+                        />  
+                    )
+                } else {
+                    return <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
                 }
             },
         },
@@ -94,6 +120,10 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
         {
             key: "id",
             label: "Mã đặt hàng",
+        },
+        {
+            key: "shipper_name",
+            label: "Nhân viên giao hàng",
         },
         {
             key: "name_recipient",
@@ -150,6 +180,7 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                 data={orders}
                 columns={columns}
                 rowsPerPage={rowPerPage}
+                getRowClassName={getRowClassName}
             />
         </>
     );

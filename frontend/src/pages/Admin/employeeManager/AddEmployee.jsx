@@ -23,6 +23,7 @@ import { Link, useNavigate } from "react-router-dom"
 import EmployeeApi from "@/apis/modules/employee.api.ts"
 import roleApi from "@/apis/modules/role.api.ts"
 import Swal from "sweetalert2"
+import WarehouseApi from "@/apis/modules/warehouse.api.ts"
 
 export default function AddEmployeeForm() {
     const navigate = useNavigate()
@@ -30,6 +31,7 @@ export default function AddEmployeeForm() {
     const [roles, setRoles] = useState([])
     const [loading, setLoading] = useState(false)
     const [errors, setErrors] = useState({})
+    const [warehouses, setWarehouses] = useState([])
     const [formData, setFormData] = useState({
         surname: "",
         lastname: "",
@@ -41,6 +43,7 @@ export default function AddEmployeeForm() {
         username: "",
         role: -1,
         image: "",
+        warehouse_id: -1,
     })
 
     const validateForm = () => {
@@ -73,7 +76,27 @@ export default function AddEmployeeForm() {
     }
     useEffect(() => {
         fetchDataRole()
+        fetchDataWarehouse()
     }, [])
+
+    const fetchDataWarehouse = async () => {
+
+        try {
+            const res = await WarehouseApi.list({})
+            if (res.status_code === 200) {
+                setWarehouses(res.data?.data || [])
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi",
+                    text: "Không thể tải danh sách kho hàng. Vui lòng thử lại.",
+                    confirmButtonText: "Đóng",
+                })
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
 
     const fetchDataRole = async () => {
         setLoading(true)
@@ -446,6 +469,28 @@ export default function AddEmployeeForm() {
                                                 <SelectContent>
                                                     <SelectItem value="1" Selected>Hoạt động</SelectItem>
                                                     <SelectItem value="0">Không hoạt động</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Kho hàng */}
+                                        <div className="space-y-2"> 
+                                            <Label htmlFor="warehouse_id" className="text-sm font-medium flex items-center gap-2">
+                                                Kho hàng <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Select onValueChange={(value) => handleInputChange("warehouse_id", parseInt(value))}
+                                                value={formData.warehouse_id}
+                                            >
+                                                <SelectTrigger className="h-11 w-full">
+                                                    <SelectValue placeholder="Chọn kho hàng" defaultValue={formData.warehouse_id} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {warehouses.map((warehouse) => (
+                                                        <SelectItem key={warehouse.id} value={warehouse.id}>
+                                                            {warehouse.name}
+                                                        </SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>

@@ -11,51 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import axiosPublic from "@/apis/clients/public.client"
 import { formatCurrency } from "@/utils/format"
-// import { BarcodeScanner } from "@/components/common/warehouse/BarcodeScanner"
-
-// Sample data for products
-const sampleProducts = [
-    {
-        id: 1,
-        name: "Laptop Dell XPS 13",
-        code: "PROD001",
-        category: "Laptop",
-        price: 25000000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-        id: 2,
-        name: "Màn hình Dell 27 inch",
-        code: "PROD002",
-        category: "Màn hình",
-        price: 5000000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-        id: 3,
-        name: "Bàn phím cơ Logitech",
-        code: "PROD003",
-        category: "Bàn phím",
-        price: 2000000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-        id: 4,
-        name: "Chuột không dây Logitech",
-        code: "PROD004",
-        category: "Chuột",
-        price: 500000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-        id: 5,
-        name: "Tai nghe Bluetooth Sony",
-        code: "PROD005",
-        category: "Tai nghe",
-        price: 3000000,
-        image: "/placeholder.svg?height=80&width=80",
-    },
-]
 
 export function ProductSelector({ open, onOpenChange, onProductSelect }) {
     const [searchTerm, setSearchTerm] = useState("")

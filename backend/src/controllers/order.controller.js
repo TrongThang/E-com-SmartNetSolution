@@ -1,4 +1,4 @@
-const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, cancelOrderService, getOrderDetailService, respondListOrderService, getOrderForWarehouseEmployee, StartShippingOrderService, confirmShippingOrderService} = require("../services/order.service");
+const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, cancelOrderService, getOrderDetailService, respondListOrderService, getOrderForWarehouseEmployee, StartShippingOrderService, confirmShippingOrderService, assignShipperToOrders} = require("../services/order.service");
 const { PrismaClient } = require('@prisma/client');
 
 class OrderController {
@@ -73,6 +73,18 @@ class OrderController {
     async confirmShippingOrder(req, res) {
         const { order_id, image_proof } = req.body;
         const result = await confirmShippingOrderService(order_id);
+        res.status(result.status_code).json(result);
+    }
+    
+    async assignShipperToOrders(req, res) {
+        const { orderIds, employeeId } = req.body;
+        const result = await assignShipperToOrders(orderIds, employeeId);
+        res.status(result.status_code).json(result);
+    }
+
+    async confirmFinishedOrder(req, res) {
+        const { order_id, customer_id } = req.body;
+        const result = await confirmFinishedOrderService(order_id, customer_id);
         res.status(result.status_code).json(result);
     }
 }

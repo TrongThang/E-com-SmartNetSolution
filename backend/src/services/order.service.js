@@ -822,7 +822,7 @@ async function StartShippingOrderService(order_id, account_id) {
 
         if (employee.role_id !== ROLE.SHIPPER && employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE && employee.role_id !== ROLE.MANAGER_WAREHOUSE && employee.role_id !== ROLE.SALER) {
             return get_error_response(
-                errors=ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED,
+                errors=ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED_SHIPPER,
                 status_code=STATUS_CODE.BAD_REQUEST
             );
         }
@@ -919,8 +919,37 @@ async function confirmShippingOrderService(order_id, image_proof, account_id) {
     }
 }
 
-async function assignShipperToOrders(order_ids, shipper_id) {
+async function assignShipperToOrders(order_ids, employeeId) {
     try {
+        const employee = await prisma.employee.findFirst({
+            where: {
+                id: employeeId,
+                deleted_at: null,
+            },
+            select: {
+                account: {
+                    select: {
+                        role_id: true
+                    }
+                },
+                id: true
+            }
+        });
+
+        if (!employee) {
+            return get_error_response(
+                ERROR_CODES.EMPLOYEE_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (employee.account[0].role_id !== ROLE.SHIPPER) {
+            return get_error_response(
+                ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED_SHIPPER,
+                STATUS_CODE.BAD_REQUEST
+            );
+        }
+
         const orders = await prisma.order.findMany({
             where: {
                 id: { in: order_ids }, deleted_at: null,
@@ -929,7 +958,6 @@ async function assignShipperToOrders(order_ids, shipper_id) {
                 }
             }
         });
-
         if (orders.length !== order_ids.length) {
             return get_error_response(
                 errors = ERROR_CODES.ORDER_LIST_ASSIGN_SHIPPER_INVALID,
@@ -939,7 +967,7 @@ async function assignShipperToOrders(order_ids, shipper_id) {
 
         await prisma.order.updateMany({
             where: { id: { in: order_ids } },
-            data: { shipper_id: shipper_id, status: ORDER.PENDING_SHIPPING }
+            data: { shipper_id: employeeId }
         });
 
         return get_error_response(
@@ -948,6 +976,59 @@ async function assignShipperToOrders(order_ids, shipper_id) {
         );
     } catch (error) {
         console.log('Assign shipper to orders error:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
+async function confirmFinishedOrderService(order_id, customer_id) {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: order_id }
+        });
+
+        if (!order) {
+            return get_error_response(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (order.customer_id !== customer_id) {
+            return get_error_response(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (order.status !== ORDER.DELIVERED) {
+            return get_error_response(
+                ERROR_CODES.ORDER_REQUIRE_STATUS_DELIVERED,
+                STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.update({
+            where: { id: order_id },
+            data: {
+                status: ORDER.FINISHED
+            }
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK
+        );
+    } catch (error) {
+        console.log('Confirm finished order error:', error);
+        if (error.code === 'P2025') {
+            return get_error_response(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND
+            );
+        }
         return get_error_response(
             ERROR_CODES.INTERNAL_SERVER_ERROR,
             STATUS_CODE.INTERNAL_SERVER_ERROR
@@ -965,5 +1046,6 @@ module.exports = {
     getOrderForWarehouseEmployee,
     StartShippingOrderService,
     confirmShippingOrderService,
-    assignShipperToOrders
+    assignShipperToOrders,
+    confirmFinishedOrderService
 }

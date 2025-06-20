@@ -24,16 +24,16 @@ class EmployeeController {
         return res.status(response.status_code).json(response);
     }
     async createEmployee(req, res) {
-        const { surname, lastname, image, birthdate, gender, email, phone, status, username, role } = req.body || {};
-        const response = await createEmployeeService(surname, lastname, image, birthdate, gender, email, phone, status, username, role);
+        const { surname, lastname, image, birthdate, gender, email, phone, status, username, role, warehouse_id } = req.body || {};
+        const response = await createEmployeeService(surname, lastname, image, birthdate, gender, email, phone, status, username, role, warehouse_id);
         return res.status(response.status_code).json(response);
     }
 
     async updateEmployee(req, res) {
         const { id } = req.params;
 
-        const { surname, lastname, image, birthdate, gender, email, phone, status, role } = req.body || {};
-        const response = await updateEmployeeService(id, surname, lastname, image, birthdate, gender, email, phone, status, role);
+        const { surname, lastname, image, birthdate, gender, email, phone, status, role, warehouse_id } = req.body || {};
+        const response = await updateEmployeeService(id, surname, lastname, image, birthdate, gender, email, phone, status, role, warehouse_id);
         return res.status(response.status_code).json(response);
     }
     async updateProfileEmployee(req, res) {

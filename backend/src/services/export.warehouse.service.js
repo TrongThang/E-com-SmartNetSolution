@@ -411,22 +411,22 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
     return undefined;
 }
 
-async function startExportWarehouseService(exportWarehouse, account_id) {
-    const { import_id } = exportWarehouse;
+// TODO: CHỈNH LẠI
+async function startExportWarehouseService(export_id, account_id) {
 
-    const importWarehouse = await prisma.import_warehouse.findFirst({
+    const exportWarehouse = await prisma.export_warehouse.findFirst({
         where: {
-            id: import_id,
+            id: export_id,
             deleted_at: null
         }
     })
 
-    if (!importWarehouse) { 
-        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+    if (!exportWarehouse) { 
+        return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
-    if (importWarehouse.status !== IMPORT_WAREHOUSE.PENDING) {
-        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_PENDING, STATUS_CODE.BAD_REQUEST);
+    if (exportWarehouse.status !== EXPORT_WAREHOUSE.PENDING) {
+        return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_NOT_PENDING, STATUS_CODE.BAD_REQUEST);
     }
 
     const employee = await prisma.account.findFirst({
@@ -444,16 +444,16 @@ async function startExportWarehouseService(exportWarehouse, account_id) {
         return get_error_response(ERROR_CODES.ACCOUNT_NOT_HAVE_PERMISSION, STATUS_CODE.BAD_REQUEST);
     }
 
-    const importWarehouseUpdate = await prisma.import_warehouse.update({
-        where: { id: import_id },
-        data: { status: IMPORT_WAREHOUSE.PROCESSING }
+    const exportWarehouseUpdate = await prisma.export_warehouse.update({
+        where: { id: export_id },
+        data: { status: EXPORT_WAREHOUSE.PROCESSING }
     })
 
-    if (!importWarehouseUpdate) {
-        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_UPDATE_FAILED, STATUS_CODE.BAD_REQUEST);
+    if (!exportWarehouseUpdate) {
+        return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_UPDATE_FAILED, STATUS_CODE.BAD_REQUEST);
     }
 
-    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, importWarehouseUpdate);
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, exportWarehouseUpdate);
 }
 
 /**
@@ -465,7 +465,16 @@ async function startExportWarehouseService(exportWarehouse, account_id) {
  * @param {string} account_id - ID của tài khoản thực hiện
  * @returns {Object} Response object chứa kết quả và thông báo
  */
-async function exportProductService(export_id, batch_production_id, template_id, serial_number, account_id) {
+// List product
+/**
+ * {
+ *  "batch_production_id": "BATC_PRODUCTION_ID",  ==> Mã lô sản xuất
+ *  "template_id": 10,  ==> Mã khuôn mẫu
+ *  "serial_number": 5,
+ * }
+ */
+// TODO: CHỈNH LẠI
+async function exportProductService(export_id, listProduct, account_id) {
     try {
         // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
         const result = await prisma.$transaction(async (tx) => {
