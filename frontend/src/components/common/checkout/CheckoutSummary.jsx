@@ -21,13 +21,6 @@ export function CheckoutSummary({ shippingFee }) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    <div className="flex items-center">
-                        <Input placeholder="Mã giảm giá" className="rounded-r-none" />
-                        <Button variant="secondary" className="rounded-l-none">
-                            Áp dụng
-                        </Button>
-                    </div>
-
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                             <span className="text-sm">Tạm tính</span>

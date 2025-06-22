@@ -188,9 +188,7 @@ export default function FirmwarePage() {
                         <div className="text-2xl font-bold text-green-600">
                             {firmwareData.filter((f) => f.is_approved).length}
                         </div>
-                        <p className="text-xs text-muted-
-
-foreground">Sẵn sàng triển khai</p>
+                        <p className="text-xs text-muted-foreground">Sẵn sàng triển khai</p>
                     </CardContent>
                 </Card>
 

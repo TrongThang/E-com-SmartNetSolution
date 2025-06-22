@@ -27,6 +27,7 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
                 console.log("response", response.data.data)
                 if (response.status_code === 200) {
                     setProducts(response.data.data)
+                    console.log("products", response.data.data)
                 } else {
                     setError('Failed to fetch products')
                 }

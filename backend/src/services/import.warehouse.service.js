@@ -309,11 +309,15 @@ async function addDetailImport(importWarehouseId, detailImport, import_date) {
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
     }
 
-    const batchProductDetail = await prisma.batch_product_detail.create({
+    const batchProductDetail = await prisma.warehouse_inventory.create({
         data: {
-            imp_batch_id: batchCode,
-            product_id: detailImport.product_id,
-            quantity: 0,
+            batch_code: batchCode,
+            product: {
+                connect: {
+                    id: detailImport.product_id,
+                }
+            },
+            stock: 0,
             created_at: new Date(),
         }
     })

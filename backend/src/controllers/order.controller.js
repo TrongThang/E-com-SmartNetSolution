@@ -15,7 +15,6 @@ class OrderController {
     async getOrdersForAdministrator(req, res) {
         const { filter, logic, limit, sort, order } = req.query;
         
-        console.log("filter", filter)
         const result = await getOrdersForAdministrator(
             filter,
             logic,
@@ -44,7 +43,6 @@ class OrderController {
 
     async createOrder(req, res) {
         const result = await createOrder(req.body);
-        console.log('Chuẩn bị vào createOrder')
         const response = res.status(result.status_code).json(result);
         return response;
     }
@@ -62,8 +60,7 @@ class OrderController {
     }
 
     async shippingOrder(req, res) {
-        // const account_id = req.user.id;
-        const account_id = '1';
+        const account_id = req.user.userId;
         const { order_id } = req.body;
 
         const result = await StartShippingOrderService(order_id, account_id);

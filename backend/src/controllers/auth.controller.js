@@ -63,7 +63,9 @@ class AuthController {
 
     async getMe(req, res) {
         const token = req.headers.authorization.split(' ')[1];
+        console.log('TOKEN',token)
 
+        console.log('decoded', jwt.decode(token)) 
         const response = await getMe(token);
 
         return res.status(response.status_code).json(response);
@@ -71,7 +73,6 @@ class AuthController {
 
     async getMeEmployee(req, res) {
         const token = req.headers.authorization.split(' ')[1];
-        console.log('TOKEN',token)
         const response = await getMeEmployee(token);
 
         return res.status(response.status_code).json(response);

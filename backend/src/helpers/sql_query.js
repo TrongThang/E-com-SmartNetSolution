@@ -42,6 +42,10 @@ function buildWhereQuery(filter, table = null) {
                 return value ? `(${field} IS NOT NULL AND ${field} LIKE '${value}%')` : `(${field} LIKE '%%' OR ${field} IS NULL)`;
             case 'endswith':
                 return value ? `(${field} IS NOT NULL AND ${field} LIKE '%${value}')` : `(${field} LIKE '%%' OR ${field} IS NULL)`;
+            case 'is':
+                return `${field} IS ${value}`;
+            case 'isnot':
+                return `${field} IS NOT ${value}`;
             case '=':
                 return `${field} = '${value}'`;
             case '<>':

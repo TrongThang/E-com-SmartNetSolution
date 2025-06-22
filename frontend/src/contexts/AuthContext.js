@@ -58,6 +58,7 @@ export const AuthProvider = ({ children }) => {
                 if (token) {
                     try {
                         const decoded = jwtDecode(token);
+                        console.log('decoded', decoded)
                         if (decoded.exp * 1000 > Date.now()) {
                             setIsAuthenticated(true);
                             await fetchUserInfo(token);

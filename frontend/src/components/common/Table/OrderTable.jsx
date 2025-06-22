@@ -7,6 +7,9 @@ import { ORDER_STATUS } from "@/constants/status.constants";
 import { Badge } from "@/components/ui/badge";
 import { CheckCheckIcon, CheckCircle, Eye, FolderClock, Handshake, MapPinCheck, PackageSearch, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertCircle } from "lucide-react";
+
 const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelectedIds }) => {
     const rowPerPage = 10;
 
@@ -118,21 +121,51 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
             ),
         },
         {
+            key: "is_fulfillable",
+            label: "Đáp ứng",
+            render: (row) => (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger className="flex justify-center w-full">
+                            {row.is_fulfillable ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                            ) : (
+                                <AlertCircle className="w-5 h-5 text-red-500" />
+                            )}
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-white text-black border border-blue-300">
+                            <div className="p-2">
+                                <p className="font-bold mb-2">Chi tiết sản phẩm:</p>
+                                <ul className="list-none space-y-2">
+                                    {row.products.map(p => (
+                                        <li key={p.id} className="flex items-center">
+                                            {p.quantity <= p.total_stock ? (
+                                                <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                                            ) : (
+                                                <AlertCircle className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" />
+                                            )}
+                                            <span className="text-sm">{p.name} - Cần: {p.quantity} / Có: {p.total_stock || 0}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )
+        },
+        {
             key: "id",
             label: "Mã đặt hàng",
         },
         {
             key: "shipper_name",
-            label: "Nhân viên giao hàng",
+            label: "Giao hàng",
         },
         {
             key: "name_recipient",
             label: "Người nhận",
         },
-        // {
-        //     key: "customer_name",
-        //     label: "Người đặt",
-        // },
         {
             key: "address",
             label: "Địa chỉ",

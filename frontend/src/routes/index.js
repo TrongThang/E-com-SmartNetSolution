@@ -40,7 +40,7 @@ import CategoryManagerPage from "@/pages/Admin/categoryManager/index.jsx";
 import AddCategoryPage from "@/pages/Admin/categoryManager/AddCategory.jsx";
 import EditCategoryPage from "@/pages/Admin/categoryManager/EditCategory.jsx";
 import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
-import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
+import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/create";
 import UserManagerPage from "@/pages/Admin/userManager";
 import ProductManagerPage from "@/pages/Admin/productManager";
 import EmployeeManagerPage from "@/pages/Admin/employeeManager";

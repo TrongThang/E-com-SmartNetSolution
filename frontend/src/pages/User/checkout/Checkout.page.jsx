@@ -108,7 +108,6 @@ export default function CheckoutPage() {
                 removeSelected();
                 setIsSuccess(true);
                 setResultOrder(res.data);
-                console.log("res.data:", res.data)
             } else {
                 if (res.errors && res?.errors.length === 1) {
                     return Swal.fire({
@@ -191,6 +190,7 @@ export default function CheckoutPage() {
         }
     }
 
+    console.log("shippingData:", shippingData)
     return (
         isSuccess ? (
             <CheckoutSuccess resultOrder={resultOrder} shipping={shippingData} payment={paymentData} />
@@ -226,9 +226,9 @@ export default function CheckoutPage() {
                                         <div>
                                             <h3 className="font-medium mb-2">Thông Tin Giao Hàng</h3>
                                             <div className="bg-muted p-4 rounded-md">
-                                                <p> {shippingData?.fullName} </p>
-                                                <p> {shippingData?.phone} </p>
-                                                <p> {shippingData?.address}, {shippingData?.city}, {shippingData?.district}, {shippingData?.ward} </p>
+                                                <p>Người nhận: <span className="font-bold">{shippingData?.fullName}</span> </p>
+                                                <p>SĐT: <span className="font-bold">{shippingData?.phone}</span> </p>
+                                                <p>Địa chỉ: <span className="font-bold">{shippingData?.address}, {shippingData?.ward}, {shippingData?.district}, {shippingData?.city}</span> </p>
                                             </div>
                                         </div>
 

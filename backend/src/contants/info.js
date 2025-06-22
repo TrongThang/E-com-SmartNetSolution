@@ -12,6 +12,7 @@ PRODUCT = {
     DISCOUNT: 2,
     FETURED: 3,
     NEW: 4,
+    PRE_ORDER: 5, //  Đặt trước
 }
 
 ORDER = {

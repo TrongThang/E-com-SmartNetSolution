@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { PackageCheck, Shapes, Filter, TruckElectric } from "lucide-react"
+import { PackageCheck, Shapes, Filter, TruckElectric, CheckCircle, Clock, AlertTriangle, FolderClock, PackageSearch, Truck, Handshake } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
@@ -15,6 +15,8 @@ import ReactDOM from 'react-dom/client';
 import axiosPrivate from "@/apis/clients/private.client"
 import { Input } from "@/components/ui/input"
 import DeliveryEmployeePopup from "@/components/common/order/DeliveryEmployeePopup";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Code } from "lucide-react";
 
 function ErrorList({ errors }) {
     return (
@@ -51,6 +53,8 @@ export default function OrderManager() {
     const [searchAddress, setSearchAddress] = useState("");
     const [showAssignPopup, setShowAssignPopup] = useState(false);
     const [selectedOrderIdsForAssign, setSelectedOrderIdsForAssign] = useState([]);
+    const [productSummary, setProductSummary] = useState([]);
+    const [cardAnalysis, setCardAnalysis] = useState({});
 
     useEffect(() => {
         fetchOrders()
@@ -84,7 +88,34 @@ export default function OrderManager() {
             || order.status === ORDER_STATUS.PREPARING
         );
         setIsAllSelectedPendingShipper(isAllPendingShipper);
-    }, [selectedIds, filteredOrders])
+
+        if (selectedIds.length === 0) {
+            setProductSummary([]);
+            return;
+        }
+    
+        const summary = {};
+        const allSelectedOrders = orders.filter(order => selectedIds.includes(order.id));
+    
+        for (const order of allSelectedOrders) {
+            if (order.status === ORDER_STATUS.PENDING) {
+                for (const product of order.products) {
+                    if (!summary[product.id]) {
+                        summary[product.id] = {
+                            id: product.id,
+                            name: product.name,
+                            total_stock: product.total_stock || 0,
+                            selected_quantity: 0,
+                        };
+                    }
+                    summary[product.id].selected_quantity += product.quantity;
+                }
+            }
+        }
+    
+        setProductSummary(Object.values(summary));
+
+    }, [selectedIds, filteredOrders, orders])
 
     const fetchOrders = async () => {
         setLoading(true)
@@ -92,6 +123,7 @@ export default function OrderManager() {
             const response = await axiosPublic.get("/order/admin")
             if (response.status_code === 200) {
                 setOrders(response.data.data)
+                setCardAnalysis(response.data.cardAnalysis)
             }
         } catch (error) {
             toast.error("Không thể tải danh sách đơn hàng")
@@ -159,14 +191,13 @@ export default function OrderManager() {
 
     const handleConfirmOrder = async () => {
         try {
+
             const selectedOrders = getSelectedOrdersByStatus([
-                ORDER_STATUS.PENDING_SHIPPING,
                 ORDER_STATUS.PENDING,
-                ORDER_STATUS.PREPARING
             ])
 
             const result = await Swal.fire({
-                title: `Bạn có chắc chắn muốn xác nhận các đơn hàng [ ${selectedOrders.map(order => order.id).join(', ')} ]?`,
+                title: `Bạn có chắc chắn muốn xác nhận các đơn hàng [ <span class="text-green-500">${selectedOrders.map(order => order).join(', ')}</span> ]?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -175,7 +206,7 @@ export default function OrderManager() {
 
             if (!result.isConfirmed) return
 
-            const response = await axiosPublic.patch("/order/admin/respond-orders", { orderIds: selectedOrders.map(order => order.id) })
+            const response = await axiosPublic.patch("/order/admin/respond-orders", { orderIds: selectedOrders })
 
             if (response.status_code === 200) {
                 Swal.fire({
@@ -282,6 +313,55 @@ export default function OrderManager() {
                 </div>
             </div>
 
+            {/* Stats Cards */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Chờ xác nhận</CardTitle>
+                        <FolderClock className="h-4 w-4 text-red-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-red-600">{cardAnalysis.total_pending_orders}</div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Đang chuẩn bị</CardTitle>
+                        <PackageSearch className="h-4 w-4 text-yellow-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-yellow-600">
+                            {cardAnalysis.total_preparing_orders}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Chờ & Đang giao hàng</CardTitle>
+                        <Truck className="h-4 w-4 text-blue-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-blue-600">
+                            {cardAnalysis.total_processing_orders}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Đã giao hàng</CardTitle>
+                        <Handshake className="h-4 w-4 text-green-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-green-600">
+                            {cardAnalysis.total_completed_orders}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
             {/* Filter Section */}
             <div className="bg-white p-4 rounded-lg shadow-sm border">
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -339,6 +419,37 @@ export default function OrderManager() {
                     </div>
                 </div>
             </div>
+
+            {productSummary.length > 0 && (
+                <div className="bg-white p-4 rounded-lg shadow-sm border">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Tổng hợp sản phẩm đã chọn</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {productSummary.map(product => (
+                            <div 
+                                key={product.id} 
+                                className={`p-4 rounded-lg border ${
+                                    product.selected_quantity > product.total_stock ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                                }`}
+                            >
+                                <p className="font-bold text-gray-800 truncate">{product.name}</p>
+                                <div className="mt-2 text-sm text-gray-600">
+                                    <span>Đã chọn: </span>
+                                    <span className="font-semibold">{product.selected_quantity}</span>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                    <span>Tồn kho: </span>
+                                    <span className="font-semibold">{product.total_stock}</span>
+                                </div>
+                                {product.selected_quantity > product.total_stock && (
+                                    <p className="text-xs text-red-600 font-bold mt-1 animate-pulse">
+                                        Không đủ hàng
+                                    </p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <OrderTable
                 orders={filteredOrders}

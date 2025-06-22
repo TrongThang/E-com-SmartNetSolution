@@ -303,7 +303,7 @@ const getMe = async (token) => {
 
 		const user = await prisma.account.findFirst({
 			where: {
-				account_id: decoded.account_id,
+				account_id: decoded.userId,
 				deleted_at: null
 			},
 			include: {

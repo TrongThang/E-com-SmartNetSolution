@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
-
+import VNPayLogo from "@/assets/images/logo/v-vnpay-svgrepo-com.svg"
 const formSchema = z.object({
     paymentMethod: z.enum(["cod", "card", "banking", "vnpay"]),
     sameAsShipping: z.boolean().default(true),
@@ -79,7 +79,7 @@ export function PaymentForm({ onComplete, onBack }) {
                                             <RadioGroupItem value="vnpay" />
                                         </FormControl>
                                         <FormLabel className="font-normal flex items-center">
-                                            <img src="/images/logo/v-vnpay-svgrepo-com.svg" alt="VNPay" className="mr-2 h-5 w-5" />
+                                            <img src={VNPayLogo} alt="VNPay" className="mr-2 h-5 w-5" />
                                             Thanh toán qua VNPay
                                         </FormLabel>
                                     </FormItem>

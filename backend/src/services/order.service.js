@@ -93,23 +93,88 @@ async function getOrderForWarehouseEmployee(filters, logic, limit, sort, order) 
     }
 }
 
+function configOrderDataForAdministrator(dbResults) {
+    if (!dbResults || dbResults.length === 0) {
+        return [];
+    }
+
+    const orderMap = new Map();
+
+    dbResults.forEach(record => {
+        if (!orderMap.has(record.id)) {
+            orderMap.set(record.id, {
+                id: record.id,
+                saler_name: record.saler_name,
+                shipper_name: record.shipper_name,
+                customer_name: record.customer_name,
+                name_recipient: record.name_recipient,
+                address: record.address,
+                phone: record.phone,
+                amount: record.amount,
+                status: record.status,
+                note: record.note,
+                warehouse_inventory: record.warehouse_inventory,
+                products: [],
+                is_fulfillable: true, 
+            });
+        }
+
+        const order = orderMap.get(record.id);
+
+        if (record.product_id) {
+            const product = {
+                id: record.product_id,
+                name: record.product_name,
+                quantity: record.quantity_sold,
+                total_stock: record.total_stock,
+            };
+            order.products.push(product);
+
+            if (product.quantity > product.total_stock) {
+                order.is_fulfillable = false;
+            }
+        }
+    });
+
+    return Array.from(orderMap.values());
+}
+
 async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     let get_attr = `
         order.id,
         CONCAT(employee.surname, ' ',employee.lastname) AS saler_name,
+        CONCAT(shipper.surname, ' ',shipper.lastname) AS shipper_name,
         CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
         order.name_recipient,
         order.address,
         order.phone,
         order.amount,
         order.status,
-        order.note
+        order.note,
+        warehouse_inventory.total_stock,
+        warehouse_inventory.total_delta,
+        order_detail.product_id,
+        warehouse_inventory.product_name,
+        order_detail.quantity_sold
     `;
 
     let get_table = `\`order\``;
     let query_join = `
         LEFT JOIN customer ON order.customer_id = customer.id
         LEFT JOIN employee ON order.saler_id = employee.id
+        LEFT JOIN employee shipper ON order.shipper_id = shipper.id
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN (
+            SELECT
+                product_id,
+                product.name AS product_name,
+                SUM(stock) AS total_stock,
+                SUM(delta) AS total_delta
+            FROM warehouse_inventory
+                LEFT JOIN product ON warehouse_inventory.product_id = product.id
+            WHERE warehouse_inventory.deleted_at IS NULL
+            GROUP BY product_id
+        ) AS warehouse_inventory ON order_detail.product_id = warehouse_inventory.product_id
     `;
 
     try {
@@ -122,7 +187,20 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
             logic: logic,
             sort: sort,
             order: order,
+            configData: configOrderDataForAdministrator
         });
+
+        const cardAnalysis = await queryHelper.queryRaw(`
+            SELECT
+                SUM(CASE WHEN status IN (${ORDER.PENDING}) THEN 1 ELSE 0 END) AS total_pending_orders,
+                SUM(CASE WHEN status IN (${ORDER.PREPARING}) THEN 1 ELSE 0 END) AS total_preparing_orders,
+                SUM(CASE WHEN status IN (${ORDER.PENDING_SHIPPING}, ${ORDER.SHIPPING}) THEN 1 ELSE 0 END) AS total_processing_orders,
+                SUM(CASE WHEN status IN (${ORDER.DELIVERED}, ${ORDER.COMPLETED}) THEN 1 ELSE 0 END) AS total_completed_orders
+            FROM \`order\`
+            WHERE deleted_at IS NULL;    
+        `)
+
+        orders.cardAnalysis = cardAnalysis[0];
 
         return get_error_response(
             ERROR_CODES.SUCCESS,
@@ -232,7 +310,7 @@ async function getOrderDetailService(order_id) {
         LEFT JOIN employee saler ON order.saler_id = saler.id
         LEFT JOIN customer ON order.customer_id = customer.id
     `;
-    console.log('order_id', order_id)
+
     const filter = {
         field: "order.id",
         condition: "=",
@@ -743,36 +821,39 @@ async function respondListOrderService(orderIds) {
     }
 }
 
-
+// Hàm kiểm tra số lượng sản phẩm trong kho
 async function checkProductInWarehouse(listProduct) {
     const productIds = listProduct.map(item => item.product_id);
+    const inClause = productIds.map(id => `'${id}'`).join(',');
 
-    const result = await prisma.$queryRaw`
+    const result = await queryHelper.queryRaw(`
         SELECT 
             wi.product_id, 
             p.name AS product_name, 
+            p.delta AS delta,
             SUM(wi.stock) AS total_stock
         FROM warehouse_inventory wi
         JOIN product p ON wi.product_id = p.id
-        WHERE wi.product_id IN (${productIds.join(',')}) AND wi.deleted_at IS NULL
+        WHERE wi.product_id IN (${inClause}) AND wi.deleted_at IS NULL
         GROUP BY wi.product_id, p.name
-    `;
+    `);
 
     const warehouseData = result.map(item => ({
         product_id: item.product_id,
         product_name: item.product_name,
-        stock: item.total_stock
+        stock: item.total_stock,
+        delta: item.delta
     }));
     
     const errorsData = [];
 
+
     const validProducts = warehouseData.filter(w => {
         const match = listProduct.find(p => p.product_id === w.product_id);
-        console.log('match', match)
-        if (w.stock < match.quantity) {
+        if (w.stock < match.quantity + w.delta) {
             errorsData.push({
                 type: 'product_stock_not_enough',
-                message: `Sản phẩm ${w.product_name} không đủ số lượng. Còn lại ${w.stock} sản phẩm`
+                message: `Sản phẩm ${w.product_name} không đủ số lượng. Còn lại ${w.stock + w.delta} sản phẩm`
             });
         }
         return match && w.stock >= match.quantity;
