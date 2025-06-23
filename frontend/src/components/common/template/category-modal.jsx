@@ -157,10 +157,10 @@ export default function CategoryModal({ fetchCategories }) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="bg-green-600 hover:bg-green-700">
+        <button className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700">
           <Plus className="mr-2 h-4 w-4" />
           Thêm loại thiết bị
-        </Button>
+        </button>
       </DialogTrigger>
       <DialogContent ref={dialogRef} className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
