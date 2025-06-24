@@ -16,7 +16,7 @@ import axiosPublic from "@/apis/clients/public.client"
 import Swal from "sweetalert2"
 
 export default function CreateImportWarehousePage() {
-    const router = useNavigate()
+    const navigate = useNavigate()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [showConfirmDialog, setShowConfirmDialog] = useState(false)
     const [activeTab, setActiveTab] = useState("basic-info")
@@ -196,7 +196,7 @@ export default function CreateImportWarehousePage() {
                     )}
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => router.push("/warehouse/import")}>
+                    <Button variant="outline" onClick={() => navigate("/admin/warehouses/import")}>
                         Hủy
                     </Button>
                     <Button onClick={() => setShowConfirmDialog(true)} disabled={!validateForm() || isSubmitting}>

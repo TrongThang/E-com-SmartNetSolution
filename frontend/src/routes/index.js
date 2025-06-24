@@ -349,7 +349,7 @@ export const router = createBrowserRouter([
         element: <ExportWarehousePage />
       },
       {
-        path: 'warehouse/import/create',
+        path: 'warehouses/import/create',
         element: <CreateImportWarehousePage />
       },
       {

@@ -14,10 +14,10 @@ exportWarehouseRouter.get('/', asyncHandler(getExportWarehouse));
 exportWarehouseRouter.get('/detail/:id', asyncHandler(getExportWarehouseDetail));
 exportWarehouseRouter.get('/process/:id', asyncHandler(getProcessExportWarehouse));
 
-exportWarehouseRouter.post('/', asyncHandler(createExportWarehouse));
+exportWarehouseRouter.post('/', authMiddleware, asyncHandler(createExportWarehouse));
 
-exportWarehouseRouter.patch('/start', asyncHandler(startExportWarehouse));
-exportWarehouseRouter.patch('/export-order', asyncHandler(exportProduct));
+exportWarehouseRouter.patch('/start', authMiddleware, asyncHandler(startExportWarehouse));
+exportWarehouseRouter.patch('/export-order', authMiddleware, asyncHandler(exportProduct));
 
 exportWarehouseRouter.get('/invoice-not-finish', authMiddleware, asyncHandler(getExportWarehouseNotFinishForEmployee));
 

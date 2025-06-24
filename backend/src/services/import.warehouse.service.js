@@ -283,7 +283,6 @@ async function createImportWarehouse(importWarehouse) {
                 throw new Error('Failed to create import warehouse');
             }
 
-            console.log("importWarehouse.detail_import", importWarehouse.detail_import)
             for (const detailImport of importWarehouse.detail_import) {
                 const batchCode = await generateDetailImportBatchCode(importWarehouse.import_date, detailImport.product_id)
                 
@@ -451,7 +450,7 @@ async function importProductService(import_id, batch_production_id, template_id,
     // Kiểm tra sản phẩm đã được nhập vào lô sản xuất chưa và trạng thái của sản phẩm có phải đang chờ nhập kho không
     const productionSerial = await queryHelper.queryRaw(`
         SELECT 
-            production_tracking.id,
+            production_tracking.production_id,
             production_tracking.device_serial,
             production_batches.template_id,
             production_tracking.status
@@ -461,13 +460,14 @@ async function importProductService(import_id, batch_production_id, template_id,
             device_serial = '${serial_number}' 
             AND production_tracking.is_deleted IS false
             AND production_batches.template_id = '${template_id}'
-    `)[0]
+    `)
 
     if (!productionSerial) {
         return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
-    if(productionSerial.status !== 'pending_import') {
+    console.log("productionSerial", productionSerial)
+    if(productionSerial[0].status !== 'pending_import') {
         return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_PENDING_IMPORT, STATUS_CODE.BAD_REQUEST);
     }
 
@@ -514,18 +514,23 @@ async function importProductService(import_id, batch_production_id, template_id,
 
     await prisma.production_tracking.update({
         where: {
-            id: productionSerial.id
+            production_id: productionSerial[0].production_id
         },
         data: {
             status: 'in_stock'
         }
     })
 
+    console.log("detailImport", detailImport)
     const warehouseInventory = await prisma.warehouse_inventory.findFirst({
         where: {
             batch_code: detailImport.batch_code,
+            product_id: template_id,
+            deleted_at: null
         }
     })
+
+    console.log("warehouseInventory", warehouseInventory)
 
     if (!warehouseInventory) {
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_BATCH_CODE_INVENTORY_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
@@ -533,7 +538,7 @@ async function importProductService(import_id, batch_production_id, template_id,
 
     const warehouseInventoryUpdate = await prisma.warehouse_inventory.update({
         where: {
-            batch_code: detailImport.batch_code,
+            id: warehouseInventory.id
         },
         data: {
             stock: warehouseInventory.stock + 1

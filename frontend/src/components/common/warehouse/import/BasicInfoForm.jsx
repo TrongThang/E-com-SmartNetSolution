@@ -108,11 +108,6 @@ export function BasicInfoForm({ formData, onChange, onNext }) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="file">File xác thực (nếu có)</Label>
-                    <Input id="file" type="file" onChange={(e) => onChange("file_authenticate", e.target.files?.[0])} />
-                </div>
-
-                <div className="space-y-2">
                     <Label htmlFor="note">Ghi chú</Label>
                     <Textarea
                         id="note"
@@ -140,7 +135,6 @@ BasicInfoForm.propTypes = {
         employee_id: PropTypes.string.isRequired,
         warehouse_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
         import_date: PropTypes.instanceOf(Date).isRequired,
-        file_authenticate: PropTypes.any,
         note: PropTypes.string
     }).isRequired,
     onChange: PropTypes.func.isRequired,
