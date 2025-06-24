@@ -16,14 +16,14 @@ const { get_error_response } = require('../helpers/response.helper');
  */
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    
+    console.log('authHeader', authHeader);
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         const response = get_error_response(ERROR_CODES.ACCOUNT_UNAUTHORIZED, STATUS_CODE.UNAUTHORIZED);
         return res.status(response.status_code).json(response);
     }
     
     const token = authHeader.split(' ')[1];
-    const secretKey = process.env.SECRET_KEY;
+    const secretKey = process.env.JWT_SECRET;
 
     if (!secretKey) {
         const response = get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
@@ -42,7 +42,7 @@ const authMiddleware = (req, res, next) => {
         
         if (error instanceof Error) {
             if (error.name === 'TokenExpiredError') {
-                errorCode = ERROR_CODES.ACCOUNT_UNAUTHORIZED;
+                errorCode = ERROR_CODES.ACCOUNT_TOKEN_EXPIRED;
             } else if (error.name === 'JsonWebTokenError') {
                 errorCode = ERROR_CODES.ACCOUNT_UNAUTHORIZED;
             }

@@ -1,10 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import axiosPublic from '@/apis/clients/public.client';
 import axiosIOTPublic from '@/apis/clients/iot.private.client';
 import axiosPrivate from '@/apis/clients/private.client';
+import { getToken } from 'firebase/messaging';
+import { messaging } from '../config/firebase';
+
 const AuthContext = createContext();
+
+const updateFCMTokenToServer = async (token) => {
+    if (!token) return;
+    try {
+        await axiosPrivate.put('auth/update-fcm-token', { deviceToken: token });
+        console.log('FCM token updated to server');
+    } catch (err) {
+        console.error('Failed to update FCM token:', err);
+    }
+};
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -113,6 +125,23 @@ export const AuthProvider = ({ children }) => {
                 const decoded = jwtDecode(token);
                 setUser(decoded);
                 setIsAuthenticated(true);
+                
+                // === LẤY FCM TOKEN VÀ UPDATE LÊN SERVER ===
+                // if (window.Notification && window.Notification.permission === 'granted') {
+                //     // Nếu đã granted thì lấy luôn
+                //     getToken(messaging, { vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY })
+                //         .then(updateFCMTokenToServer)
+                //         .catch(console.error);
+                // } else if (window.Notification) {
+                //     // Nếu chưa granted thì request permission
+                //     Notification.requestPermission().then(permission => {
+                //         if (permission === 'granted') {
+                //             getToken(messaging, { vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY })
+                //                 .then(updateFCMTokenToServer)
+                //                 .catch(console.error);
+                //         }
+                //     });
+                // }
                 return { success: true };
             } else {
                 return {
@@ -263,26 +292,6 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
-
-    const verifyOtpForChangeEmail = async (email, otp) => {
-        try {
-            const response = await axiosPublic.post('auth/verify-otp-change-email', { account_id: user.account_id, email, otp });
-            if (response.status_code === 200 || response.success) {
-                return { success: true };
-            } else {
-                return {
-                    success: false,
-                    message: response.data.message || 'Xác thực OTP thất bại'
-                };
-            }
-        } catch (error) {
-            console.error('Verify OTP for change email error:', error);
-            return {
-                success: false,
-                message: error.response?.data?.message || 'Có lỗi xảy ra khi xác thực OTP'
-            };
-        }
-    }
 
     const changePasswordEmployee = async (currentPassword, newPassword, confirmPassword) => {
 

@@ -1,14 +1,11 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
-const { ROLE } = require('../contants/info');
 const { get_error_response } = require('../helpers/response.helper');
-const { PrismaClient, sql } = require('@prisma/client');
 const { convertToSlug, removeTagHtml } = require('../helpers/extension.helper');
 const { executeSelectData } = require('../helpers/sql_query')
-const { configDataProductDetail, diffAttributeSets, configDataProduct } = require('../helpers/product.helper')
+const { configDataProductDetail, configDataProduct } = require('../helpers/product.helper')
 const { generateProductId } = require('../helpers/generate.helper');
+const prisma = require('../config/database');
 
-
-const prisma = new PrismaClient()
 // 0: Sản phẩm ngừng bán
 // >= 1: Sản phẩm đang bán
 // 1: Sản phẩm bán

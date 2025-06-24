@@ -1,13 +1,11 @@
-const { PrismaClient } = require('@prisma/client');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
 const { generateCustomerId, generateAccountId } = require('../helpers/generate.helper');
 const { getVietnamTimeNow } = require('../helpers/time.helper');
 const { hashPassword } = require('../helpers/auth.helper');
-
-const prisma = new PrismaClient();
-
+const prisma = require('../config/database');
+    
 async function getCustomersService(filter, limit, sort, order) {
     try {
         let get_attr = `surname, lastname, image, phone, email, gender, birthdate, email_verified, created_at, updated_at, deleted_at`

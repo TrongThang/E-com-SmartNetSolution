@@ -1,16 +1,13 @@
-const { ERROR_CODES, STATUS_CODE, ERROR_MESSAGES } = require("../contants/errors");
+const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
 const { generateImportID } = require("../helpers/generate.helper");
 const { getImportNumber, generateDetailImportBatchCode } = require("../helpers/import.warehouse.helper");
-const { validateNumber } = require("../helpers/number.helper");
-const { check_list_info_product } = require("../helpers/product.helper");
 const queryHelper = require("../helpers/query.helper");
-const { prisma, isExistId, queryRaw } = require("../helpers/query.helper");
 
 const { get_error_response } = require("../helpers/response.helper");
 const { executeSelectData } = require("../helpers/sql_query");
 const { IMPORT_WAREHOUSE, ROLE } = require("../contants/info");
 const sseController = require('../controllers/sse.controller');
-
+const prisma = require('../config/database');
 
 function configDataImportWarehouse(rows) {
     const result = [];
@@ -222,6 +219,7 @@ async function getImportWarehouseDetailService(id) {
 }
 
 async function createImportWarehouse(importWarehouse) {
+    // Validation checks outside transaction
     const employee = await prisma.account.findFirst({
         where: {
             employee_id: importWarehouse.employee_id,
@@ -247,86 +245,89 @@ async function createImportWarehouse(importWarehouse) {
         return get_error_response(ERROR_CODES.WAREHOUSE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
+    // Validate all products before starting transaction
+    for (const detailImport of importWarehouse.detail_import) {
+        const product = await prisma.product.findFirst({
+            where: {
+                id: detailImport.product_id,
+                deleted_at: null
+            }
+        })
+
+        if (!product) {
+            return get_error_response(ERROR_CODES.PRODUCT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+        }
+    }
+
     const importNumber = await getImportNumber(importWarehouse.import_date) + 1
     const importID = generateImportID(importNumber, importWarehouse.import_date)
 
-    const importWarehouseData = await prisma.import_warehouse.create({
-        data: {
-            id: importID,
-            import_number: importNumber,
-            employee_id: importWarehouse.employee_id,
-            warehouse_id: Number(importWarehouse.warehouse_id),
-            import_date: importWarehouse.import_date,
-            note: importWarehouse.note,
-            created_at: new Date(),
-        }
-    })
-
-    if (!importWarehouseData) {
-        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
-    }
-
-
-    for (const detailImport of importWarehouse.detail_import) {
-        const detailImportResult = await addDetailImport(importWarehouseData.id, detailImport, importWarehouse.import_date)
-
-        if (detailImportResult) {
-            return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
-        }
-    }
-
-    return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_SUCCESS, STATUS_CODE.OK, importWarehouseData);
-}
-
-async function addDetailImport(importWarehouseId, detailImport, import_date) {
-
-    // Kiểm tra sản phẩm
-    const product = await prisma.product.findFirst({
-        where: {
-            id: detailImport.product_id,
-            deleted_at: null
-        }
-    })
-
-    if (!product) {
-        return get_error_response(ERROR_CODES.PRODUCT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
-    }
-
-    const batchCode = await generateDetailImportBatchCode(import_date, detailImport.product_id)
-    
-    const detailImportResult = await prisma.detail_import.create({
-        data: {
-            batch_code: batchCode,
-            import_id: importWarehouseId,
-            product_id: detailImport.product_id,
-            quantity: detailImport.quantity,
-            // import_price: detailImport.import_price,
-            created_at: new Date(),
-        }
-    })
-
-    if (!detailImportResult) {
-        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
-    }
-
-    const batchProductDetail = await prisma.warehouse_inventory.create({
-        data: {
-            batch_code: batchCode,
-            product: {
-                connect: {
-                    id: detailImport.product_id,
+    try {
+        // Wrap all database operations in a transaction
+        const result = await prisma.$transaction(async (tx) => {
+            // Create import warehouse
+            const importWarehouseData = await tx.import_warehouse.create({
+                data: {
+                    id: importID,
+                    import_number: importNumber,
+                    employee_id: importWarehouse.employee_id,
+                    warehouse_id: Number(importWarehouse.warehouse_id),
+                    import_date: importWarehouse.import_date,
+                    note: importWarehouse.note,
+                    status: IMPORT_WAREHOUSE.PENDING,
+                    created_at: new Date(),
                 }
-            },
-            stock: 0,
-            created_at: new Date(),
-        }
-    })
+            })
 
-    if (!batchProductDetail) {
+            if (!importWarehouseData) {
+                throw new Error('Failed to create import warehouse');
+            }
+
+            console.log("importWarehouse.detail_import", importWarehouse.detail_import)
+            for (const detailImport of importWarehouse.detail_import) {
+                const batchCode = await generateDetailImportBatchCode(importWarehouse.import_date, detailImport.product_id)
+                
+                const detailImportResult = await tx.detail_import.create({
+                    data: {
+                        batch_code: batchCode,
+                        import_id: importWarehouseData.id,
+                        product_id: detailImport.product_id,
+                        quantity: detailImport.quantity,
+                        created_at: new Date(),
+                    }
+                })
+
+                if (!detailImportResult) {
+                    throw new Error('Failed to create detail import');
+                }
+
+                const batchProductDetail = await tx.warehouse_inventory.create({
+                    data: {
+                        batch_code: batchCode,
+                        product: {
+                            connect: {
+                                id: detailImport.product_id,
+                            }
+                        },
+                        stock: 0,
+                        created_at: new Date(),
+                    }
+                })
+
+                if (!batchProductDetail) {
+                    throw new Error('Failed to create warehouse inventory');
+                }
+            }
+
+            return importWarehouseData;
+        });
+
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_SUCCESS, STATUS_CODE.OK, result);
+
+    } catch (error) {
+        console.error('Transaction error:', error);
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
     }
-
-    return undefined;
 }
 
 async function getProcessImportWarehouseService(importWarehouseId) {
@@ -366,7 +367,18 @@ async function getProcessImportWarehouseService(importWarehouseId) {
     return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, result);
 }
 
-async function StartImportWarehouseService(import_id, employee_id) {
+async function StartImportWarehouseService(import_id, account_id) {
+    const account = await prisma.account.findFirst({
+        where: {
+            account_id: account_id,
+            deleted_at: null
+        }
+    })
+
+    if (!account) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
     const importWarehouse = await prisma.import_warehouse.findFirst({
         where: {
             id: import_id,
@@ -382,7 +394,7 @@ async function StartImportWarehouseService(import_id, employee_id) {
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_REQUIRE_STATUS_PENDING, STATUS_CODE.BAD_REQUEST);
     }
 
-    if(importWarehouse.employee_id !== employee_id) {
+    if(importWarehouse.employee_id !== account.employee_id) {
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_ASSIGNED_EMPLOYEE_FOR_RECEIPT, STATUS_CODE.BAD_REQUEST);
     }
     
@@ -392,7 +404,7 @@ async function StartImportWarehouseService(import_id, employee_id) {
         },
         data: {
             status: IMPORT_WAREHOUSE.IMPORTING,
-            employee_id: employee_id
+            employee_id: account.employee_id
         }   
     })
 
@@ -405,7 +417,18 @@ async function StartImportWarehouseService(import_id, employee_id) {
 
 // batch_production_id: id lô sản xuất - id production batches
 // Mỗi lần là 1 sản phẩm
-async function importProductService(import_id, batch_production_id, template_id, serial_number, employee_id) {
+async function importProductService(import_id, batch_production_id, template_id, serial_number, account_id) {
+    const account = await prisma.account.findFirst({
+        where: {
+            account_id: account_id,
+            deleted_at: null
+        }
+    })
+
+    if (!account) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
     const importWarehouse = await prisma.import_warehouse.findFirst({
         where: {
             id: import_id,
@@ -421,29 +444,30 @@ async function importProductService(import_id, batch_production_id, template_id,
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_REQUIRE_STATUS_IMPORTING, STATUS_CODE.BAD_REQUEST);
     }
 
-    if (importWarehouse.employee_id !== employee_id) {
+    if (importWarehouse.employee_id !== account.employee_id) {
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_ASSIGNED_EMPLOYEE_FOR_RECEIPT, STATUS_CODE.BAD_REQUEST);
     }
 
     // Kiểm tra sản phẩm đã được nhập vào lô sản xuất chưa và trạng thái của sản phẩm có phải đang chờ nhập kho không
     const productionSerial = await queryHelper.queryRaw(`
         SELECT 
-            production_tracking.serial_number,
+            production_tracking.id,
+            production_tracking.device_serial,
             production_batches.template_id,
             production_tracking.status
         FROM production_tracking 
-            LEFT JOIN production_batches ON production_tracking.batch_id = production_batches.production_batch_id
+            LEFT JOIN production_batches ON production_tracking.production_batch_id = production_batches.production_batch_id
         WHERE
-            serial_number = '${serial_number}' 
+            device_serial = '${serial_number}' 
             AND production_tracking.is_deleted IS false
             AND production_batches.template_id = '${template_id}'
-    `)
+    `)[0]
 
     if (!productionSerial) {
         return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
-    if(productionSerial[0].status !== 'pending_import') {
+    if(productionSerial.status !== 'pending_import') {
         return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_PENDING_IMPORT, STATUS_CODE.BAD_REQUEST);
     }
 
@@ -454,12 +478,14 @@ async function importProductService(import_id, batch_production_id, template_id,
         }
     })
 
-    // Nếu khác => Đã có và serial này khôg thuộc về lô sản xuất này
-    if (batchProductDetail.batch_production_id !== batch_production_id) {
-        return get_error_response(ERROR_CODES.SERIAL_NUMBER_IS_EXISTED_AND_NOT_IN_BATCH_PRODUCTION, STATUS_CODE.BAD_REQUEST);
-    } else if (batchProductDetail.batch_production_id === batch_production_id) {
-        // Nếu giống => Đã có và serial này thuộc về lô sản xuất này
-        return get_error_response(ERROR_CODES.SERIAL_NUMBER_IS_EXISTED_AND_IN_BATCH_PRODUCTION, STATUS_CODE.BAD_REQUEST);
+    if(batchProductDetail) {
+        // Nếu khác => Đã có và serial này khôg thuộc về lô sản xuất này
+        if (batchProductDetail.batch_production_id !== batch_production_id) {
+            return get_error_response(ERROR_CODES.SERIAL_NUMBER_IS_EXISTED_AND_NOT_IN_BATCH_PRODUCTION, STATUS_CODE.BAD_REQUEST);
+        } else if (batchProductDetail.batch_production_id === batch_production_id) {
+            // Nếu giống => Đã có và serial này thuộc về lô sản xuất này
+            return get_error_response(ERROR_CODES.SERIAL_NUMBER_IS_EXISTED_AND_IN_BATCH_PRODUCTION, STATUS_CODE.BAD_REQUEST);
+        }
     }
 
     const detailImport = await prisma.detail_import.findFirst({
@@ -475,8 +501,8 @@ async function importProductService(import_id, batch_production_id, template_id,
 
     const batchProductDetailInsert = await prisma.batch_product_detail.create({
         data: {
-            // product_id: productionSerial[0].template_id,
-            // batch_production_id: import_id,
+            // product_id: productionSerial.template_id,
+            batch_production_id: batch_production_id,
             serial_number: serial_number,
             imp_batch_id: detailImport.batch_code
         }
@@ -486,11 +512,9 @@ async function importProductService(import_id, batch_production_id, template_id,
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED, STATUS_CODE.BAD_REQUEST);
     }
 
-    const productionTrackingUpdate = await prisma.production_tracking.update({
+    await prisma.production_tracking.update({
         where: {
-            batch_id: batch_production_id,
-            serial_number: serial_number,
-            deleted_at: null
+            id: productionSerial.id
         },
         data: {
             status: 'in_stock'

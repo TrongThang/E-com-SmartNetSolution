@@ -1,13 +1,11 @@
 const { ERROR_CODES, STATUS_CODE, ERROR_MESSAGES } = require("../contants/errors");
-const { ORDER, ROLE, IMPORT_WAREHOUSE, EXPORT_WAREHOUSE } = require("../contants/info");
-const { validateNumber } = require("../helpers/number.helper");
-const { check_list_info_product } = require("../helpers/product.helper");
-const { prisma, isExistId } = require("../helpers/query.helper");
+const { ORDER, ROLE, EXPORT_WAREHOUSE } = require("../contants/info");
 const { get_error_response } = require("../helpers/response.helper");
 const { getExportNumber } = require("../helpers/import.warehouse.helper");
 const { generateExportNumber } = require("../helpers/generate.helper");
 const { executeSelectData } = require("../helpers/sql_query");
 const queryHelper = require("../helpers/query.helper");
+const prisma = require('../config/database');
 
 function configDataExportWarehouse(rows) {
     const result = [];

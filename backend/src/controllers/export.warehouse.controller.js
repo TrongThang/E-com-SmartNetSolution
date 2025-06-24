@@ -1,4 +1,3 @@
-const { PrismaClient } = require('@prisma/client');
 const { createExportWarehouseService, getExportWarehouseService, getExportWarehouseDetailService, startExportWarehouseService, exportProductService, getProcessExportWarehouseService, getExportWarehouseNotFinishForEmployee } = require('../services/export.warehouse.service');
 
 

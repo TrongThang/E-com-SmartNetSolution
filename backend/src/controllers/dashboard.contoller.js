@@ -1,12 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
 const { getDashboardService, getChartStatisticsService, getCardStatisticsService } = require('../services/dashboard.service');
 const { get_error_response } = require('../helpers/response.helper');
 
 class DashboardController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getDashboard(req, res) {
         const { period } = req.query;
 

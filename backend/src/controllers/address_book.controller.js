@@ -1,12 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
 const { getAddressBookService, getDetailAddressBookService, createAddressBookService, updateAddressBookService, deleteAddressBookService } = require('../services/address_book.service');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 
 class AddressBookController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getAddressBook(req, res) {
         const { customer_id } = req.params;
 

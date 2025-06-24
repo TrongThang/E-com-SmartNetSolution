@@ -1,12 +1,10 @@
 const jwt = require('jsonwebtoken');
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
-const { PrismaClient, sql } = require('@prisma/client');
 const { hashPassword, verifyPassword } = require('../helpers/auth.helper');
 const { generateAccountId, generateCustomerId } = require('../helpers/generate.helper');
 const { getVietnamTimeNow } = require('../helpers/time.helper');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 async function getUserAdminInfo(account_id) {
 	const user = await prisma.account.findFirst({
@@ -56,7 +54,7 @@ async function loginAPI(username, password, remember_me = null) {
 				name: infoUser.lastname + ' ' + infoUser.surname || undefined,
 				role_id: user.role_id
 			},
-			process.env.SECRET_KEY,
+			process.env.JWT_SECRET,
 			{ expiresIn: remember_me ? '30d' : '3h' }
 		);
 
@@ -112,13 +110,13 @@ async function loginEmployee({ username, password }) {
 			employee_id: employee.id,
 			roleId: account.role_id || 'employee',
 		},
-		process.env.SECRET_KEY,
+		process.env.JWT_SECRET,
 		{ expiresIn: '8h' }
 	);
 
 	const refreshToken = jwt.sign(
 		{ employeeId: account.account_id, type: 'refresh' },
-		process.env.SECRET_KEY,
+		process.env.JWT_SECRET,
 		{ expiresIn: '8h' }
 	);
 
@@ -141,13 +139,13 @@ const refreshTokenAPI = async (req, res) => {
 	try {
 		const { refresh_token } = req.body;
 
-		const decoded = jwt.verify(refresh_token, process.env.REFRESH_SECRET_KEY || process.env.SECRET_KEY);
+		const decoded = jwt.verify(refresh_token, process.env.REFRESH_SECRET_KEY || process.env.JWT_SECRET);
 		const newAccessToken = jwt.sign(
 			{
 				user_id: decoded.user_id,
 				username: decoded.username
 			},
-			process.env.SECRET_KEY,
+			process.env.JWT_SECRET,
 			{ expiresIn: '3h' }
 		);
 
@@ -299,8 +297,8 @@ const ChangedPasswordAccount = async (payload, userId) => {
 
 const getMe = async (token) => {
 	try {
-		const decoded = jwt.verify(token, process.env.SECRET_KEY);
-
+		console.log('token', token);
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 		const user = await prisma.account.findFirst({
 			where: {
 				account_id: decoded.userId,
@@ -337,7 +335,7 @@ const getMe = async (token) => {
 
 const getMeEmployee = async (token) => {
 	try {
-		const decoded = jwt.verify(token, process.env.SECRET_KEY);
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
 		const user_employee = await prisma.account.findFirst({
 			where: {

@@ -2,26 +2,9 @@ const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { getVietnamTimeNow, formatDateToDDMMYYYY } = require('../helpers/time.helper');
-const { PrismaClient } = require('@prisma/client');
 const { generateEmployeeId, generateAccountId } = require('../helpers/generate.helper');
 const { hashPassword } = require('../helpers/auth.helper');
-const { ROLE } = require('../contants/info');
-
-const prisma = new PrismaClient();
-
-const shipper = [
-    {
-        logic: "AND",
-        filters: [
-            {
-                field: "account.role_id",
-                condition: "=",
-                value: ROLE.SHIPPER
-            }
-        ]
-    }
-]
-
+const prisma = require('../config/database');
 
 const getEmployeeService = async (filter, limit, sort, order) => {
     try {

@@ -16,7 +16,7 @@ orderRouter.get('/admin/detail/:order_id', asyncHandler(getOrderDetailForAdminis
 orderRouter.get('/customer/:customer_id', asyncHandler(getOrdersForCustomer));
 orderRouter.post('/checkout', asyncHandler(createOrder));
 orderRouter.put('/customer', asyncHandler(canceledOrder))
-orderRouter.put('/finished', asyncHandler(confirmFinishedOrder))
+orderRouter.patch('/finished', asyncHandler(confirmFinishedOrder))
 
 // Confirm đơn hàng
 orderRouter.patch('/admin/respond-orders', asyncHandler(respondListOrder));

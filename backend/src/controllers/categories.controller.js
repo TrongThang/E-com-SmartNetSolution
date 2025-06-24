@@ -6,13 +6,7 @@ const { getCategoriesService,
     restoreCategoriesService,
     deletedCategoriesService
 } = require('../services/categories.service');
-const { PrismaClient } = require('@prisma/client');
 class CategoriesController {
-
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getCategories(req, res) {
         const { filters, limit, sort, order } = req.query  || {};
         const response = await getCategoriesService(filters, limit, sort, order);

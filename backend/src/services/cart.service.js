@@ -1,8 +1,9 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
-const { prisma, isExistId } = require("../helpers/query.helper");
+const { isExistId } = require("../helpers/query.helper");
 const { get_error_response, get_success_response } = require("../helpers/response.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const { getProductService } = require("./product.service");
+const prisma = require('../config/database');
 
 async function checkCustomerAndProduct (customer_id, product_id) {
     const customer = await prisma.customer.findFirst({

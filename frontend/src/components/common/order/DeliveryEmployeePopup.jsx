@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Phone, Mail, X, Warehouse } from 'lucide-react';
+import { Search, Phone, Mail, X, Warehouse, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Swal from 'sweetalert2';
 import axiosPrivate from '@/apis/clients/private.client';
@@ -27,7 +27,7 @@ const DeliveryEmployeePopup = ({ open, onClose, orderIds = [], onAssign }) => {
                 }
             ]
 
-            const response = await axiosPrivate.get('/employee', { params: { filters } });
+            const response = await axiosPrivate.get('/employee', { params: { filter: JSON.stringify(filters) } });
             if (response.status_code === 200) {
                 setEmployees(response.data.data);
             } else {
@@ -127,6 +127,13 @@ const DeliveryEmployeePopup = ({ open, onClose, orderIds = [], onAssign }) => {
                     </div>
                 </div>
 
+                {
+                    isLoading && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white text-blue-500">
+                            <Loader2 className="animate-spin" size={64} />
+                        </div>
+                    )
+                }
                 {/* Employee List by Warehouse */}
                 <div className="p-6 max-h-96 overflow-y-auto">
                     {Object.keys(groupedEmployees).length === 0 ? (

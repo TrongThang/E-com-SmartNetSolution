@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { useEffect, useState } from "react"
 import axiosPublic from "@/apis/clients/public.client"
+import { ROLE } from "@/constants/role.contant"
 
 export function BasicInfoForm({ formData, onChange, onNext }) {
     const [employees, setEmployees] = useState(null)
@@ -22,8 +23,8 @@ export function BasicInfoForm({ formData, onChange, onNext }) {
 
     useEffect(() => {
         const fetchData = async () => {
-            let filter = { field: "role.id", condition: "contains", value: "WAREHOUSE" }
-            
+            let filter = { field: "role.id", condition: "=", value: ROLE.EMPLOYEE_WAREHOUSE }
+
             let response = await axiosPublic.get("employee", {
                 params: {
                     filter: JSON.stringify(filter),
@@ -32,7 +33,6 @@ export function BasicInfoForm({ formData, onChange, onNext }) {
 
             if(response.status_code === 200) {
                 setEmployees(response.data.data)
-                console.log(response.data.data)
             }
 
             response = await axiosPublic.get("warehouse")

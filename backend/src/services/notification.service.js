@@ -1,9 +1,10 @@
-const { PrismaClient } = require('@prisma/client');
+
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { generateVerificationOTPCode } = require('../helpers/generate.helper');
 const { get_error_response } = require('../helpers/response.helper');
 
 const transporter = require('../config/nodemailer');
+const prisma = require('../config/database');
 const { getVietnamTimeNow, addVietnamMinutes } = require('../helpers/time.helper');
 
 const mailOptions = (toEmail, verificationCode) => ({
@@ -15,7 +16,7 @@ const mailOptions = (toEmail, verificationCode) => ({
 });
 class NotificationService {
     constructor() {
-        this.prisma = new PrismaClient();
+        this.prisma = prisma;
         this.otpStore = new Map();
     }
 
@@ -133,7 +134,7 @@ class NotificationService {
                 deleted_at: null,
             },
         });
-        
+
         if (!account) {
             return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
         }
@@ -270,6 +271,424 @@ class NotificationService {
             console.error("Lỗi xác minh OTP:", error);
             return get_error_response(ERROR_CODES.ACCOUNT_VERIFICATION_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /* FCM */
+    /**
+     * Gửi thông báo FCM đến nhân viên bán hàng
+     */
+    async sendOrderNotificationToRoleEmployees(roleId, title, body, data = {}) {
+        try {
+            // Lấy tất cả nhân viên bán hàng
+            const employees = await this.prisma.account.findMany({
+                where: {
+                    role_id: roleId,
+                    is_active: true,
+                    deleted_at: null,
+                    employee: {
+                        status: 1
+                    }
+                },
+                include: {
+                    employee: true,
+                    user_devices: {
+                        where: {
+                            is_deleted: false,
+                            device_token: { not: null }
+                        }
+                    }
+                }
+            });
+
+            if (employees.length === 0) {
+                console.log('No sales staff found with FCM tokens');
+                return { success: false, message: 'No sales staff available' };
+            }
+
+
+
+            // Gửi thông báo đến tất cả nhân viên bán hàng
+            const results = await Promise.allSettled(
+                employees.map(employee =>
+                    this.sendFCMToUser(employee.account_id, title, body, data)
+                )
+            );
+
+            const successCount = results.filter(r => r.status === 'fulfilled').length;
+            const failCount = results.filter(r => r.status === 'rejected').length;
+
+            console.log(`Notification sent: ${successCount} success, ${failCount} failed`);
+
+            return {
+                success: true,
+                details: {
+                    total_employees: employees.length,
+                    success: successCount,
+                    failed: failCount
+                }
+            };
+
+        } catch (error) {
+            console.error('Failed to send notification:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Gửi FCM đến một user cụ thể
+     */
+    async sendFCMToUser(accountId, title, body, data = {}) {
+        try {
+            // Lấy tất cả thiết bị của user
+            const userDevices = await this.prisma.user_devices.findMany({
+                where: {
+                    user_id: accountId,
+                    is_deleted: false,
+                    device_token: { not: null }
+                }
+            });
+
+            if (userDevices.length === 0) {
+                console.log(`No FCM tokens for user ${accountId}`);
+                return { success: false, message: 'No devices found' };
+            }
+
+            // Gửi đến tất cả thiết bị của user
+            const results = await Promise.allSettled(
+                userDevices.map(device =>
+                    this.sendFCMToDevice(device, title, body, data)
+                )
+            );
+
+            const successCount = results.filter(r => r.status === 'fulfilled').length;
+            const failCount = results.filter(r => r.status === 'rejected').length;
+
+            return {
+                success: true,
+                details: {
+                    total_devices: userDevices.length,
+                    success: successCount,
+                    failed: failCount
+                }
+            };
+
+        } catch (error) {
+            console.error(`FCM failed for user ${accountId}:`, error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Validate FCM token format
+     */
+    isValidFCMToken(token) {
+        if (!token || typeof token !== 'string') return false;
+        return token.length > 100 && !token.includes('@') && !token.includes(' ');
+    }
+
+    /**
+     * Kiểm tra lỗi token không hợp lệ
+     */
+    isInvalidTokenError(error) {
+        const invalidTokenCodes = [
+            'messaging/invalid-argument',
+            'messaging/registration-token-not-registered',
+            'messaging/invalid-registration-token'
+        ];
+        return error?.code && invalidTokenCodes.includes(error.code);
+    }
+
+    /**
+     * Xóa FCM token không hợp lệ
+     */
+    async removeDeviceFCMToken(userDeviceId) {
+        try {
+            await this.prisma.user_devices.update({
+                where: { user_device_id: userDeviceId },
+                data: {
+                    device_token: null,
+                    updated_at: new Date()
+                }
+            });
+            console.log(`Cleaned up invalid token for device ${userDeviceId}`);
+        } catch (error) {
+            console.log('Error cleaning up FCM token:', error.message);
+        }
+    }
+
+    /**
+     * Update FCM token cho thiết bị
+     */
+    async updateFCMToken(accountId, fcmToken, userAgent) {
+        try {
+            if (!accountId) {
+                return {
+                    success: false,
+                    message: 'Unauthorized'
+                };
+            }
+
+            if (!fcmToken) {
+                return {
+                    success: false,
+                    message: 'FCM token is required'
+                };
+            }
+
+            // Validate FCM token format
+            if (!this.isValidFCMToken(fcmToken)) {
+                return {
+                    success: false,
+                    message: 'Invalid FCM token format'
+                };
+            }
+
+            // Tìm hoặc tạo device cho user
+            let device = await this.prisma.user_devices.findFirst({
+                where: {
+                    user_id: accountId,
+                    is_deleted: false
+                }
+            });
+
+            if (device) {
+                // Update existing device
+                await this.prisma.user_devices.update({
+                    where: { user_device_id: device.user_device_id },
+                    data: {
+                        device_token: fcmToken,
+                        last_login: new Date(),
+                        updated_at: new Date()
+                    }
+                });
+                console.log(`Updated FCM token for device: ${device.user_device_id}`);
+            } else {
+                // Create new device
+                device = await this.prisma.user_devices.create({
+                    data: {
+                        user_device_id: `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        user_id: accountId,
+                        device_name: this.getDeviceName(userAgent),
+                        device_id: this.getDeviceId(),
+                        device_token: fcmToken,
+                        last_login: new Date(),
+                        created_at: new Date(),
+                        updated_at: new Date(),
+                        is_deleted: false
+                    }
+                });
+                console.log(`Created new device: ${device.user_device_id}`);
+            }
+
+            return {
+                success: true,
+                message: 'FCM token updated successfully',
+                data: {
+                    user_device_id: device.user_device_id,
+                    device_name: device.device_name
+                }
+            };
+
+        } catch (error) {
+            console.error('Error updating FCM token:', error);
+            return {
+                success: false,
+                message: 'Internal server error',
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Lấy FCM tokens của user (cho debugging)
+     */
+    async getUserFCMTokens(accountId) {
+        try {
+            return await this.prisma.user_devices.findMany({
+                where: {
+                    user_id: accountId,
+                    is_deleted: false,
+                    device_token: { not: null }
+                },
+                select: {
+                    user_device_id: true,
+                    device_name: true,
+                    device_token: true,
+                    last_login: true
+                }
+            });
+        } catch (error) {
+            console.warn('Failed to get user FCM tokens:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Test FCM connection
+     */
+    async testFCMConnection() {
+        try {
+            const app = admin.app();
+            return !!app;
+        } catch (error) {
+            console.warn('FCM connection test failed:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Xóa device của user
+     */
+    async deleteDevice(accountId) {
+        try {
+            if (!accountId) {
+                return {
+                    success: false,
+                    message: 'Unauthorized'
+                };
+            }
+
+            // Soft delete all devices of user
+            await this.prisma.user_devices.updateMany({
+                where: {
+                    user_id: accountId,
+                    is_deleted: false
+                },
+                data: {
+                    is_deleted: true,
+                    updated_at: new Date()
+                }
+            });
+
+            return {
+                success: true,
+                message: 'Device deleted successfully'
+            };
+
+        } catch (error) {
+            console.error('Error deleting device:', error);
+            return {
+                success: false,
+                message: 'Internal server error',
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Gửi test notification cho user
+     */
+    async sendTestNotification(accountId) {
+        try {
+            if (!accountId) {
+                return {
+                    success: false,
+                    message: 'Unauthorized'
+                };
+            }
+
+            const result = await this.sendFCMToUser(
+                accountId,
+                '🧪 Test Notification',
+                'Đây là thông báo test từ server Ecom',
+                {
+                    type: 'test',
+                    timestamp: Date.now().toString()
+                }
+            );
+
+            return {
+                success: true,
+                message: 'Test notification sent',
+                data: result
+            };
+
+        } catch (error) {
+            console.error('Error sending test notification:', error);
+            return {
+                success: false,
+                message: 'Internal server error',
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Gửi FCM đến device cụ thể
+     */
+    async sendFCMToDevice(device, title, body, data = {}) {
+        if (!device.device_token || !this.isValidFCMToken(device.device_token)) {
+            console.log(`Invalid FCM token for device ${device.device_name}`);
+            return Promise.resolve();
+        }
+
+        try {
+            const message = {
+                token: device.device_token,
+                notification: {
+                    title: title,
+                    body: body
+                },
+                data: this.sanitizeDataForFCM(data),
+                android: {
+                    notification: {
+                        sound: 'default',
+                        priority: 'high',
+                        channelId: 'ecom_orders'
+                    }
+                },
+                apns: {
+                    payload: {
+                        aps: {
+                            sound: 'default',
+                            badge: 1
+                        }
+                    }
+                }
+            };
+
+            const response = await admin.messaging().send(message);
+            console.log(`✓ FCM sent to ${device.device_name}: ${response}`);
+
+        } catch (error) {
+            console.log(`✗ FCM failed for ${device.device_name}:`, error.message);
+
+            // Xóa token không hợp lệ
+            if (this.isInvalidTokenError(error)) {
+                await this.removeDeviceFCMToken(device.user_device_id);
+            }
+        }
+    }
+
+    /**
+     * Sanitize data cho FCM
+     */
+    sanitizeDataForFCM(data) {
+        const sanitized = {};
+        for (const [key, value] of Object.entries(data)) {
+            sanitized[key] = String(value);
+        }
+        return sanitized;
+    }
+    
+    /**
+     * Get device name from user agent
+     */
+    getDeviceName(userAgent) {
+        if (!userAgent) return 'Web Browser';
+        
+        if (userAgent.includes('Chrome')) return 'Chrome Browser';
+        if (userAgent.includes('Firefox')) return 'Firefox Browser';
+        if (userAgent.includes('Safari')) return 'Safari Browser';
+        if (userAgent.includes('Edge')) return 'Edge Browser';
+        return 'Web Browser';
+    }
+
+    /**
+     * Generate device ID
+     */
+    getDeviceId() {
+        return `web_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
 }
 

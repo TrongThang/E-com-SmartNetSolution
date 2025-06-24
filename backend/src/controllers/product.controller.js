@@ -1,4 +1,3 @@
-const { PrismaClient } = require('@prisma/client');
 const {
     getProductService,
     getProductDetailService,
@@ -10,14 +9,9 @@ const {
     getProductsByCategoryIdAndStatusAndIsHideService,
     checkWarehouseInventory,
 } = require('../services/product.service');
-const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response.helper');
-const { check_info_product, check_list_info_product } = require('../helpers/product.helper');
+const {  check_list_info_product } = require('../helpers/product.helper');
 
 class ProductController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
 
     async getProduct(req, res) {
         const { filters, limit, sort, order, logic, role, type, page } = req.query || {};

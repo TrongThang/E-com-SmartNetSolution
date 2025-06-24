@@ -2,9 +2,7 @@ const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { getVietnamTimeNow } = require('../helpers/time.helper');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 //Lấy danh sách nhóm thuộc tính và thuộc tính thuộc nhóm thuộc tính và lọc theo deleted_at = null
 const getAttributeGroupService = async (filter, limit, sort, order) => {

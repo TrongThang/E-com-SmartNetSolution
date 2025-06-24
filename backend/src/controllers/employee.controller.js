@@ -4,17 +4,12 @@ const { getEmployeeService, getEmployeeDetailService,
     updateProfileEmployeeService,
     toggleDeleteRestoreEmployeeService,
 } = require('../services/employee.service');
-const { PrismaClient } = require('@prisma/client');
 const { getImportWarehouseNotFinishForEmployee } = require('../services/import.warehouse.service');
 
 
 class EmployeeController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getEmployees(req, res) {
-        const { filter = null, limit = null, sort = null, order = null } = req.body || {};
+        const { filter = null, limit = null, sort = null, order = null } = req.query || {};
         const response = await getEmployeeService(filter, limit, sort, order);
         return res.status(response.status_code).json(response);
     }

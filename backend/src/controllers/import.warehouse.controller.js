@@ -27,20 +27,18 @@ class ImportWarehouseController {
     }
 
     async startImportWarehouse(req, res) {
-        // const employee_id = req.user.id;
-        const employee_id = '1';
+        const account_id = req.user.employeeId;
         const { import_id } = req.body;
 
-        const response = await StartImportWarehouseService(import_id, employee_id);
+        const response = await StartImportWarehouseService(import_id, account_id);
         return res.status(response.status_code).json(response);
     }
 
     async importProduct(req, res) {
-        // const employee_id = req.user.id;
-        const employee_id = '1';
+        const account_id = req.user.employeeId;
         // mã phiếu nhập + serial_number
-        const { import_id, serial_number } = req.body;
-        const response = await importProductService(import_id, serial_number, employee_id);
+        const { import_id, batch_production_id, template_id, serial_number } = req.body;
+        const response = await importProductService(import_id, batch_production_id, template_id, serial_number, account_id);
         return res.status(response.status_code).json(response);
     }    
 }

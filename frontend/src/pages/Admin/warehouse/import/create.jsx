@@ -128,7 +128,6 @@ export default function CreateImportWarehousePage() {
             }
             
             const response = await axiosPublic.post("/import-warehouse", { data: importWarehouseData })
-            console.log("Response:", response)
 
             if (response.status_code === 200) {
                 Swal.fire({

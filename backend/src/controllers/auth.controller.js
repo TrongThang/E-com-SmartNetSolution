@@ -1,4 +1,3 @@
-const { PrismaClient } = require('@prisma/client');
 const {
     loginAPI,
     refreshTokenAPI,
@@ -9,7 +8,7 @@ const {
     getMe,
     getMeEmployee
 } = require('../services/auth.service');
-const bcrypt = require('bcrypt');
+
 const jwt = require('jsonwebtoken');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
@@ -19,10 +18,6 @@ const NotificationService = require("../services/notification.service");
 const notificationService = new NotificationService(); // Truyền Prisma client vào
 
 class AuthController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async register(req, res) {
         const { username, password, confirm_password, surname, lastname, phone, email, gender } = req.body;
 

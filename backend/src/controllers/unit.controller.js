@@ -5,13 +5,8 @@ const {
     updateUnitService,
     deleteUnitService
 } = require('../services/unit.service');
-const { generateUnitId } = require('../helpers/generate.helper');
-const { PrismaClient } = require('@prisma/client');
 
 class UnitController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
     async getUnit(req, res) {
         const { filter = null, limit = null, sort = null, order = null } = req.body || {};
         const response = await getUnitService(filter, limit, sort, order);

@@ -1,9 +1,7 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
-const { PrismaClient } = require('@prisma/client');
 const { executeSelectData } = require('../helpers/sql_query');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 const getBlogService = async (filter, limit, sort, order) => {
     let get_attr = `blog.id, blog.id, blog.title, blog.author, blog.content,blog.content_normal, blog.image, blog.score, blog.is_hide,

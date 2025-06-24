@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+
 const {
     getBlogService,
     getBlogDetailService,
@@ -8,10 +8,6 @@ const {
 } = require('../services/blog.service');
 
 class BlogController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getBlog(req, res) {
         const { filter = null, limit = null, sort = null, order = null } = req.body || {};
 

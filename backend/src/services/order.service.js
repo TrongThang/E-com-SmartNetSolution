@@ -5,8 +5,7 @@ const { getOrderNumber } = require("../helpers/import.warehouse.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
 const queryHelper = require("../helpers/query.helper");
-const { prisma, isExistId, queryRaw } = require("../helpers/query.helper");
-
+const prisma = require('../config/database');
 const { get_error_response } = require("../helpers/response.helper");
 const { executeSelectData } = require("../helpers/sql_query");
 
@@ -678,9 +677,9 @@ async function cancelOrderService(order_id) {
             );
         }
 
-        if (order.status === ORDER.PENDING || order.status === ORDER.PREPARING) {
+        if (order.status !== ORDER.PENDING && order.status !== ORDER.PREPARING) {
             return get_error_response(
-                errors=ERROR_CODES.ORDER_ALREADY_CANCELLED,
+                errors=ERROR_CODES.ORDER_NOT_STATUS_CANCELLED,
                 status_code=STATUS_CODE.BAD_REQUEST
             );
         }
@@ -1066,18 +1065,11 @@ async function assignShipperToOrders(order_ids, employeeId) {
 
 async function confirmFinishedOrderService(order_id, customer_id) {
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: order_id }
+        const order = await prisma.order.findFirst({
+            where: { id: order_id, customer_id: customer_id, deleted_at: null }
         });
 
         if (!order) {
-            return get_error_response(
-                ERROR_CODES.ORDER_NOT_FOUND,
-                STATUS_CODE.NOT_FOUND
-            );
-        }
-
-        if (order.customer_id !== customer_id) {
             return get_error_response(
                 ERROR_CODES.ORDER_NOT_FOUND,
                 STATUS_CODE.NOT_FOUND
@@ -1094,7 +1086,7 @@ async function confirmFinishedOrderService(order_id, customer_id) {
         await prisma.order.update({
             where: { id: order_id },
             data: {
-                status: ORDER.FINISHED
+                status: ORDER.COMPLETED
             }
         });
 
