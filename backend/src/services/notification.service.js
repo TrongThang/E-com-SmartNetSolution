@@ -6,6 +6,7 @@ const { get_error_response } = require('../helpers/response.helper');
 const transporter = require('../config/nodemailer');
 const prisma = require('../config/database');
 const { getVietnamTimeNow, addVietnamMinutes } = require('../helpers/time.helper');
+const admin = require('firebase-admin');
 
 const mailOptions = (toEmail, verificationCode) => ({
     from: process.env.EMAIL_USER, // Email người gửi
@@ -419,83 +420,68 @@ class NotificationService {
     /**
      * Update FCM token cho thiết bị
      */
-    async updateFCMToken(accountId, fcmToken, userAgent) {
-        try {
-            if (!accountId) {
-                return {
-                    success: false,
-                    message: 'Unauthorized'
-                };
-            }
-
-            if (!fcmToken) {
-                return {
-                    success: false,
-                    message: 'FCM token is required'
-                };
-            }
-
-            // Validate FCM token format
-            if (!this.isValidFCMToken(fcmToken)) {
-                return {
-                    success: false,
-                    message: 'Invalid FCM token format'
-                };
-            }
-
-            // Tìm hoặc tạo device cho user
-            let device = await this.prisma.user_devices.findFirst({
+    async updateFCMToken(accountId, deviceToken, userDeviceId) {
+        const account = await this.prisma.account.findFirst({ where: { account_id: accountId } });
+        if (!account) {
+            return { success: false, message: 'Account not found' };
+        }
+    
+        if (userDeviceId) {
+            // Update specific device
+            await this.updateDeviceFCMToken(userDeviceId, deviceToken);
+            return {
+                success: true,
+                message: 'FCM token updated successfully for specific device',
+                deviceId: userDeviceId
+            };
+        } else {
+            // Find and update latest device
+            const latestDevice = await this.prisma.user_devices.findFirst({
                 where: {
                     user_id: accountId,
                     is_deleted: false
+                },
+                orderBy: { last_login: 'desc' }
+            });
+    
+            if (latestDevice) {
+                await this.updateDeviceFCMToken(latestDevice.user_device_id, deviceToken);
+                return {
+                    success: true,
+                    message: 'FCM token updated successfully for latest device',
+                    deviceId: latestDevice.user_device_id
+                };
+            } else {
+                return {
+                    success: false,
+                    message: 'No device found for user'
+                };
+            }
+        }
+    }
+    
+    /**
+     * Update FCM token cho thiết bị cụ thể
+     */
+    async updateDeviceFCMToken(userDeviceId, deviceToken) {
+        try {
+            if (!userDeviceId || !deviceToken) {
+                throw new Error('Missing required parameters');
+            }
+
+            await this.prisma.user_devices.update({
+                where: { user_device_id: userDeviceId },
+                data: {
+                    device_token: deviceToken,
+                    updated_at: new Date()
                 }
             });
 
-            if (device) {
-                // Update existing device
-                await this.prisma.user_devices.update({
-                    where: { user_device_id: device.user_device_id },
-                    data: {
-                        device_token: fcmToken,
-                        last_login: new Date(),
-                        updated_at: new Date()
-                    }
-                });
-                console.log(`Updated FCM token for device: ${device.user_device_id}`);
-            } else {
-                // Create new device
-                device = await this.prisma.user_devices.create({
-                    data: {
-                        user_device_id: `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                        user_id: accountId,
-                        device_name: this.getDeviceName(userAgent),
-                        device_id: this.getDeviceId(),
-                        device_token: fcmToken,
-                        last_login: new Date(),
-                        created_at: new Date(),
-                        updated_at: new Date(),
-                        is_deleted: false
-                    }
-                });
-                console.log(`Created new device: ${device.user_device_id}`);
-            }
-
-            return {
-                success: true,
-                message: 'FCM token updated successfully',
-                data: {
-                    user_device_id: device.user_device_id,
-                    device_name: device.device_name
-                }
-            };
-
+            console.log(`FCM token updated for device ${userDeviceId}`);
+            return { success: true };
         } catch (error) {
             console.error('Error updating FCM token:', error);
-            return {
-                success: false,
-                message: 'Internal server error',
-                error: error.message
-            };
+            throw error;
         }
     }
 
@@ -692,4 +678,4 @@ class NotificationService {
     }
 }
 
-module.exports = NotificationService;
+module.exports = new NotificationService();

@@ -1,21 +1,34 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getMessaging } from "firebase/messaging";
+import { getMessaging, isSupported } from "firebase/messaging";
+import { FIREBASE_CONFIG } from "./firebase-config";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDDG_6dS0sQf-ST3ZjzLCOO7JnhbA93Sek",
-    authDomain: "homeconnect-teamiot.firebaseapp.com",
-    projectId: "homeconnect-teamiot",
-    storageBucket: "homeconnect-teamiot.firebasestorage.app",
-    messagingSenderId: "697438598174",
-    appId: "1:697438598174:web:0fb3109284f665c5532a0f",
-    measurementId: "G-PVR53BGMC1"
+    apiKey: FIREBASE_CONFIG.API_KEY,
+    authDomain: FIREBASE_CONFIG.AUTH_DOMAIN,
+    projectId: FIREBASE_CONFIG.PROJECT_ID,
+    storageBucket: FIREBASE_CONFIG.STORAGE_BUCKET,
+    messagingSenderId: FIREBASE_CONFIG.MESSAGING_SENDER_ID,
+    appId: FIREBASE_CONFIG.APP_ID,
+    measurementId: FIREBASE_CONFIG.MEASUREMENT_ID
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const messaging = getMessaging(app);
 
-export { app, analytics, messaging };
+// Initialize messaging only if supported
+let messaging = null;
+isSupported().then((supported) => {
+    if (supported) {
+        messaging = getMessaging(app);
+        console.log('Firebase messaging initialized successfully');
+    } else {
+        console.log('Firebase messaging not supported in this browser');
+    }
+}).catch((error) => {
+    console.error('Error checking messaging support:', error);
+});
+
+export { app, analytics, messaging, FIREBASE_CONFIG };

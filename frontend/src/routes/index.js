@@ -74,6 +74,7 @@ import Dashboard from "@/pages/Admin/Dashboard";
 import ProfileEmployee from "@/pages/Admin/ProfileEmployee";
 import ChangePassword from "@/pages/Admin/ChangePassword";
 import ChangePasswordUser from "@/pages/User/Profile/ChangePassword";
+import FCMTestPage from "@/pages/Admin/FCMTestPage";
 
 export const router = createBrowserRouter([
   {
@@ -370,4 +371,8 @@ export const router = createBrowserRouter([
       }
     ],
   },
+  {
+    path: '/admin/fcm-test',
+    element: <FCMTestPage />
+  }
 ]);

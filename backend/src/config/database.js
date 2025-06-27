@@ -1,7 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient({
-  log: ['query'], // Ghi lại các truy vấn SQL ra console
-});
+const prisma = new PrismaClient();
 
 module.exports = prisma;

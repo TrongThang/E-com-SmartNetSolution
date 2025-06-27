@@ -13,10 +13,7 @@ const jwt = require('jsonwebtoken');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 const { loginSchema, sendOtpSchema } = require('../schemas/account.schema');
-const NotificationService = require("../services/notification.service");
-
-const notificationService = new NotificationService(); // Truyền Prisma client vào
-
+const notificationService = require("../services/notification.service");
 class AuthController {
     async register(req, res) {
         const { username, password, confirm_password, surname, lastname, phone, email, gender } = req.body;

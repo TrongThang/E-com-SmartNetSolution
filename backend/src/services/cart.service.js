@@ -314,7 +314,7 @@ async function getCart(customer_id = null) {
 async function fetchLatestProductInfo(filters) {
     const product = await getProductService(filters = filters)
 
-    const productCartConfig = product.data.data.map(item => ({
+    const productCartConfig = product.data?.data?.map(item => ({
         id: item.id,
         image: item.image,
         name: item.name,

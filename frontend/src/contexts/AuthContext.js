@@ -1,20 +1,73 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import axiosPublic from '@/apis/clients/public.client';
-import axiosIOTPublic from '@/apis/clients/iot.private.client';
+import axiosIOTPublic from '@/apis/clients/iot.public.client';
 import axiosPrivate from '@/apis/clients/private.client';
 import { getToken } from 'firebase/messaging';
-import { messaging } from '../config/firebase';
+import { messaging, FIREBASE_CONFIG } from '../config/firebase';
 
 const AuthContext = createContext();
 
-const updateFCMTokenToServer = async (token) => {
+const updateFCMTokenToServer = async (token, deviceId) => {
     if (!token) return;
     try {
-        await axiosPrivate.put('auth/update-fcm-token', { deviceToken: token });
+        await axiosPrivate.put('notification/fcm-token', { deviceToken: token, deviceId: deviceId });
         console.log('FCM token updated to server');
     } catch (err) {
         console.error('Failed to update FCM token:', err);
+    }
+};
+
+// Thêm hàm request notification permission
+const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+        console.log('This browser does not support notifications');
+        return false;
+    }
+
+    if (Notification.permission === 'granted') {
+        return true;
+    }
+
+    if (Notification.permission === 'denied') {
+        console.log('Notification permission denied');
+        return false;
+    }
+
+    // Request permission
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+};
+
+// Thêm hàm lấy và cập nhật FCM token
+const getAndUpdateFCMToken = async (deviceId) => {
+    try {
+        const hasPermission = await requestNotificationPermission();
+        if (!hasPermission) {
+            console.log('Notification permission not granted');
+            return;
+        }
+
+        // Kiểm tra messaging có tồn tại không
+        if (!messaging) {
+            console.log('Firebase messaging not initialized');
+            return;
+        }
+
+        const token = await getToken(messaging, {
+            vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY
+        });
+
+        if (token) {
+            await updateFCMTokenToServer(token, deviceId);
+            console.log('deviceId', deviceId)
+            console.log('FCM token obtained and updated:', token);
+            return token;
+        } else {
+            console.log('No FCM token available');
+        }
+    } catch (error) {
+        console.error('Error getting FCM token:', error);
     }
 };
 
@@ -33,7 +86,7 @@ export const AuthProvider = ({ children }) => {
                     Authorization: `BEARER ${token}`,
                 },
             });
-            
+
             if (response.status_code === 200) {
                 setUser(response.data);
             }
@@ -45,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     const fetchEmployeeInfo = async () => {
         try {
             const token = localStorage.getItem('employeeToken');
-            const response = await axiosIOTPublic.get('auth/employee/get-me', { 
+            const response = await axiosIOTPublic.get('auth/employee/get-me', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -60,88 +113,86 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
-        // Hàm khởi tạo authentication
-        const initializeAuth = async () => {
-            setLoading(true);
-            
-            try {
-                // Kiểm tra user token
-                const token = localStorage.getItem('authToken');
-                if (token) {
-                    try {
-                        const decoded = jwtDecode(token);
-                        console.log('decoded', decoded)
-                        if (decoded.exp * 1000 > Date.now()) {
-                            setIsAuthenticated(true);
-                            await fetchUserInfo(token);
-                        } else {
-                            localStorage.removeItem('authToken');
-                        }
-                    } catch (error) {
-                        console.error('Error decoding user token:', error);
+    // Hàm khởi tạo authentication
+    const initializeAuth = async () => {
+        setLoading(true);
+
+        try {
+            // Kiểm tra user token
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                try {
+                    const decoded = jwtDecode(token);
+                    if (decoded.exp * 1000 > Date.now()) {
+                        setIsAuthenticated(true);
+                        await fetchUserInfo(token);
+
+                        // Lấy FCM token sau khi đã xác thực user
+                        await getAndUpdateFCMToken();
+                    } else {
                         localStorage.removeItem('authToken');
                     }
+                } catch (error) {
+                    console.error('Error decoding user token:', error);
+                    localStorage.removeItem('authToken');
                 }
-    
-                // Kiểm tra employee token
-                const employeeToken = localStorage.getItem('employeeToken');
-                if (employeeToken) {
-                    try {
-                        const decoded = jwtDecode(employeeToken);
-                        if (decoded.exp * 1000 > Date.now()) {
-                            setIsAdminAuthenticated(true);
-                            await fetchEmployeeInfo();
-                        } else {
-                            localStorage.removeItem('employeeToken');
-                        }
-                    } catch (error) {
-                        console.error('Error decoding employee token:', error);
+            }
+
+            // Kiểm tra employee token
+            const employeeToken = localStorage.getItem('employeeToken');
+            if (employeeToken) {
+                try {
+                    const decoded = jwtDecode(employeeToken);
+                    if (decoded.exp * 1000 > Date.now()) {
+                        setIsAdminAuthenticated(true);
+                        await fetchEmployeeInfo();
+
+                        // Lấy FCM token cho employee
+                        await getAndUpdateFCMToken();
+                    } else {
                         localStorage.removeItem('employeeToken');
                     }
+                } catch (error) {
+                    console.error('Error decoding employee token:', error);
+                    localStorage.removeItem('employeeToken');
                 }
-            } catch (error) {
-                console.error('Error initializing auth:', error);
-            } finally {
-                setLoading(false);
-                setAuthInitialized(true); // Đánh dấu đã khởi tạo xong
             }
-        };
-    
-        useEffect(() => {
-            initializeAuth();
-        }, []);
+        } catch (error) {
+            console.error('Error initializing auth:', error);
+        } finally {
+            setLoading(false);
+            setAuthInitialized(true);
+        }
+    };
 
-    const login = async (username, password) => {
+    useEffect(() => {
+        initializeAuth();
+    }, []);
+
+    const login = async (payload) => {
         try {
-            const response = await axiosPublic.post('auth/login', {
-                username,
-                password
-            });
-            
-            if (response.status_code === 200) {
-                const token = response.data.accessToken;
-                localStorage.setItem('authToken', token);
+            const response = await axiosIOTPublic.post('auth/login', payload);
 
-                const decoded = jwtDecode(token);
-                setUser(decoded);
+            if (response) {
+                const { accessToken, refreshToken, deviceUuid } = response;
+
+                localStorage.setItem('authToken', accessToken);
+                if (payload.rememberMe && refreshToken) {
+                    localStorage.setItem('refreshToken', refreshToken)
+                }
+
+                await fetchUserInfo(accessToken)
                 setIsAuthenticated(true);
-                
-                // === LẤY FCM TOKEN VÀ UPDATE LÊN SERVER ===
-                // if (window.Notification && window.Notification.permission === 'granted') {
-                //     // Nếu đã granted thì lấy luôn
-                //     getToken(messaging, { vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY })
-                //         .then(updateFCMTokenToServer)
-                //         .catch(console.error);
-                // } else if (window.Notification) {
-                //     // Nếu chưa granted thì request permission
-                //     Notification.requestPermission().then(permission => {
-                //         if (permission === 'granted') {
-                //             getToken(messaging, { vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY })
-                //                 .then(updateFCMTokenToServer)
-                //                 .catch(console.error);
-                //         }
-                //     });
-                // }
+
+                const deviceMap = JSON.parse(localStorage.getItem("deviceMap") || "{}");
+                deviceMap[payload.username] = deviceUuid;
+                localStorage.setItem("deviceMap", JSON.stringify(deviceMap));
+
+                const decoded = jwtDecode(accessToken);
+                setUser(decoded);
+
+                // Lấy FCM token sau khi đăng nhập thành công
+                await getAndUpdateFCMToken(deviceUuid);
                 return { success: true };
             } else {
                 return {
@@ -160,10 +211,6 @@ export const AuthProvider = ({ children }) => {
 
     const loginEmployee = async (username, password) => {
         try {
-            // const response = await axiosPublic.post('auth/login-employee', {
-            //     username,
-            //     password,
-            // });
             const response = await axiosIOTPublic.post('auth/employee/login', {
                 username,
                 password,
@@ -171,10 +218,13 @@ export const AuthProvider = ({ children }) => {
 
             if (response) {
                 const token = response.accessToken;
-                
+
                 localStorage.setItem('employeeToken', token);
                 setIsAdminAuthenticated(true);
                 fetchEmployeeInfo();
+
+                // Lấy FCM token sau khi đăng nhập employee thành công
+                await getAndUpdateFCMToken();
                 return { success: true };
             } else {
                 return {
@@ -190,7 +240,7 @@ export const AuthProvider = ({ children }) => {
             };
         }
     };
-    
+
     const register = async (userData) => {
         try {
             console.log('userData', userData)
@@ -213,13 +263,20 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Cập nhật hàm logout để xóa FCM token
     const logout = () => {
+        // Xóa FCM token khỏi server trước khi logout
+        axiosPrivate.delete('notification/device').catch(console.error);
+        
         localStorage.removeItem('authToken');
         setUser(null);
         setIsAuthenticated(false);
     };
 
     const logoutEmployee = () => {
+        // Xóa FCM token khỏi server trước khi logout
+        axiosPrivate.delete('notification/device').catch(console.error);
+        
         localStorage.removeItem('employeeToken');
         setEmployee(null);
         setIsAdminAuthenticated(false);

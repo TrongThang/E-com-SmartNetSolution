@@ -1,14 +1,10 @@
-const NotificationService = require('../services/notification.service');
+const notificationService = require('../services/notification.service');
 
 class NotificationController {
-    constructor() {
-        this.notificationService = new NotificationService();
-    }
-
     async getNotifications(req, res, next) {
         try {
             const { filter, limit, sort, order } = req.query;
-            const notifications = await this.notificationService.getNotifications(filter, limit, sort, order);
+            const notifications = await notificationService.getNotifications(filter, limit, sort, order);
             return res.status(200).json(notifications);
         } catch (error) {
             next(error);
@@ -18,7 +14,7 @@ class NotificationController {
     async createNotification(req, res, next) {
         try {
             const { filter, limit, sort, order } = req.body;
-            const notification = await this.notificationService.createNotification(filter, limit, sort, order);
+            const notification = await notificationService.createNotification(filter, limit, sort, order);
             return res.status(200).json(notification);
         } catch (error) {
             next(error);
@@ -28,7 +24,7 @@ class NotificationController {
     async deleteNotification(req, res, next) {
         try {
             const { id } = req.params;
-            const notification = await this.notificationService.deleteNotification(id);
+            const notification = await notificationService.deleteNotification(id);
             return res.status(200).json(notification);
         } catch (error) {
             next(error);
@@ -37,22 +33,49 @@ class NotificationController {
 
     // ===== FCM METHODS =====
 
-    async updateFCMToken(req, res, next) {
+    updateFCMToken = async (req, res) => {
         try {
-            const { fcm_token } = req.body;
-            const account_id = req.user?.account_id;
-
-            const result = await this.notificationService.updateFCMToken(account_id, fcm_token, req.headers['user-agent']);
-            return res.status(200).json(result);
+            const { deviceToken, deviceId } = req.body;
+            const accountId = req?.user?.userId || req?.user?.accountId;
+    
+            if (!deviceToken) {
+                return res.status(400).json({
+                    error: 'Device token is required'
+                });
+            }
+    
+            if (!accountId) {
+                return res.status(401).json({
+                    error: 'User not authenticated'
+                });
+            }
+    
+            const result = await notificationService.updateFCMToken(accountId, deviceToken, deviceId);
+    
+            if (result.success) {
+                return res.json({
+                    message: result.message,
+                    deviceId: result.deviceId,
+                    note: 'Push notifications are now enabled for this device'
+                });
+            } else {
+                return res.status(404).json({
+                    error: result.message
+                });
+            }
         } catch (error) {
-            next(error);
+            console.error('Update FCM token error:', error);
+            res.status(500).json({
+                error: error.message || 'Failed to update FCM token'
+            });
         }
-    }
+    };
+    
 
     async deleteDevice(req, res, next) {
         try {
             const account_id = req.user?.account_id;
-            const result = await this.notificationService.deleteDevice(account_id);
+            const result = await notificationService.deleteDevice(account_id);
             return res.status(200).json(result);
         } catch (error) {
             next(error);
@@ -61,8 +84,8 @@ class NotificationController {
 
     async sendTestNotification(req, res, next) {
         try {
-            const account_id = req.user?.account_id;
-            const result = await this.notificationService.sendTestNotification(account_id);
+            const account_id = req.user?.userId || req.user?.accountId || req.user?.employeeId;
+            const result = await notificationService.sendTestNotification(account_id);
             return res.status(200).json(result);
         } catch (error) {
             next(error);

@@ -581,6 +581,9 @@ async function getImportWarehouseNotFinishForEmployee(userId) {
             employee_id: account.employee_id,
             status: IMPORT_WAREHOUSE.IMPORTING,
             deleted_at: null
+        },
+        include: {
+            detail_import: true
         }
     })
 

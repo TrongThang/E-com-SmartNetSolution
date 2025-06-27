@@ -12,7 +12,7 @@ import SerialCard from "./SerialCard"
 import Swal from "sweetalert2"
 import { useManufacturing } from "@/hooks/useManufacturing"
 import { exportMultipleQRCodesToPDF } from "@/utils/print"
-import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import axiosIOTPublic from "@/apis/clients/iot.public.client"
 
 export default function StageDetails({
     stage,

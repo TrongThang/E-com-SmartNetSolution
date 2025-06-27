@@ -16,7 +16,7 @@ import CheckoutSuccess from "@/pages/User/checkout/success/CheckoutSuccess"
 import { useCart } from "@/contexts/CartContext"
 import Swal from "sweetalert2"
 import axiosPublic from "@/apis/clients/public.client"
-import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import axiosIOTPublic from "@/apis/clients/iot.public.client"
 import { useAuth } from "@/contexts/AuthContext"
 import handleVnpayPayment from "@/utils/vnpay.util"
 

@@ -10,7 +10,7 @@ import Swal from "sweetalert2"
 import { useManufacturing } from "@/hooks/useManufacturing"
 import NotificationBar from "./NotificationBar"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import axiosIOTPublic from "@/apis/clients/iot.public.client"
 import { useNavigate, useLocation } from "react-router-dom"
 
 export default function StatePrimary() {

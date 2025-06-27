@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const axiosIOTPublic = axios.create({
-    baseURL: process.env.REACT_APP_SMART_NET_IOT_API_URL || "http://localhost:9999/api/admin/", // Địa chỉ API public
+    baseURL: process.env.REACT_APP_SMART_NET_IOT_API_URL || "http://localhost:9999/api/", // Địa chỉ API public
     headers: {
         // 'ngrok-skip-browser-warning': 'true',
         'Accept': 'application/json',

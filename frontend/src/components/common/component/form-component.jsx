@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Swal from "sweetalert2";
-import axiosIOTPublic from "@/apis/clients/iot.private.client";
+import axiosIOTPublic from "@/apis/clients/iot.public.client";
 
 export function ComponentFormModal({ showForm, component, onClose, isEdit, fetchComponent }) {
   const [formData, setFormData] = useState({});

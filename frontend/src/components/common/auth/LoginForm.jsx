@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
 import { AtSign, KeyRound, Loader2, Mail, Lock } from 'lucide-react'
+import { v4 as uuidv4 } from 'uuid';
 
 export default function LoginForm({ onSuccess }) {
   const { login, sendOtp, verifyOtp, changePassword, loginEmployee } = useAuth()
@@ -55,13 +56,52 @@ export default function LoginForm({ onSuccess }) {
     }
   }
 
+  const getOrCreateDeviceId = () => {
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+      deviceId = uuidv4();
+      localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+  };
+
+  const getOrAskDeviceName = () => {
+    let deviceName = localStorage.getItem('device_name');
+    if (!deviceName) {
+      deviceName = getDeviceNameFromBrowser();
+      if (deviceName) {
+        localStorage.setItem('device_name', deviceName);
+      }
+    }
+    return deviceName;
+  };
+
+  const getDeviceUuid = (username) => {
+    const deviceMap = JSON.parse(localStorage.getItem("deviceMap") || "{}");
+    return deviceMap[username] || null;
+  }
+
+  const getDeviceNameFromBrowser = () => {
+    const userAgent = navigator.userAgent;
+    return `${userAgent.substring(0, 30)}`;
+  };
+
+
   // Xử lý đăng nhập
   const handleLogin = async (e) => {
     e.preventDefault()
-    console.log('vafo ddnawg nhap')
     setIsLoading(true)
     try {
-      const result = await login(loginForm.username, loginForm.password)
+      const payload = {
+        username: loginForm.username,
+        password: loginForm.password,
+        rememberMe,
+        deviceName: getOrAskDeviceName(),
+        deviceId: getOrCreateDeviceId(),
+        deviceUuid: getDeviceUuid(loginForm.username),
+    }
+
+      const result = await login(payload)
       if (result.success) {
         toast.success("Đăng nhập thành công", { description: "Chào mừng bạn quay trở lại!" })
         onSuccess?.()

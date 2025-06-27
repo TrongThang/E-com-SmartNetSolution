@@ -1,4 +1,4 @@
-import axiosIOTPublic from "../clients/iot.private.client"
+import axiosIOTPublic from "../clients/iot.public.client"
 import type { IApiResponse } from "@/models/interfaces"
 
 const planningEndpoints = {

@@ -430,19 +430,28 @@ async function startExportWarehouseService(export_id, account_id) {
 /**
  * Hàm xuất kho cho một sản phẩm theo serial number
  * @param {string} export_id - Mã phiếu xuất kho
- * @param {string} batch_production_id - Mã lô sản xuất
- * @param {string} template_id - Mã sản phẩm
- * @param {string} serial_number - Số serial của sản phẩm
+ * @param {string} order_id - Mã đơn hàng
+ * @param {Array} list_product - Danh sách sản phẩm với cấu trúc mới
  * @param {string} account_id - ID của tài khoản thực hiện
  * @returns {Object} Response object chứa kết quả và thông báo
  */
-// List product
+// List product với cấu trúc mới
 /**
  * {
- *  "batch_production_id": "BATC_PRODUCTION_ID",  ==> Mã lô sản xuất
- *  "template_id": 10,  ==> Mã khuôn mẫu
- *  "serial_number": 5,
- *  "quantity": 2,
+ *  "export_id": 5,
+ *  "order_id": "DH-2025-0001",
+ *  "list_product": [
+ *    {
+ *      "template_id": "1",
+ *      "list_serial": [
+ *        {
+ *          "batch_production_id": "BTCH12JUN2501JXHMC1K08JPX24K0TDV",
+ *          "serial_number": "SERL12JUN2501JXHMC1QCH11ECD111ACQ"
+ *        }
+ *      ],
+ *      "quantity": 1
+ *    }
+ *  ]
  * }
  */
 async function exportProductByOrderService(export_id, order_id, list_product, account_id) {
@@ -555,128 +564,158 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
                 throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED);
             }
 
-            // 6.3. Xử lý từng serial trong listProduct
+            // 6.3. Xử lý từng sản phẩm trong listProduct
             const productResults = [];
 
             for (const product of list_product) {
-                const { batch_production_id, template_id, serial_number } = product;
+                const { template_id, list_serial, quantity } = product;
 
-                // 6.3.1. Kiểm tra trạng thái serial
-                const productionSerial = await queryHelper.queryRaw(`
-                    SELECT 
-                        production_tracking.device_serial,
-                        production_batches.template_id,
-                        production_tracking.status
-                    FROM production_tracking 
-                        LEFT JOIN production_batches ON production_tracking.production_batch_id = production_batches.production_batch_id
-                    WHERE
-                        device_serial = '${serial_number}' 
-                        AND production_tracking.is_deleted IS false
-                        AND production_batches.template_id = '${template_id}'
-                `);
-
-                if (!productionSerial || productionSerial.length === 0) {
-                    throw new Error(`${ERROR_CODES.SERIAL_NUMBER_NOT_FOUND}: ${serial_number}`);
+                // Kiểm tra số lượng serial có khớp với quantity không
+                if (!list_serial || list_serial.length !== quantity) {
+                    throw new Error(`${ERROR_CODES.QUANTITY_NOT_MATCH}: Template ${template_id} - Expected ${quantity} serials, got ${list_serial ? list_serial.length : 0}`);
                 }
 
-                if (productionSerial[0].status !== 'in_stock') {
-                    throw new Error(`${ERROR_CODES.SERIAL_NUMBER_NOT_IN_STOCK}: ${serial_number}`);
-                }
-
-                // 6.3.2. Kiểm tra batch_product_detail
-                const batchProductDetail = await tx.batch_product_detail.findFirst({
-                    where: {
-                        batch_production_id: batch_production_id,
-                        serial_number: serial_number,
-                        deleted_at: null
-                    }
-                });
-
-                if (!batchProductDetail) {
-                    throw new Error(`${ERROR_CODES.SERIAL_NUMBER_NOT_FOUND_IN_BATCH_PRODUCTION}: ${serial_number}`);
-                }
-
-                if (batchProductDetail.exp_batch_id) {
-                    throw new Error(`${ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED}: ${serial_number}`);
-                }
-
-                // 6.3.3. Lấy batch_code từ detail_export
+                // 6.3.1. Lấy batch_code từ detail_export cho template này
                 const detailExport = detailExports.find(
                     d => d.product_id === template_id
                 );
                 if (!detailExport) {
-                    throw new Error(`${ERROR_CODES.EXPORT_WAREHOUSE_DETAIL_EXPORT_NOT_FOUND}: ${serial_number}`);
+                    throw new Error(`${ERROR_CODES.EXPORT_WAREHOUSE_DETAIL_EXPORT_NOT_FOUND}: Template ${template_id}`);
                 }
 
-                // 6.3.4. Cập nhật batch_product_detail (gán exp_batch_id là batch_code của detail_export)
-                const batchProductDetailUpdate = await tx.batch_product_detail.update({
-                    where: {
-                        id: batchProductDetail.id,
-                        deleted_at: null,
-                    },
-                    data: {
-                        exp_batch_id: detailExport.batch_code,
-                        updated_at: new Date()
+                // 6.3.2. Xử lý từng serial trong list_serial
+                const serialResults = [];
+                for (const serialItem of list_serial) {
+                    const { batch_production_id, serial_number } = serialItem;
+
+                    // 6.3.2.1. Kiểm tra trạng thái serial
+                    const productionSerial = await queryHelper.queryRaw(`
+                        SELECT 
+                            production_tracking.device_serial,
+                            production_batches.template_id,
+                            production_tracking.status
+                        FROM production_tracking 
+                            LEFT JOIN production_batches ON production_tracking.production_batch_id = production_batches.production_batch_id
+                        WHERE
+                            device_serial = '${serial_number}' 
+                            AND production_tracking.is_deleted IS false
+                            AND production_batches.template_id = '${template_id}'
+                    `);
+
+                    if (!productionSerial || productionSerial.length === 0) {
+                        throw new Error(`${ERROR_CODES.SERIAL_NUMBER_NOT_FOUND}: ${serial_number}`);
                     }
-                });
 
-                if (!batchProductDetailUpdate) {
-                    throw new Error(`${ERROR_CODES.EXPORT_WAREHOUSE_UPDATE_FAILED}: ${serial_number}`);
-                }
-
-                console.log('batchProductDetail', batchProductDetail)
-                // 6.3.5. Cập nhật tồn kho
-                const warehouseInventory = await tx.warehouse_inventory.findFirst({
-                    where: {
-                        batch_code: batchProductDetail.imp_batch_id,
-                        product_id: template_id,
-                        deleted_at: null
+                    if (productionSerial[0].status !== 'in_stock') {
+                        throw new Error(`${ERROR_CODES.SERIAL_NUMBER_NOT_IN_STOCK}: ${serial_number}`);
                     }
-                });
 
-                if (!warehouseInventory) {
-                    throw new Error(`${ERROR_CODES.WAREHOUSE_INVENTORY_NOT_FOUND}: ${serial_number}`);
-                }
+                    // 6.3.2.2. Kiểm tra batch_product_detail
+                    const batchProductDetail = await tx.batch_product_detail.findFirst({
+                        where: {
+                            batch_production_id: batch_production_id,
+                            serial_number: serial_number,
+                            deleted_at: null
+                        }
+                    });
 
-                if (warehouseInventory.stock <= 0) {
-                    throw new Error(`${ERROR_CODES.INSUFFICIENT_STOCK}: ${serial_number}`);
-                }
-
-                const warehouseInventoryUpdate = await tx.warehouse_inventory.update({
-                    where: {
-                        id: warehouseInventory.id
-                    },
-                    data: {
-                        stock: warehouseInventory.stock - 1,
-                        updated_at: new Date()
+                    if (!batchProductDetail) {
+                        throw new Error(`${ERROR_CODES.SERIAL_NUMBER_NOT_FOUND_IN_BATCH_PRODUCTION}: ${serial_number}`);
                     }
-                });
 
-                if (!warehouseInventoryUpdate) {
-                    throw new Error(`${ERROR_CODES.WAREHOUSE_INVENTORY_UPDATE_FAILED}: ${serial_number}`);
-                }
-
-                // 6.3.6. Cập nhật trạng thái sản phẩm
-                const productionTrackingUpdate = await tx.production_tracking.updateMany({
-                    where: {
-                        production_batch_id: batch_production_id,
-                        device_serial: serial_number,
-                        is_deleted: false
-                    },
-                    data: {
-                        status: 'stock_out'
+                    if (batchProductDetail.exp_batch_id) {
+                        throw new Error(`${ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED}: ${serial_number}`);
                     }
-                });
+
+                    // 6.3.2.3. Cập nhật batch_product_detail (gán exp_batch_id là batch_code của detail_export)
+                    const batchProductDetailUpdate = await tx.batch_product_detail.update({
+                        where: {
+                            id: batchProductDetail.id,
+                            deleted_at: null,
+                        },
+                        data: {
+                            exp_batch_id: detailExport.batch_code,
+                            updated_at: new Date()
+                        }
+                    });
+
+                    if (!batchProductDetailUpdate) {
+                        throw new Error(`${ERROR_CODES.EXPORT_WAREHOUSE_UPDATE_FAILED}: ${serial_number}`);
+                    }
+
+                    // 6.3.2.4. Cập nhật tồn kho
+                    const warehouseInventory = await tx.warehouse_inventory.findFirst({
+                        where: {
+                            batch_code: batchProductDetail.imp_batch_id,
+                            product_id: template_id,
+                            deleted_at: null
+                        }
+                    });
+
+                    if (!warehouseInventory) {
+                        throw new Error(`${ERROR_CODES.WAREHOUSE_INVENTORY_NOT_FOUND}: ${serial_number}`);
+                    }
+
+                    if (warehouseInventory.stock <= 0) {
+                        throw new Error(`${ERROR_CODES.INSUFFICIENT_STOCK}: ${serial_number}`);
+                    }
+
+                    const warehouseInventoryUpdate = await tx.warehouse_inventory.update({
+                        where: {
+                            id: warehouseInventory.id
+                        },
+                        data: {
+                            stock: warehouseInventory.stock - 1,
+                            updated_at: new Date()
+                        }
+                    });
+
+                    if (!warehouseInventoryUpdate) {
+                        throw new Error(`${ERROR_CODES.WAREHOUSE_INVENTORY_UPDATE_FAILED}: ${serial_number}`);
+                    }
+
+                    // 6.3.2.5. Cập nhật trạng thái sản phẩm
+                    const productionTrackingUpdate = await tx.production_tracking.updateMany({
+                        where: {
+                            production_batch_id: batch_production_id,
+                            device_serial: serial_number,
+                            is_deleted: false
+                        },
+                        data: {
+                            status: 'stock_out'
+                        }
+                    });
+
+                    // Push kết quả từng serial
+                    serialResults.push({
+                        serial_number,
+                        batch_production_id,
+                        success: true,
+                        warehouseInventory: warehouseInventoryUpdate,
+                        batchProductDetail: batchProductDetailUpdate,
+                        productionTracking: productionTrackingUpdate
+                    });
+                }
 
                 // Push kết quả từng sản phẩm
                 productResults.push({
-                    serial_number,
-                    success: true,
-                    warehouseInventory: warehouseInventoryUpdate,
-                    batchProductDetail: batchProductDetailUpdate,
-                    productionTracking: productionTrackingUpdate
+                    template_id,
+                    quantity,
+                    serials: serialResults,
+                    success: true
                 });
             }
+
+            // 6.4. Cập nhật trạng thái đơn hàng
+            await tx.order.update({
+                where: { id: order_id },
+                data: { status: ORDER.PENDING_SHIPPING }
+            });
+
+            await tx.export_warehouse.update({
+                where: { id: export_id },
+                data: { status: EXPORT_WAREHOUSE.COMPLETED, updated_at: new Date() }
+            });
 
             return productResults;
         });
@@ -728,6 +767,9 @@ async function getExportWarehouseNotFinishForEmployee(userId) {
             employee_id: account.employee_id,
             status: EXPORT_WAREHOUSE.PROCESSING,
             deleted_at: null
+        },
+        include: {
+            detail_export: true
         }
     })
 

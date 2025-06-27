@@ -27,7 +27,7 @@ import {
 import { Link } from "react-router-dom";
 import { formatDate, removeVietnameseTones } from "@/utils/format";
 import Swal from "sweetalert2";
-import axiosIOTPublic from "@/apis/clients/iot.private.client";
+import axiosIOTPublic from "@/apis/clients/iot.public.client";
 import PlanPagination from "@/components/common/planning/PlanPagination";
 
 export default function FirmwarePage() {

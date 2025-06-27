@@ -687,6 +687,7 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.ACCOUNT_VERIFICATION_FAILED]: "Xác thực tài khoản thất bại",
     [ERROR_CODES.ACCOUNT_ID_INVALID]: "ID tài khoản không hợp lệ",
     [ERROR_CODES.ACCOUNT_NEW_PASSWORD_AND_CONFIRM_PASSWORD_NOT_MATCH]: "Mật khẩu mới và xác nhận mật khẩu không khớp",
+    [ERROR_CODES.ACCOUNT_TOKEN_EXPIRED]: "Token đã hết hạn",
 
     // SLIDESHOW
     [ERROR_CODES.SLIDESHOW_NOT_FOUND]: "Slideshow không tồn tại.",

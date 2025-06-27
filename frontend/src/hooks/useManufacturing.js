@@ -1,5 +1,5 @@
 // hooks/useManufacturing.ts
-import axiosIOTPublic from "@/apis/clients/iot.private.client";
+import axiosIOTPublic from "@/apis/clients/iot.public.client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 

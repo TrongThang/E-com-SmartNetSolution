@@ -1,7 +1,7 @@
 const express = require('express');
 const { validateMiddleware } = require('../middleware/validate.middleware');
 const notificationController = require('../controllers/notification.controller');
-const authMiddleware = require('../middleware/auth');
+const authMiddleware = require('../middleware/auth.middleware');
 
 const notificationRouter = express.Router();
 

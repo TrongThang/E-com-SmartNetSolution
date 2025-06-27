@@ -13,7 +13,7 @@ import { formatDate } from "@/utils/format"
 import ImageCropper from "@/components/common/ImageCropper"
 import { toast } from "sonner"
 import Swal from "sweetalert2"
-import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import axiosIOTPublic from "@/apis/clients/iot.public.client"
 
 export default function ProfileEmployee() {
     const [isEditing, setIsEditing] = useState(false)
