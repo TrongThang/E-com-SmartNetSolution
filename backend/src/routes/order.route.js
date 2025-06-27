@@ -28,6 +28,46 @@ orderRouter.patch('/admin/finish-shipping-order', asyncHandler(confirmShippingOr
 orderRouter.post('/create_payment_url', create_payment_url);
 orderRouter.get('/vnpay_return', vnpay_return);
 
+// ============= TEST ENDPOINTS =============
+orderRouter.get('/test-platform', (req, res) => {
+    const userAgent = req.headers['user-agent'] || '';
+    const platform = req.query.platform || '';
+    const customReturnUrl = req.query.returnUrl || '';
+    
+    // Detect platform
+    let detectedPlatform = 'web';
+    if (platform) {
+        detectedPlatform = platform.toLowerCase();
+    } else if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+        detectedPlatform = 'mobile';
+    }
+    
+    // Generate return URL
+    const baseUrl = process.env.BASE_URL || 'http://localhost:8081';
+    const mobileAppScheme = process.env.MOBILE_APP_SCHEME || 'myapp';
+    
+    let returnUrl = customReturnUrl;
+    if (!returnUrl) {
+        if (detectedPlatform === 'mobile') {
+            returnUrl = `${mobileAppScheme}://payment`;
+        } else {
+            returnUrl = `${baseUrl}/api/order/vnpay_return`;
+        }
+    }
+    
+    res.json({
+        success: true,
+        data: {
+            platform: detectedPlatform,
+            userAgent: userAgent,
+            returnUrl: returnUrl,
+            baseUrl: baseUrl,
+            mobileAppScheme: mobileAppScheme,
+            environment: process.env.NODE_ENV || 'development'
+        }
+    });
+});
+
 module.exports = orderRouter;
 
 
