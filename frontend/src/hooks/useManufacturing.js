@@ -7,20 +7,7 @@ export const useManufacturing = () => {
     const [serialsByStage, setSerialsByStage] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [notifications, setNotifications] = useState([
-        {
-            "serial": "1234567890",
-            "stage": "assembly",
-            "status": "in_progress",
-            "timestamp": "2025-06-01T08:10:38.878Z"
-        },
-        {
-            "serial": "SN1234",
-            "stage": "firmware",
-            "status": "firmware_upload",
-            "timestamp": "2025-06-01T11:43:09.878Z"
-        },
-    ]);
+    const [notifications, setNotifications] = useState([]);
     const [importProductTracking, setImportProductTracking] = useState([]);
     const [exportProductTracking, setExportProductTracking] = useState([]);
 
@@ -57,7 +44,7 @@ export const useManufacturing = () => {
 
     // Xử lý SSE message
     useEffect(() => {
-        let eventSource = new EventSource(`${process.env.REACT_APP_SMART_NET_IOT_API_URL}sse/events`);
+        let eventSource = new EventSource(`${process.env.REACT_APP_SMART_NET_IOT_API_URL}/sse/events`);
 
         eventSource.onmessage = (event) => {
             try {

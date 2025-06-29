@@ -24,6 +24,7 @@ const PlanningApi = {
             if (!Array.isArray(templates)) {
                 return [];
             }
+            
             // Filter lại template hợp lệ
             const filteredTemplates = templates.filter(template => {
                 const isTemplateValid = template.status === "production" && !template.is_deleted;

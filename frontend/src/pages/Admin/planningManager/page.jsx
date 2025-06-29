@@ -381,11 +381,9 @@ export default function ProductionPlanningManagement() {
   const fetchTemplates = async () => {
     try {
       const response = await PlanningApi.getAllDeviceTemplates();
-      console.log("API trả về:", response);
 
       if (response) {
         setTemplates(response);
-        console.log("Templates sau khi set:", response);
       } else {
         setTemplates([]);
       }

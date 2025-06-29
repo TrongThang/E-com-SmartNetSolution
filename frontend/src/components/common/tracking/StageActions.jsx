@@ -21,7 +21,6 @@ export default function StageActions({
             });
             return;
         }
-        console.log("selectedSerials", selectedSerials);
         exportMultipleQRCodesToPDF(selectedSerials);
     }
 

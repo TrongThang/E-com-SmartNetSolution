@@ -85,6 +85,12 @@ export default function SerialCard({ serialData, isCheckable = true, isSelected 
                 icon: Package,
                 dotColor: "bg-purple-500",
             },
+            completed_packaging: {
+                label: "Đã đóng gói",
+                color: "bg-green-100 text-green-800 border-green-200",
+                icon: CheckCircle,
+                dotColor: "bg-green-500",
+            },
         }
 
         return (
