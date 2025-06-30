@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ProductTable from "@/components/common/table/ProductTable";
+import ProductTable from "@/components/common/Table/ProductTable";
 import { Button } from "@/components/ui/button.jsx";
 import Swal from 'sweetalert2';
 import productApi from "@/apis/modules/product.api.ts";

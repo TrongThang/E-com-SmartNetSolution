@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
-import RoleTable from "@/components/common/table/RoleTable"
+import RoleTable from "@/components/common/Table/RoleTable"
 import { Skeleton } from "@/components/ui/skeleton"
 import Swal from "sweetalert2"
 
@@ -91,7 +91,7 @@ export default function RoleManager() {
     }
 
     const confirmDelete = async () => {
-        
+
     }
 
     if (loading) {

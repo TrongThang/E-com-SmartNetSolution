@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import EmployeeApi from "@/apis/modules/employee.api.ts";
 import { useNavigate } from "react-router-dom";
-import EmployeesTable from "@/components/common/table/EmployeeTable";
+import EmployeesTable from "@/components/common/Table/EmployeeTable";
 import { Button } from "@/components/ui/button";
 import Swal from "sweetalert2";
 

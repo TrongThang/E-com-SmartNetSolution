@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
 import { Skeleton } from "@/components/ui/skeleton"
 import Swal from "sweetalert2"
-import ExportWarehouseTable from "@/components/common/table/ExportWarehouseTable"
+import ExportWarehouseTable from "@/components/common/Table/ExportWarehouseTable"
 
 export default function ExportWarehousePage() {
     const [exportWarehouse, setExportWarehouse] = useState([])
@@ -88,7 +88,7 @@ export default function ExportWarehousePage() {
     }
 
     const confirmDelete = async () => {
-        
+
     }
 
     if (loading) {

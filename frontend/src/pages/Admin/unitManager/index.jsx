@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UnitApi from "@/apis/modules/unit.api.ts";
-import UnitTable from "@/components/common/table/UnitTable";
+import UnitTable from "@/components/common/Table/UnitTable";
 import { Button } from "@/components/ui/button.jsx";
 import Swal from 'sweetalert2';
 

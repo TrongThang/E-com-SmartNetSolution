@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SlideshowApi from "@/apis/modules/slideshow.api.ts";
-import SlideshowTable from "@/components/common/table/SlideshowTable";
+import SlideshowTable from "@/components/common/Table/SlideshowTable";
 import { Button } from "@/components/ui/button.jsx";
 import Swal from 'sweetalert2';
 

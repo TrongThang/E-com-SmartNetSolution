@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
 import { Skeleton } from "@/components/ui/skeleton"
 import Swal from "sweetalert2"
-import OrderTable from "@/components/common/table/OrderTable"
+import OrderTable from "@/components/common/Table/OrderTable"
 import { ORDER_STATUS } from "@/constants/status.constants"
 import ReactDOM from 'react-dom/client';
 import axiosPrivate from "@/apis/clients/private.client"
@@ -93,10 +93,10 @@ export default function OrderManager() {
             setProductSummary([]);
             return;
         }
-    
+
         const summary = {};
         const allSelectedOrders = orders.filter(order => selectedIds.includes(order.id));
-    
+
         for (const order of allSelectedOrders) {
             if (order.status === ORDER_STATUS.PENDING) {
                 for (const product of order.products) {
@@ -112,7 +112,7 @@ export default function OrderManager() {
                 }
             }
         }
-    
+
         setProductSummary(Object.values(summary));
 
     }, [selectedIds, filteredOrders, orders])
