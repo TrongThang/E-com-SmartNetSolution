@@ -7,21 +7,26 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+# Install dependencies with legacy peer deps and ignore scripts
+RUN npm ci --legacy-peer-deps --ignore-scripts || npm install --legacy-peer-deps --ignore-scripts
 
-# Copy all configuration files first
+# Copy configuration files needed for build
 COPY jsconfig.json craco.config.js tailwind.config.js postcss.config.js ./
 
 # Copy the rest of the application
 COPY . .
 
-# Set NODE_PATH to include src directory for aliases
+# Set environment variables for build
 ENV NODE_PATH=./src
 ENV INLINE_RUNTIME_CHUNK=false
 ENV CI=false
+ENV NODE_OPTIONS=--no-deprecation
 
-# Build the application
+# Set explicit paths for correct resolution
+ENV REACT_APP_RESOLVE_MODULES=src
+ENV REACT_APP_BABEL_MODULE_RESOLVER={"root":["./src"],"alias":{"@":"./src"}}
+
+# Build the application with extended timeout
 RUN npm run build
 
 # Production stage

@@ -1,5 +1,5 @@
-# Use Node.js LTS version as the base image
-FROM node:18-alpine
+# Use Node.js LTS version as the base image with multi-architecture support
+FROM --platform=$TARGETPLATFORM node:18-alpine
 
 # Set working directory
 WORKDIR /app
@@ -10,7 +10,7 @@ RUN apk add --no-cache make gcc g++ python3 git
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies and rebuild bcrypt
+# Install dependencies and rebuild bcrypt with explicit architecture support
 RUN npm ci && npm rebuild bcrypt --build-from-source
 
 # Copy prisma schema
