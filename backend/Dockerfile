@@ -4,14 +4,11 @@ FROM --platform=$TARGETPLATFORM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Install dependencies required for bcrypt and other native modules
-RUN apk add --no-cache make gcc g++ python3 git
-
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies and rebuild bcrypt with explicit architecture support
-RUN npm ci && npm rebuild bcrypt --build-from-source
+# Install dependencies (no need to rebuild bcrypt anymore since we'll use bcryptjs)
+RUN npm ci
 
 # Copy prisma schema
 COPY prisma ./prisma/
