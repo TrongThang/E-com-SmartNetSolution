@@ -1,4 +1,4 @@
-const { createImportWarehouse: createImportWarehouseService, getImportWarehouseService, getImportWarehouseDetailService, getProcessImportWarehouseService, importProductService, StartImportWarehouseService } = require('../services/import.warehouse.service');
+const { createImportWarehouse: createImportWarehouseService, getImportWarehouseService, getImportWarehouseDetailService, getProcessImportWarehouseService, importProductService, StartImportWarehouseService, getImportWarehouseNotFinishForEmployee } = require('../services/import.warehouse.service');
 
 class ImportWarehouseController {
     async getImportWarehouse(req, res) {
@@ -41,6 +41,12 @@ class ImportWarehouseController {
         const response = await importProductService(import_id, batch_production_id, template_id, serial_number, account_id);
         return res.status(response.status_code).json(response);
     }    
+
+    async getImportWarehouseNotFinishForEmployee(req, res) {
+        const userId = req.user.id;
+        const response = await getImportWarehouseNotFinishForEmployee(userId);
+        return res.status(response.status_code).json(response);
+    }
 }
 
 module.exports = new ImportWarehouseController();
