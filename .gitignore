@@ -10,3 +10,4 @@ node_modules
 /.idea/modules.xml
 /.idea/vcs.xml
 /.idea/.gitignore
+/backend/node_modules/

@@ -12,3 +12,4 @@ docker-compose.override.yaml
 # Docker volumes
 data/
 mysql-data/
+/node_modules/
