@@ -43,7 +43,7 @@ class ImportWarehouseController {
     }    
 
     async getImportWarehouseNotFinishForEmployee(req, res) {
-        const userId = req.user.id;
+        const userId = req.user.employeeId; // Changed from req.user.id to req.user.employeeId
         const response = await getImportWarehouseNotFinishForEmployeeService(userId);
         return res.status(response.status_code).json(response);
     }
