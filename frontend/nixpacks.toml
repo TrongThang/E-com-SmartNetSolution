@@ -1,0 +1,16 @@
+# Nixpack configuration for Railway deployment - FRONTEND ONLY
+[phases.setup]
+nixPkgs = ["nodejs", "nginx"]
+
+[phases.install]
+cmds = [
+  "npm install"
+]
+
+[phases.build]
+cmds = [
+  "npm run build"
+]
+
+[start]
+cmd = "nginx -c $PWD/nginx.conf -g 'daemon off;'"
