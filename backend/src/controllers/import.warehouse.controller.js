@@ -43,8 +43,8 @@ class ImportWarehouseController {
     }    
 
     async getImportWarehouseNotFinishForEmployee(req, res) {
-        const userId = req.user.employeeId; // Changed from req.user.id to req.user.employeeId
-        const response = await getImportWarehouseNotFinishForEmployeeService(userId);
+        const employeeAccountId = req.user.employeeId;  // Getting employeeId from JWT token
+        const response = await getImportWarehouseNotFinishForEmployeeService(employeeAccountId);
         return res.status(response.status_code).json(response);
     }
 }

@@ -559,11 +559,10 @@ async function importProductService(import_id, batch_production_id, template_id,
     return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, batchProductDetailInsert);
 }
 
-async function getImportWarehouseNotFinishForEmployee(userId) {
-
+async function getImportWarehouseNotFinishForEmployee(accountId) {
     const account = await prisma.account.findFirst({
         where: {
-            id: userId,
+            account_id: accountId,
             deleted_at: null
         }
     })
