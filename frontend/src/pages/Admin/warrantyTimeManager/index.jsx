@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WarrantyTimeApi from "@/apis/modules/warrantyTime.api.ts";
-import WarrantyTimeTable from "@/components/common/Table/WarrantyTimeTable";
+import WarrantyTimeTable from "@/components/common/table/WarrantyTimeTable";
 import { Button } from "@/components/ui/button.jsx";
 import Swal from 'sweetalert2';
 

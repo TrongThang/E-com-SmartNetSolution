@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
 import { Skeleton } from "@/components/ui/skeleton"
 import Swal from "sweetalert2"
-import ImportWarehouseTable from "@/components/common/Table/ImportWarehouseTable"
+import ImportWarehouseTable from "@/components/common/table/ImportWarehouseTable"
 
 export default function ImportWarehousePage() {
     const [importWarehouse, setImportWarehouse] = useState([])
