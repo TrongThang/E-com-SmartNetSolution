@@ -466,7 +466,6 @@ async function importProductService(import_id, batch_production_id, template_id,
         return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
-    console.log("productionSerial", productionSerial)
     if(productionSerial[0].status !== 'pending_import') {
         return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_PENDING_IMPORT, STATUS_CODE.BAD_REQUEST);
     }
@@ -521,7 +520,6 @@ async function importProductService(import_id, batch_production_id, template_id,
         }
     })
 
-    console.log("detailImport", detailImport)
     const warehouseInventory = await prisma.warehouse_inventory.findFirst({
         where: {
             batch_code: detailImport.batch_code,
@@ -529,8 +527,6 @@ async function importProductService(import_id, batch_production_id, template_id,
             deleted_at: null
         }
     })
-
-    console.log("warehouseInventory", warehouseInventory)
 
     if (!warehouseInventory) {
         return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_BATCH_CODE_INVENTORY_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
@@ -578,7 +574,9 @@ async function getImportWarehouseNotFinishForEmployee(accountId) {
     const importWarehouse = await prisma.import_warehouse.findMany({
         where: {
             employee_id: account.employee_id,
-            status: IMPORT_WAREHOUSE.IMPORTING,
+            status: {
+                in: [IMPORT_WAREHOUSE.PENDING, IMPORT_WAREHOUSE.PENDING]
+            },
             deleted_at: null
         }
     })

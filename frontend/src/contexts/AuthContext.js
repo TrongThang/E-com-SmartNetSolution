@@ -9,6 +9,7 @@ import { messaging, FIREBASE_CONFIG } from '../config/firebase';
 const AuthContext = createContext();
 
 const updateFCMTokenToServer = async (token, deviceId) => {
+    console.log('token', token)
     if (!token) return;
     try {
         await axiosPrivate.put('notification/fcm-token', { deviceToken: token, deviceId: deviceId });
@@ -187,9 +188,6 @@ export const AuthProvider = ({ children }) => {
                 const deviceMap = JSON.parse(localStorage.getItem("deviceMap") || "{}");
                 deviceMap[payload.username] = deviceUuid;
                 localStorage.setItem("deviceMap", JSON.stringify(deviceMap));
-
-                const decoded = jwtDecode(accessToken);
-                setUser(decoded);
 
                 // Lấy FCM token sau khi đăng nhập thành công
                 await getAndUpdateFCMToken(deviceUuid);

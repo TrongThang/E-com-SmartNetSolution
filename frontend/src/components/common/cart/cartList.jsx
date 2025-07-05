@@ -18,11 +18,11 @@ export default function CartList() {
     const [itemsPerPage] = useState(5)
     const indexOfLastItem = currentPage * itemsPerPage
     const indexOfFirstItem = indexOfLastItem - itemsPerPage
-    const currentItems = cart.items.slice(indexOfFirstItem, indexOfLastItem)
-    const totalPages = Math.ceil(cart.items.length / itemsPerPage)
+    const currentItems = cart?.items?.slice(indexOfFirstItem, indexOfLastItem)
+    const totalPages = Math.ceil(cart?.items?.length / itemsPerPage)
 
-    const allSelected = cart.items.length > 0 && cart.items.every((item) => item.selected)
-    const someSelected = cart.items.some((item) => item.selected)
+    const allSelected = cart?.items?.length > 0 && cart?.items?.every((item) => item.selected)
+    const someSelected = cart?.items?.some((item) => item.selected)
 
     const handleToggleAll = () => {
         if (allSelected) {
@@ -36,7 +36,7 @@ export default function CartList() {
         setSearchParams({ page: page.toString() })
     }
 
-    if (!cart.items || cart.items.length === 0) {
+    if (!cart?.items || cart?.items?.length === 0) {
         return (
             <Card className="bg-white shadow-md">
                 <CardContent className="flex flex-col items-center justify-center py-16">
@@ -63,7 +63,7 @@ export default function CartList() {
                     />
                     <label htmlFor="select-all" className="text-sm font-medium flex items-center gap-2 cursor-pointer">
                         <Package className="h-4 w-4" />
-                        Chọn tất cả ({cart.items.length})
+                        Chọn tất cả ({cart?.items?.length})
                     </label>
                 </div>
 
@@ -79,7 +79,7 @@ export default function CartList() {
                 {someSelected && (
                     <Alert className="m-4 bg-blue-50 border-blue-200">
                         <AlertTitle className="text-blue-700">
-                            Đã chọn {cart.items.filter((item) => item.selected).length} sản phẩm
+                            Đã chọn {cart?.items?.filter((item) => item.selected).length} sản phẩm
                         </AlertTitle>
                         <AlertDescription className="text-blue-600">
                             Các sản phẩm đã chọn sẽ được tính vào tổng thanh toán

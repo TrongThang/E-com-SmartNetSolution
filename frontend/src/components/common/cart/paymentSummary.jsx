@@ -11,7 +11,7 @@ import axiosPublic from "@/apis/clients/public.client";
 
 export default function PaymentSummary() {
     const navigate = useNavigate();
-    const { state, totalItems, totalAmount, getItemSelected } = useCart(); // Thay đổi ở đây
+    const { totalItems, totalAmount, getItemSelected } = useCart(); // Thay đổi ở đây
     const { user } = useAuth();
 
     const checkCheckout = async () => {
@@ -75,7 +75,7 @@ export default function PaymentSummary() {
                         Tổng cộng <span className="text-red-500">({totalItems})</span> {/* Thay đổi ở đây */}
                     </h3>
                     <span className="text-2xl font-bold text-red-600">
-                        {formatCurrency(totalAmount)} {/* Thay đổi ở đây */}
+                        {formatCurrency(totalAmount || 0)} {/* Thay đổi ở đây */}
                     </span>
                 </div>
 
