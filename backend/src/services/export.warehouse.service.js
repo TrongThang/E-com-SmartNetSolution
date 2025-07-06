@@ -119,6 +119,7 @@ async function getExportWarehouseDetailService(id) {
     }
 
     let get_attr = `
+        export_warehouse.id,
         CONCAT(employee.surname, ' ',employee.lastname) AS employee_name,
         export_warehouse.export_date,
         export_warehouse.file_authenticate,
@@ -169,17 +170,17 @@ async function getExportWarehouseDetailService(id) {
 
 async function getProcessExportWarehouseService(exportWarehouseId) {
     const queryProductNeed = `
-        SELECT 
+        SELECT
             de.product_id, product.name as product_name, de.quantity as total_serial_need
         FROM detail_export de
-            LEFT JOIN product ON product.id = de.product_id
+                 LEFT JOIN product ON product.id = de.product_id
         WHERE de.export_id = '${exportWarehouseId}' AND de.deleted_at IS NULL
     `
 
     const queryProductExported = `
         SELECT de.product_id, CAST(COUNT(serial_number) AS CHAR) AS total_serial_exported
-            FROM detail_export de
-            LEFT JOIN batch_product_detail ON batch_product_detail.exp_batch_id = de.batch_code
+        FROM detail_export de
+                 LEFT JOIN batch_product_detail ON batch_product_detail.exp_batch_id = de.batch_code
         WHERE de.export_id = '${exportWarehouseId}' AND de.deleted_at IS NULL
         GROUP BY de.product_id
     `
@@ -221,10 +222,6 @@ async function createExportWarehouse(exportWarehouse, account_id) {
         return get_error_response(ERROR_CODES.ACCOUNT_UNAUTHORIZED, STATUS_CODE.BAD_REQUEST);
     }
 
-    // if(account.role_id !== ROLE.MANAGER_WAREHOUSE) {
-    //     return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_MANAGER_NOT_AUTHORIZED, STATUS_CODE.BAD_REQUEST);
-    // }
-    
     const employee = await prisma.account.findFirst({
         where: {
             employee_id: employee_id,
@@ -271,8 +268,7 @@ async function createExportWarehouse(exportWarehouse, account_id) {
                 order,
                 export_date
             );
-        
-        
+
             if (orderResult) {
                 return orderResult;
             }
@@ -282,7 +278,7 @@ async function createExportWarehouse(exportWarehouse, account_id) {
     if (exportWarehouseData) {
         return exportWarehouseData
     }
-    // logger.info(`Created export warehouse with ID: ${exportWarehouseData.id}`);
+
     return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_CREATE_SUCCESS, STATUS_CODE.OK);
 }
 
@@ -296,12 +292,11 @@ async function createExportWarehouse(exportWarehouse, account_id) {
  */
 async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, export_date) {
     // Kiểm tra sự tồn tại của đơn hàng
-
     const orderExists = await tx.order.findFirst({
         where: {
             id: order.id,
             deleted_at: null,
-            status: { 
+            status: {
                 in: [
                     ORDER.PENDING, ORDER.PREPARING
                 ]
@@ -326,7 +321,6 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
         },
     });
 
-
     if (products.length !== productIds.length) {
         return get_error_response(
             ERROR_CODES.PRODUCT_NOT_FOUND,
@@ -336,13 +330,11 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
 
     // Xử lý từng sản phẩm trong đơn hàng
     for (const product of order.products) {
-
         const exportDetailNumber = await getExportNumber(export_date)
         const exportNumber = exportDetailNumber + 1
-
         const batchCode = await generateDetailExportBatchCode(export_date, product.id)
+
         // Tạo chi tiết xuất kho
-        // console.log('product', product)
         const detail = await tx.detail_export.create({
             data: {
                 batch_code: batchCode,
@@ -354,7 +346,6 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
             }
         })
 
-        
         if (!detail) {
             return get_error_response(
                 ERROR_CODES.EXPORT_WAREHOUSE_CREATE_FAILED,
@@ -382,9 +373,7 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
     return undefined;
 }
 
-// TODO: CHỈNH LẠI
 async function startExportWarehouseService(export_id, account_id) {
-
     const exportWarehouse = await prisma.export_warehouse.findFirst({
         where: {
             export_code: export_id,
@@ -392,7 +381,7 @@ async function startExportWarehouseService(export_id, account_id) {
         }
     })
 
-    if (!exportWarehouse) { 
+    if (!exportWarehouse) {
         return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
 
@@ -406,7 +395,7 @@ async function startExportWarehouseService(export_id, account_id) {
             deleted_at: null
         }
     })
-    
+
     if (!employee) {
         return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
     }
@@ -428,31 +417,266 @@ async function startExportWarehouseService(export_id, account_id) {
 }
 
 /**
- * Hàm xuất kho cho một sản phẩm theo serial number
- * @param {string} export_id - Mã phiếu xuất kho
- * @param {string} order_id - Mã đơn hàng
- * @param {Array} list_product - Danh sách sản phẩm với cấu trúc mới
- * @param {string} account_id - ID của tài khoản thực hiện
- * @returns {Object} Response object chứa kết quả và thông báo
+ * Validate device for export - New function to support enhanced scanning
+ * @param {string} export_id - Export warehouse ID
+ * @param {string} serial_number - Device serial number
+ * @param {string} account_id - Account ID
+ * @returns {Object} Validation result with device details
  */
-// List product với cấu trúc mới
+
 /**
- * {
- *  "export_id": 5,
- *  "order_id": "DH-2025-0001",
- *  "list_product": [
- *    {
- *      "template_id": "1",
- *      "list_serial": [
- *        {
- *          "batch_production_id": "BTCH12JUN2501JXHMC1K08JPX24K0TDV",
- *          "serial_number": "SERL12JUN2501JXHMC1QCH11ECD111ACQ"
- *        }
- *      ],
- *      "quantity": 1
- *    }
- *  ]
- * }
+ * Enhanced validate device with dynamic device type
+ */
+async function validateExportDeviceService(export_id, serial_number, account_id) {
+    try {
+        // 1. Validate account
+        const account = await prisma.account.findFirst({
+            where: {
+                account_id: account_id,
+                deleted_at: null
+            }
+        });
+
+        if (!account) {
+            return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+        }
+
+        if (account.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
+            return get_error_response(ERROR_CODES.ACCOUNT_NOT_HAVE_PERMISSION, STATUS_CODE.BAD_REQUEST);
+        }
+
+        // 2. Validate export warehouse
+        const exportWarehouse = await prisma.export_warehouse.findFirst({
+            where: {
+                id: parseInt(export_id),
+                deleted_at: null
+            }
+        });
+
+        if (!exportWarehouse) {
+            return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+        }
+
+        if (exportWarehouse.status !== EXPORT_WAREHOUSE.PROCESSING) {
+            return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_NOT_PENDING, STATUS_CODE.BAD_REQUEST);
+        }
+
+        if (exportWarehouse.employee_id !== account.employee_id) {
+            return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED, STATUS_CODE.BAD_REQUEST);
+        }
+
+        // 3. Get device details with dynamic type information
+        const deviceQuery = `
+            SELECT pt.device_serial,
+                   pt.status,
+                   pb.template_id,
+                   pb.production_batch_id,
+                   pt.production_id,
+                   dt.name as device_template_name,
+                   c.name  as device_category_name
+            FROM production_tracking pt
+                     LEFT JOIN production_batches pb ON pt.production_batch_id = pb.production_batch_id
+                     LEFT JOIN device_templates dt ON pb.template_id = dt.template_id
+                     LEFT JOIN categories c ON dt.device_type_id = c.category_id
+            WHERE pt.device_serial = '${serial_number}'
+              AND pt.is_deleted = false
+        `;
+
+        const deviceResult = await queryHelper.queryRaw(deviceQuery);
+
+        if (!deviceResult || deviceResult.length === 0) {
+            return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+        }
+
+        const device = deviceResult[0];
+
+        if (device.status !== 'in_stock') {
+            return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_IN_STOCK, STATUS_CODE.BAD_REQUEST);
+        }
+
+        // 4. Check if device is part of this export order
+        const detailExport = await prisma.detail_export.findFirst({
+            where: {
+                export_id: parseInt(export_id),
+                product_id: device.template_id,
+                deleted_at: null
+            }
+        });
+
+        if (!detailExport) {
+            return get_error_response(ERROR_CODES.DEVICE_NOT_IN_EXPORT_ORDER, STATUS_CODE.BAD_REQUEST);
+        }
+
+        // 5. Check if device is already exported
+        const batchProductDetail = await prisma.batch_product_detail.findFirst({
+            where: {
+                serial_number: serial_number,
+                deleted_at: null
+            }
+        });
+
+        if (batchProductDetail && batchProductDetail.exp_batch_id) {
+            return get_error_response(ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED, STATUS_CODE.BAD_REQUEST);
+        }
+
+        // Determine device type name with fallback hierarchy
+        let deviceTypeName = 'Unknown Device';
+        if (device.device_category_name) {
+            deviceTypeName = device.device_category_name;
+        } else if (device.device_template_name) {
+            deviceTypeName = device.device_template_name;
+        }
+
+        // 6. Return success with device details including dynamic type name
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, {
+            device_serial: device.device_serial,
+            template_id: device.template_id,
+            batch_production_id: device.production_batch_id,
+            status: device.status,
+            export_id: export_id,
+            detail_export_batch_code: detailExport.batch_code,
+            device_type: deviceTypeName,
+            device_template_name: device.device_template_name,
+            device_category_name: device.device_category_name
+        });
+
+    } catch (error) {
+        console.error('[Validate Export Device] Error:', error);
+        return get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
+    }
+}
+
+/**
+ * Get device details for export scanning
+ * @param {string} serial_number - Device serial number
+ * @returns {Object} Device details
+ */
+/**
+ * Get device details with dynamic device type names from database
+ * @param {string} serial_number - Device serial number
+ * @returns {Object} Device details
+ */
+async function getDeviceDetailsService(serial_number) {
+    try {
+        const deviceQuery = `
+            SELECT
+                pt.device_serial,
+                pt.status,
+                pb.template_id,
+                pb.production_batch_id,
+                pb.created_at as production_date,
+                dt.name as device_template_name,
+                c.name as device_category_name,
+                p.name as product_name,
+                p.image as product_image
+            FROM production_tracking pt
+                     LEFT JOIN production_batches pb ON pt.production_batch_id = pb.production_batch_id
+                     LEFT JOIN device_templates dt ON pb.template_id = dt.template_id
+                     LEFT JOIN categories c ON dt.device_type_id = c.category_id
+                     LEFT JOIN product p ON pb.template_id = p.id
+            WHERE pt.device_serial = '${serial_number}'
+              AND pt.is_deleted = false
+        `;
+
+        const deviceResult = await queryHelper.queryRaw(deviceQuery);
+
+        if (!deviceResult || deviceResult.length === 0) {
+            return get_error_response(ERROR_CODES.SERIAL_NUMBER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
+        }
+
+        const device = deviceResult[0];
+
+        // Determine device type name with fallback hierarchy
+        let deviceTypeName = 'Unknown Device';
+        if (device.device_category_name) {
+            deviceTypeName = device.device_category_name;
+        } else if (device.device_template_name) {
+            deviceTypeName = device.device_template_name;
+        } else if (device.product_name) {
+            deviceTypeName = device.product_name;
+        }
+
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, {
+            serial_number: device.device_serial,
+            template_id: device.template_id,
+            batch_production_id: device.production_batch_id,
+            status: device.status,
+            production_date: device.production_date,
+            product_name: device.product_name || 'Unknown Product',
+            product_image: device.product_image,
+            device_type: deviceTypeName,
+            device_template_name: device.device_template_name,
+            device_category_name: device.device_category_name
+        });
+
+    } catch (error) {
+        console.error('[Get Device Details] Error:', error);
+        return get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
+    }
+}
+
+/**
+ * Get device type name from template ID
+ * @param {string} template_id - Template ID
+ * @returns {string} Device type name
+ */
+function getDeviceTypeName(template_id) {
+    switch (template_id) {
+        case '1':
+            return 'Smart Sensor';
+        case '2':
+            return 'Control Unit';
+        case '3':
+            return 'Gateway Device';
+        case '4':
+            return 'Communication Module';
+        case '5':
+            return 'Power Module';
+        default:
+            return 'Unknown Device';
+    }
+}
+
+/**
+ * Enhanced scan export device function
+ * @param {string} export_id - Export warehouse ID
+ * @param {string} serial_number - Device serial number
+ * @param {string} account_id - Account ID
+ * @returns {Object} Scan result with device details
+ */
+async function scanExportDeviceService(export_id, serial_number, account_id) {
+    try {
+        // First validate the device
+        const validationResult = await validateExportDeviceService(export_id, serial_number, account_id);
+
+        if (validationResult.status_code !== STATUS_CODE.OK) {
+            return validationResult;
+        }
+
+        // Get additional device details
+        const deviceDetailsResult = await getDeviceDetailsService(serial_number);
+
+        if (deviceDetailsResult.status_code !== STATUS_CODE.OK) {
+            return deviceDetailsResult;
+        }
+
+        // Combine validation and device details
+        const combinedData = {
+            ...validationResult.data,
+            ...deviceDetailsResult.data,
+            scanned_at: new Date().toIso8601String()
+        };
+
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, combinedData);
+
+    } catch (error) {
+        console.error('[Scan Export Device] Error:', error);
+        return get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
+    }
+}
+
+/**
+ * Hàm xuất kho cho một sản phẩm theo serial number - Enhanced version
  */
 async function exportProductByOrderService(export_id, order_id, list_product, account_id) {
     try {
@@ -471,7 +695,7 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
             return get_error_response(ERROR_CODES.ORDER_NOT_PREPARING, STATUS_CODE.BAD_REQUEST, { order_id });
         }
 
-        // 2. Lấy danh sách sản phẩm & số lượng từ order_id (giả sử bảng detail_order)
+        // 2. Lấy danh sách sản phẩm & số lượng từ order_id
         const orderDetails = await prisma.order_detail.findMany({
             where: {
                 order_id: order_id,
@@ -494,7 +718,7 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
             if (!productCountMap[template_id]) {
                 productCountMap[template_id] = 0;
             }
-            productCountMap[template_id] += quantity || 1; // Nếu không có quantity thì mặc định là 1
+            productCountMap[template_id] += quantity || 1;
         }
 
         // 4. So sánh với số lượng trong orderDetails
@@ -590,16 +814,17 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
 
                     // 6.3.2.1. Kiểm tra trạng thái serial
                     const productionSerial = await queryHelper.queryRaw(`
-                        SELECT 
+                        SELECT
                             production_tracking.device_serial,
                             production_batches.template_id,
-                            production_tracking.status
-                        FROM production_tracking 
-                            LEFT JOIN production_batches ON production_tracking.production_batch_id = production_batches.production_batch_id
+                            production_tracking.status,
+                            production_tracking.production_id
+                        FROM production_tracking
+                                 LEFT JOIN production_batches ON production_tracking.production_batch_id = production_batches.production_batch_id
                         WHERE
-                            device_serial = '${serial_number}' 
-                            AND production_tracking.is_deleted IS false
-                            AND production_batches.template_id = '${template_id}'
+                            device_serial = '${serial_number}'
+                          AND production_tracking.is_deleted IS false
+                          AND production_batches.template_id = '${template_id}'
                     `);
 
                     if (!productionSerial || productionSerial.length === 0) {
@@ -627,7 +852,7 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
                         throw new Error(`${ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED}: ${serial_number}`);
                     }
 
-                    // 6.3.2.3. Cập nhật batch_product_detail (gán exp_batch_id là batch_code của detail_export)
+                    // 6.3.2.3. Cập nhật batch_product_detail
                     const batchProductDetailUpdate = await tx.batch_product_detail.update({
                         where: {
                             id: batchProductDetail.id,
@@ -706,7 +931,7 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
                 });
             }
 
-            // 6.4. Cập nhật trạng thái đơn hàng
+            // 6.4. Cập nhật trạng thái đơn hàng và phiếu xuất
             await tx.order.update({
                 where: { id: order_id },
                 data: { status: ORDER.PENDING_SHIPPING }
@@ -723,7 +948,6 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, result);
 
     } catch (error) {
-        // Log lỗi
         console.error(`[Export Product] Error exporting product`, {
             error: error.message,
             export_id,
@@ -737,9 +961,8 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
             return get_error_response(errorCode, STATUS_CODE.BAD_REQUEST, { serial_number: serial });
         }
 
-        // Lỗi không xác định
         return get_error_response(
-            ERROR_CODES.INTERNAL_SERVER_ERROR, 
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
             STATUS_CODE.INTERNAL_SERVER_ERROR,
             { message: 'An unexpected error occurred during export process' }
         );
@@ -787,5 +1010,8 @@ module.exports = {
     startExportWarehouseService,
     exportProductByOrderService,
     getProcessExportWarehouseService,
-    getExportWarehouseNotFinishForEmployee
+    getExportWarehouseNotFinishForEmployee,
+    validateExportDeviceService,
+    getDeviceDetailsService,
+    scanExportDeviceService
 }

@@ -1,4 +1,6 @@
-const { createExportWarehouseService, getExportWarehouseService, getExportWarehouseDetailService, startExportWarehouseService, exportProductService, getProcessExportWarehouseService, getExportWarehouseNotFinishForEmployee, exportProductByOrderService } = require('../services/export.warehouse.service');
+const { createExportWarehouseService, getExportWarehouseService, getExportWarehouseDetailService, startExportWarehouseService, exportProductService, getProcessExportWarehouseService, getExportWarehouseNotFinishForEmployee, exportProductByOrderService,  validateExportDeviceService,
+    getDeviceDetailsService,
+    scanExportDeviceService } = require('../services/export.warehouse.service');
 
 
 class ExportWarehouseController {
@@ -50,6 +52,145 @@ class ExportWarehouseController {
     async getExportWarehouseNotFinishForEmployee(req, res) {
         const response = await getExportWarehouseNotFinishForEmployee(req.user.id);
         return res.status(response.status_code).json(response);
+    }
+
+
+    /**
+     * Validate device for export
+     * POST /export-warehouse/validate-device
+     * Body: { export_id, serial_number }
+     */
+    async validateExportDevice(req, res) {
+        try {
+            const { export_id, serial_number } = req.body;
+            const account_id = req.user.account_id;
+
+            // Validate required fields
+            if (!export_id || !serial_number) {
+                return res.status(400).json({
+                    success: false,
+                    status_code: 400,
+                    errors: [{
+                        code: 'MISSING_REQUIRED_FIELDS',
+                        message: 'Export ID and serial number are required'
+                    }]
+                });
+            }
+
+            const result = await validateExportDeviceService(export_id, serial_number, account_id);
+
+            return res.status(result.status_code).json({
+                success: result.status_code === 200,
+                status_code: result.status_code,
+                data: result.data,
+                errors: result.status_code !== 200 ? [{
+                    code: result.error_code,
+                    message: result.message
+                }] : undefined
+            });
+
+        } catch (error) {
+            console.error('[Controller] Validate Export Device Error:', error);
+            return res.status(500).json({
+                success: false,
+                status_code: 500,
+                errors: [{
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'Internal server error occurred'
+                }]
+            });
+        }
+    }
+
+    /**
+     * Get device details
+     * GET /export-warehouse/device-details?serial_number=xxx
+     */
+    async getDeviceDetails(req, res) {
+        try {
+            const { serial_number } = req.query;
+
+            if (!serial_number) {
+                return res.status(400).json({
+                    success: false,
+                    status_code: 400,
+                    errors: [{
+                        code: 'MISSING_SERIAL_NUMBER',
+                        message: 'Serial number is required'
+                    }]
+                });
+            }
+
+            const result = await getDeviceDetailsService(serial_number);
+
+            return res.status(result.status_code).json({
+                success: result.status_code === 200,
+                status_code: result.status_code,
+                data: result.data,
+                errors: result.status_code !== 200 ? [{
+                    code: result.error_code,
+                    message: result.message
+                }] : undefined
+            });
+
+        } catch (error) {
+            console.error('[Controller] Get Device Details Error:', error);
+            return res.status(500).json({
+                success: false,
+                status_code: 500,
+                errors: [{
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'Internal server error occurred'
+                }]
+            });
+        }
+    }
+
+    /**
+     * Scan device for export (enhanced version)
+     * POST /export-warehouse/scan-device
+     * Body: { export_id, serial_number }
+     */
+    async scanExportDevice(req, res) {
+        try {
+            const { export_id, serial_number } = req.body;
+            const account_id = req.user.account_id;
+
+            // Validate required fields
+            if (!export_id || !serial_number) {
+                return res.status(400).json({
+                    success: false,
+                    status_code: 400,
+                    errors: [{
+                        code: 'MISSING_REQUIRED_FIELDS',
+                        message: 'Export ID and serial number are required'
+                    }]
+                });
+            }
+
+            const result = await scanExportDeviceService(export_id, serial_number, account_id);
+
+            return res.status(result.status_code).json({
+                success: result.status_code === 200,
+                status_code: result.status_code,
+                data: result.data,
+                errors: result.status_code !== 200 ? [{
+                    code: result.error_code,
+                    message: result.message
+                }] : undefined
+            });
+
+        } catch (error) {
+            console.error('[Controller] Scan Export Device Error:', error);
+            return res.status(500).json({
+                success: false,
+                status_code: 500,
+                errors: [{
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'Internal server error occurred'
+                }]
+            });
+        }
     }
 
 }
