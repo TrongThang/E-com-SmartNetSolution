@@ -25,13 +25,13 @@ const EditUnit = () => {
         setLoading(true);
         try {
             const res = await UnitApi.update({ id: Number(id), name });
-            if (res.error && res.error !== 0) {
+            if ((res.status_code && res.status_code !== 200) || (res.errors && res.errors.length > 0)) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Lỗi!',
-                    text: res.message || "Có lỗi xảy ra!"
+                    text: res.errors?.[0]?.message || res.message || "Có lỗi xảy ra!"
                 });
-                setError(res.message || "Có lỗi xảy ra!");
+                setError(res.errors?.[0]?.message || res.message || "Có lỗi xảy ra!");
             } else {
                 Swal.fire({
                     icon: 'success',

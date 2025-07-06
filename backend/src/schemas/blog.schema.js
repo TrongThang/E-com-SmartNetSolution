@@ -10,9 +10,9 @@ const BaseBlogSchema = z.object({
         title: z.string().max(500, {
             message: `[${ERROR_CODES.BLOG_TITLE_TOO_LONG}]${ERROR_MESSAGES[ERROR_CODES.BLOG_TITLE_TOO_LONG]}`
         }),
-        author: z.string().max(12, {
-            message: `[${ERROR_CODES.BLOG_AUTHOR_TOO_LONG}]${ERROR_MESSAGES[ERROR_CODES.BLOG_AUTHOR_TOO_LONG]}`
-        }),
+        // author: z.string().max(12, {
+        //     message: `[${ERROR_CODES.BLOG_AUTHOR_TOO_LONG}]${ERROR_MESSAGES[ERROR_CODES.BLOG_AUTHOR_TOO_LONG]}`
+        // }),
         content: z.string().max(500, {
             message: `[${ERROR_CODES.BLOG_CONTENT_TOO_LONG}]${ERROR_MESSAGES[ERROR_CODES.BLOG_CONTENT_TOO_LONG]}`
         }),

@@ -137,7 +137,7 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
     try {
         // Chuyển đổi category_id và product_id thành số
         const categoryId = category_id ? parseInt(category_id) : null;
-        const productId = product_id ? product_id : null;
+        const productId = product_id ? String(product_id) : null;
         const Score = score ? parseInt(score) : null;
 
         const isHideBoolean = is_hide === "true" || is_hide === true;
@@ -164,15 +164,8 @@ const createBlogService = async ({ category_id, product_id, title, author, conte
 
         // Kiểm tra product_id nếu có
         if (productId) {
-            if (isNaN(productId)) {
-                return get_error_response(
-                    errors = ERROR_CODES.BAD_REQUEST,
-                    status_code = STATUS_CODE.BAD_REQUEST,
-                    data = "Invalid product ID format"
-                );
-            }
             const product = await prisma.product.findUnique({
-                where: { id: productId }
+                where: { id: String(productId) }
             });
             if (!product) {
                 return get_error_response(
@@ -242,7 +235,7 @@ const updateBlogService = async ({ id, category_id, product_id, title, author, c
         // Kiểm tra product_id nếu có
         if (product_id) {
             const product = await prisma.product.findUnique({
-                where: { id: product_id }
+                where: { id: String(product_id) }
             });
             if (!product) {
                 return get_error_response(
@@ -256,7 +249,7 @@ const updateBlogService = async ({ id, category_id, product_id, title, author, c
             where: { id: id },
             data: {
                 category_id,
-                product_id,
+                product_id: product_id ? String(product_id) : null,
                 title,
                 author,
                 content,
