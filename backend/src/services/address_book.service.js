@@ -1,10 +1,7 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { executeSelectData } = require('../helpers/sql_query')
 const { get_error_response } = require('../helpers/response.helper');
-const { PrismaClient } = require('@prisma/client');
-const { number } = require('zod');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 function configDataAddressBook(dbResults) {
     if (!dbResults || dbResults.length === 0) {

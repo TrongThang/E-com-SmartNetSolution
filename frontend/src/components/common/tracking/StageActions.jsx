@@ -21,7 +21,6 @@ export default function StageActions({
             });
             return;
         }
-        console.log("selectedSerials", selectedSerials);
         exportMultipleQRCodesToPDF(selectedSerials);
     }
 
@@ -56,6 +55,9 @@ export default function StageActions({
                     <>
                         <Button variant="destructive" onClick={onReject} disabled={loading}>
                             Từ chối ({selectedCount})
+                        </Button>
+                        <Button className="bg-green-600 hover:bg-green-700" onClick={onReject} disabled={loading}>
+                            Duyệt ({selectedCount})
                         </Button>
                     </>
                 )

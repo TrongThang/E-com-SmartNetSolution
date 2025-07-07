@@ -88,7 +88,7 @@ export default function ExportWarehousePage() {
     }
 
     const confirmDelete = async () => {
-        
+
     }
 
     if (loading) {

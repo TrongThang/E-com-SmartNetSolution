@@ -1,13 +1,9 @@
-const { PrismaClient } = require('@prisma/client');
 const { getRoleService, getRoleDetailService,
     createRoleService, updateRoleService,
     toggleDeleteRestoreRoleService
 } = require('../services/role.service');
 
 class RoleController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
     async getRole(req, res) {
         const { filter = null, limit = null, sort = null, order = null } = req.body || {};
         const response = await getRoleService(filter, limit, sort, order)

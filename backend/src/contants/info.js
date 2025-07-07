@@ -1,7 +1,7 @@
 ROLE = {
     ADMIN: 1,
-    EMPLOYEE_WAREHOUSE: 3,
     MANAGER_WAREHOUSE: 2,
+    EMPLOYEE_WAREHOUSE: 3,
     SHIPPER: 4,
 }
 
@@ -12,6 +12,7 @@ PRODUCT = {
     DISCOUNT: 2,
     FETURED: 3,
     NEW: 4,
+    PRE_ORDER: 5, //  Đặt trước
 }
 
 ORDER = {

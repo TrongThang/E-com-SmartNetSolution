@@ -1,4 +1,4 @@
-import axiosIOTPublic from "../clients/iot.private.client"
+import axiosIOTPublic from "../clients/iot.public.client"
 import type { IApiResponse } from "@/models/interfaces"
 
 const planningEndpoints = {
@@ -24,6 +24,7 @@ const PlanningApi = {
             if (!Array.isArray(templates)) {
                 return [];
             }
+            
             // Filter lại template hợp lệ
             const filteredTemplates = templates.filter(template => {
                 const isTemplateValid = template.status === "production" && !template.is_deleted;

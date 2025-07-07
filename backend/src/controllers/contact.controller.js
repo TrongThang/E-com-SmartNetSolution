@@ -5,7 +5,6 @@ const {
     updateContactStatusService,
     deleteContactService
 } = require('../services/contact.service');
-
 class ContactController {
     async getContact(req, res) {
         const { filter = null, limit = null, sort = null, order = null } = req.body || {};

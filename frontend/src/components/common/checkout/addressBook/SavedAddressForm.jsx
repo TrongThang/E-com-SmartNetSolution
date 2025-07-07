@@ -69,7 +69,7 @@ export function SavedAddressForm({ form, addressData, selectedAddress }) {
                             <div>
                                 <p className="text-sm text-muted-foreground">Địa chỉ giao hàng:</p>
                                 <p className="font-medium">
-                                    {selectedAddress.detail}, {selectedAddress.ward}, {selectedAddress.district},{" "}
+                                    {selectedAddress.street}, {selectedAddress.ward}, {selectedAddress.district},{" "}
                                     {selectedAddress.city}
                                 </p>
                             </div>

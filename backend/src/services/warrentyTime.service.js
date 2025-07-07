@@ -1,8 +1,7 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 // Lấy danh sách warrenty time
 const getWarrentyTimeService = async (filter, limit, sort, order) => {

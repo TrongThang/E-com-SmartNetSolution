@@ -91,7 +91,7 @@ export default function RoleManager() {
     }
 
     const confirmDelete = async () => {
-        
+
     }
 
     if (loading) {

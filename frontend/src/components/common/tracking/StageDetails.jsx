@@ -10,9 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SerialCard from "./SerialCard"
 import Swal from "sweetalert2"
-import { useManufacturing } from "@/hooks/useManufacturing"
 import { exportMultipleQRCodesToPDF } from "@/utils/print"
-import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import axiosIOTPublic from "@/apis/clients/iot.public.client"
 
 export default function StageDetails({
     stage,
@@ -22,6 +21,7 @@ export default function StageDetails({
     onSelectSerial,
     onSelectAllSerial,
     onReject,
+    onApprove,
     loading = false,
 }) {
     const [searchTerm, setSearchTerm] = useState("")
@@ -74,14 +74,23 @@ export default function StageDetails({
                 )
             case "qc":
                 return (
-                    <Button
-                        variant="destructive"
-                        onClick={onReject}
-                        disabled={loading || selectedSerials.length === 0}
-                        className="w-full"
-                    >
-                        Từ chối ({selectedSerials.length})
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="destructive"
+                            onClick={onReject}
+                            disabled={loading || selectedSerials.length === 0}
+                            className="w-full bg-red-600 hover:bg-red-700"
+                        >
+                            Từ chối ({selectedSerials.length})
+                            </Button>
+                        <Button
+                            className="bg-green-600 hover:bg-green-700 w-full"
+                            onClick={onApprove}
+                            disabled={loading || selectedSerials.length === 0}
+                        >
+                            Duyệt ({selectedSerials.length})
+                        </Button>
+                    </div>
                 )
             default:
                 return null

@@ -42,6 +42,10 @@ function buildWhereQuery(filter, table = null) {
                 return value ? `(${field} IS NOT NULL AND ${field} LIKE '${value}%')` : `(${field} LIKE '%%' OR ${field} IS NULL)`;
             case 'endswith':
                 return value ? `(${field} IS NOT NULL AND ${field} LIKE '%${value}')` : `(${field} LIKE '%%' OR ${field} IS NULL)`;
+            case 'is':
+                return `${field} IS ${value}`;
+            case 'isnot':
+                return `${field} IS NOT ${value}`;
             case '=':
                 return `${field} = '${value}'`;
             case '<>':
@@ -106,12 +110,11 @@ async function executeSelectData({
     const skip = parsedLimit && parsedPage ? parsedLimit * (parsedPage - 1) : 0;
 
     // Xử lý ORDER BY
-    const optOrder = order ? ` ${order.toUpperCase()} ` : '';
+    const optOrder = order ? ` ${order.toUpperCase()} ` : ``;
     const sortColumn = sort || null;
-    const buildSort = sortColumn ? `ORDER BY ${sortColumn} ${optOrder}` : '';
+    const buildSort = sortColumn ? `ORDER BY ${sortColumn} ${optOrder}` : ``;
     const buildLimit = parsedLimit ? `LIMIT ${parsedLimit}` : '';
     const buildOffset = skip ? `OFFSET ${skip}` : '';
-
     // Xác định cột ID dựa trên tên bảng
     const idColumn = table === 'categories' ? 'category_id' : 'id';
 
@@ -128,14 +131,12 @@ async function executeSelectData({
             ) AS sub
     `;
 
-    console.log(queryGetIdTable)
     const idResult = await QueryHelper.queryRaw(queryGetIdTable);
     const resultIds = idResult.map(row => row[idColumn]).filter(id => id !== undefined && id !== null);
 
     const whereCondition = resultIds.length
         ? `${table}.${idColumn} IN (${resultIds.map(id => typeof id === 'string' ? `'${id}'` : id).join(',')})`
         : '1=0';
-    console.log('whereCondition:', whereCondition);
     // Xử lý các cột thời gian
     const queryGetTime = `${table}.created_at, ${table}.updated_at, ${table}.deleted_at`;
 
@@ -145,10 +146,8 @@ async function executeSelectData({
         FROM ${table}
         ${queryJoin || ''}
         WHERE ${whereCondition}
-        -- GROUP BY ${table}.${idColumn}
-        ${buildSort}
+        ${buildSort ? buildSort : `ORDER BY ${table}.created_at DESC`}
     `;
-    console.log('queryPrimary:', queryPrimary)
     
     let data = await QueryHelper.queryRaw(queryPrimary);
     if (configData && typeof configData === 'function') {

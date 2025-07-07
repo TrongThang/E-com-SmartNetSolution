@@ -115,8 +115,11 @@ const ERROR_CODES = {
     ORDER_TOTAL_MONEY_NOT_SAME: 6016,
     ORDER_AMOUNT_NOT_SAME: 6017,
     ORDER_PROFIT_NOT_SAME: 6018,
-    ORDER_ALREADY_CANCELLED: 6019,
+    ORDER_NOT_STATUS_CANCELLED: 6019,
     ORDER_CONFIRM_ORDER_SUCCESS: 6020,
+    ORDER_LIST_ASSIGN_SHIPPER_INVALID: 6021,
+    ORDER_REQUIRE_STATUS_DELIVERED: 6022,
+    ORDER_NOT_PREPARING: 6023,
 
     // PAYMENT - 7xxx
     PAYMENT_FAILED: 7001,
@@ -151,6 +154,7 @@ const ERROR_CODES = {
     IMPORT_WAREHOUSE_NOT_ASSIGNED_EMPLOYEE_FOR_RECEIPT: 9010,
     IMPORT_WAREHOUSE_SERIAL_NUMBER_EXIST: 9011,
     IMPORT_WAREHOUSE_BATCH_CODE_INVENTORY_IS_EXIST: 9012,
+    IMPORT_WAREHOUSE_BATCH_CODE_INVENTORY_NOT_FOUND: 9013,
 
     // EMPLOYEE - 11xx
     EMPLOYEE_SUCCESS: 1100,
@@ -173,6 +177,7 @@ const ERROR_CODES = {
     EMPLOYEE_EMAIL_ALREADY_EXISTS: 1117,
     EMPLOYEE_INVALID_EMAIL_FORMAT: 1118,
     EMPLOYEE_ID_REQUIRED: 1119,
+    EMPLOYEE_NOT_AUTHORIZED_SHIPPER: 1120,
 
 
     // SUPPLIER - 12xx
@@ -245,6 +250,7 @@ const ERROR_CODES = {
     ACCOUNT_VERIFICATION_FAILED: 1618,
     ACCOUNT_ID_INVALID: 1619,
     ACCOUNT_NEW_PASSWORD_AND_CONFIRM_PASSWORD_NOT_MATCH: 1620,
+    ACCOUNT_TOKEN_EXPIRED: 1621,
 
     // SLIDESHOW - 17xx
     SLIDESHOW_NOT_FOUND: 1701,
@@ -405,9 +411,14 @@ const ERROR_CODES = {
     CART_PRODUCT_QUANTITY_NOT_ZERO: 3114,
 
     WAREHOUSE_INVENTORY_PRODUCT_STOCK_NOT_ENOUGH: 3201,
+    WAREHOUSE_INVENTORY_NOT_FOUND: 3202,    
 
     SERIAL_NUMBER_NOT_FOUND: 3301,
     SERIAL_NUMBER_NOT_COMPLETED: 3302,
+    SERIAL_NUMBER_NOT_PENDING_IMPORT: 3303,
+    SERIAL_NUMBER_IS_EXISTED_AND_NOT_IN_BATCH_PRODUCTION: 3304,
+    SERIAL_NUMBER_IS_EXISTED_AND_IN_BATCH_PRODUCTION: 3305,
+    SERIAL_NUMBER_NOT_FOUND_IN_BATCH_PRODUCTION: 3306,
 
     IMPORT_WAREHOUSE_REQUIRE_STATUS_PENDING: 3401,
     IMPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED: 3402,
@@ -415,7 +426,13 @@ const ERROR_CODES = {
     EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED: 3501,
     EXPORT_WAREHOUSE_MANAGER_NOT_AUTHORIZED: 3502,
     EXPORT_WAREHOUSE_EMPLOYEE: 3503,
+    EXPORT_WAREHOUSE_NOT_FOUND: 3504,   
+    EXPORT_WAREHOUSE_NOT_PENDING: 3505,
+    EXPORT_WAREHOUSE_DETAIL_EXPORT_NOT_FOUND: 3506,
+    EXPORT_WAREHOUSE_UPDATE_FAILED: 3507,
 
+    // INVENTORY
+    INSUFFICIENT_STOCK: 3601,
 };
 
 const ERROR_MESSAGES = {
@@ -544,7 +561,11 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.ORDER_PROFIT_NOT_SAME]: "Lợi nhuận không khớp",
     [ERROR_CODES.ORDER_AMOUNT_NOT_SAME]: "Thành tiền tiền không khớp",
     [ERROR_CODES.ORDER_CONFIRM_ORDER_SUCCESS]: "Xác nhận đơn hàng thành công",
-    
+    [ERROR_CODES.ORDER_LIST_ASSIGN_SHIPPER_INVALID]: "Danh sách đơn hàng để giao cho nhân viên giao hàng không hợp lệ",
+    [ERROR_CODES.ORDER_REQUIRE_STATUS_DELIVERED]: "Đơn hàng phải có trạng thái giao hàng thành công",
+    [ERROR_CODES.ORDER_NOT_STATUS_CANCELLED]: "Đơn hàng không còn có thể huỷ!",
+    [ERROR_CODES.ORDER_NOT_PREPARING]: "Đơn hàng không ở trạng thái đang chuẩn bị!",
+
     // PAYMENT
     [ERROR_CODES.PAYMENT_FAILED]: "Thanh toán thất bại",
     [ERROR_CODES.PAYMENT_INVALID_METHOD]: "Phương thức thanh toán không hợp lệ",
@@ -593,6 +614,7 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.EMPLOYEE_INVALID_EMAIL_FORMAT]: "Email không hợp lệ",
     [ERROR_CODES.EMPLOYEE_EMAIL_ALREADY_EXISTS]: "Email đã tồn tại",
     [ERROR_CODES.EMPLOYEE_ID_REQUIRED]: "ID nhân viên là bắt buộc",
+    [ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED_SHIPPER]: "Chỉ dành cho nhân viên có chức vụ giao hàng",
 
     // SUPPLIER
     [ERROR_CODES.SUPPLIER_SUCCESS]: "Thao tác với nhà cung cấp thành công",
@@ -665,6 +687,7 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.ACCOUNT_VERIFICATION_FAILED]: "Xác thực tài khoản thất bại",
     [ERROR_CODES.ACCOUNT_ID_INVALID]: "ID tài khoản không hợp lệ",
     [ERROR_CODES.ACCOUNT_NEW_PASSWORD_AND_CONFIRM_PASSWORD_NOT_MATCH]: "Mật khẩu mới và xác nhận mật khẩu không khớp",
+    [ERROR_CODES.ACCOUNT_TOKEN_EXPIRED]: "Token đã hết hạn",
 
     // SLIDESHOW
     [ERROR_CODES.SLIDESHOW_NOT_FOUND]: "Slideshow không tồn tại.",
@@ -799,6 +822,7 @@ const ERROR_MESSAGES = {
 
     // WAREHOUSE_INVENTORY
     [ERROR_CODES.WAREHOUSE_INVENTORY_PRODUCT_STOCK_NOT_ENOUGH]: "Số lượng sản phẩm trong kho không đủ",
+    [ERROR_CODES.WAREHOUSE_INVENTORY_NOT_FOUND]: "Sản phẩm không tồn tại trong kho",
 
     // IMPORT_WAREHOUSE
     [ERROR_CODES.IMPORT_WAREHOUSE_REQUIRE_STATUS_IMPORTING]: "Phiếu nhập kho phải ở trạng thái đang nhập",
@@ -808,16 +832,29 @@ const ERROR_MESSAGES = {
     [ERROR_CODES.IMPORT_WAREHOUSE_REQUIRE_STATUS_PENDING]: "Phiếu nhập kho phải ở trạng thái chờ thực hiện",
     [ERROR_CODES.IMPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED]: "Chỉ nhân viên kho mới được chỉ định thực hiện phiếu nhập kho này",
     [ERROR_CODES.IMPORT_WAREHOUSE_CREATE_FAILED]: "Tạo phiếu nhập kho thất bại",
-    [ERROR_CODES.IMPORT_WAREHOUSE_SERIAL_NUMBER_EXIST]: "Serial number đã tồn tại",
+    [ERROR_CODES.IMPORT_WAREHOUSE_SERIAL_NUMBER_EXIST]: "Serial number đã tồn tại trong phiếu nhập kho này",
     [ERROR_CODES.IMPORT_WAREHOUSE_BATCH_CODE_INVENTORY_IS_EXIST]: "Mã mặt hàng nhập cho batch code đã tồn tại trong kho",
+    [ERROR_CODES.IMPORT_WAREHOUSE_BATCH_CODE_INVENTORY_NOT_FOUND]: "Mã lô hàng nhập cho batch code không tồn tại trong kho",
 
     [ERROR_CODES.SERIAL_NUMBER_NOT_FOUND]: "Serial number không tồn tại",
     [ERROR_CODES.SERIAL_NUMBER_NOT_COMPLETED]: "Serial number chưa hoàn thành",
+    [ERROR_CODES.SERIAL_NUMBER_IS_EXISTED_AND_IN_BATCH_PRODUCTION]: "Serial number đã tồn tại và thuộc về lô sản phẩm này",
+    [ERROR_CODES.SERIAL_NUMBER_IS_EXISTED_AND_NOT_IN_BATCH_PRODUCTION]: "Serial number đã tồn tại và không thuộc về lô sản phẩm này",
+    [ERROR_CODES.SERIAL_NUMBER_NOT_PENDING_IMPORT]: "Serial number chưa ở trạng thái chờ nhập kho",
+    [ERROR_CODES.SERIAL_NUMBER_NOT_FOUND_IN_BATCH_PRODUCTION]: "Serial number không tồn tại trong lô sản phẩm này",
 
     // EXPORT_WAREHOUSE
     [ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED]: "Chỉ nhân viên kho được chỉ định thực hiện phiếu xuất kho này",
     [ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE]: "Nhân viên được chỉ dịnh thực hiện phiếu xuất kho không phải nhân viên kho",
     [ERROR_CODES.EXPORT_WAREHOUSE_MANAGER_NOT_AUTHORIZED]: "Chỉ quản lý kho mới thực hiện phiếu xuất kho này",
+    [ERROR_CODES.EXPORT_WAREHOUSE_NOT_FOUND]: "Phiếu xuất kho không tồn tại",
+    [ERROR_CODES.EXPORT_WAREHOUSE_NOT_PENDING]: "Phiếu xuất kho không ở trạng thái đang chuẩn bị!",
+    [ERROR_CODES.EXPORT_WAREHOUSE_DETAIL_EXPORT_NOT_FOUND]: "Chi tiết xuất kho không tồn tại",
+    [ERROR_CODES.EXPORT_WAREHOUSE_UPDATE_FAILED]: "Cập nhật chi tiết xuất kho thất bại",
+
+    // INVENTORY
+    [ERROR_CODES.INSUFFICIENT_STOCK]: "Số lượng thiết bị không đủ",
+
 };
 
 module.exports = {

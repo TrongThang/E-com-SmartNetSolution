@@ -1,13 +1,11 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
-const { ROLE } = require('../contants/info');
 const { get_error_response } = require('../helpers/response.helper');
-const { PrismaClient, sql } = require('@prisma/client');
 const { convertToSlug, removeTagHtml } = require('../helpers/extension.helper');
 const { executeSelectData } = require('../helpers/sql_query')
-const { configDataProductDetail, diffAttributeSets, configDataProduct } = require('../helpers/product.helper')
+const { configDataProductDetail, configDataProduct } = require('../helpers/product.helper')
+const { generateProductId } = require('../helpers/generate.helper');
+const prisma = require('../config/database');
 
-
-const prisma = new PrismaClient()
 // 0: Sản phẩm ngừng bán
 // >= 1: Sản phẩm đang bán
 // 1: Sản phẩm bán
@@ -97,7 +95,7 @@ const getProductDetailService = async (id = null, slug = null, role = null, type
         })
     } else {
         product = await prisma.product.findFirst({
-            where: { id: Number(id) }
+            where: { id: id }
         })
     }
 
@@ -111,7 +109,7 @@ const getProductDetailService = async (id = null, slug = null, role = null, type
     const filter = JSON.stringify([
         {
             field: "product.id",
-            condition: "contains",
+            condition: "=",
             value: product.id
         }
     ])
@@ -280,9 +278,11 @@ async function createProductService({ name, description, images, selling_price, 
         }
     }
 
+    const product_id = generateProductId();
     // Tạo sản phẩm
     const product = await prisma.product.create({
         data: {
+            id: product_id,
             name,
             slug,
             description,
@@ -443,7 +443,7 @@ async function updateProductService({ id, name, description, selling_price, cate
     }
 
     return get_error_response(
-        ERROR_CODES.SUCCESS,
+        ERROR_CODES.SUCCESS,    
         STATUS_CODE.OK,
         product
     )
@@ -452,7 +452,7 @@ async function updateProductService({ id, name, description, selling_price, cate
 async function deleteProductService(id) {
     const product = await prisma.product.findUnique({
         where: {
-            id: Number(id),
+            id: id,
         },
     });
 
@@ -463,7 +463,7 @@ async function deleteProductService(id) {
     }
 
     await prisma.product.update({
-        where: { id: parseInt(id) },
+        where: { id: id },
         data: {
             deleted_at: new Date()
         }
@@ -564,7 +564,7 @@ const checkNameExcludingCurrent = async (name, excludeId = null) => {
 const checkWarehouseInventory = async (product_id) => {
 
     const product = await prisma.product.findFirst({
-        where: { id: Number(product_id) },
+        where: { id: product_id },
         select: {
             id: true,
             name: true,
@@ -579,7 +579,7 @@ const checkWarehouseInventory = async (product_id) => {
     }
 
     const warehouse_inventory = await prisma.warehouse_inventory.aggregate({
-        where: { product_id: Number(product_id), deleted_at: null },
+        where: { product_id: product_id, deleted_at: null },
         _sum: { stock: true }
     });
 

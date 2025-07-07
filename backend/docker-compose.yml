@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartnet-backend
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - NODE_ENV=production
+      - PORT=8081
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+    networks:
+      - smartnet-network
+
+networks:
+  smartnet-network:
+    driver: bridge

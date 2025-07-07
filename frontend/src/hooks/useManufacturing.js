@@ -1,5 +1,5 @@
 // hooks/useManufacturing.ts
-import axiosIOTPublic from "@/apis/clients/iot.private.client";
+import axiosIOTPublic from "@/apis/clients/iot.public.client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -7,20 +7,7 @@ export const useManufacturing = () => {
     const [serialsByStage, setSerialsByStage] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [notifications, setNotifications] = useState([
-        {
-            "serial": "1234567890",
-            "stage": "assembly",
-            "status": "in_progress",
-            "timestamp": "2025-06-01T08:10:38.878Z"
-        },
-        {
-            "serial": "SN1234",
-            "stage": "firmware",
-            "status": "firmware_upload",
-            "timestamp": "2025-06-01T11:43:09.878Z"
-        },
-    ]);
+    const [notifications, setNotifications] = useState([]);
     const [importProductTracking, setImportProductTracking] = useState([]);
     const [exportProductTracking, setExportProductTracking] = useState([]);
 
@@ -57,7 +44,7 @@ export const useManufacturing = () => {
 
     // Xử lý SSE message
     useEffect(() => {
-        let eventSource = new EventSource(`${process.env.REACT_APP_SMART_NET_IOT_API_URL}sse/events`);
+        let eventSource = new EventSource(`${process.env.REACT_APP_SMART_NET_IOT_API_URL}/sse/events`);
 
         eventSource.onmessage = (event) => {
             try {
@@ -178,6 +165,27 @@ export const useManufacturing = () => {
             throw error;
         }
     };
+
+    const approveQC = async (selectedSerials, note) => {
+        try {
+            const response = await axiosIOTPublic.patch('production-tracking/approve-tested-serial', {
+                device_serials: selectedSerials,
+                note,
+            });
+            console.log("response", response);
+
+            if (response.success) {
+                toast.success('Duyệt sản phẩm thành công', response.message);
+            } else {
+                toast.error('Duyệt sản phẩm thất bại', response.message);
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('Error approving QC:', error);
+            throw error;
+        }
+    }
     
 
     return {
@@ -193,6 +201,7 @@ export const useManufacturing = () => {
         importProductTracking,
         setImportProductTracking,
         exportProductTracking,
-        setExportProductTracking
+        setExportProductTracking,
+        approveQC
     };
 };

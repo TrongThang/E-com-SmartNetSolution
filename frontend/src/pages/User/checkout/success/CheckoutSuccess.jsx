@@ -35,9 +35,9 @@ export default function CheckoutSuccess({resultOrder, shipping, payment}) {
 
                     <div>
                         <p className="text-sm text-muted-foreground">Địa chỉ giao hàng</p>
-                        <p className="font-medium">{shipping.fullName}</p>
-                        <p className="text-sm">{shipping.address}, {shipping.ward}, {shipping.district}, {shipping.city}</p>
-                        <p className="text-sm">{shipping.phone}</p>
+                        <p className="font-medium">Người nhận: <span className="font-bold">{shipping.fullName}</span> </p>
+                        <p className="text-sm">SĐT: <span className="font-bold">{shipping.phone}</span> </p>
+                        <p className="text-sm">Địa chỉ: <span className="font-bold">{shipping.address}, {shipping.ward}, {shipping.district}, {shipping.city}</span> </p>
                     </div>
 
                     <div>
@@ -59,13 +59,13 @@ export default function CheckoutSuccess({resultOrder, shipping, payment}) {
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" asChild className="bg-blue-500 text-white border-gray-400">
-                        <Link href="/">
+                        <Link to="/">
                             <Home className="mr-2 h-4 w-4" />
                             Trang chủ
                         </Link>
                     </Button>
                     <Button asChild>
-                        <Link href="/account/orders">
+                        <Link to="/profile/orders">
                             <Package className="mr-2 h-4 w-4" />
                             Theo dõi đơn hàng
                         </Link>

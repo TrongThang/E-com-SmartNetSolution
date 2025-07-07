@@ -5,7 +5,7 @@ const { executeSelectData } = require('../helpers/sql_query');
 const { convertToSlug } = require('../helpers/extension.helper');
 const { getVietnamTimeNow } = require('../helpers/time.helper');
 const { isDescendant } = require('../helpers/categories.helper');
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 
 //Lấy danh sách danh mục và danh mục con và thuộc tính của danh mục [được lọc theo deleted_at = null]

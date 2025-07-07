@@ -9,6 +9,8 @@ import { ConfirmationDialog } from "@/components/common/warehouse/ConfirmationDi
 import { ExportHeader } from "@/components/common/warehouse/export/ExportHeader"
 import Swal from "sweetalert2"
 import axiosPublic from "@/apis/clients/public.client"
+import axiosPrivate from "@/apis/clients/private.client"
+import employeePrivate from "@/apis/clients/employeePrivate.client"
 
 export default function CreateExportWarehousePage() {
     const router = useNavigate()
@@ -66,7 +68,7 @@ export default function CreateExportWarehousePage() {
             }
 
             // API call would go here
-            const response = await axiosPublic.post("/export-warehouse", { data: dataToSubmit })
+            const response = await employeePrivate.post("/export-warehouse", { data: dataToSubmit })
 
             if (response.status_code === 200) {
                 Swal.fire({
@@ -74,8 +76,6 @@ export default function CreateExportWarehousePage() {
                     text: "Phiếu xuất kho đã được tạo thành công",
                     icon: "success",
                 })
-                
-                console.log('result:', response)
             } else {
                 Swal.fire({
                     title: "Lỗi",
@@ -88,6 +88,11 @@ export default function CreateExportWarehousePage() {
             // router.push("/warehouse/export")
         } catch (error) {
             console.error("Error submitting form:", error)
+            Swal.fire({
+                title: "Lỗi",
+                text: error.message,
+                icon: "error",
+            })
         } finally {
             setIsSubmitting(false)
         }

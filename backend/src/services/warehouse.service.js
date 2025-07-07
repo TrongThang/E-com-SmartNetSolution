@@ -1,12 +1,11 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 // Lấy danh sách warehouse
 const getWarehouseService = async (filter, limit, sort, order) => {
-    let get_attr = `name, address`;
+    let get_attr = `name, address, province, district, ward`;
     let get_table = `warehouse`;
 
     try {
@@ -42,7 +41,7 @@ const getWarehouseDetailService = async (id) => {
         ]);
         const get_attr = `
             product.id, product.name, product.slug, product.image, product.selling_price, product.status, 
-            detail_import.quantity, detail_import.amount, detail_import.import_price
+            detail_import.quantity
         `;
         const get_table = "product";
         const query_join = `
@@ -66,32 +65,23 @@ const getWarehouseDetailService = async (id) => {
         return get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
 };
-// const getWarehouseDetailService = async (id) => {
-//     try {
-//         // Lấy thông tin kho
-//         const warehouse = await prisma.warehouse.findUnique({
-//             where: { id: Number(id) }
-//         });
-//         if (!warehouse || warehouse.deleted_at) {
-//             return get_error_response(ERROR_CODES.WAREHOUSE_NOT_FOUND, STATUS_CODE.NOT_FOUND);
-//         }
-
-//         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, warehouse);
-//     } catch (error) {
-//         console.log(error);
-//         return get_error_response(ERROR_CODES.INTERNAL_SERVER_ERROR, STATUS_CODE.INTERNAL_SERVER_ERROR);
-//     }
-// };
 
 // Tạo warehouse
-const createWarehouseService = async ({ name, address }) => {
+const createWarehouseService = async ({ name, address, province, district, ward }) => {
     try {
         const exist = await prisma.warehouse.findFirst({ where: { name, deleted_at: null } });
         if (exist) {
             return get_error_response(ERROR_CODES.WAREHOUSE_NAME_EXISTED, STATUS_CODE.CONFLICT);
         }
         const warehouse = await prisma.warehouse.create({
-            data: { name, address, created_at: new Date(), updated_at: new Date() }
+            data: {
+                name,
+                address,
+                province: Number(province),
+                district: Number(district),
+                ward: Number(ward),
+                created_at: new Date()
+            }
         });
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.CREATED, warehouse);
     } catch (error) {
@@ -101,7 +91,7 @@ const createWarehouseService = async ({ name, address }) => {
 };
 
 // Cập nhật warehouse
-const updateWarehouseService = async ({ id, name, address }) => {
+const updateWarehouseService = async ({ id, name, address, province, district, ward }) => {
     try {
         const warehouse = await prisma.warehouse.findUnique({ where: { id: Number(id) } });
         if (!warehouse || warehouse.deleted_at) {
@@ -122,7 +112,7 @@ const updateWarehouseService = async ({ id, name, address }) => {
 
         const updated = await prisma.warehouse.update({
             where: { id: Number(id) },
-            data: { name, address, updated_at: new Date() }
+            data: { name, address, province: Number(province), district: Number(district), ward: Number(ward), updated_at: new Date() }
         });
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, updated);
     } catch (error) {

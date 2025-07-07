@@ -6,3 +6,8 @@
 .env
 node_modules
 # Keep environment variables out of version control
+/.idea/E-com-SmartNetSolution.iml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.idea/.gitignore
+/backend/node_modules/

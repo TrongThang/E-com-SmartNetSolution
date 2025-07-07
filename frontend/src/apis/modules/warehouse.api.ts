@@ -18,10 +18,10 @@ const WarehouseApi = {
     async detail(id: number): Promise<IApiResponse<any>> {
         return axiosPrivate.get(warehouseEndpoints.detail(id));
     },
-    async create(data: { name: string, address: string }): Promise<IApiResponse<any>> {
+    async create(data: { name: string, address: string, province: number, district: number, ward: number }): Promise<IApiResponse<any>> {
         return axiosPrivate.post(warehouseEndpoints.create, data);
     },
-    async update(data: { id: number, name: string, address: string }): Promise<IApiResponse<any>> {
+    async update(data: { id: number, name: string, address: string, province: number, district: number, ward: number }): Promise<IApiResponse<any>> {
         return axiosPrivate.put(warehouseEndpoints.update, data);
     },
     async delete(id: number): Promise<IApiResponse<any>> {

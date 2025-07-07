@@ -1,6 +1,6 @@
 "use client"
 
-import logo from "@/assets/images/logo/HomeConnect.png"
+import logo from "@/assets/images/logo/ecom_logo.png"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, ShoppingCart, User, ChevronDown, Menu } from "lucide-react"
@@ -84,12 +84,12 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "h-[11.5vh] py-4 bg-white "} border-b-2 border-blue-400`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "h-[8vh] py-4 bg-white "} border-b-2 border-blue-400`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="logo" className={`hover:scale-110 transition-all duration-300 ${isScrolled ? "w-30 h-14":"w-14 h-14"}`} />
+            <img src={logo} alt="logo" className={`hover:scale-110 transition-all duration-300 ${isScrolled ? "w-36 h-16":"w-25 h-10"}`} />
           </Link>
 
           <nav className="hidden md:flex items-center space-x-10">

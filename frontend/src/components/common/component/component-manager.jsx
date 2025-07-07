@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2, Package, Search } from "lucide-react"
 import { ComponentFormModal } from "./form-component"
 import { formatDate } from "@/utils/format"
 import Swal from "sweetalert2"
-import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import axiosIOTPublic from "@/apis/clients/iot.public.client"
 import PlanPagination from "@/components/common/planning/PlanPagination"
 
 export default function ComponentManager({ components, setComponents, fetchComponent }) {

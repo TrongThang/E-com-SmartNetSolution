@@ -1,6 +1,6 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
-const { prisma } = require("../helpers/query.helper");
 const { get_error_response } = require("../helpers/response.helper");
+const prisma = require('../config/database');
 
 function diffPermission(request, in_db) {
     // request = [1, 2, 3]

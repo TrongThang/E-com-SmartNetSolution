@@ -1,11 +1,6 @@
-const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, cancelOrderService, getOrderDetailService, respondListOrderService, getOrderForWarehouseEmployee, StartShippingOrderService, confirmShippingOrderService} = require("../services/order.service");
-const { PrismaClient } = require('@prisma/client');
+const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, cancelOrderService, getOrderDetailService, respondListOrderService, getOrderForWarehouseEmployee, StartShippingOrderService, confirmShippingOrderService, assignShipperToOrders, confirmFinishedOrderService} = require("../services/order.service");
 
 class OrderController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getOrdersForWarehouseEmployee(req, res) {
         const { filter, logic, limit, sort, order } = req.query;
         const result = await getOrderForWarehouseEmployee(filter, logic, limit, sort, order);
@@ -15,7 +10,6 @@ class OrderController {
     async getOrdersForAdministrator(req, res) {
         const { filter, logic, limit, sort, order } = req.query;
         
-        console.log("filter", filter)
         const result = await getOrdersForAdministrator(
             filter,
             logic,
@@ -44,14 +38,13 @@ class OrderController {
 
     async createOrder(req, res) {
         const result = await createOrder(req.body);
-        console.log('Chuẩn bị vào createOrder')
         const response = res.status(result.status_code).json(result);
         return response;
     }
 
     async canceledOrder(req, res) {
-        const {id} = req.body;
-        const result = await cancelOrderService(id);
+        const { order_id } = req.body;  
+        const result = await cancelOrderService(order_id);
         res.status(result.status_code).json(result);
     }
 
@@ -62,8 +55,7 @@ class OrderController {
     }
 
     async shippingOrder(req, res) {
-        // const account_id = req.user.id;
-        const account_id = '1';
+        const account_id = req.user.userId;
         const { order_id } = req.body;
 
         const result = await StartShippingOrderService(order_id, account_id);
@@ -73,6 +65,20 @@ class OrderController {
     async confirmShippingOrder(req, res) {
         const { order_id, image_proof } = req.body;
         const result = await confirmShippingOrderService(order_id);
+        res.status(result.status_code).json(result);
+    }
+    
+    async assignShipperToOrders(req, res) {
+        const { orderIds, employeeId } = req.body;
+        const result = await assignShipperToOrders(orderIds, employeeId);
+        res.status(result.status_code).json(result);
+    }
+
+    async confirmFinishedOrder(req, res) {
+        const { order_id, customer_id } = req.body;
+        console.log('order_id', order_id);
+        console.log('customer_id', customer_id);
+        const result = await confirmFinishedOrderService(order_id, customer_id);
         res.status(result.status_code).json(result);
     }
 }

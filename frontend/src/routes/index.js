@@ -40,7 +40,7 @@ import CategoryManagerPage from "@/pages/Admin/categoryManager/index.jsx";
 import AddCategoryPage from "@/pages/Admin/categoryManager/AddCategory.jsx";
 import EditCategoryPage from "@/pages/Admin/categoryManager/EditCategory.jsx";
 import CreateImportWarehousePage from "@/pages/Admin/warehouse/import/create";
-import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/create";
+import CreateExportWarehousePage from "@/pages/Admin/warehouse/export/Create";
 import UserManagerPage from "@/pages/Admin/userManager";
 import ProductManagerPage from "@/pages/Admin/productManager";
 import EmployeeManagerPage from "@/pages/Admin/employeeManager";
@@ -71,6 +71,10 @@ import AddEmployeeForm from "@/pages/Admin/employeeManager/AddEmployee";
 import EditEmployeeForm from "@/pages/Admin/employeeManager/EditEmployee";
 import SalesAnalytics from "@/pages/Admin/SalesAnalytics";
 import Dashboard from "@/pages/Admin/Dashboard";
+import ProfileEmployee from "@/pages/Admin/ProfileEmployee";
+import ChangePassword from "@/pages/Admin/ChangePassword";
+import ChangePasswordUser from "@/pages/User/Profile/ChangePassword";
+import FCMTestPage from "@/pages/Admin/FCMTestPage";
 
 export const router = createBrowserRouter([
   {
@@ -119,7 +123,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "change-password",
-            element: <h1>Thay đổi mật khẩu</h1>,
+            element: <ChangePasswordUser />,
           },
         ],
       },
@@ -346,7 +350,7 @@ export const router = createBrowserRouter([
         element: <ExportWarehousePage />
       },
       {
-        path: 'warehouse/import/create',
+        path: 'warehouses/import/create',
         element: <CreateImportWarehousePage />
       },
       {
@@ -357,6 +361,18 @@ export const router = createBrowserRouter([
         path: 'warehouses/export/create',
         element: <CreateExportWarehousePage />
       },
+      {
+        path: 'profile',
+        element: <ProfileEmployee />
+      },
+      {
+        path: 'profile/change-password',
+        element: <ChangePassword />
+      }
     ],
   },
+  {
+    path: '/admin/fcm-test',
+    element: <FCMTestPage />
+  }
 ]);

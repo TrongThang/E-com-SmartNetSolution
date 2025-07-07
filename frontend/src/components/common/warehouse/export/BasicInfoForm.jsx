@@ -1,25 +1,23 @@
-import { format } from "date-fns"
-import { vi } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { useState, useEffect } from "react"
-import axiosPublic from "@/apis/clients/public.client"
 import { formatDate } from "@/utils/format"
+import { ROLE } from "@/constants/role.contant"
+import axiosPrivate from "@/apis/clients/private.client"
 
 export function BasicInfoForm({ formData, onChange }) {
     const [employees, setEmployees] = useState(null)
     useEffect(() => {
         const fetchEmployees = async () => {
-            const filter = { field: "role.id", condition: "contains", value: "WAREHOUSE" }
+            const filter = { field: "role.id", condition: "=", value: ROLE.EMPLOYEE_WAREHOUSE }
             
-            const response = await axiosPublic.get("employee", {
+            const response = await axiosPrivate.get("employee", {
                 params: {
                     filter: JSON.stringify(filter),
                 }

@@ -2,27 +2,31 @@ const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { getVietnamTimeNow, formatDateToDDMMYYYY } = require('../helpers/time.helper');
-const { PrismaClient } = require('@prisma/client');
 const { generateEmployeeId, generateAccountId } = require('../helpers/generate.helper');
 const { hashPassword } = require('../helpers/auth.helper');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 const getEmployeeService = async (filter, limit, sort, order) => {
     try {
-        let get_attr = `employee.surname, employee.lastname, employee.image, employee.birthdate, employee.gender, employee.email, employee.phone, 
-    employee.status, role.name as role_name, employee.created_at, employee.updated_at`;
-        let get_table = "employee";
-        let query_join = `LEFT JOIN account ON employee.id = account.employee_id
-        LEFT JOIN role ON account.role_id = role.id`;
+        let get_attr = `
+            employee.surname, employee.lastname, employee.image, employee.birthdate, employee.gender,
+            employee.email, employee.phone, employee.status, role.name as role_name,
+            warehouse.id as warehouse_id,
+            warehouse.name as warehouse_name,
+            CONCAT_WS(', ',
+                warehouse.address,
+                warehouse.ward,
+                warehouse.district,
+                warehouse.province
+            ) AS full_warehouse_address
+        `;
 
-        const filter = JSON.stringify([
-            {
-                field: "employee.deleted_at",
-                condition: "is",
-                value: null
-            }
-        ]);
+        let get_table = "employee";
+        let query_join = `
+            LEFT JOIN account ON employee.id = account.employee_id
+            LEFT JOIN role ON account.role_id = role.id
+            LEFT JOIN warehouse ON employee.warehouse_id = warehouse.id
+        `;
 
         const result = await executeSelectData({
             strGetColumn: get_attr,
@@ -46,6 +50,7 @@ const getEmployeeService = async (filter, limit, sort, order) => {
         );
     }
 }
+
 const getEmployeeDetailService = async (id) => {
     try {
 
@@ -93,7 +98,8 @@ const getEmployeeDetailService = async (id) => {
         );
     }
 }
-const createEmployeeService = async (surname, lastname, image, birthdate, gender, email, phone, status, username, role) => {
+
+const createEmployeeService = async (surname, lastname, image, birthdate, gender, email, phone, status, username, role, warehouse_id) => {
     try {
         // Kiểm tra email có tồn tại hay không
         const emailExists = await prisma.employee.findFirst({
@@ -128,6 +134,23 @@ const createEmployeeService = async (surname, lastname, image, birthdate, gender
             );
         }
 
+        const warehouse = await prisma.warehouse.findFirst({
+            where: { id: warehouse_id }
+        });
+        if (!warehouse) {
+            return get_error_response(
+                ERROR_CODES.WAREHOUSE_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
+
+        if (warehouse.status === 0) {
+            return get_error_response(
+                ERROR_CODES.WAREHOUSE_NOT_ACTIVE,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
+
         const employee_id = generateEmployeeId();
         // Tạo nhân viên
         const employee = await prisma.employee.create({
@@ -142,6 +165,7 @@ const createEmployeeService = async (surname, lastname, image, birthdate, gender
                 phone,
                 status, // 1 là hoạt động, 0 là không hoạt động
                 created_at: getVietnamTimeNow(),
+                warehouse_id: warehouse_id
             }
         });
 
@@ -182,7 +206,7 @@ const createEmployeeService = async (surname, lastname, image, birthdate, gender
             ERROR_CODES.SUCCESS,
             STATUS_CODE.OK,
             employee
-        );
+        );  
     } catch (error) {
         console.error('Error in createEmployeeService:', error);
         return get_error_response(
@@ -191,8 +215,9 @@ const createEmployeeService = async (surname, lastname, image, birthdate, gender
         );
     }
 };
-const updateEmployeeService = async (id, surname, lastname, image, birthdate, gender, email, phone, status, role) => {
+const updateEmployeeService = async (id, surname, lastname, image, birthdate, gender, email, phone, status, role, warehouse_id) => {
     try {
+        console.log("vào cập nhật")
         // Kiểm tra email đã tồn tại (trừ chính nó)
         const emailExists = await prisma.employee.findFirst({
             where: {
@@ -231,6 +256,16 @@ const updateEmployeeService = async (id, surname, lastname, image, birthdate, ge
             );
         }
 
+        const warehouse = await prisma.warehouse.findFirst({
+            where: { id: warehouse_id }
+        });
+        if (!warehouse) {
+            return get_error_response(
+                ERROR_CODES.WAREHOUSE_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
+            );
+        }
+
         const updatedEmployee = await prisma.employee.update({
             where: { id: id },
             data: {
@@ -242,6 +277,7 @@ const updateEmployeeService = async (id, surname, lastname, image, birthdate, ge
                 email, // email riêng
                 phone,
                 status, // 1 là hoạt động, 0 là không hoạt động
+                warehouse_id: warehouse_id,
                 updated_at: getVietnamTimeNow(),
             }
         });
@@ -294,12 +330,13 @@ const updateEmployeeService = async (id, surname, lastname, image, birthdate, ge
 }
 const updateProfileEmployeeService = async (id, surname, lastname, image, birthdate, gender, email, phone) => {
     try {
-
         // Kiểm tra email đã tồn tại (trừ chính nó)
         const emailExists = await prisma.employee.findFirst({
             where: {
                 email: email,
-                NOT: { id: id }
+                id: {
+                    not: id
+                }
             }
         })
         if (emailExists) {
@@ -311,9 +348,12 @@ const updateProfileEmployeeService = async (id, surname, lastname, image, birthd
 
         // Kiểm tra số điện thoại có tồn tại hay không
         const phoneExists = await prisma.employee.findFirst({
-            where: { phone: phone,
-                NOT: { id: id } // Trừ chính nhân viên đang cập nhật
-             },
+            where: {
+                phone: phone,
+                id: {
+                    not: id
+                }
+            }
         });
         if (phoneExists) {
             return get_error_response(
@@ -327,7 +367,7 @@ const updateProfileEmployeeService = async (id, surname, lastname, image, birthd
         if (!employee) {
             return get_error_response(
                 ERROR_CODES.EMPLOYEE_NOT_FOUND,
-                STATUS_CODE.NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
             );
         }
         const updatedEmployee = await prisma.employee.update({

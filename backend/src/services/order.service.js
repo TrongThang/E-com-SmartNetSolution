@@ -5,8 +5,7 @@ const { getOrderNumber } = require("../helpers/import.warehouse.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const { check_list_info_product } = require("../helpers/product.helper");
 const queryHelper = require("../helpers/query.helper");
-const { prisma, isExistId, queryRaw } = require("../helpers/query.helper");
-
+const prisma = require('../config/database');
 const { get_error_response } = require("../helpers/response.helper");
 const { executeSelectData } = require("../helpers/sql_query");
 
@@ -93,23 +92,88 @@ async function getOrderForWarehouseEmployee(filters, logic, limit, sort, order) 
     }
 }
 
+function configOrderDataForAdministrator(dbResults) {
+    if (!dbResults || dbResults.length === 0) {
+        return [];
+    }
+
+    const orderMap = new Map();
+
+    dbResults.forEach(record => {
+        if (!orderMap.has(record.id)) {
+            orderMap.set(record.id, {
+                id: record.id,
+                saler_name: record.saler_name,
+                shipper_name: record.shipper_name,
+                customer_name: record.customer_name,
+                name_recipient: record.name_recipient,
+                address: record.address,
+                phone: record.phone,
+                amount: record.amount,
+                status: record.status,
+                note: record.note,
+                warehouse_inventory: record.warehouse_inventory,
+                products: [],
+                is_fulfillable: true, 
+            });
+        }
+
+        const order = orderMap.get(record.id);
+
+        if (record.product_id) {
+            const product = {
+                id: record.product_id,
+                name: record.product_name,
+                quantity: record.quantity_sold,
+                total_stock: record.total_stock,
+            };
+            order.products.push(product);
+
+            if (product.quantity > product.total_stock) {
+                order.is_fulfillable = false;
+            }
+        }
+    });
+
+    return Array.from(orderMap.values());
+}
+
 async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     let get_attr = `
         order.id,
         CONCAT(employee.surname, ' ',employee.lastname) AS saler_name,
+        CONCAT(shipper.surname, ' ',shipper.lastname) AS shipper_name,
         CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
         order.name_recipient,
         order.address,
         order.phone,
         order.amount,
         order.status,
-        order.note
+        order.note,
+        warehouse_inventory.total_stock,
+        warehouse_inventory.total_delta,
+        order_detail.product_id,
+        warehouse_inventory.product_name,
+        order_detail.quantity_sold
     `;
 
     let get_table = `\`order\``;
     let query_join = `
         LEFT JOIN customer ON order.customer_id = customer.id
         LEFT JOIN employee ON order.saler_id = employee.id
+        LEFT JOIN employee shipper ON order.shipper_id = shipper.id
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN (
+            SELECT
+                product_id,
+                product.name AS product_name,
+                SUM(stock) AS total_stock,
+                SUM(delta) AS total_delta
+            FROM warehouse_inventory
+                LEFT JOIN product ON warehouse_inventory.product_id = product.id
+            WHERE warehouse_inventory.deleted_at IS NULL
+            GROUP BY product_id
+        ) AS warehouse_inventory ON order_detail.product_id = warehouse_inventory.product_id
     `;
 
     try {
@@ -122,7 +186,20 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
             logic: logic,
             sort: sort,
             order: order,
+            configData: configOrderDataForAdministrator
         });
+
+        const cardAnalysis = await queryHelper.queryRaw(`
+            SELECT
+                SUM(CASE WHEN status IN (${ORDER.PENDING}) THEN 1 ELSE 0 END) AS total_pending_orders,
+                SUM(CASE WHEN status IN (${ORDER.PREPARING}) THEN 1 ELSE 0 END) AS total_preparing_orders,
+                SUM(CASE WHEN status IN (${ORDER.PENDING_SHIPPING}, ${ORDER.SHIPPING}) THEN 1 ELSE 0 END) AS total_processing_orders,
+                SUM(CASE WHEN status IN (${ORDER.DELIVERED}, ${ORDER.COMPLETED}) THEN 1 ELSE 0 END) AS total_completed_orders
+            FROM \`order\`
+            WHERE deleted_at IS NULL;    
+        `)
+
+        orders.cardAnalysis = cardAnalysis[0];
 
         return get_error_response(
             ERROR_CODES.SUCCESS,
@@ -232,7 +309,7 @@ async function getOrderDetailService(order_id) {
         LEFT JOIN employee saler ON order.saler_id = saler.id
         LEFT JOIN customer ON order.customer_id = customer.id
     `;
-    console.log('order_id', order_id)
+
     const filter = {
         field: "order.id",
         condition: "=",
@@ -263,6 +340,8 @@ async function getOrderDetailService(order_id) {
 }
 
 async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, order) {
+    sort = 'order.created_at';
+    order = 'DESC';
     const get_attr = `
         order.id,
         order.total_money,
@@ -598,9 +677,9 @@ async function cancelOrderService(order_id) {
             );
         }
 
-        if (order.status === ORDER.PENDING || order.status === ORDER.PREPARING) {
+        if (order.status !== ORDER.PENDING && order.status !== ORDER.PREPARING) {
             return get_error_response(
-                errors=ERROR_CODES.ORDER_ALREADY_CANCELLED,
+                errors=ERROR_CODES.ORDER_NOT_STATUS_CANCELLED,
                 status_code=STATUS_CODE.BAD_REQUEST
             );
         }
@@ -741,36 +820,39 @@ async function respondListOrderService(orderIds) {
     }
 }
 
-
+// Hàm kiểm tra số lượng sản phẩm trong kho
 async function checkProductInWarehouse(listProduct) {
     const productIds = listProduct.map(item => item.product_id);
+    const inClause = productIds.map(id => `'${id}'`).join(',');
 
-    const result = await prisma.$queryRaw`
+    const result = await queryHelper.queryRaw(`
         SELECT 
             wi.product_id, 
             p.name AS product_name, 
+            p.delta AS delta,
             SUM(wi.stock) AS total_stock
         FROM warehouse_inventory wi
         JOIN product p ON wi.product_id = p.id
-        WHERE wi.product_id IN (${productIds.join(',')}) AND wi.deleted_at IS NULL
+        WHERE wi.product_id IN (${inClause}) AND wi.deleted_at IS NULL
         GROUP BY wi.product_id, p.name
-    `;
+    `);
 
     const warehouseData = result.map(item => ({
         product_id: item.product_id,
         product_name: item.product_name,
-        stock: item.total_stock
+        stock: item.total_stock,
+        delta: item.delta
     }));
     
     const errorsData = [];
 
+
     const validProducts = warehouseData.filter(w => {
         const match = listProduct.find(p => p.product_id === w.product_id);
-        console.log('match', match)
-        if (w.stock < match.quantity) {
+        if (w.stock < match.quantity + w.delta) {
             errorsData.push({
                 type: 'product_stock_not_enough',
-                message: `Sản phẩm ${w.product_name} không đủ số lượng. Còn lại ${w.stock} sản phẩm`
+                message: `Sản phẩm ${w.product_name} không đủ số lượng. Còn lại ${w.stock + w.delta} sản phẩm`
             });
         }
         return match && w.stock >= match.quantity;
@@ -820,7 +902,7 @@ async function StartShippingOrderService(order_id, account_id) {
 
         if (employee.role_id !== ROLE.SHIPPER && employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE && employee.role_id !== ROLE.MANAGER_WAREHOUSE && employee.role_id !== ROLE.SALER) {
             return get_error_response(
-                errors=ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED,
+                errors=ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED_SHIPPER,
                 status_code=STATUS_CODE.BAD_REQUEST
             );
         }
@@ -917,6 +999,116 @@ async function confirmShippingOrderService(order_id, image_proof, account_id) {
     }
 }
 
+async function assignShipperToOrders(order_ids, employeeId) {
+    try {
+        const employee = await prisma.employee.findFirst({
+            where: {
+                id: employeeId,
+                deleted_at: null,
+            },
+            select: {
+                account: {
+                    select: {
+                        role_id: true
+                    }
+                },
+                id: true
+            }
+        });
+
+        if (!employee) {
+            return get_error_response(
+                ERROR_CODES.EMPLOYEE_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (employee.account[0].role_id !== ROLE.SHIPPER) {
+            return get_error_response(
+                ERROR_CODES.EMPLOYEE_NOT_AUTHORIZED_SHIPPER,
+                STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        const orders = await prisma.order.findMany({
+            where: {
+                id: { in: order_ids }, deleted_at: null,
+                status: {
+                    in: [ORDER.PREPARING, ORDER.PENDING, ORDER.PENDING_SHIPPING]
+                }
+            }
+        });
+        if (orders.length !== order_ids.length) {
+            return get_error_response(
+                errors = ERROR_CODES.ORDER_LIST_ASSIGN_SHIPPER_INVALID,
+                status_code = STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.updateMany({
+            where: { id: { in: order_ids } },
+            data: { shipper_id: employeeId }
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK    
+        );
+    } catch (error) {
+        console.log('Assign shipper to orders error:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
+async function confirmFinishedOrderService(order_id, customer_id) {
+    try {
+        const order = await prisma.order.findFirst({
+            where: { id: order_id, customer_id: customer_id, deleted_at: null }
+        });
+
+        if (!order) {
+            return get_error_response(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND
+            );
+        }
+
+        if (order.status !== ORDER.DELIVERED) {
+            return get_error_response(
+                ERROR_CODES.ORDER_REQUIRE_STATUS_DELIVERED,
+                STATUS_CODE.BAD_REQUEST
+            );
+        }
+
+        await prisma.order.update({
+            where: { id: order_id },
+            data: {
+                status: ORDER.COMPLETED
+            }
+        });
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK
+        );
+    } catch (error) {
+        console.log('Confirm finished order error:', error);
+        if (error.code === 'P2025') {
+            return get_error_response(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND
+            );
+        }
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
 module.exports = {
     createOrder,
     getOrdersForAdministrator,
@@ -926,5 +1118,7 @@ module.exports = {
     respondListOrderService,
     getOrderForWarehouseEmployee,
     StartShippingOrderService,
-    confirmShippingOrderService
+    confirmShippingOrderService,
+    assignShipperToOrders,
+    confirmFinishedOrderService
 }

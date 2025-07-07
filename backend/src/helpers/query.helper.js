@@ -1,8 +1,9 @@
-const { PrismaClient, sql } = require('@prisma/client');
+const prisma = require('../config/database');
+const { sql } = require('@prisma/client');
 
 class QueryHelper {
     constructor() {
-        this.prisma = new PrismaClient();
+        this.prisma = prisma;
     }
 
     // Hàm chạy truy vấn SELECT, trả về dữ liệu

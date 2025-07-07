@@ -13,6 +13,7 @@ import { NewAddressForm } from "@/components/common/checkout/addressBook/NewAddr
 import addressBookApi from "@/apis/modules/address.api.ts"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
+import axiosPrivate from "@/apis/clients/private.client"
 
 const formSchema = z.object({
     addressType: z.enum(["new", "saved"]),
@@ -40,14 +41,12 @@ export function ShippingForm({ onComplete }) {
         const fetchAddressBook = async () => {
             try {
                 setIsLoading(true)
-                const response = await axios.get(
-                    'http://localhost:8081/api/address-book/customer/CUST5QL4N3FV51NLUY895SCRHZFV'
-                )
+                const response = await axiosPrivate.get(`/address-book/customer/${user.customer_id}`)
                 
-                if (response.data.status_code === 200) {
+                if (response.status_code === 200) {
                     setAddressData({
-                        customer: response.data.data.data.customer,
-                        address_books: response.data.data.data.address_books
+                        customer: response.data.data.customer,
+                        address_books: response.data.data.address_books
                     })
                 }
             } catch (error) {
@@ -58,7 +57,7 @@ export function ShippingForm({ onComplete }) {
         }
 
         fetchAddressBook()
-    }, [])
+    }, [user])
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -102,13 +101,15 @@ export function ShippingForm({ onComplete }) {
                 form.setError("savedAddressId", { type: "manual", message: "Vui lòng chọn địa chỉ đã lưu" });
                 return;
             }
-            form.setValue("fullName", addressData.customer.name);
+            console.log("addressData.customer:", addressData.customer)
+            // form.setValue("fullName", addressData.customer.surname + " " + addressData.customer.lastname);
+            form.setValue("fullName", selectedAddress.receiver_name);
             form.setValue("phone", addressData.customer.phone);
             form.setValue("email", addressData.customer.email);
             form.setValue("city", selectedAddress.city);
             form.setValue("district", selectedAddress.district);
             form.setValue("ward", selectedAddress.ward);
-            form.setValue("address", selectedAddress.detail);
+            form.setValue("address", selectedAddress.street);
             form.setValue("note", values.note);
             onComplete(form.getValues());
         }
@@ -218,7 +219,7 @@ export function ShippingForm({ onComplete }) {
                     <SavedAddressForm 
                         form={form} 
                         addressData={addressData} 
-                        selectedAddress={selectedAddress} 
+                        selectedAddress={selectedAddress}   
                     />
                 )}
 

@@ -82,8 +82,7 @@ const CreateProductSchema = BaseProductSchema;
 
 const UpdateProductSchema = BaseProductSchema.extend({
     body: BaseProductSchema.shape.body.extend({
-        id: z.number({
-            invalid_type_error: `[${ERROR_CODES.SHARED_NOT_NUMBER}]${ERROR_MESSAGES[ERROR_CODES.SHARED_NOT_NUMBER]}`,
+        id: z.string().min(1, {
             required_error: `[${ERROR_CODES.PRODUCT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.PRODUCT_ID_REQUIRED]}`
         })
     })
@@ -91,8 +90,7 @@ const UpdateProductSchema = BaseProductSchema.extend({
 
 const DeleteProductSchema = z.object({
     params: z.object({
-        id: z.number({
-            invalid_type_error: `[${ERROR_CODES.SHARED_NOT_NUMBER}]${ERROR_MESSAGES[ERROR_CODES.SHARED_NOT_NUMBER]}`,
+        id: z.string().min(1, {
             required_error: `[${ERROR_CODES.PRODUCT_ID_REQUIRED}]${ERROR_MESSAGES[ERROR_CODES.PRODUCT_ID_REQUIRED]}`
         })
     })

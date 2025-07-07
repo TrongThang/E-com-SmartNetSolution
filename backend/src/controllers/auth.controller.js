@@ -1,4 +1,3 @@
-const { PrismaClient } = require('@prisma/client');
 const {
     loginAPI,
     refreshTokenAPI,
@@ -9,20 +8,13 @@ const {
     getMe,
     getMeEmployee
 } = require('../services/auth.service');
-const bcrypt = require('bcrypt');
+
 const jwt = require('jsonwebtoken');
 const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
 const { get_error_response } = require('../helpers/response.helper');
 const { loginSchema, sendOtpSchema } = require('../schemas/account.schema');
-const NotificationService = require("../services/notification.service");
-
-const notificationService = new NotificationService(); // Truyền Prisma client vào
-
+const notificationService = require("../services/notification.service");
 class AuthController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async register(req, res) {
         const { username, password, confirm_password, surname, lastname, phone, email, gender } = req.body;
 
@@ -44,7 +36,6 @@ class AuthController {
         const { username, password, remember_me } = req.body;
 
         const response = await loginAPI(username, password, remember_me);
-
         return res.status(response.status_code).json(response);
     }
 
@@ -64,7 +55,9 @@ class AuthController {
 
     async getMe(req, res) {
         const token = req.headers.authorization.split(' ')[1];
+        console.log('TOKEN',token)
 
+        console.log('decoded', jwt.decode(token)) 
         const response = await getMe(token);
 
         return res.status(response.status_code).json(response);
@@ -72,7 +65,6 @@ class AuthController {
 
     async getMeEmployee(req, res) {
         const token = req.headers.authorization.split(' ')[1];
-        console.log('TOKEN',token)
         const response = await getMeEmployee(token);
 
         return res.status(response.status_code).json(response);
@@ -93,8 +85,12 @@ class AuthController {
     }
 
     async ChangedPassword(req, res) {
-        console.log(1233123)
-        const response = await ChangedPasswordAccount(req.body)
+
+        const userId = req.user.userId;
+        if(!userId) {
+            return res.status(STATUS_CODE.BAD_REQUEST).json(get_error_response(ERROR_CODES.ACCOUNT_INVALID, STATUS_CODE.BAD_REQUEST))
+        }
+        const response = await ChangedPasswordAccount(req.body, userId)
 
         return res.status(response.status_code).json(response)
     }

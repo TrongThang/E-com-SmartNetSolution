@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ORDER_STATUS } from "@/constants/status.constants";
 import { Badge } from "@/components/ui/badge";
-import { Eye, FolderClock, Handshake, MapPinCheck, PackageSearch, Truck } from "lucide-react";
+import { CheckCheckIcon, CheckCircle, Eye, FolderClock, Handshake, MapPinCheck, PackageSearch, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertCircle } from "lucide-react";
+
 const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelectedIds }) => {
     const rowPerPage = 10;
 
@@ -20,11 +23,33 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
 
     const toggleSelectOne = (id) => {
         setSelectedIds((prev) =>
-            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+            prev?.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
         );
     };
 
-    const isAllSelected = orders.length > 0 && selectedIds.length === orders.length;
+    const getRowClassName = (row) => {
+        switch (row.status) {
+            case ORDER_STATUS.DELIVERED:
+            case ORDER_STATUS.COMPLETED:
+                return "bg-green-50 hover:bg-green-100"; // Xanh nhẹ cho đơn đã giao/hoàn thành
+            case ORDER_STATUS.CANCELLED:
+                return "bg-red-50 hover:bg-red-100"; // Đỏ nhẹ cho đơn đã hủy
+            case ORDER_STATUS.SHIPPING:
+                return "bg-blue-50 hover:bg-blue-100"; // Xanh dương nhẹ cho đơn đang giao
+            case ORDER_STATUS.PREPARING:
+                return "bg-yellow-50 hover:bg-yellow-100"; // Vàng nhẹ cho đơn đang chuẩn bị
+            case ORDER_STATUS.PENDING:
+                return "bg-orange-50 hover:bg-orange-100"; // Cam nhẹ cho đơn chờ xác nhận
+            case ORDER_STATUS.PENDING_PAYMENT:
+                return "bg-purple-50 hover:bg-purple-100"; // Tím nhẹ cho đơn chờ thanh toán
+            case ORDER_STATUS.PENDING_SHIPPING:
+                return "bg-indigo-50 hover:bg-indigo-100"; // Chàm nhẹ cho đơn chờ giao
+            default:
+                return "hover:bg-gray-50"; // Màu mặc định
+        }
+    };
+
+    const isAllSelected = orders.length > 0 && selectedIds?.length === orders.length;
 
     const columns = [
         {
@@ -37,13 +62,17 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                 />
             ),
             render: (row) => {
-                if(row.status === ORDER_STATUS.PENDING) {
-                    return <Input
-                                className="flex items-center justify-center"
-                                type="checkbox"
-                                checked={selectedIds.includes(row.id)}
-                                onChange={() => toggleSelectOne(row.id)}
-                            />
+                if(row.status === ORDER_STATUS.PENDING_SHIPPING || row.status === ORDER_STATUS.PENDING || row.status === ORDER_STATUS.PREPARING) {
+                    return (
+                        <Input
+                            className="flex items-center justify-center"
+                            type="checkbox"
+                            checked={selectedIds.includes(row.id)}
+                            onChange={() => toggleSelectOne(row.id)}
+                        />  
+                    )
+                } else {
+                    return <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
                 }
             },
         },
@@ -55,8 +84,10 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                 <span
                     className={`
                         px-2 py-1 rounded text-sm whitespace-nowrap min-w-[120px]
-                        ${row.status === ORDER_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : 
+                        ${row.status === ORDER_STATUS.PENDING_PAYMENT ? "bg-rose-100 text-rose-800" : 
+                        row.status === ORDER_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : 
                         row.status === ORDER_STATUS.PREPARING ? "bg-blue-100 text-blue-800" : 
+                        row.status === ORDER_STATUS.PENDING_SHIPPING ? "bg-purple-100 text-purple-800" : 
                         row.status === ORDER_STATUS.SHIPPING ? "bg-green-100 text-green-800" : 
                         row.status === ORDER_STATUS.DELIVERED ? "bg-green-100 text-green-800" : 
                         row.status === ORDER_STATUS.COMPLETED ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
@@ -78,23 +109,63 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                         row.status === ORDER_STATUS.COMPLETED ? 
                             <Badge variant="outline"><MapPinCheck className="w-4 h-4 mr-2" /> Hoàn tất</Badge>
                         : 
+                        row.status === ORDER_STATUS.PENDING_PAYMENT ? 
+                            <Badge variant="outline"><Handshake className="w-4 h-4 mr-2" /> Chờ thanh toán</Badge>
+                        : 
+                        row.status === ORDER_STATUS.PENDING_SHIPPING ? 
+                            <Badge variant="outline"><Truck className="w-4 h-4 mr-2" /> Chờ giao hàng</Badge>
+                        : 
                         <Badge variant="outline">Chưa xác định</Badge>
                     }
                 </span>
             ),
         },
         {
+            key: "is_fulfillable",
+            label: "Đáp ứng",
+            render: (row) => (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger className="flex justify-center w-full">
+                            {row.is_fulfillable ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                            ) : (
+                                <AlertCircle className="w-5 h-5 text-red-500" />
+                            )}
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-white text-black border border-blue-300">
+                            <div className="p-2">
+                                <p className="font-bold mb-2">Chi tiết sản phẩm:</p>
+                                <ul className="list-none space-y-2">
+                                    {row.products.map(p => (
+                                        <li key={p.id} className="flex items-center">
+                                            {p.quantity <= p.total_stock ? (
+                                                <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                                            ) : (
+                                                <AlertCircle className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" />
+                                            )}
+                                            <span className="text-sm">{p.name} - Cần: {p.quantity} / Có: {p.total_stock || 0}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )
+        },
+        {
             key: "id",
             label: "Mã đặt hàng",
+        },
+        {
+            key: "shipper_name",
+            label: "Giao hàng",
         },
         {
             key: "name_recipient",
             label: "Người nhận",
         },
-        // {
-        //     key: "customer_name",
-        //     label: "Người đặt",
-        // },
         {
             key: "address",
             label: "Địa chỉ",
@@ -142,6 +213,7 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                 data={orders}
                 columns={columns}
                 rowsPerPage={rowPerPage}
+                getRowClassName={getRowClassName}
             />
         </>
     );

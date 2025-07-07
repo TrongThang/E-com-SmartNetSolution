@@ -1,0 +1,6 @@
+export const ROLE = {
+    CUSTOMER: 1,
+    MANAGER_WAREHOUSE: 2,
+    EMPLOYEE_WAREHOUSE: 3,
+    SHIPPER: 4,
+}

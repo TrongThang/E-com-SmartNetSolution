@@ -75,9 +75,29 @@ async function generateDetailImportBatchCode(import_date, product_id) {
     return `BATCH_IMP${currentYear}_${product_id}_${detailImportCount._count + 1}`
 }
 
+async function generateDetailExportBatchCode(export_date, product_id) {
+    const currentYear = new Date(export_date).getFullYear();
+    const startOfYear = new Date(currentYear, 0, 1); // 1/1 của năm hiện tại
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59); // 31/12 của năm hiện tại
+
+    const detailExportCount = await prisma.detail_export.aggregate({
+        where: {
+            created_at: {
+                gte: startOfYear,
+                lte: endOfYear  
+            },
+            product_id: product_id
+        },
+        _count: true
+    });
+    
+    return `BATCH_EXP${currentYear}_${product_id}_${detailExportCount._count + 1}`
+}
+
 module.exports = {
     getImportNumber,
     getOrderNumber,
     getExportNumber,
-    generateDetailImportBatchCode
+    generateDetailImportBatchCode,
+    generateDetailExportBatchCode
 }

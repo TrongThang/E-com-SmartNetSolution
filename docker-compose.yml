@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
+    platform: ${TARGETPLATFORM:-linux/amd64}
+    container_name: smartnet-backend
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - NODE_ENV=production
+      - PORT=8081
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/.env:/app/.env
+    networks:
+      - smartnet-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smartnet-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://backend:8081
+    networks:
+      - smartnet-network
+
+networks:
+  smartnet-network:
+    driver: bridge

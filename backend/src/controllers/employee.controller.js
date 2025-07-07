@@ -4,16 +4,12 @@ const { getEmployeeService, getEmployeeDetailService,
     updateProfileEmployeeService,
     toggleDeleteRestoreEmployeeService,
 } = require('../services/employee.service');
-const { PrismaClient } = require('@prisma/client');
+const { getImportWarehouseNotFinishForEmployee } = require('../services/import.warehouse.service');
 
 
 class EmployeeController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getEmployees(req, res) {
-        const { filter = null, limit = null, sort = null, order = null } = req.body || {};
+        const { filter = null, limit = null, sort = null, order = null } = req.query || {};
         const response = await getEmployeeService(filter, limit, sort, order);
         return res.status(response.status_code).json(response);
     }
@@ -23,15 +19,16 @@ class EmployeeController {
         return res.status(response.status_code).json(response);
     }
     async createEmployee(req, res) {
-        const { surname, lastname, image, birthdate, gender, email, phone, status, username, role } = req.body || {};
-        const response = await createEmployeeService(surname, lastname, image, birthdate, gender, email, phone, status, username, role);
+        const { surname, lastname, image, birthdate, gender, email, phone, status, username, role, warehouse_id } = req.body || {};
+        const response = await createEmployeeService(surname, lastname, image, birthdate, gender, email, phone, status, username, role, warehouse_id);
         return res.status(response.status_code).json(response);
     }
 
     async updateEmployee(req, res) {
         const { id } = req.params;
-        const { surname, lastname, image, birthdate, gender, email, phone, status, role } = req.body || {};
-        const response = await updateEmployeeService(id, surname, lastname, image, birthdate, gender, email, phone, status, role);
+
+        const { surname, lastname, image, birthdate, gender, email, phone, status, role, warehouse_id } = req.body || {};
+        const response = await updateEmployeeService(id, surname, lastname, image, birthdate, gender, email, phone, status, role, warehouse_id);
         return res.status(response.status_code).json(response);
     }
     async updateProfileEmployee(req, res) {
@@ -44,6 +41,11 @@ class EmployeeController {
         const { id } = req.params;
         const { isRestore } = req.body || {};
         const response = await toggleDeleteRestoreEmployeeService(id, isRestore);
+        return res.status(response.status_code).json(response);
+    }
+
+    async getImportWarehouseNotFinishForEmployee(req, res) {
+        const response = await getImportWarehouseNotFinishForEmployee(req.user.id);
         return res.status(response.status_code).json(response);
     }
 }

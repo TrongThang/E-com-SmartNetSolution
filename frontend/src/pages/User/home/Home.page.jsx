@@ -6,28 +6,33 @@ import categoryApi from "@/apis/modules/categories.api.ts"
 import { useEffect } from "react"
 import CategoryGrid from "./categoryGird.page"
 import Slideshow from "./slideshow.component"
+import { useNavigate } from "react-router-dom"
 
 export default function HomePage() {
 	const [newArrivals, setNewArrivals] = useState([])
 	const [featuredProducts, setFeaturedProducts] = useState([])
 	const [categories, setCategories] = useState([])
+	const navigate = useNavigate()
+
 	const fecthProducts = async () => {
 		try {
-			const filter = {
-				logic: 'OR',
-				filters: [
-					{
-						field: 'product.status',
-						condition: '=',
-						value: 3,
-					},
-					{
-						field: 'product.status',
-						condition: '=',
-						value: 4,
-					}
-				]
-			}
+			const filter = [
+				{
+					logic: 'OR',
+					filters: [
+						{
+							field: 'product.status',
+							condition: '=',
+							value: 3,
+						},
+						{
+							field: 'product.status',
+							condition: '=',
+							value: 4,
+						}
+					]
+				},
+			]
 			const res = await productApi.search({
 				limit: 10,
 				filters: filter
@@ -47,11 +52,23 @@ export default function HomePage() {
 	}
 	const fetchCategories = async () => {
 		try {
-			const filters = {
-				field: 'categories.is_hide',
-				condition: '=',
-				value: false,
-			}
+			const filters = [
+				{
+					logic: 'AND',
+					filters: [
+						{
+							field: 'categories.is_hide',
+							condition: '=',
+							value: false
+						},
+						{
+							field: 'categories.parent_id',
+							condition: 'is',
+							value: null
+						}
+					]
+				}
+			];
 			
 			const res = await categoryApi.list({ limit: 6, filters: filters });
 			if (res.status_code === 200) {	
@@ -87,11 +104,11 @@ export default function HomePage() {
 					<div className="mx-auto max-w-5xl px-4">
 						<div className="flex flex-col md:flex-row items-center justify-between">
 							<div className="mb-6 md:mb-0">
-								<h2 className="text-2xl md:text-3xl font-bold mb-2">Giảm giá đến 30%</h2>
-								<p className="text-white/90">Cho tất cả sản phẩm Apple trong tháng 5</p>
+								<h2 className="text-2xl md:text-3xl font-bold mb-2">Vận chuyển nhanh chóng</h2>
+								<p className="text-white/90"></p>
 							</div>
-							<Button className="bg-white hover:bg-gray-100 text-blue-700" size="lg">
-								Mua ngay
+							<Button className="bg-white hover:bg-gray-100 text-blue-700" size="lg" onClick={() => navigate('/search')}>
+								Tìm kiếm ngay
 							</Button>
 						</div>
 					</div>

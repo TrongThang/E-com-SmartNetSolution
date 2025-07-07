@@ -124,8 +124,12 @@ const EditBlog = () => {
                 is_hide: form.is_hide === "true" || form.is_hide === true,
             };
             const res = await blogApi.edit(dataToSend);
-            if (res.error && res.error !== 0) {
-                Swal.fire({ icon: "error", title: "Lỗi!", text: res.message || "Có lỗi xảy ra!" });
+            const isSuccessStatus = res.status_code && (
+                (typeof res.status_code === "number" && res.status_code >= 200 && res.status_code < 300) ||
+                (typeof res.status_code === "string" && res.status_code.startsWith("2"))
+            );
+            if (!isSuccessStatus || (res.errors && res.errors.length > 0)) {
+                Swal.fire({ icon: "error", title: "Lỗi!", text: res.errors?.[0]?.message || res.message || "Có lỗi xảy ra!" });
             } else {
                 Swal.fire({ icon: "success", title: "Thành công!", text: "Đã cập nhật bài viết thành công" });
                 navigate("/admin/blogs");
@@ -211,7 +215,7 @@ const EditBlog = () => {
                                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                                         'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
                                         'insertdatetime', 'media', 'table', 'help', 'wordcount',
-                                        'emoticons','media','preview','table'
+                                        'emoticons', 'media', 'preview', 'table'
 
                                     ],
                                     toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify |  outdent indent | removeformat link image|fullscreen code| emoticons preview table help',

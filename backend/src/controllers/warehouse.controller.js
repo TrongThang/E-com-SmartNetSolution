@@ -20,14 +20,15 @@ class WarehouseController {
     }
 
     async createWarehouse(req, res) {
-        const { name, address } = req.body;
-        const response = await createWarehouseService({ name, address });
+        const { name, address, province, district, ward } = req.body;
+        console.log(req.body);
+        const response = await createWarehouseService({ name, address, province, district, ward });
         return res.status(response.status_code).json(response);
     }
 
     async updateWarehouse(req, res) {
-        const { id, name, address } = req.body;
-        const response = await updateWarehouseService({ id: Number(id), name, address });
+        const { id, name, address, province, district, ward } = req.body;
+        const response = await updateWarehouseService({ id: Number(id), name, address, province, district, ward });
         return res.status(response.status_code).json(response);
     }
 

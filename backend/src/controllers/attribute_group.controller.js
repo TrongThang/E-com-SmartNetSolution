@@ -5,12 +5,7 @@ const { getAttributeGroupService,
     toggleDeleteRestoreAttributeGroupService,
 } = require('../services/attribute_group.service');
 
-const { PrismaClient } = require('@prisma/client');
 class AttributeGroupsController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getAttributeGroups(req, res) {
         const { filter = null, limit = null, sort = null, order = null } = req.body || {};
         const response = await getAttributeGroupService(filter, limit, sort, order);

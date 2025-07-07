@@ -28,6 +28,7 @@ export default function GenericTable({
   rowsPerPage = 5,
   defaultSortField = null,
   defaultSortOrder = "asc",
+  getRowClassName = null
 }) {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -152,7 +153,7 @@ export default function GenericTable({
         </TableHeader>
         <TableBody className="bg-white divide-y divide-gray-200">
           {currentData.map((row, index) => (
-            <TableRow key={index}>
+            <TableRow key={index} className={getRowClassName ? getRowClassName(row) : ""} >
               {columns.map((col) => (
                 <TableCell
                   key={col.key}

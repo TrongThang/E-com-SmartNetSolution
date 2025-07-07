@@ -1,9 +1,7 @@
 const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const { executeSelectData } = require('../helpers/sql_query')
 const { get_error_response } = require('../helpers/response.helper');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 const getLikedService = async (id) => {
     const customer = await prisma.customer.findFirst({
@@ -56,7 +54,7 @@ const checkLikedService = async (customer_id, product_id) => {
     const liked = await prisma.liked.findFirst({
         where: {
             customer_id: customer_id,
-            product_id: Number(product_id),
+            product_id: product_id,
             deleted_at: null
         }
     })
@@ -72,7 +70,7 @@ const checkLikedService = async (customer_id, product_id) => {
 const createLikedService = async (product_id, customer_id) => {
     try {
         // Chuyển đổi product_id từ chuỗi sang số nguyên
-        const productId = parseInt(product_id);
+        const productId = product_id;
         
         if (isNaN(productId)) {
             return get_error_response(
@@ -132,7 +130,7 @@ const deleteLikedService = async (customer_id, product_id) => {
     try {
         // Kiểm tra xem liked có tồn tại không
         const likedToDelete = await prisma.liked.findFirst({
-            where: { customer_id: customer_id, product_id: Number(product_id), deleted_at: null }
+            where: { customer_id: customer_id, product_id: product_id, deleted_at: null }
         });
 
         if (!likedToDelete) {
@@ -142,12 +140,9 @@ const deleteLikedService = async (customer_id, product_id) => {
             );
         }
 
-        // Xóa mềm liked 
-        await prisma.liked.update({
-            where: { id: likedToDelete.id },
-            data: {
-                deleted_at: new Date()
-            }
+        // Xóa liked 
+        await prisma.liked.delete({
+            where: { id: likedToDelete.id }
         });
 
         return get_error_response(

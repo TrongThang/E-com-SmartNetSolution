@@ -81,7 +81,7 @@ export default function ImportWarehousePage() {
     }
 
     const confirmDelete = async () => {
-        
+
     }
 
     if (loading) {
@@ -106,7 +106,7 @@ export default function ImportWarehousePage() {
                     </p>
                 </div>
                 <Button asChild>
-                    <Link to="/admin/warehouse/import/create">
+                    <Link to="/admin/warehouses/import/create">
                         <Plus className="mr-2 h-4 w-4" />
                         Tạo phiếu nhập kho mới
                     </Link>

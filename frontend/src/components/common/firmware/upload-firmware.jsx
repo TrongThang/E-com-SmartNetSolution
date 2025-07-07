@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle, X, Info, Shield, Clock, Users, Loader2 } from "lucide-react"
 import Swal from "sweetalert2"
-import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import axiosIOTPublic from "@/apis/clients/iot.public.client"
 
 export default function NewFirmwarePage() {
     const navigate = useNavigate()

@@ -1,13 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
 const { getLikedService, createLikedService, deleteLikedService, checkLikedService } = require('../services/liked.service');
-const { ERROR_CODES, STATUS_CODE } = require('../contants/errors');
-const { get_error_response } = require('../helpers/response.helper');
 
 class LikedController {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getLiked(req, res) {
         const { customer_id } = req.params;
 

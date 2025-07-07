@@ -1,10 +1,14 @@
+require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
-require('dotenv').config();
+const cors = require('cors');
 const morgan = require('morgan'); // Thêm morgan để ghi log
 const configServer = require('./config/server');
 const connection = require('./config/database');
 const { initializeSocket } = require('./services/socketQR.service');
+const routes = require('./routes');
+
 const app = express();
 const port = process.env.PORT || 8081;
 
@@ -24,8 +28,7 @@ app.use(
 
 configServer(app);
 
-const routeAPI = require('./routes');
-app.use('/api', routeAPI);
+app.use('/api', routes);
 
 app.get('/', (req, res) => {
     res.status(200).json({

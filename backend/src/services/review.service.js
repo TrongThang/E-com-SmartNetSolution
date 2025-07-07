@@ -2,8 +2,7 @@ const { STATUS_CODE, ERROR_CODES } = require('../contants/errors');
 const queryHelper = require('../helpers/query.helper');
 const { get_error_response } = require('../helpers/response.helper');
 const { executeSelectData } = require('../helpers/sql_query');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
 
 // Lấy danh sách review (lọc, phân trang, sắp xếp)
 const getReviewService = async (filter, limit, sort, order, page = 1) => {
@@ -167,7 +166,7 @@ const getReviewByProductIdService = async (product_id, filter, limit, sort, orde
         {
             field: "review_product.product_id",
             condition: "=",
-            value: Number(product_id)
+            value: product_id
         },
         {
             field: "review_product.deleted_at",

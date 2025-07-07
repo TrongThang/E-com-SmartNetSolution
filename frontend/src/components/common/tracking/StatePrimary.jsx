@@ -10,14 +10,14 @@ import Swal from "sweetalert2"
 import { useManufacturing } from "@/hooks/useManufacturing"
 import NotificationBar from "./NotificationBar"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import axiosIOTPublic from "@/apis/clients/iot.private.client"
+import axiosIOTPublic from "@/apis/clients/iot.public.client"
 import { useNavigate, useLocation } from "react-router-dom"
 
 export default function StatePrimary() {
     const navigate = useNavigate()
     const location = useLocation()
     const { serialsByStage, setSerialsByStage } = useManufacturing()
-    const { rejectQC } = useManufacturing()
+    const { rejectQC, approveQC } = useManufacturing()
     const [isInitialLoading, setIsInitialLoading] = useState(true)
     const [selectedStage, setSelectedStage] = useState("pending")
     const [selectedSerials, setSelectedSerials] = useState({})
@@ -172,6 +172,35 @@ export default function StatePrimary() {
         })
     }
 
+    const handleApprove = async (e) => {
+        if (selectedStage === "qc") {
+            e.preventDefault()
+        }
+
+        if (currentSelectedSerials.length === 0) {
+            Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: "Vui lòng chọn serial để duyệt",
+            })
+            return
+        }
+
+        try {
+            await approveQC(currentSelectedSerials, qcFormData.note)
+
+            setSelectedSerials([])
+        } catch (error) {
+            console.error("Error approving QC:", error)
+        }
+        
+        Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Duyệt sản phẩm thành công",
+        })
+    }
+
     if (isInitialLoading || loading) {
         return <div className="flex justify-center items-center h-screen text-blue-500 font-bold">
             <Loader2 className="w-20 h-20 animate-spin" />
@@ -247,6 +276,7 @@ export default function StatePrimary() {
                             onSelectSerial={handleSelectSerial}
                             onSelectAllSerial={handleSelectAllSerial}
                             onReject={handleReject}
+                            onApprove={handleApprove}
                             loading={loading}
                             setSelectedSerials={setSelectedSerials}
                         />

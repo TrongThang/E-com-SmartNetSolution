@@ -39,7 +39,7 @@ export function ProductList({
             ) : (
                 <div className="text-center py-8">
                     <p className="text-muted-foreground mb-4">Chưa có sản phẩm nào được thêm vào phiếu nhập kho</p>
-                    <Button onClick={() => setShowProductDialog(true)}>
+                    <Button onClick={() => setShowProductDialog(true)}> 
                         <Plus className="h-4 w-4 mr-1" />
                         Thêm sản phẩm
                     </Button>

@@ -23,6 +23,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import EmployeeApi from "@/apis/modules/employee.api.ts"
 import roleApi from "@/apis/modules/role.api.ts"
 import Swal from "sweetalert2"
+import WarehouseApi from "@/apis/modules/warehouse.api.ts"
 
 export default function EditEmployeeForm() {
     const navigate = useNavigate()
@@ -31,6 +32,7 @@ export default function EditEmployeeForm() {
     const [roles, setRoles] = useState([])
     const [loading, setLoading] = useState(false)
     const [errors, setErrors] = useState({})
+    const [warehouses, setWarehouses] = useState([])
     const [formData, setFormData] = useState({
         surname: "",
         lastname: "",
@@ -42,6 +44,7 @@ export default function EditEmployeeForm() {
         username: "",
         role: "", // This will hold the role ID
         image: "",
+        warehouse_id: -1,
     })
 
     const validateForm = () => {
@@ -78,12 +81,32 @@ export default function EditEmployeeForm() {
             try {
                 await fetchDataRole()
                 await fetchEmployeeData()
+                await fetchDataWarehouse()
             } finally {
                 setLoading(false)
             }
         }
         fetchData()
     }, [id])
+
+    const fetchDataWarehouse = async () => {
+
+        try {
+            const res = await WarehouseApi.list({})
+            if (res.status_code === 200) {
+                setWarehouses(res.data?.data || [])
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi",
+                    text: "Không thể tải danh sách kho hàng. Vui lòng thử lại.",
+                    confirmButtonText: "Đóng",
+                })
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
 
     const fetchDataRole = async () => {
         try {
@@ -126,6 +149,7 @@ export default function EditEmployeeForm() {
                     username: employee.username, // Fallback to email prefix since username is not provided
                     role: employee.role_id || "", // Use the matched role ID
                     image: employee.image || "",
+                    warehouse_id: employee.warehouse_id || -1,
                 })
                 setImagePreview(employee.image || null)
             } else {
@@ -501,6 +525,26 @@ export default function EditEmployeeForm() {
                                                 <SelectContent>
                                                     <SelectItem value="1">Hoạt động</SelectItem>
                                                     <SelectItem value="0">Không hoạt động</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="warehouse_id" className="text-sm font-medium flex items-center gap-2">
+                                                Kho hàng <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Select
+                                                onValueChange={(value) => handleInputChange("warehouse_id", parseInt(value))}
+                                                value={formData.warehouse_id}
+                                            >
+                                                <SelectTrigger className="h-11 w-full">
+                                                    <SelectValue placeholder="Chọn kho hàng" defaultValue={formData.warehouse_id} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {warehouses.map((warehouse) => (
+                                                        <SelectItem key={warehouse.id} value={warehouse.id}>
+                                                            {warehouse.name}
+                                                        </SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>

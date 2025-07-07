@@ -10,7 +10,7 @@ import { removeVietnameseTones } from "@/utils/format";
 import Swal from "sweetalert2";
 import categoryApi from "@/apis/modules/categories.api.ts";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import axiosIOTPublic from "@/apis/clients/iot.private.client";
+import axiosIOTPublic from "@/apis/clients/iot.public.client";
 
 export default function TemplateManagement() {
 	const [searchParams] = useSearchParams();

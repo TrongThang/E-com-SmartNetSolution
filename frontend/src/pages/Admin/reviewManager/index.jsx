@@ -18,7 +18,7 @@ const ReviewManagerPage = () => {
         {
             key: "id",
             label: "ID",
-            
+
         },
         {
             key: "name",

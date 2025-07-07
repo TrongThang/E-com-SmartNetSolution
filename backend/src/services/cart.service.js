@@ -1,8 +1,9 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
-const { prisma, isExistId } = require("../helpers/query.helper");
+const { isExistId } = require("../helpers/query.helper");
 const { get_error_response, get_success_response } = require("../helpers/response.helper");
 const { validateNumber } = require("../helpers/number.helper");
 const { getProductService } = require("./product.service");
+const prisma = require('../config/database');
 
 async function checkCustomerAndProduct (customer_id, product_id) {
     const customer = await prisma.customer.findFirst({
@@ -207,7 +208,7 @@ async function removeFromCart(customer_id, product_id) {
             const cart = await tx.cart.findFirst({
                 where: {
                     customer_id,
-                    product_id: Number(product_id),
+                    product_id: product_id,
                     deleted_at: null
                 },
             });
@@ -313,7 +314,7 @@ async function getCart(customer_id = null) {
 async function fetchLatestProductInfo(filters) {
     const product = await getProductService(filters = filters)
 
-    const productCartConfig = product.data.data.map(item => ({
+    const productCartConfig = product.data?.data?.map(item => ({
         id: item.id,
         image: item.image,
         name: item.name,

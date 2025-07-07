@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Heart, Star } from "lucide-react"
+import { ShoppingCart, Heart, Star, BadgeX, Clock5 } from "lucide-react"
 import { formatCurrency } from "@/utils/format"
 import { useCart } from "@/contexts/CartContext"
 import LikedApi from "@/apis/modules/liked.api.ts"
 import { useAuth } from "@/contexts/AuthContext"
 import Swal from "sweetalert2"
+import { PRODUCT_STATUS } from "@/constants/status.constants"
 
 export default function ProductDetails({ device }) {
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const { addToCart } = useCart();
     const [selectedImage, setSelectedImage] = useState(
         { id: "main", url: device.image || "/placeholder.svg", alt: "Main image" }
@@ -33,6 +34,37 @@ export default function ProductDetails({ device }) {
         }
     }, [user?.customer_id, device?.id])
 
+    const handleViewButton = () => {
+        if (device.status === PRODUCT_STATUS.STOP_SELLING) {
+            return <p className="font-semibold flex items-center badge bg-red-500 text-white text-2xl px-4 py-2 rounded-md">
+            <span className="mr-2"> <BadgeX className="w-6 h-6" /></span>Ngừng bán
+        </p>
+        } else if (device.status === PRODUCT_STATUS.SOLD_OUT) {
+            return <p className="font-semibold flex items-center badge bg-red-500 text-white text-2xl px-4 py-2 rounded-md">
+            <span className="mr-2"> <BadgeX className="w-6 h-6" /></span>Hết hàng
+        </p>
+        } else {
+            return (
+                <>
+                    <Button
+                        className="flex-1 max-w-xs bg-white border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white h-20"
+                        onClick={() => handleAddToCart(device, quantity)}
+                    >
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Thêm vào giỏ hàng
+                    </Button>
+
+                    <Button
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white max-w-xs h-20"
+                    >
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        {device.status === PRODUCT_STATUS.PRE_ORDER ? "Đặt trước" : "Mua ngay"}
+                    </Button>
+                </>
+            )
+        }
+    }
+
     const handleAddToCart = async () => {
         try {
             const productData = {
@@ -49,6 +81,14 @@ export default function ProductDetails({ device }) {
 
     const handleLike = async () => {
         try {
+            if (!isAuthenticated) {
+                Swal.fire({
+                    title: "Bạn cần đăng nhập để thực hiện hành động này",
+                    icon: "warning",
+                    confirmButtonText: "Đăng nhập"
+                })
+                return
+            }
             const res = await LikedApi.add({
                 product_id: device.id,
                 customer_id: user.customer_id
@@ -64,6 +104,14 @@ export default function ProductDetails({ device }) {
 
     const handleDeleteLike = async () => {
         try { 
+            if (!isAuthenticated) {
+                Swal.fire({
+                    title: "Bạn cần đăng nhập để thực hiện hành động này",
+                    icon: "warning",
+                    confirmButtonText: "Đăng nhập"
+                })
+                return
+            }
             const res = await LikedApi.delete({
                 product_id: device.id,
                 customer_id: user.customer_id
@@ -186,20 +234,7 @@ export default function ProductDetails({ device }) {
                         />
                     </Button>
                     <div className="flex space-x-4 pt-6">
-                        <Button
-                            className="flex-1 max-w-xs bg-white border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white h-20"
-                            onClick={() => handleAddToCart(device, quantity)}
-                        >
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                            Thêm vào giỏ hàng
-                        </Button>
-
-                        <Button
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white max-w-xs h-20"
-                        >
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                            Mua ngay
-                        </Button>
+                        {handleViewButton()}
                     </div>
                 </div>
             </div>
