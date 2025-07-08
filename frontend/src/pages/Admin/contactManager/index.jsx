@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import contactApi from "@/apis/modules/contact.api.ts";
-import ContactTable from "@/components/common/table/ContactTable";
+import ContactTable from "@/components/common/table_e/ContactTable";
 import Swal from 'sweetalert2';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 

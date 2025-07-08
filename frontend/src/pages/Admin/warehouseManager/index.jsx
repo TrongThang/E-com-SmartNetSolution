@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WarehouseApi from "@/apis/modules/warehouse.api.ts";
-import WarehouseTable from "@/components/common/table/WarehouseTable";
+import WarehouseTable from "@/components/common/table_e/WarehouseTable";
 import { Button } from "@/components/ui/button.jsx";
 import Swal from 'sweetalert2';
 
