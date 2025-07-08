@@ -23,14 +23,16 @@ ENV NODE_ENV=production
 RUN npm run build
 
 # Production stage
-FROM nginx:stable-alpine AS production
+FROM node:20-alpine AS production
 
-# Copy build output sang nginx
-COPY --from=build /app/build /usr/share/nginx/html
+WORKDIR /app
 
-# Nếu bạn có file nginx.conf thì giữ lại dòng này, nếu không thì comment lại
-# COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy build output
+COPY --from=build /app/build ./build
 
-EXPOSE 80
+# Cài dependencies production (nếu cần)
+COPY package*.json ./
+RUN npm ci --only=production --legacy-peer-deps --ignore-scripts
 
-CMD ["nginx", "-g", "daemon off;"]
+# Chạy ứng dụng (thay 'start' bằng script trong package.json của bạn nếu khác)
+CMD ["npm", "start"]
