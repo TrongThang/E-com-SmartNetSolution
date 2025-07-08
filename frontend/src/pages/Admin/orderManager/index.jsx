@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import axiosPublic from "@/apis/clients/public.client"
 import { Skeleton } from "@/components/ui/skeleton"
 import Swal from "sweetalert2"
-import OrderTable from "@/components/common/table_e/OrderTable"
+import OrderTable from "@/components/common/table/OrderTable"
 import { ORDER_STATUS } from "@/constants/status.constants"
 import ReactDOM from 'react-dom/client';
 import axiosPrivate from "@/apis/clients/private.client"

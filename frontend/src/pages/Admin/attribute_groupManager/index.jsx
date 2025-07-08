@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import attributeGroupApi from "@/apis/modules/attribute_group.api.ts";
-import AttributeGroupCardList from "@/components/common/table_e/AttributeGroupCardList.jsx";
+import AttributeGroupCardList from "@/components/common/table/AttributeGroupCardList.jsx";
 import AttributeModal from "./attributeModal.jsx";
 import { Button } from "@/components/ui/button.jsx";
 
