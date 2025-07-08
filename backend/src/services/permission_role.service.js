@@ -95,7 +95,7 @@ async function getRoleService() {
 async function getPermissionRoleService(role_id) {
     const role = await prisma.role.findFirst({
         where: {
-            id: role_id,
+            id: Number(role_id),
             deleted_at: null
         },
         include: {
