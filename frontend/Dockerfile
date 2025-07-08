@@ -28,12 +28,14 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy build output
+# Copy build output from the build stage
 COPY --from=build /app/build ./build
 
-# Cài dependencies production (nếu cần)
-COPY package*.json ./
-RUN npm ci --only=production --legacy-peer-deps --ignore-scripts
+# Install 'serve' globally to run the static files
+RUN npm install -g serve
 
-# Chạy ứng dụng (thay 'start' bằng script trong package.json của bạn nếu khác)
-CMD ["npm", "start"]
+# Expose port 80, which is the port the container will listen on
+EXPOSE 80
+
+# Command to run the app using 'serve'. It serves files from the 'build' directory on port 80.
+CMD ["serve", "-s", "build", "-l", "80"]
