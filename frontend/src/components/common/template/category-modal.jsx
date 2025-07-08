@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import categoryApi from "@/apis/modules/categories.api.ts";
-import ParentCategorySelect from "@/pages/Admin_1/categoryManager/SearchCategoryParent";
+import ParentCategorySelect from "@/pages/Admin/categoryManager/SearchCategoryParent";
 
 export default function CategoryModal({ fetchCategories }) {
   const [open, setOpen] = useState(false);
