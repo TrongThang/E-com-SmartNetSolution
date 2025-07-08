@@ -21,6 +21,7 @@ COPY . .
 # Build app với biến môi trường production
 ENV NODE_ENV=production
 RUN npm run build
+RUN ls -la  # Kiểm tra thư mục build được tạo chưa
 
 # Production stage
 FROM node:20-alpine AS production
