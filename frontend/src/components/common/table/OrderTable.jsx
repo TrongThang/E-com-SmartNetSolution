@@ -115,6 +115,9 @@ const OrderTable = ({ orders, onEdit, onDelete, onView, selectedIds, setSelected
                         row.status === ORDER_STATUS.PENDING_SHIPPING ? 
                             <Badge variant="outline"><Truck className="w-4 h-4 mr-2" /> Chờ giao hàng</Badge>
                         : 
+                        row.status === ORDER_STATUS.CANCELLED ? 
+                            <Badge variant="outline"><AlertCircle className="w-4 h-4 mr-2" /> Đã hủy</Badge>
+                        : 
                         <Badge variant="outline">Chưa xác định</Badge>
                     }
                 </span>

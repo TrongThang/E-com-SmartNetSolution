@@ -48,11 +48,11 @@ export function ProductSelector({ open, onOpenChange, onProductSelect }) {
         (product) =>
             (product.name.toLowerCase().includes(searchTerm.toLowerCase())
                 ) &&
-            (activeTab === "all" || product.categories.toLowerCase() === activeTab.toLowerCase()),
+            (activeTab === "all" || product.categories?.toLowerCase() === activeTab.toLowerCase()),
     )
 
     // Get unique categories
-    const categories = ["all", ...new Set(products.map((product) => product.categories.toLowerCase()))]
+    const categories = ["all", ...new Set(products.map((product) => product.categories?.toLowerCase()))]
 
     return (
         <>

@@ -2,11 +2,11 @@ import axiosPrivate from "../clients/private.client";
 import { IApiResponse } from "@/models/interfaces/index";
 
 const slideshowEndpoints = {
-    list: "/slideshow",
-    detail: (id: number) => `/slideshow/${id}`,
-    create: "/slideshow",
-    update: "/slideshow",
-    delete: (id: number) => `/slideshow/${id}`,
+    list: "slideshow",
+    detail: (id: number) => `slideshow/${id}`,
+    create: "slideshow",
+    update: "slideshow",
+    delete: (id: number) => `slideshow/${id}`,
 };
 
 const SlideshowApi = {
