@@ -289,7 +289,7 @@ const OrderDetailPage = () => {
                         </div>
 
                         {/* Actions */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
+                        {/* <div className="bg-white rounded-lg shadow-sm p-6">
                             <h3 className="font-semibold text-gray-900 mb-4">Thao tác</h3>
                             <div className="space-y-3">
                                 <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -302,7 +302,7 @@ const OrderDetailPage = () => {
                                     Gửi email khách hàng
                                 </button>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

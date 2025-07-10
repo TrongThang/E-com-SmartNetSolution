@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import axiosPrivate from "@/apis/clients/private.client";
 
 export default function AddressInfo() {
     const { customer } = useCart();
@@ -8,7 +9,7 @@ export default function AddressInfo() {
 
     const fetchDataCustomer = async () => {
         try {
-            const response = await fetch(`http://localhost:8081/api/addressBook/${customer.id}`);
+            const response = await axiosPrivate.get(`/address-book/${customer.id}`);
             if (!response.ok) {
                 throw new Error("Lỗi lấy dữ liệu từ khách hàng");
             }

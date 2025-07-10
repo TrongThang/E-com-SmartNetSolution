@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import ListRating from "./ReviewList";
 import PlaceToRating from "./ReviewSection";
-import axios from "axios";
+import axiosPrivate from "@/apis/clients/private.client";
 
 export default function AreaRating({ device }) {
     const [reviews, setReviews] = useState(device.reviews || []);
 
     const fetchReviews = async () => {
         try {
-            const response = await axios.get(`http://localhost:8081/api/device/reviews/${device.idDevice}`);
+            const response = await axiosPrivate.get(`device/reviews/${device.idDevice}`);
             setReviews(response.data);
             console.log('Đánh giá:', reviews)
         } catch (error) {

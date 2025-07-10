@@ -1,5 +1,6 @@
 import Swal from "sweetalert2"
 import axiosPublic from "@/apis/clients/public.client"
+import axiosPrivate from "@/apis/clients/private.client";
 
 // ============= PLATFORM DETECTION =============
 function detectPlatform() {
@@ -51,7 +52,7 @@ const handleVnpayPayment = async (amount, bankCode, customReturnUrl = null) => {
             userAgent: navigator.userAgent
         });
 
-        const response = await axiosPublic.post('http://localhost:8081/api/order/create_payment_url', requestData);
+        const response = await axiosPrivate.post('order/create_payment_url', requestData);
 
         console.log('✅ VNPay Response:', response);
 

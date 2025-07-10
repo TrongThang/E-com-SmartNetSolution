@@ -223,7 +223,7 @@ export default function StatePrimary() {
                                 onValueChange={handleChangeBatch}
                                 disabled={loading || isInitialLoading}
                             >
-                                <SelectTrigger className="w-[250px]">
+                                <SelectTrigger className="w-[400px]">
                                     <SelectValue placeholder="Chọn lô" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -270,6 +270,8 @@ export default function StatePrimary() {
                     {/* Stage Details */}
                     <div className="lg:col-span-2">
                         <StageDetails
+                            batch_production_id={selectedBatch}
+                            template_id={listBatch.find((b) => b.production_batch_id === selectedBatch)?.template_id}
                             stage={stages.find((s) => s.id === selectedStage) || stages[0]}
                             serials={currentStageSerials}
                             selectedSerials={currentSelectedSerials}

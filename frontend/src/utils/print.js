@@ -5,7 +5,7 @@ import QRCode from "qrcode";
  * title: string (optional) - Tiêu đề của tài liệu
  * companyName: string (optional) - Tên công ty
  */ 
-export async function exportMultipleQRCodesToPDF(serialList, title = "MÃ QR THIẾT BỊ", companyName = "HOME CONNECT") {
+export async function exportMultipleQRCodesToPDF(serialList, batch_production_id, template_id, title = "MÃ QR THIẾT BỊ", companyName = "HOME CONNECT") {
     const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -56,7 +56,12 @@ export async function exportMultipleQRCodesToPDF(serialList, title = "MÃ QR THI
         const startY = marginY + row * blockHeight;
 
         const serial = serialList[qrIndex];
-        const qrDataUrl = await QRCode.toDataURL(serial);
+        const qrPayload = {
+            serial_number: serial,
+            batch_production_id: batch_production_id,
+            template_id: template_id,
+        };
+        const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload));
 
         // Serial ở trên (font size nhỏ hơn)
         doc.setFontSize(4);

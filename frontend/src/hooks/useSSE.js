@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 
 export const useSSE = (onMessage) => {
     const connectSSE = useCallback(() => {
-        const eventSource = new EventSource(`http://localhost:8888/api/sse/events`);
+        const eventSource = new EventSource(`${process.env.REACT_APP_SMART_NET_IOT_API_URL}/sse/events`);
 
         eventSource.onopen = () => {
             console.log('SSE Connected');

@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 
 // Tạo instance axios
 const axiosPrivate = axios.create({
-    baseURL: process.env.REACT_APP_SMART_NET_ECOMERCE_PRIVATE_API_URL || "http://localhost:3000/api/",
+    baseURL: process.env.REACT_APP_SMART_NET_ECOMERCE_API_URL,
     timeout: 1000000,
     headers: {
         // "ngrok-skip-browser-warning": "true",

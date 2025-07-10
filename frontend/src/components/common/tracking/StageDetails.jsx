@@ -14,6 +14,8 @@ import { exportMultipleQRCodesToPDF } from "@/utils/print"
 import axiosIOTPublic from "@/apis/clients/iot.public.client"
 
 export default function StageDetails({
+    batch_production_id,
+    template_id,
     stage,
     serials,
     selectedSerials,
@@ -34,7 +36,6 @@ export default function StageDetails({
         return matchesSearch && matchesStatus
     })
     
-
     const isAllSelected =
         filteredSerials.length > 0 && filteredSerials.every((serial) => selectedSerials.includes(serial.serial))
 
@@ -198,7 +199,9 @@ export default function StageDetails({
             return;
         }
         console.log("selectedSerials", selectedSerials);
-        exportMultipleQRCodesToPDF(selectedSerials);
+        console.log("batch_production_id", batch_production_id);
+        console.log("template_id", template_id);
+        exportMultipleQRCodesToPDF(selectedSerials, batch_production_id, template_id);
     }
 
     return (

@@ -9,7 +9,7 @@ class SSEService {
             return;
         }
 
-        this.eventSource = new EventSource('http://localhost:8888/api/sse/events');
+        this.eventSource = new EventSource(`${process.env.REACT_APP_SMART_NET_IOT_API_URL}sse/events`);
 
         this.eventSource.onopen = () => {
             console.log('SSE connection established');
