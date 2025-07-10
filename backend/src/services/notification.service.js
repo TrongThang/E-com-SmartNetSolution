@@ -21,6 +21,62 @@ class NotificationService {
         this.otpStore = new Map();
     }
 
+    async getNotificationByAccountService(account_id) {
+        let user = await this.prisma.account.findFirst({
+            where: {
+                account_id: account_id,
+                deleted_at: null
+            }
+        });
+        if (!user) {
+            return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+        }
+
+        const notifications = await this.prisma.notification.findMany({
+            where: {
+                account_id: account_id,
+                deleted_at: null
+            }
+        });
+
+        return notifications;
+    }
+
+    async isReadNotification(notification_id, account_id) {
+        let user = await this.prisma.account.findFirst({
+            where: {
+                account_id: account_id,
+                deleted_at: null
+            }
+        });
+        if (!user) {
+            return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+        }
+
+
+
+        const notifications = await this.prisma.notification.findFirst({
+            where: {
+                notification_id: notification_id,
+            }
+        });
+
+        await this.prisma.notification.update({
+            where: {
+                notification_id: notification_id
+            },
+            data: {
+                is_read: true
+            }
+        });
+
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, { message: "Đã đọc thông báo" });
+    }
+    
+    async createNotification() {
+        
+    }
+
     async checkAccountEmail(data) {
         const { account_id, email, username } = data;
 

@@ -12,7 +12,10 @@ const asyncHandler = (fn) => {
 }
 
 // Existing notification routes
-notificationRouter.get('/', asyncHandler(notificationController.getNotifications));
+notificationRouter.get('/',
+    authMiddleware,    
+    asyncHandler(notificationController.getNotificationByAccount)
+);
 notificationRouter.post('/', validateMiddleware(notificationController.CreateNotificationSchema), asyncHandler(notificationController.createNotification));
 notificationRouter.delete('/:id', validateMiddleware(notificationController.DeleteNotificationSchema), asyncHandler(notificationController.deleteNotification));
 

@@ -1,10 +1,18 @@
 const notificationService = require('../services/notification.service');
 
 class NotificationController {
-    async getNotifications(req, res, next) {
+    async getNotificationByAccount(req, res, next) {
         try {
-            const { filter, limit, sort, order } = req.query;
-            const notifications = await notificationService.getNotifications(filter, limit, sort, order);
+            const account_id = req.user?.userId || req.user?.accountId || req.user?.employeeId;
+
+            if (!account_id)
+            {
+                return res.status(401).json({
+                    error: 'Người dùng không hợp lệ'
+                });
+            }
+
+            const notifications = await notificationService.getNotificationByAccountService(account_id);
             return res.status(200).json(notifications);
         } catch (error) {
             next(error);
