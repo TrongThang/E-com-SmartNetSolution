@@ -219,7 +219,7 @@ export const AuthProvider = ({ children }) => {
 
                 localStorage.setItem('employeeToken', token);
                 setIsAdminAuthenticated(true);
-                fetchEmployeeInfo();
+                await fetchEmployeeInfo();
 
                 // Lấy FCM token sau khi đăng nhập employee thành công
                 await getAndUpdateFCMToken();
