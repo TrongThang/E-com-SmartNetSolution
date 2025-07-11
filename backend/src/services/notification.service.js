@@ -39,7 +39,7 @@ class NotificationService {
             }
         });
 
-        return notifications;
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, notifications);
     }
 
     async isReadNotification(notification_id, account_id) {
@@ -73,9 +73,41 @@ class NotificationService {
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, { message: "Đã đọc thông báo" });
     }
     
-    async createNotification() {
-        
-    }
+    async createNotification({
+        account_id,
+        role_id,
+        text,
+        type,
+    }) {
+        if (account_id) {
+            const account = await this.prisma.account.findFirst({
+                where: { account_id, deleted_at: null },
+            });
+            if (!account) return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+        }
+
+        if (role_id) {
+            const role = await this.prisma.role.findUnique({
+                where: { id: role_id },
+            });
+            if (!role) return get_error_response(ERROR_CODES.ROLE_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+        }
+
+        // Tạo notification trong database trước (business logic chính)
+        const notification = await this.prisma.notification.create({
+            data: {
+                account_id: account_id || null,
+                role_id: role_id || null,
+                text: text,
+                type: type,
+                is_read: false,
+                created_at: new Date(),
+                updated_at: new Date(),
+            }
+        });
+
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, { message: "Thông báo đã được tạo" });
+    }   
 
     async checkAccountEmail(data) {
         const { account_id, email, username } = data;

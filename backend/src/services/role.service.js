@@ -35,9 +35,6 @@ const getRoleService = async (filter, limit, sort, order) => {
             order: order
         });
 
-        // Log result for debugging
-        console.log("executeSelectData result:", result);
-
         // Extract rows from result.data
         const rows = result.data || [];
 

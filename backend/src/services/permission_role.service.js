@@ -1,6 +1,7 @@
 const { ERROR_CODES, STATUS_CODE } = require("../contants/errors");
 const { get_error_response } = require("../helpers/response.helper");
 const prisma = require('../config/database');
+const { updatePermissionInRedis } = require("../helpers/permissionRedis.helper");
 
 function diffPermission(request, in_db) {
     // request = [1, 2, 3]
@@ -232,6 +233,13 @@ async function modifyPermissionForRoleService(payload) {
             }
         })  
 
+        // Cập nhật vào Redis thay đổi các quyền của chức vụ
+        const redisResult = await updatePermissionInRedis(role_id, toAdd, toDelete);
+        if (!redisResult.success) {
+            console.warn('⚠️ Cảnh báo: Không thể cập nhật Redis:', redisResult.error);
+        } else {
+            console.log('✅ Đã cập nhật cache quyền trong Redis');
+        }
 
         return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, "Cập nhật quyền thành công")
 

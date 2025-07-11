@@ -8,6 +8,7 @@ const configServer = require('./config/server');
 const connection = require('./config/database');
 const { initializeSocket } = require('./services/socketQR.service');
 const routes = require('./routes');
+const { initRedis } = require('./config/redis.config');
 
 const app = express();
 const port = process.env.PORT || 8081;
@@ -42,11 +43,22 @@ const server = http.createServer(app);
 
 // **Khởi tạo socket.io trên server này**
 const io = initializeSocket(server);
+async function startServer () {
+    try {
+        // Khởi tạo Redis
+        await initRedis();
+        
+        // **Lắng nghe trên server**
+        server.listen(port, () => {
+            console.log(`Server running http://localhost:${port}`);
+        });
+    } catch (error) {
+        console.error('❌ Error starting server:', error);
+        process.exit(1);
+    }
+}
 
-// **Lắng nghe trên server**
-server.listen(port, () => {
-    console.log(`Server running http://localhost:${port}`);
-});
+startServer();
 
 // Đóng kết nối Prisma khi server dừng
 process.on('SIGTERM', async () => {
