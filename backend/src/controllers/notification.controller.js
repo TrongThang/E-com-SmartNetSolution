@@ -5,7 +5,7 @@ class NotificationController {
         try {
             const account_id = req.user?.userId || req.user?.accountId || req.user?.employeeId;
 
-            const { type } = req.params || 'all';
+            const { type } = req.query;
 
             if (!account_id)
             {

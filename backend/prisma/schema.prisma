@@ -417,7 +417,7 @@ model employee {
 
 model export_warehouse {
   id                Int             @id @default(autoincrement())
-  export_code       String?         @db.VarChar(12)
+  export_code       String?         @db.VarChar(32)
   export_number     Int?
   employee_id       String?         @db.VarChar(32)
   export_date       DateTime?       @db.Date
