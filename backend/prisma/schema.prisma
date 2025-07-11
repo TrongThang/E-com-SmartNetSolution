@@ -241,7 +241,8 @@ model components {
   is_deleted          Boolean?              @default(false)
   status              Boolean?              @default(false)
   flow_type           String?
-  value               String?               
+  value               String?    
+  unit                String?           
   template_components template_components[]
 }
 
