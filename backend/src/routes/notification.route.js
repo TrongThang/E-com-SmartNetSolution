@@ -16,7 +16,7 @@ notificationRouter.get('/',
     authMiddleware,    
     asyncHandler(notificationController.getNotificationByAccount)
 );
-notificationRouter.patch('/read-notification',
+notificationRouter.patch('/read-notification/:id',
     authMiddleware,
     asyncHandler(notificationController.isReadNotification)
 );
