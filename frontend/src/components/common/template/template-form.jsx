@@ -33,6 +33,7 @@ export default function TemplateForm({ template, components, fetchComponent, onS
     const [newCapabilityNote, setNewCapabilityNote] = useState("");
     const [capabilitySearchTerm, setCapabilitySearchTerm] = useState("");
     const [capabilityError, setCapabilityError] = useState("");
+    const [capabilityRequiredError, setCapabilityRequiredError] = useState("");
 
     useEffect(() => {
         fetchCategories();
@@ -226,6 +227,13 @@ export default function TemplateForm({ template, components, fetchComponent, onS
         e.preventDefault();
         e.stopPropagation();
         console.log("Submitting TemplateForm");
+
+        if (selectedCapabilities.length === 0) {
+            setCapabilityRequiredError("Vui lòng chọn ít nhất 1 tính năng cho template.");
+            return;
+        } else {
+            setCapabilityRequiredError("");
+        }
 
         let deviceTypeId = Number(formData.device_type_id);
         if (!deviceTypeId || deviceTypeId === 0) {
@@ -517,6 +525,9 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                                     </span>
                                 ))}
                             </div>
+                            {capabilityRequiredError && (
+                                <div className="text-red-500 text-sm mb-2">{capabilityRequiredError}</div>
+                            )}
                         </div>
 
                         {/* Modal chọn capability dạng card, search, chọn nhiều */}
