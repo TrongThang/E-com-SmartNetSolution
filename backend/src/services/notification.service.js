@@ -46,6 +46,8 @@ class NotificationService {
     }
 
     async isReadNotification(notification_id, account_id) {
+        notification_id = typeof notification_id == 'number' ? notification_id : parseInt(notification_id);
+
         let user = await this.prisma.account.findFirst({
             where: {
                 account_id: account_id,
