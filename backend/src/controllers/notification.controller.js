@@ -5,6 +5,8 @@ class NotificationController {
         try {
             const account_id = req.user?.userId || req.user?.accountId || req.user?.employeeId;
 
+            const { type } = req.params || 'all';
+
             if (!account_id)
             {
                 return res.status(401).json({
@@ -12,7 +14,7 @@ class NotificationController {
                 });
             }
 
-            const notifications = await notificationService.getNotificationByAccountService(account_id);
+            const notifications = await notificationService.getNotificationByAccountService(account_id, type);
             return res.status(200).json(notifications);
         } catch (error) {
             next(error);

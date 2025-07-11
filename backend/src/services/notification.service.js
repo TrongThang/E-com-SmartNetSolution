@@ -21,7 +21,7 @@ class NotificationService {
         this.otpStore = new Map();
     }
 
-    async getNotificationByAccountService(account_id) {
+    async getNotificationByAccountService(account_id, type) {
         let user = await this.prisma.account.findFirst({
             where: {
                 account_id: account_id,
@@ -35,6 +35,9 @@ class NotificationService {
         const notifications = await this.prisma.notification.findMany({
             where: {
                 account_id: account_id,
+                type: {
+                    in: [type]
+                },
                 deleted_at: null
             }
         });
