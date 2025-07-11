@@ -60,13 +60,13 @@ class NotificationService {
 
         const notifications = await this.prisma.notification.findFirst({
             where: {
-                notification_id: notification_id,
+                id: notification_id,
             }
         });
 
         await this.prisma.notification.update({
             where: {
-                notification_id: notification_id
+                id: notification_id
             },
             data: {
                 is_read: true
