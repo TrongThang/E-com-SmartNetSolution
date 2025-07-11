@@ -240,6 +240,8 @@ model components {
   updated_at          DateTime?             @default(dbgenerated("(now())")) @db.DateTime(0)
   is_deleted          Boolean?              @default(false)
   status              Boolean?              @default(false)
+  flow_type           String?
+  value               String?               
   template_components template_components[]
 }
 
@@ -578,6 +580,7 @@ model notification {
   text       String?   @db.VarChar(255)
   type       String?   @db.VarChar(200)
   is_read    Boolean?
+  id_reference         String?   @db.VarChar(50)
   created_at DateTime? @default(dbgenerated("(now())")) @db.DateTime(0)
   updated_at DateTime? @default(dbgenerated("(now())")) @db.DateTime(0)
   deleted_at DateTime? @db.DateTime(0)
