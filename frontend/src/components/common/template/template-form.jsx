@@ -6,6 +6,12 @@ import categoryApi from "@/apis/modules/categories.api.ts";
 import CategoryModal from "./category-modal";
 import axiosIOTPublic from "@/apis/clients/iot.public.client";
 
+function removeVietnameseTones(str) {
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d").replace(/Đ/g, "D");
+}
 
 export default function TemplateForm({ template, components, fetchComponent, onSave, onCancel }) {
     const [formData, setFormData] = useState({
@@ -84,6 +90,10 @@ export default function TemplateForm({ template, components, fetchComponent, onS
         setCapabilityError("");
         if (!newCapabilityKeyword.trim()) {
             setCapabilityError("Keyword không được để trống");
+            return;
+        }
+        if (!newCapabilityNote.trim()) {
+            setCapabilityError("Ghi chú không được để trống");
             return;
         }
         try {
@@ -608,7 +618,12 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                                                         type="text"
                                                         placeholder="Keyword (bắt buộc)"
                                                         value={newCapabilityKeyword}
-                                                        onChange={e => setNewCapabilityKeyword(e.target.value.toUpperCase())}
+                                                        onChange={e => {
+                                                            let value = e.target.value;
+                                                            value = removeVietnameseTones(value);
+                                                            value = value.toUpperCase().replace(/[^A-Z0-9_]/g, "");
+                                                            setNewCapabilityKeyword(value);
+                                                        }}
                                                         className="w-full mb-2 px-3 py-2 border border-gray-300 rounded"
                                                     />
                                                     {capabilityError && (
