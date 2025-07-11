@@ -4,6 +4,8 @@ import { X, Plus, Minus, Search, Tags } from "lucide-react";
 import { ComponentFormModal } from "../component/form-component";
 import categoryApi from "@/apis/modules/categories.api.ts";
 import CategoryModal from "./category-modal";
+import axiosIOTPublic from "@/apis/clients/iot.public.client";
+
 
 export default function TemplateForm({ template, components, fetchComponent, onSave, onCancel }) {
     const [formData, setFormData] = useState({
@@ -20,6 +22,87 @@ export default function TemplateForm({ template, components, fetchComponent, onS
     const [categories, setCategories] = useState([]);
     const [showComponentSearch, setShowComponentSearch] = useState(false);
     const [showComponentForm, setShowComponentForm] = useState(false);
+    // Thêm state cho capabilities
+    const [capabilities, setCapabilities] = useState([]);
+    const [selectedCapabilities, setSelectedCapabilities] = useState([]);
+    // Modal chọn capability
+    const [showCapabilityModal, setShowCapabilityModal] = useState(false);
+    // Tạo mới capability (giả lập, có thể thay bằng form thực tế nếu có API)
+    const [showCreateCapability, setShowCreateCapability] = useState(false);
+    const [newCapabilityKeyword, setNewCapabilityKeyword] = useState("");
+    const [newCapabilityNote, setNewCapabilityNote] = useState("");
+    const [capabilitySearchTerm, setCapabilitySearchTerm] = useState("");
+    const [capabilityError, setCapabilityError] = useState("");
+
+    useEffect(() => {
+        fetchCategories();
+        fetchCapabilities();
+    }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const res = await categoryApi.list({});
+            if (res.status_code === 200) {
+                const flattenCategories = flattenCategoryTree(res.data?.categories || []);
+                setCategories(flattenCategories);
+            }
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
+
+    const flattenCategoryTree = (categories, level = 0, parentId = null) => {
+        let result = [];
+        for (const category of categories) {
+            result.push({
+                ...category,
+                level,
+                parentId,
+            });
+            if (category.children && category.children.length > 0) {
+                result = result.concat(flattenCategoryTree(category.children, level + 1, category.category_id));
+            }
+        }
+        return result;
+    };
+
+    // Lấy capabilities từ API dùng axiosIOTPublic
+    const fetchCapabilities = async () => {
+        try {
+            const res = await axiosIOTPublic.get("device-capabilities");
+            const data = Array.isArray(res.data) ? res.data.filter(c => !c.is_deleted) : [];
+            console.log("Fetched capabilities:", data);
+            setCapabilities(data);
+        } catch (error) {
+            setCapabilities([]);
+        }
+    };
+
+    // Hàm tạo capability mới (gọi API thật)
+    const handleCreateCapability = async () => {
+        setCapabilityError("");
+        if (!newCapabilityKeyword.trim()) {
+            setCapabilityError("Keyword không được để trống");
+            return;
+        }
+        try {
+            const res = await axiosIOTPublic.post("device-capabilities", {
+                keyword: newCapabilityKeyword,
+                note: newCapabilityNote
+            });
+            if (res.data) {
+                await fetchCapabilities();
+                setShowCreateCapability(false);
+                setNewCapabilityKeyword("");
+                setNewCapabilityNote("");
+                setCapabilityError("");
+            } else {
+                setCapabilityError(res.data?.message || "Keyword đã tồn tại!");
+            }
+        } catch (error) {
+            setCapabilityError(error?.response?.data?.message || "Keyword đã tồn tại!");
+        }
+    };
 
     useEffect(() => {
         if (template) {
@@ -52,6 +135,14 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                 components: enrichedComponents,
                 production_cost: template.production_cost || 0,
             });
+
+            // Khi setSelectedCapabilities từ API (edit template)
+            if (template.base_capabilities && Array.isArray(template.base_capabilities)) {
+                setSelectedCapabilities(template.base_capabilities.map(cap => ({
+                    id: cap.id,
+                    key: cap.key || cap.keyword
+                })));
+            }
         } else {
             const firstChildCategory = categories.find((cat) => cat.parentId !== null);
             if (firstChildCategory) {
@@ -61,39 +152,9 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                     device_type_name: firstChildCategory.name,
                 }));
             }
+            setSelectedCapabilities([]); // reset khi tạo mới
         }
     }, [template, categories, components]);
-
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    const fetchCategories = async () => {
-        try {
-            const res = await categoryApi.list({});
-            if (res.status_code === 200) {
-                const flattenCategories = flattenCategoryTree(res.data?.categories || []);
-                setCategories(flattenCategories);
-            }
-        } catch (error) {
-            console.error("Error fetching categories:", error);
-        }
-    };
-
-    const flattenCategoryTree = (categories, level = 0, parentId = null) => {
-        let result = [];
-        for (const category of categories) {
-            result.push({
-                ...category,
-                level,
-                parentId,
-            });
-            if (category.children && category.children.length > 0) {
-                result = result.concat(flattenCategoryTree(category.children, level + 1, category.category_id));
-            }
-        }
-        return result;
-    };
 
     const filteredComponents = components.filter(
         (component) =>
@@ -101,9 +162,22 @@ export default function TemplateForm({ template, components, fetchComponent, onS
             !formData.components.some((c) => c.component_id === component.component_id)
     );
 
+    // Lọc capabilities theo search
+    const filteredCapabilities = capabilities.filter(
+        (cap) =>
+            (cap.keyword?.toLowerCase() || "").includes(capabilitySearchTerm.toLowerCase()) &&
+            !selectedCapabilities.some((c) => c.id === cap.id)
+    );
+
+    useEffect(() => {
+        console.log("All capabilities:", capabilities);
+        console.log("Selected capabilities:", selectedCapabilities);
+        console.log("Filtered capabilities:", filteredCapabilities);
+    }, [capabilities, selectedCapabilities, filteredCapabilities]);
+
     const handleCategoryFetch = () => {
         fetchCategories();
-      }
+    }
 
     const addComponent = (component) => {
         setFormData({
@@ -168,6 +242,7 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                 component_id: component.component_id,
                 quantity_required: component.quantity_required,
             })),
+            capabilities: selectedCapabilities, // Gửi capabilities về backend
         };
 
         console.log("Payload gửi về backend:", payload);
@@ -409,6 +484,146 @@ export default function TemplateForm({ template, components, fetchComponent, onS
                                 ))}
                             </div>
                         </div>
+                        {/* UI chọn capabilities đẹp như chọn linh kiện */}
+                        <div className="mb-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-lg font-medium">Tính năng ({selectedCapabilities.length})</h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCapabilityModal(true)}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-green-700"
+                                >
+                                    <Plus size={16} />
+                                    <span>Thêm tính năng</span>
+                                </button>
+                            </div>
+                            {/* Hiển thị capabilities đã chọn */}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                {selectedCapabilities.map(cap => (
+                                    <span
+                                        key={cap.id}
+                                        className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded"
+                                    >
+                                        {cap.key || cap.keyword}
+                                        <button
+                                            type="button"
+                                            className="ml-1 text-red-500"
+                                            onClick={() =>
+                                                setSelectedCapabilities(selectedCapabilities.filter(c => c.id !== cap.id))
+                                            }
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Modal chọn capability dạng card, search, chọn nhiều */}
+                        {showCapabilityModal && (
+                            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-60">
+                                <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                                    <div className="p-4 border-b flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold">Chọn tính năng</h3>
+                                        <button
+                                            onClick={() => setShowCapabilityModal(false)}
+                                            className="text-gray-400 hover:text-gray-600"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    <div className="p-4">
+                                        <div className="relative mb-4">
+                                            <input
+                                                type="text"
+                                                placeholder="Tìm kiếm tính năng..."
+                                                value={capabilitySearchTerm}
+                                                onChange={e => setCapabilitySearchTerm(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                            />
+                                            <Search
+                                                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                                                size={16}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto">
+                                            {filteredCapabilities.map((cap) => (
+                                                <div
+                                                    key={cap.id}
+                                                    onClick={() => {
+                                                        setSelectedCapabilities([...selectedCapabilities, { id: cap.id, key: cap.keyword }]);
+                                                    }}
+                                                    className="p-3 border rounded-md mb-2 cursor-pointer hover:bg-gray-50 flex justify-between items-center"
+                                                >
+                                                    <div>
+                                                        <h4 className="font-medium">{cap.keyword}</h4>
+                                                        <p className="text-sm text-gray-600">{cap.note}</p>
+                                                    </div>
+                                                    <Plus size={18} className="text-green-600" />
+                                                </div>
+                                            ))}
+                                            {filteredCapabilities.length === 0 && (
+                                                <div className="col-span-2 text-gray-500 text-center py-4">Không có tính năng phù hợp</div>
+                                            )}
+                                        </div>
+                                        <div className="flex justify-between items-center mt-4">
+                                            <button
+                                                type="button"
+                                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                onClick={() => setShowCapabilityModal(false)}
+                                            >
+                                                Xong
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                                onClick={() => setShowCreateCapability(true)}
+                                            >
+                                                Tạo tính năng mới
+                                            </button>
+                                        </div>
+                                        {/* Modal tạo capability mới lồng trong modal chọn capability */}
+                                        {showCreateCapability && (
+                                            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-70">
+                                                <div className="bg-white rounded-lg max-w-sm w-full p-6 relative">
+                                                    <h4 className="text-md font-semibold mb-2">Tạo tính năng mới</h4>
+                                                    <button
+                                                        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                                                        onClick={() => setShowCreateCapability(false)}
+                                                    >
+                                                        <X size={18} />
+                                                    </button>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Keyword (bắt buộc)"
+                                                        value={newCapabilityKeyword}
+                                                        onChange={e => setNewCapabilityKeyword(e.target.value.toUpperCase())}
+                                                        className="w-full mb-2 px-3 py-2 border border-gray-300 rounded"
+                                                    />
+                                                    {capabilityError && (
+                                                        <div className="text-red-500 text-sm mb-2">{capabilityError}</div>
+                                                    )}
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Ghi chú (tùy chọn)"
+                                                        value={newCapabilityNote}
+                                                        onChange={e => setNewCapabilityNote(e.target.value)}
+                                                        className="w-full mb-4 px-3 py-2 border border-gray-300 rounded"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 w-full"
+                                                        onClick={handleCreateCapability}
+                                                    >
+                                                        Lưu tính năng
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </form>
                 </div>
                 <div className="flex justify-end space-x-3 p-6 border-t bg-gray-50">

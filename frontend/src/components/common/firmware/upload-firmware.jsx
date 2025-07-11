@@ -39,12 +39,21 @@ export default function NewFirmwarePage() {
     const [deviceTemplates, setDeviceTemplates] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [textFile, setTextFile] = useState('') //Dùng để đưa nội dung file
+    const [allCapabilities, setAllCapabilities] = useState([]); // toàn bộ capabilities
+    const [selectedCapabilities, setSelectedCapabilities] = useState([]); // capabilities chọn cho firmware
+    const [showCapabilityModal, setShowCapabilityModal] = useState(false);
+    const [capabilitySearchTerm, setCapabilitySearchTerm] = useState("");
+    const [showCreateCapability, setShowCreateCapability] = useState(false);
+    const [newCapabilityKeyword, setNewCapabilityKeyword] = useState("");
+    const [newCapabilityNote, setNewCapabilityNote] = useState("");
+    const [capabilityError, setCapabilityError] = useState("");
+    const [noRuntimeCapabilities, setNoRuntimeCapabilities] = useState(false);
 
     // Dữ liệu mẫu cho device templates
     useEffect(() => {
         const fetchDeviceTemplates = async () => {
             try {
-            const response = await axiosIOTPublic.get("firmware/latest-version-by-template")
+                const response = await axiosIOTPublic.get("firmware/latest-version-by-template")
 
                 if (response.success) {
                     setDeviceTemplates(response.data)
@@ -58,6 +67,17 @@ export default function NewFirmwarePage() {
         fetchDeviceTemplates()
     }, [])
 
+    // Fetch all capabilities khi mở trang
+    useEffect(() => {
+        const fetchAllCapabilities = async () => {
+            try {
+                const res = await axiosIOTPublic.get("device-capabilities");
+                setAllCapabilities(Array.isArray(res.data) ? res.data : []);
+            } catch { }
+        };
+        fetchAllCapabilities();
+    }, []);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target
 
@@ -69,7 +89,7 @@ export default function NewFirmwarePage() {
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0]
-        console.log('e.target:',e.target.files[0])
+        console.log('e.target:', e.target.files[0])
         if (file) {
             const allowedTypes = [".ino", ".cpp", ".txt"]
             const fileExtension = `.${file.name.split(".").pop()?.toLowerCase()}`
@@ -85,7 +105,7 @@ export default function NewFirmwarePage() {
             }
 
             const reader = new FileReader();
-            
+
             reader.onload = (e) => {
                 setTextFile(e.target.result);
             };
@@ -127,6 +147,7 @@ export default function NewFirmwarePage() {
             is_mandatory: formData.is_mandatory,
             note: formData.note,
             file_path: textFile,
+            capabilities: noRuntimeCapabilities ? [] : selectedCapabilities,
         }
         try {
             console.log("newFirmware:", newFirmware)
@@ -156,7 +177,7 @@ export default function NewFirmwarePage() {
                 icon: "error",
             })
         }
-        
+
 
     }
 
@@ -168,7 +189,31 @@ export default function NewFirmwarePage() {
         return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
     }
 
-    const selectedTemplate = deviceTemplates.find((t) => t.id === formData.id)
+    // Lấy base_capabilities từ template đã chọn
+    const selectedTemplate = deviceTemplates.find((t) => t.id === formData.id);
+    const templateCapabilities = Array.isArray(selectedTemplate?.base_capabilities)
+        ? selectedTemplate.base_capabilities.map(cap => ({
+            id: cap.id,
+            key: cap.key || cap.keyword
+        }))
+        : [];
+
+    // Lọc capabilities chỉ lấy những cái chưa có trong template
+    const availableCapabilities = allCapabilities
+        .filter(
+            (cap) =>
+                !templateCapabilities.some((c) => Number(c.id) === Number(cap.id)) &&
+                !selectedCapabilities.some((c) => Number(c.id) === Number(cap.id))
+        )
+        .filter(
+            (cap) => (cap.keyword?.toLowerCase() || "").includes(capabilitySearchTerm.toLowerCase())
+        );
+
+    useEffect(() => {
+        console.log("allCapabilities", allCapabilities);
+        console.log("templateCapabilities", templateCapabilities);
+        console.log("availableCapabilities", availableCapabilities);
+    }, [allCapabilities, templateCapabilities, availableCapabilities]);
 
     if (isLoading) {
         return (
@@ -212,6 +257,33 @@ export default function NewFirmwarePage() {
             </div>
         )
     }
+
+    const handleCreateCapability = async () => {
+        setCapabilityError("");
+        if (!newCapabilityKeyword.trim()) {
+            setCapabilityError("Keyword không được để trống");
+            return;
+        }
+        try {
+            const res = await axiosIOTPublic.post("device-capabilities", {
+                keyword: newCapabilityKeyword,
+                note: newCapabilityNote
+            });
+            if (res.data) {
+                // Reload lại capabilities
+                const res2 = await axiosIOTPublic.get("device-capabilities");
+                setAllCapabilities(Array.isArray(res2.data) ? res2.data : []);
+                setShowCreateCapability(false);
+                setNewCapabilityKeyword("");
+                setNewCapabilityNote("");
+                setCapabilityError("");
+            } else {
+                setCapabilityError(res.data?.message || "Keyword đã tồn tại!");
+            }
+        } catch (error) {
+            setCapabilityError(error?.response?.data?.message || "Keyword đã tồn tại!");
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -410,6 +482,158 @@ export default function NewFirmwarePage() {
                                     />
                                     {error.note && <p className="text-red-500 text-sm">{error.note}</p>}
                                 </div>
+
+                                {formData.id && (
+                                    <div className="mb-4">
+                                        <div className="flex items-center mb-2">
+                                            <Checkbox
+                                                id="no_runtime_capabilities"
+                                                checked={noRuntimeCapabilities}
+                                                onCheckedChange={setNoRuntimeCapabilities}
+                                                className="mr-2"
+                                            />
+                                            <Label htmlFor="no_runtime_capabilities" className="cursor-pointer">
+                                                Không có tính năng khi chạy
+                                            </Label>
+                                        </div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h3 className="text-lg font-medium">Tính năng khi chạy ({selectedCapabilities.length})</h3>
+                                            <Button
+                                                type="button"
+                                                onClick={() => setShowCapabilityModal(true)}
+                                                className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-green-700"
+                                                disabled={noRuntimeCapabilities}
+                                            >
+                                                <Upload className="h-4 w-4" />
+                                                <span>Thêm tính năng khi chạy</span>
+                                            </Button>
+                                        </div>
+                                        {/* Hiển thị capabilities đã chọn */}
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {selectedCapabilities.map(cap => (
+                                                <span
+                                                    key={cap.id}
+                                                    className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded"
+                                                >
+                                                    {cap.key || cap.keyword}
+                                                    <button
+                                                        type="button"
+                                                        className="ml-1 text-red-500"
+                                                        onClick={() =>
+                                                            setSelectedCapabilities(selectedCapabilities.filter(c => c.id !== cap.id))
+                                                        }
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        {/* Modal chọn capability runtime */}
+                                        {showCapabilityModal && (
+                                            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-60">
+                                                <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                                                    <div className="p-4 border-b flex justify-between items-center">
+                                                        <h3 className="text-lg font-semibold">Chọn tính năng khi chạy</h3>
+                                                        <button
+                                                            onClick={() => setShowCapabilityModal(false)}
+                                                            className="text-gray-400 hover:text-gray-600"
+                                                        >
+                                                            <X size={20} />
+                                                        </button>
+                                                    </div>
+                                                    <div className="p-4">
+                                                        <div className="relative mb-4">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Tìm kiếm tính năng..."
+                                                                value={capabilitySearchTerm}
+                                                                onChange={e => setCapabilitySearchTerm(e.target.value)}
+                                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                                            />
+                                                            <Info
+                                                                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                                                                size={16}
+                                                            />
+                                                        </div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto">
+                                                            {availableCapabilities.map((cap) => (
+                                                                <div
+                                                                    key={cap.id}
+                                                                    onClick={() => {
+                                                                        setSelectedCapabilities([...selectedCapabilities, { id: cap.id, key: cap.keyword }]);
+                                                                    }}
+                                                                    className="p-3 border rounded-md mb-2 cursor-pointer hover:bg-gray-50 flex justify-between items-center"
+                                                                >
+                                                                    <div>
+                                                                        <h4 className="font-medium">{cap.keyword}</h4>
+                                                                        <p className="text-sm text-gray-600">{cap.note}</p>
+                                                                    </div>
+                                                                    <Upload className="text-green-600 h-5 w-5" />
+                                                                </div>
+                                                            ))}
+                                                            {availableCapabilities.length === 0 && (
+                                                                <div className="col-span-2 text-gray-500 text-center py-4">Không có tính năng phù hợp</div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex justify-between items-center mt-4">
+                                                            <Button
+                                                                type="button"
+                                                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                                onClick={() => setShowCapabilityModal(false)}
+                                                            >
+                                                                Xong
+                                                            </Button>
+                                                            <Button
+                                                                type="button"
+                                                                className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                                                onClick={() => setShowCreateCapability(true)}
+                                                            >
+                                                                Tạo tính năng mới
+                                                            </Button>
+                                                        </div>
+                                                        {showCreateCapability && (
+                                                            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-70">
+                                                                <div className="bg-white rounded-lg max-w-sm w-full p-6 relative">
+                                                                    <h4 className="text-md font-semibold mb-2">Tạo tính năng mới</h4>
+                                                                    <button
+                                                                        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                                                                        onClick={() => setShowCreateCapability(false)}
+                                                                    >
+                                                                        <X size={18} />
+                                                                    </button>
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Keyword (bắt buộc)"
+                                                                        value={newCapabilityKeyword}
+                                                                        onChange={e => setNewCapabilityKeyword(e.target.value.toUpperCase())}
+                                                                        className="w-full mb-2 px-3 py-2 border border-gray-300 rounded"
+                                                                    />
+                                                                    {capabilityError && (
+                                                                        <div className="text-red-500 text-sm mb-2">{capabilityError}</div>
+                                                                    )}
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Ghi chú (tùy chọn)"
+                                                                        value={newCapabilityNote}
+                                                                        onChange={e => setNewCapabilityNote(e.target.value)}
+                                                                        className="w-full mb-4 px-3 py-2 border border-gray-300 rounded"
+                                                                    />
+                                                                    <Button
+                                                                        type="button"
+                                                                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 w-full"
+                                                                        onClick={handleCreateCapability}
+                                                                    >
+                                                                        Lưu tính năng
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {isUploading && (
                                     <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
