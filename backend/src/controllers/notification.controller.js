@@ -21,6 +21,26 @@ class NotificationController {
         }
     }
 
+    async isReadNotification(req, res, next) {
+        try {
+            const account_id = req.user?.userId || req.user?.accountId || req.user?.employeeId;
+
+            const { id } = req.params;
+
+            if (!account_id)
+            {
+                return res.status(401).json({
+                    error: 'Người dùng không hợp lệ'
+                });
+            }
+
+            const notifications = await notificationService.isReadNotification(id, account_id);
+            return res.status(200).json(notifications);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async createNotification(req, res, next) {
         try {
             const { filter, limit, sort, order } = req.body;

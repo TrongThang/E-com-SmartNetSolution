@@ -16,6 +16,10 @@ notificationRouter.get('/',
     authMiddleware,    
     asyncHandler(notificationController.getNotificationByAccount)
 );
+notificationRouter.patch('/read-notification',
+    authMiddleware,
+    asyncHandler(notificationController.isReadNotification)
+);
 notificationRouter.post('/', validateMiddleware(notificationController.CreateNotificationSchema), asyncHandler(notificationController.createNotification));
 notificationRouter.delete('/:id', validateMiddleware(notificationController.DeleteNotificationSchema), asyncHandler(notificationController.deleteNotification));
 
