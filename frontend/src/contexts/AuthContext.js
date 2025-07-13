@@ -96,12 +96,17 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const fetchEmployeeInfo = async () => {
+    const fetchEmployeeInfo = async (token) => {
         try {
-            const token = localStorage.getItem('employeeToken');
+            const employeeToken = token || localStorage.getItem('employeeToken');
+            if (!employeeToken) {
+                console.error('No employee token found');
+                return;
+            }
+
             const response = await axiosIOTPublic.get('auth/employee/get-me', {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${employeeToken}`,
                 },
             });
 
@@ -146,7 +151,7 @@ export const AuthProvider = ({ children }) => {
                     const decoded = jwtDecode(employeeToken);
                     if (decoded.exp * 1000 > Date.now()) {
                         setIsAdminAuthenticated(true);
-                        await fetchEmployeeInfo();
+                        await fetchEmployeeInfo(employeeToken);
 
                         // Lấy FCM token cho employee
                         await getAndUpdateFCMToken();
@@ -177,13 +182,17 @@ export const AuthProvider = ({ children }) => {
             if (response) {
                 const { accessToken, refreshToken, deviceUuid } = response;
 
+                // Lưu token trước khi gọi API
                 localStorage.setItem('authToken', accessToken);
                 if (payload.rememberMe && refreshToken) {
                     localStorage.setItem('refreshToken', refreshToken)
                 }
 
-                await fetchUserInfo(accessToken)
+                // Đợi một chút để đảm bảo token đã được lưu
+                await new Promise(resolve => setTimeout(resolve, 100));
+
                 setIsAuthenticated(true);
+                await fetchUserInfo(accessToken);
 
                 const deviceMap = JSON.parse(localStorage.getItem("deviceMap") || "{}");
                 deviceMap[payload.username] = deviceUuid;
@@ -215,11 +224,21 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (response) {
-                const token = response.accessToken;
+                const { accessToken, refreshToken } = response;
 
-                localStorage.setItem('employeeToken', token);
+                // Lưu token trước khi gọi API
+                localStorage.setItem('employeeToken', accessToken);
+                
+                // Lưu refresh token nếu có
+                if (refreshToken) {
+                    localStorage.setItem('employeeRefreshToken', refreshToken);
+                }
+                
+                // Đợi một chút để đảm bảo token đã được lưu
+                await new Promise(resolve => setTimeout(resolve, 100));
+
                 setIsAdminAuthenticated(true);
-                await fetchEmployeeInfo();
+                await fetchEmployeeInfo(accessToken);
 
                 // Lấy FCM token sau khi đăng nhập employee thành công
                 await getAndUpdateFCMToken();
@@ -267,6 +286,7 @@ export const AuthProvider = ({ children }) => {
         axiosPrivate.delete('notification/device').catch(console.error);
         
         localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
         setUser(null);
         setIsAuthenticated(false);
     };
@@ -276,6 +296,7 @@ export const AuthProvider = ({ children }) => {
         axiosPrivate.delete('notification/device').catch(console.error);
         
         localStorage.removeItem('employeeToken');
+        localStorage.removeItem('employeeRefreshToken');
         setEmployee(null);
         setIsAdminAuthenticated(false);
     };
@@ -369,6 +390,64 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    // Hàm refresh token
+    const refreshToken = async () => {
+        try {
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (!refreshToken) {
+                throw new Error('No refresh token found');
+            }
+
+            const response = await axiosIOTPublic.post('auth/refresh', {
+                refreshToken: refreshToken
+            });
+
+            if (response && response.accessToken) {
+                // Cập nhật token mới
+                localStorage.setItem('authToken', response.accessToken);
+                console.log('Token refreshed successfully');
+                return response.accessToken;
+            } else {
+                throw new Error('Failed to refresh token');
+            }
+        } catch (error) {
+            console.error('Refresh token error:', error);
+            
+            // Nếu refresh token hết hạn hoặc không hợp lệ, đăng xuất người dùng
+            logout();
+            throw error;
+        }
+    };
+
+    // Hàm refresh token cho employee
+    const refreshEmployeeToken = async () => {
+        try {
+            const refreshToken = localStorage.getItem('employeeRefreshToken');
+            if (!refreshToken) {
+                throw new Error('No employee refresh token found');
+            }
+
+            const response = await axiosIOTPublic.post('auth/employee/refresh', {
+                refreshToken: refreshToken
+            });
+
+            if (response && response.accessToken) {
+                // Cập nhật token mới
+                localStorage.setItem('employeeToken', response.accessToken);
+                console.log('Employee token refreshed successfully');
+                return response.accessToken;
+            } else {
+                throw new Error('Failed to refresh employee token');
+            }
+        } catch (error) {
+            console.error('Refresh employee token error:', error);
+            
+            // Nếu refresh token hết hạn hoặc không hợp lệ, đăng xuất employee
+            logoutEmployee();
+            throw error;
+        }
+    };
+
     const value = {
         user,
         employee,
@@ -384,7 +463,9 @@ export const AuthProvider = ({ children }) => {
         verifyOtp,
         changePassword,
         fetchEmployeeInfo,
-        changePasswordEmployee
+        changePasswordEmployee,
+        refreshToken,
+        refreshEmployeeToken
     };
 
     return (
