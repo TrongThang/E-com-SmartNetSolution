@@ -981,9 +981,9 @@ async function getExportWarehouseNotFinishForEmployee(userId) {
         return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     }
 
-    if (account.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
-        return get_error_response(ERROR_CODES.ACCOUNT_NOT_AUTHORIZED, STATUS_CODE.BAD_REQUEST);
-    }
+    // if (account.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
+    //     return get_error_response(ERROR_CODES.ACCOUNT_NOT_AUTHORIZED, STATUS_CODE.BAD_REQUEST);
+    // }
 
     const exportWarehouse = await prisma.export_warehouse.findMany({
         where: {

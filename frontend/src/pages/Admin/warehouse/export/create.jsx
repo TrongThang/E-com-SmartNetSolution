@@ -71,11 +71,14 @@ export default function CreateExportWarehousePage() {
             const response = await employeePrivate.post("/export-warehouse", { data: dataToSubmit })
 
             if (response.status_code === 200) {
-                Swal.fire({
+                const result = Swal.fire({
                     title: "Thành công",
                     text: "Phiếu xuất kho đã được tạo thành công",
                     icon: "success",
                 })
+
+                router("/warehouses/export")
+
             } else {
                 Swal.fire({
                     title: "Lỗi",
