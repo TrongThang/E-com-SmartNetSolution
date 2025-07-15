@@ -69,9 +69,9 @@ export default function CreateExportWarehousePage() {
 
             // API call would go here
             const response = await employeePrivate.post("/export-warehouse", { data: dataToSubmit })
-
-            if (response.status_code === 200) {
-                const result = Swal.fire({
+            console.log(response)
+            if (response.data.status_code === 200) {
+                const result = await Swal.fire({
                     title: "Thành công",
                     text: "Phiếu xuất kho đã được tạo thành công",
                     icon: "success",
@@ -82,7 +82,7 @@ export default function CreateExportWarehousePage() {
             } else {
                 Swal.fire({
                     title: "Lỗi",
-                    text: response.errors[0].message,
+                    text: response.data.errors[0].message || response.data.errors[0].code,
                     icon: "error",
                 })
             }

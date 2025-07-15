@@ -345,7 +345,7 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
                 id: order.id,
                 deleted_at: null,
                 status: {
-                    in: [ORDER.PENDING, ORDER.PREPARING]
+                    in: [ORDER.PENDING, ORDER.PREPARING, ORDER.PENDING_SHIPPING]
                 }
             }
         });
@@ -402,7 +402,7 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
             const updatedProduct = await tx.product.update({
                 where: { id: orderProduct.id },
                 data: {
-                    stock_quantity: {
+                    stock: {
                         decrement: orderProduct.quantity
                     },
                     updated_at: new Date()
