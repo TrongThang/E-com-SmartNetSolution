@@ -215,6 +215,173 @@ async function getOrdersForAdministrator(filters, logic, limit, sort, order) {
     }
 }
 
+/**
+ * Enhanced version của getOrdersForAdministrator với support filter theo shipper và employee
+ * @param {Array} filters - Các bộ lọc
+ * @param {string} logic - Logic kết hợp filter
+ * @param {number} limit - Giới hạn số lượng
+ * @param {string} sort - Trường sắp xếp  
+ * @param {string} order - Thứ tự sắp xếp
+ * @param {Object} additionalFilters - Bộ lọc bổ sung {shipper_id, employee_id, status}
+ * @returns {Object} - Danh sách đơn hàng
+ */
+async function getOrdersForAdministratorEnhanced(filters, logic, limit, sort, order, additionalFilters = {}) {
+    // Tạo danh sách filter động
+    let dynamicFilters = [...(filters || [])];
+
+    // Thêm filter cho shipper nếu có
+    if (additionalFilters.shipper_id) {
+        dynamicFilters.push({
+            field: "order.shipper_id",
+            condition: "=",
+            value: additionalFilters.shipper_id
+        });
+    }
+
+    // Thêm filter cho employee (saler) nếu có
+    if (additionalFilters.employee_id) {
+        dynamicFilters.push({
+            field: "order.saler_id", 
+            condition: "=",
+            value: additionalFilters.employee_id
+        });
+    }
+
+    // Thêm filter cho status nếu có
+    if (additionalFilters.status) {
+        if (Array.isArray(additionalFilters.status)) {
+            // Nếu status là array, dùng IN
+            dynamicFilters.push({
+                field: "order.status",
+                condition: "IN",
+                value: additionalFilters.status
+            });
+        } else {
+            // Nếu status là giá trị đơn
+            dynamicFilters.push({
+                field: "order.status",
+                condition: "=", 
+                value: additionalFilters.status
+            });
+        }
+    }
+
+    // Thêm filter cho date range nếu có
+    if (additionalFilters.start_date) {
+        dynamicFilters.push({
+            field: "order.created_at",
+            condition: ">=",
+            value: additionalFilters.start_date
+        });
+    }
+
+    if (additionalFilters.end_date) {
+        dynamicFilters.push({
+            field: "order.created_at", 
+            condition: "<=",
+            value: additionalFilters.end_date
+        });
+    }
+
+    let get_attr = `
+        order.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS saler_name,
+        CONCAT(shipper.surname, ' ',shipper.lastname) AS shipper_name,
+        CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
+        order.name_recipient,
+        order.address,
+        order.phone,
+        order.amount,
+        order.status,
+        order.note,
+        order.created_at as order_date,
+        warehouse_inventory.total_stock,
+        warehouse_inventory.total_delta,
+        order_detail.product_id,
+        warehouse_inventory.product_name,
+        order_detail.quantity_sold
+    `;
+
+    let get_table = `\`order\``;
+    let query_join = `
+        LEFT JOIN customer ON order.customer_id = customer.id
+        LEFT JOIN employee ON order.saler_id = employee.id
+        LEFT JOIN employee shipper ON order.shipper_id = shipper.id
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN (
+            SELECT
+                product_id,
+                product.name AS product_name,
+                SUM(stock) AS total_stock,
+                SUM(delta) AS total_delta
+            FROM warehouse_inventory
+                LEFT JOIN product ON warehouse_inventory.product_id = product.id
+            WHERE warehouse_inventory.deleted_at IS NULL
+            GROUP BY product_id
+        ) AS warehouse_inventory ON order_detail.product_id = warehouse_inventory.product_id
+    `;
+
+    try {
+        const orders = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: dynamicFilters,
+            logic: logic,
+            sort: sort,
+            order: order,
+            configData: configOrderDataForAdministrator
+        });
+
+        // Thống kê tổng quan với filter áp dụng
+        let statsConditions = [];
+        if (additionalFilters.shipper_id) {
+            statsConditions.push(`shipper_id = '${additionalFilters.shipper_id}'`);
+        }
+        if (additionalFilters.employee_id) {
+            statsConditions.push(`saler_id = '${additionalFilters.employee_id}'`);
+        }
+        if (additionalFilters.start_date) {
+            statsConditions.push(`created_at >= '${additionalFilters.start_date}'`);
+        }
+        if (additionalFilters.end_date) {
+            statsConditions.push(`created_at <= '${additionalFilters.end_date}'`);
+        }
+
+        const whereClause = statsConditions.length > 0 
+            ? `WHERE deleted_at IS NULL AND ${statsConditions.join(' AND ')}`
+            : 'WHERE deleted_at IS NULL';
+
+        const cardAnalysis = await queryHelper.queryRaw(`
+            SELECT
+                SUM(CASE WHEN status IN (${ORDER.PENDING}) THEN 1 ELSE 0 END) AS total_pending_orders,
+                SUM(CASE WHEN status IN (${ORDER.PREPARING}) THEN 1 ELSE 0 END) AS total_preparing_orders,
+                SUM(CASE WHEN status IN (${ORDER.PENDING_SHIPPING}, ${ORDER.SHIPPING}) THEN 1 ELSE 0 END) AS total_processing_orders,
+                SUM(CASE WHEN status IN (${ORDER.DELIVERED}, ${ORDER.COMPLETED}) THEN 1 ELSE 0 END) AS total_completed_orders,
+                COUNT(*) AS total_orders,
+                SUM(amount) AS total_revenue
+            FROM \`order\`
+            ${whereClause};    
+        `);
+
+        orders.cardAnalysis = cardAnalysis[0];
+        orders.appliedFilters = additionalFilters;
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            orders
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
 function configOrderDetailData(dbResults) {
     if (!dbResults || dbResults.length === 0) {
         return [];
@@ -434,6 +601,205 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
                 data: groupedOrders,
                 total_page: result.total_page
             }
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+/**
+ * Lấy đơn hàng cho nhân viên shipper cụ thể
+ * @param {string} shipper_id - ID của shipper
+ * @param {Array} filters - Các bộ lọc khác
+ * @param {string} logic - Logic kết hợp filter
+ * @param {number} limit - Giới hạn số lượng
+ * @param {string} sort - Trường sắp xếp
+ * @param {string} order - Thứ tự sắp xếp
+ * @returns {Object} - Danh sách đơn hàng của shipper
+ */
+async function getOrdersForShipper(shipper_id, filters = [], logic = 'AND', limit = 20, sort = 'order.created_at', order = 'DESC') {
+    // Thêm filter cho shipper_id
+    const shipperFilter = {
+        field: "order.shipper_id",
+        condition: "=", 
+        value: shipper_id
+    };
+
+    // Kết hợp với các filter khác
+    const allFilters = [shipperFilter, ...filters];
+
+    let get_attr = `
+        order.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS saler_name,
+        CONCAT(shipper.surname, ' ',shipper.lastname) AS shipper_name,
+        CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
+        order.name_recipient,
+        order.address,
+        order.phone,
+        order.amount,
+        order.status,
+        order.note,
+        order.created_at as order_date,
+        warehouse_inventory.total_stock,
+        warehouse_inventory.total_delta,
+        order_detail.product_id,
+        warehouse_inventory.product_name,
+        order_detail.quantity_sold
+    `;
+
+    let get_table = `\`order\``;
+    let query_join = `
+        LEFT JOIN customer ON order.customer_id = customer.id
+        LEFT JOIN employee ON order.saler_id = employee.id
+        LEFT JOIN employee shipper ON order.shipper_id = shipper.id
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN (
+            SELECT
+                product_id,
+                product.name AS product_name,
+                SUM(stock) AS total_stock,
+                SUM(delta) AS total_delta
+            FROM warehouse_inventory
+                LEFT JOIN product ON warehouse_inventory.product_id = product.id
+            WHERE warehouse_inventory.deleted_at IS NULL
+            GROUP BY product_id
+        ) AS warehouse_inventory ON order_detail.product_id = warehouse_inventory.product_id
+    `;
+
+    try {
+        const orders = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: allFilters,
+            logic: logic,
+            sort: sort,
+            order: order,
+            configData: configOrderDataForAdministrator
+        });
+
+        // Thống kê đơn hàng cho shipper
+        const shipperStats = await queryHelper.queryRaw(`
+            SELECT
+                SUM(CASE WHEN status IN (${ORDER.PENDING_SHIPPING}) THEN 1 ELSE 0 END) AS pending_shipping,
+                SUM(CASE WHEN status IN (${ORDER.SHIPPING}) THEN 1 ELSE 0 END) AS shipping,
+                SUM(CASE WHEN status IN (${ORDER.DELIVERED}) THEN 1 ELSE 0 END) AS delivered,
+                SUM(CASE WHEN status IN (${ORDER.COMPLETED}) THEN 1 ELSE 0 END) AS completed
+            FROM \`order\`
+            WHERE shipper_id = '${shipper_id}' AND deleted_at IS NULL;    
+        `);
+
+        orders.shipperStats = shipperStats[0];
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            orders
+        );
+    } catch (error) {
+        console.error('Lỗi:', error);
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.BAD_REQUEST
+        );
+    }
+}
+
+/**
+ * Lấy đơn hàng được phân cho nhân viên cụ thể (saler)
+ * @param {string} employee_id - ID của nhân viên saler
+ * @param {Array} filters - Các bộ lọc khác
+ * @param {string} logic - Logic kết hợp filter
+ * @param {number} limit - Giới hạn số lượng
+ * @param {string} sort - Trường sắp xếp
+ * @param {string} order - Thứ tự sắp xếp
+ * @returns {Object} - Danh sách đơn hàng của nhân viên
+ */
+async function getOrdersForEmployee(employee_id, filters = [], logic = 'AND', limit = 20, sort = 'order.created_at', order = 'DESC') {
+    // Thêm filter cho saler_id
+    const employeeFilter = {
+        field: "order.saler_id", 
+        condition: "=",
+        value: employee_id
+    };
+
+    // Kết hợp với các filter khác
+    const allFilters = [employeeFilter, ...filters];
+
+    let get_attr = `
+        order.id,
+        CONCAT(employee.surname, ' ',employee.lastname) AS saler_name,
+        CONCAT(shipper.surname, ' ',shipper.lastname) AS shipper_name,
+        CONCAT(customer.surname, ' ',customer.lastname) AS customer_name,
+        order.name_recipient,
+        order.address,
+        order.phone,
+        order.amount,
+        order.status,
+        order.note,
+        order.created_at as order_date,
+        warehouse_inventory.total_stock,
+        warehouse_inventory.total_delta,
+        order_detail.product_id,
+        warehouse_inventory.product_name,
+        order_detail.quantity_sold
+    `;
+
+    let get_table = `\`order\``;
+    let query_join = `
+        LEFT JOIN customer ON order.customer_id = customer.id
+        LEFT JOIN employee ON order.saler_id = employee.id
+        LEFT JOIN employee shipper ON order.shipper_id = shipper.id
+        LEFT JOIN order_detail ON order.id = order_detail.order_id
+        LEFT JOIN (
+            SELECT
+                product_id,
+                product.name AS product_name,
+                SUM(stock) AS total_stock,
+                SUM(delta) AS total_delta
+            FROM warehouse_inventory
+                LEFT JOIN product ON warehouse_inventory.product_id = product.id
+            WHERE warehouse_inventory.deleted_at IS NULL
+            GROUP BY product_id
+        ) AS warehouse_inventory ON order_detail.product_id = warehouse_inventory.product_id
+    `;
+
+    try {
+        const orders = await executeSelectData({
+            table: get_table,
+            queryJoin: query_join,
+            strGetColumn: get_attr,
+            limit: limit,
+            filter: allFilters,
+            logic: logic,
+            sort: sort,
+            order: order,
+            configData: configOrderDataForAdministrator
+        });
+
+        // Thống kê đơn hàng cho nhân viên
+        const employeeStats = await queryHelper.queryRaw(`
+            SELECT
+                SUM(CASE WHEN status IN (${ORDER.PENDING}) THEN 1 ELSE 0 END) AS pending_orders,
+                SUM(CASE WHEN status IN (${ORDER.PREPARING}) THEN 1 ELSE 0 END) AS preparing_orders,
+                SUM(CASE WHEN status IN (${ORDER.PENDING_SHIPPING}, ${ORDER.SHIPPING}) THEN 1 ELSE 0 END) AS processing_orders,
+                SUM(CASE WHEN status IN (${ORDER.DELIVERED}, ${ORDER.COMPLETED}) THEN 1 ELSE 0 END) AS completed_orders,
+                SUM(amount) AS total_sales_amount
+            FROM \`order\`
+            WHERE saler_id = '${employee_id}' AND deleted_at IS NULL;    
+        `);
+
+        orders.employeeStats = employeeStats[0];
+
+        return get_error_response(
+            ERROR_CODES.SUCCESS,
+            STATUS_CODE.OK,
+            orders
         );
     } catch (error) {
         console.error('Lỗi:', error);
@@ -1112,6 +1478,9 @@ async function confirmFinishedOrderService(order_id, customer_id) {
 module.exports = {
     createOrder,
     getOrdersForAdministrator,
+    getOrdersForAdministratorEnhanced,
+    getOrdersForShipper,
+    getOrdersForEmployee,
     getOrdersForCustomer,
     cancelOrderService,
     getOrderDetailService,

@@ -69,11 +69,25 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
+      const scrollY = window.scrollY
+      setIsScrolled(scrollY > 10)
     }
-    window.addEventListener("scroll", handleScroll)
+    
+    // Throttle scroll event for better performance
+    let ticking = false
+    const throttledHandleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    
+    window.addEventListener("scroll", throttledHandleScroll, { passive: true })
     fetchCategories()
-    return () => window.removeEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", throttledHandleScroll)
   }, [])
 
   useEffect(() => {
@@ -84,12 +98,12 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "py-2 bg-white shadow-md" : "h-[8vh] py-4 bg-white "} border-b-2 border-blue-400`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white border-b-2 border-blue-400 h-[12vh] ${isScrolled ? "shadow-md h-[7vh]" : "h-[11vh] py-4"}`}
     >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto px-4 h-full">
+        <div className="flex items-center justify-between h-full">
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="logo" className={`hover:scale-110 transition-all duration-300 ${isScrolled ? "w-36 h-16":"w-25 h-10"}`} />
+            <img src={logo} alt="logo" className={`hover:scale-110 transition-all duration-300 ${isScrolled ? "h-fit w-fit" : "h-fit w-fit"}`} />
           </Link>
 
           <nav className="hidden md:flex items-center space-x-10">

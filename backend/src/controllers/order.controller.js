@@ -1,4 +1,19 @@
-const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, cancelOrderService, getOrderDetailService, respondListOrderService, getOrderForWarehouseEmployee, StartShippingOrderService, confirmShippingOrderService, assignShipperToOrders, confirmFinishedOrderService} = require("../services/order.service");
+const { 
+    getOrdersForAdministrator, 
+    getOrdersForAdministratorEnhanced,
+    getOrdersForShipper,
+    getOrdersForEmployee,
+    getOrdersForCustomer, 
+    createOrder, 
+    cancelOrderService, 
+    getOrderDetailService, 
+    respondListOrderService, 
+    getOrderForWarehouseEmployee, 
+    StartShippingOrderService, 
+    confirmShippingOrderService, 
+    assignShipperToOrders, 
+    confirmFinishedOrderService
+} = require("../services/order.service");
 
 class OrderController {
     async getOrdersForWarehouseEmployee(req, res) {
@@ -11,6 +26,71 @@ class OrderController {
         const { filter, logic, limit, sort, order } = req.query;
         
         const result = await getOrdersForAdministrator(
+            filter,
+            logic,
+            limit,
+            sort,
+            order
+        );
+
+        res.status(result.status_code).json(result);
+    }
+
+    /**
+     * Lấy đơn hàng với filter nâng cao cho administrator
+     */
+    async getOrdersForAdministratorEnhanced(req, res) {
+        const { filter, logic, limit, sort, order } = req.query;
+        const { shipper_id, employee_id, status, start_date, end_date } = req.query;
+        
+        const additionalFilters = {
+            shipper_id,
+            employee_id, 
+            status: status ? (Array.isArray(status) ? status : [status]) : undefined,
+            start_date,
+            end_date
+        };
+
+        const result = await getOrdersForAdministratorEnhanced(
+            filter,
+            logic,
+            limit,
+            sort,
+            order,
+            additionalFilters
+        );
+
+        res.status(result.status_code).json(result);
+    }
+
+    /**
+     * Lấy đơn hàng cho shipper cụ thể
+     */
+    async getOrdersForShipper(req, res) {
+        const { shipper_id } = req.params;
+        const { filter, logic, limit, sort, order } = req.query;
+        
+        const result = await getOrdersForShipper(
+            shipper_id,
+            filter,
+            logic,
+            limit,
+            sort,
+            order
+        );
+
+        res.status(result.status_code).json(result);
+    }
+
+    /**
+     * Lấy đơn hàng cho nhân viên saler cụ thể
+     */
+    async getOrdersForEmployee(req, res) {
+        const { employee_id } = req.params;
+        const { filter, logic, limit, sort, order } = req.query;
+        
+        const result = await getOrdersForEmployee(
+            employee_id,
             filter,
             logic,
             limit,

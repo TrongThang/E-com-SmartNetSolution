@@ -1,6 +1,21 @@
 const express = require('express');
 const { validateMiddleware } = require('../middleware/validate.middleware');
-const { getOrdersForAdministrator, getOrdersForCustomer, createOrder, canceledOrder, getOrderDetailForAdministrator, respondListOrder, getOrdersForWarehouseEmployee, assignShipperToOrders, shippingOrder, confirmShippingOrder, confirmFinishedOrder } = require('../controllers/order.controller');
+const { 
+    getOrdersForAdministrator, 
+    getOrdersForAdministratorEnhanced,
+    getOrdersForShipper,
+    getOrdersForEmployee,
+    getOrdersForCustomer, 
+    createOrder, 
+    canceledOrder, 
+    getOrderDetailForAdministrator, 
+    respondListOrder, 
+    getOrdersForWarehouseEmployee, 
+    assignShipperToOrders, 
+    shippingOrder, 
+    confirmShippingOrder, 
+    confirmFinishedOrder 
+} = require('../controllers/order.controller');
 const orderRouter = express.Router();
 const { create_payment_url, vnpay_return } = require('../services/vnpay.service');
 
@@ -10,9 +25,17 @@ const asyncHandler = (fn) => {
     }
 }
 
+// Routes cho administrator
 orderRouter.get('/admin', asyncHandler(getOrdersForAdministrator));
+orderRouter.get('/admin/enhanced', asyncHandler(getOrdersForAdministratorEnhanced));
 orderRouter.get('/admin/warehouse', asyncHandler(getOrdersForWarehouseEmployee));
 orderRouter.get('/admin/detail/:order_id', asyncHandler(getOrderDetailForAdministrator));
+
+// Routes cho shipper và employee
+orderRouter.get('/shipper/:shipper_id', asyncHandler(getOrdersForShipper));
+orderRouter.get('/employee/:employee_id', asyncHandler(getOrdersForEmployee));
+
+// Routes cho customer
 orderRouter.get('/customer/:customer_id', asyncHandler(getOrdersForCustomer));
 orderRouter.post('/checkout', asyncHandler(createOrder));
 orderRouter.put('/customer', asyncHandler(canceledOrder))

@@ -209,77 +209,124 @@ async function getProcessExportWarehouseService(exportWarehouseId) {
  * @returns {Object} - Phản hồi thành công hoặc lỗi
  */
 async function createExportWarehouse(exportWarehouse, account_id) {
-    const { employee_id, export_date, note, orders } = exportWarehouse;
+    try {
+        const { employee_id, export_date, note, orders } = exportWarehouse;
 
-    // Kiểm tra sự tồn tại của nhân viên
-    const account = await prisma.account.findFirst({
-        where: {
-            account_id: account_id,
-            deleted_at: null
+        // Kiểm tra sự tồn tại của nhân viên
+        const account = await prisma.account.findFirst({
+            where: {
+                account_id: account_id,
+                deleted_at: null
+            }
+        })
+        if (!account) {
+            return get_error_response(ERROR_CODES.ACCOUNT_UNAUTHORIZED, STATUS_CODE.BAD_REQUEST);
         }
-    })
-    if (!account) {
-        return get_error_response(ERROR_CODES.ACCOUNT_UNAUTHORIZED, STATUS_CODE.BAD_REQUEST);
-    }
 
-    const employee = await prisma.account.findFirst({
-        where: {
-            employee_id: employee_id,
-            deleted_at: null
-        }
-    })
-
-    if (!employee) {
-        return get_error_response(ERROR_CODES.EMPLOYEE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
-    }
-
-    if (employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
-        return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE, STATUS_CODE.BAD_REQUEST);
-    }
-
-    // Mảng để lưu kết quả kiểm tra của tất cả orders
-    const orderResults = [];
-
-    // Tạo bản ghi xuất kho trong transaction
-    const exportNumber = await getExportNumber(export_date)
-    const batch_code_export = generateExportNumber(exportNumber)
-    const exportWarehouseData = await prisma.$transaction(async (tx) => {
-        const data = await prisma.export_warehouse.create({
-            data: {
-                export_code: batch_code_export,
-                export_number: exportNumber,
+        const employee = await prisma.account.findFirst({
+            where: {
                 employee_id: employee_id,
-                export_date: export_date,
-                note: note,
-                created_at: new Date(),
-                status: EXPORT_WAREHOUSE.PENDING
+                deleted_at: null
             }
         })
 
-        if (!data) {
-            throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_CREATE_FAILED);
+        if (!employee) {
+            return get_error_response(ERROR_CODES.EMPLOYEE_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
         }
 
-        // Xử lý các đơn hàng
-        for (const order of orders) {
-            const orderResult = await addProductionForOrderWarehouse(
-                tx,
-                data.id,
-                order,
-                export_date
-            );
+        if (employee.role_id !== ROLE.EMPLOYEE_WAREHOUSE) {
+            return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE, STATUS_CODE.BAD_REQUEST);
+        }
 
-            if (orderResult) {
-                return orderResult;
+        // Tạo bản ghi xuất kho trong transaction
+        const exportNumber = await getExportNumber(export_date);
+        const batch_code_export = generateExportNumber(exportNumber) + 1;
+        
+        const exportWarehouseData = await prisma.$transaction(async (tx) => {
+            // Tạo bản ghi xuất kho
+            const exportData = await tx.export_warehouse.create({
+                data: {
+                    export_code: batch_code_export,
+                    export_number: exportNumber,
+                    employee_id: employee_id,
+                    export_date: export_date,
+                    note: note,
+                    created_at: new Date(),
+                    status: EXPORT_WAREHOUSE.PENDING
+                }
+            });
+
+            if (!exportData) {
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_CREATE_FAILED);
             }
+
+            // Xử lý các đơn hàng trong cùng transaction
+            for (const order of orders) {
+                await addProductionForOrderWarehouse(
+                    tx,
+                    exportData.id,
+                    order,
+                    export_date
+                );
+            }
+
+            // Return export data với thông tin chi tiết
+            const result = await tx.export_warehouse.findUnique({
+                where: { id: exportData.id },
+                include: {
+                    detail_exports: {
+                        include: {
+                            product: true,
+                            order: true
+                        }
+                    },
+                    account: {
+                        select: {
+                            employee_id: true,
+                            username: true,
+                            fullname: true
+                        }
+                    }
+                }
+            });
+
+            return result;
+        }, {
+            maxWait: 5000, // 5 seconds max wait
+            timeout: 10000, // 10 seconds timeout
+        });
+
+        return {
+            success: true,
+            message: 'Tạo phiếu xuất kho thành công',
+            data: exportWarehouseData,
+            status_code: STATUS_CODE.OK
+        };   
+    } catch (error) {
+        console.error('❌ Lỗi tạo phiếu xuất kho:', error);
+        
+        // Nếu là validation error hoặc business logic error
+        if (error.message.includes('không tồn tại') || 
+            error.message.includes('không đủ số lượng') ||
+            error.message.includes('không thể xuất kho')) {
+            return get_error_response(error.message, STATUS_CODE.BAD_REQUEST);
         }
-    });
-
-    if (exportWarehouseData) {
-        return exportWarehouseData
+        
+        // Nếu là database error hoặc system error
+        if (error.code) {
+            console.error('Database error code:', error.code);
+            return get_error_response(
+                'Lỗi hệ thống khi tạo phiếu xuất kho', 
+                STATUS_CODE.INTERNAL_SERVER_ERROR
+            );
+        }
+        
+        // Generic error
+        return get_error_response(
+            error.message || 'Lỗi tạo phiếu xuất kho thất bại', 
+            STATUS_CODE.INTERNAL_SERVER_ERROR
+        );
     }
-
-    return get_error_response(ERROR_CODES.EXPORT_WAREHOUSE_CREATE_SUCCESS, STATUS_CODE.OK);
 }
 
 /**
@@ -288,89 +335,104 @@ async function createExportWarehouse(exportWarehouse, account_id) {
  * @param {number} exportWarehouse_id - ID của bản ghi xuất kho
  * @param {Object} order - Thông tin đơn hàng
  * @param {string} export_date - Ngày xuất kho
- * @returns {Object|undefined} - Phản hồi lỗi hoặc undefined nếu thành công
+ * @throws {Error} - Throw error nếu có lỗi xảy ra
  */
 async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, export_date) {
-    // Kiểm tra sự tồn tại của đơn hàng
-    const orderExists = await tx.order.findFirst({
-        where: {
-            id: order.id,
-            deleted_at: null,
-            status: {
-                in: [
-                    ORDER.PENDING, ORDER.PREPARING
-                ]
+    try {
+        // Kiểm tra sự tồn tại của đơn hàng
+        const orderExists = await tx.order.findFirst({
+            where: {
+                id: order.id,
+                deleted_at: null,
+                status: {
+                    in: [ORDER.PENDING, ORDER.PREPARING]
+                }
             }
-        }
-    })
+        });
 
-    if (!orderExists) {
-        return get_error_response(
-            ERROR_CODES.ORDER_NOT_FOUND,
-            STATUS_CODE.BAD_REQUEST
-        );
-    }
-
-    // Kiểm tra tất cả sản phẩm trong một truy vấn
-    const productIds = order.products.map((p) => p.id);
-
-    const products = await tx.product.findMany({
-        where: {
-            id: { in: productIds },
-            deleted_at: null,
-        },
-    });
-
-    if (products.length !== productIds.length) {
-        return get_error_response(
-            ERROR_CODES.PRODUCT_NOT_FOUND,
-            STATUS_CODE.BAD_REQUEST
-        );
-    }
-
-    // Xử lý từng sản phẩm trong đơn hàng
-    for (const product of order.products) {
-        const exportDetailNumber = await getExportNumber(export_date)
-        const exportNumber = exportDetailNumber + 1
-        const batchCode = await generateDetailExportBatchCode(export_date, product.id)
-
-        // Tạo chi tiết xuất kho
-        const detail = await tx.detail_export.create({
-            data: {
-                batch_code: batchCode,
-                export_id: exportWarehouse_id,
-                order_id: order.id,
-                product_id: product.id,
-                quantity: product.quantity,
-                created_at: new Date()
-            }
-        })
-
-        if (!detail) {
-            return get_error_response(
-                ERROR_CODES.EXPORT_WAREHOUSE_CREATE_FAILED,
-                STATUS_CODE.BAD_REQUEST
-            );
+        if (!orderExists) {
+            throw new Error(`Đơn hàng ID ${order.id} không tồn tại hoặc không thể xuất kho`);
         }
 
-        // Cập nhật trạng thái đơn hàng
+        // Kiểm tra tất cả sản phẩm trong một truy vấn
+        const productIds = order.products.map((p) => p.id);
+
+        const products = await tx.product.findMany({
+            where: {
+                id: { in: productIds },
+                deleted_at: null,
+            },
+        });
+
+        if (products.length !== productIds.length) {
+            const missingProducts = productIds.filter(id => !products.find(p => p.id === id));
+            throw new Error(`Không tìm thấy sản phẩm với ID: ${missingProducts.join(', ')}`);
+        }
+
+        // Kiểm tra số lượng tồn kho cho tất cả sản phẩm
+        for (const orderProduct of order.products) {
+            const product = products.find(p => p.id === orderProduct.id);
+            if (product.stock_quantity < orderProduct.quantity) {
+                throw new Error(`Sản phẩm "${product.name}" không đủ số lượng tồn kho. Có: ${product.stock_quantity}, Cần: ${orderProduct.quantity}`);
+            }
+        }
+
+        // Xử lý từng sản phẩm trong đơn hàng
+        for (const orderProduct of order.products) {
+            const exportDetailNumber = await getExportNumber(export_date);
+            const batchCode = await generateDetailExportBatchCode(export_date, orderProduct.id);
+
+            // Tạo chi tiết xuất kho
+            const detail = await tx.detail_export.create({
+                data: {
+                    batch_code: batchCode,
+                    export_id: exportWarehouse_id,
+                    order_id: order.id,
+                    product_id: orderProduct.id,
+                    quantity: orderProduct.quantity,
+                    created_at: new Date()
+                }
+            });
+
+            if (!detail) {
+                throw new Error(`Không thể tạo chi tiết xuất kho cho sản phẩm ID ${orderProduct.id}`);
+            }
+
+            // Cập nhật số lượng tồn kho
+            const updatedProduct = await tx.product.update({
+                where: { id: orderProduct.id },
+                data: {
+                    stock_quantity: {
+                        decrement: orderProduct.quantity
+                    },
+                    updated_at: new Date()
+                }
+            });
+
+            if (!updatedProduct) {
+                throw new Error(`Không thể cập nhật tồn kho cho sản phẩm ID ${orderProduct.id}`);
+            }
+        }
+
+        // Cập nhật trạng thái đơn hàng (chỉ cập nhật một lần cho mỗi order)
         const updateOrder = await tx.order.update({
             where: { id: order.id },
             data: {
                 status: ORDER.PENDING_SHIPPING,
                 updated_at: new Date()
             }
-        })
+        });
 
         if (!updateOrder) {
-            return get_error_response(
-                ERROR_CODES.ORDER_UPDATE_FAILED,
-                STATUS_CODE.BAD_REQUEST
-            );
+            throw new Error(`Không thể cập nhật trạng thái đơn hàng ID ${order.id}`);
         }
-    }
 
-    return undefined;
+        console.log(`✅ Đã xử lý thành công đơn hàng ID ${order.id} với ${order.products.length} sản phẩm`);
+        
+    } catch (error) {
+        console.error(`❌ Lỗi xử lý đơn hàng ID ${order.id}:`, error.message);
+        throw error; // Re-throw để transaction rollback
+    }
 }
 
 async function startExportWarehouseService(export_id, account_id) {
