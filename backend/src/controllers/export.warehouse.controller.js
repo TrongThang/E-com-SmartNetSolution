@@ -50,7 +50,9 @@ class ExportWarehouseController {
     }
 
     async getExportWarehouseNotFinishForEmployee(req, res) {
-        const response = await getExportWarehouseNotFinishForEmployee(req.user.id);
+        const accountId = req.user.employeeId || req.user.userId;
+        
+        const response = await getExportWarehouseNotFinishForEmployee(accountId);
         return res.status(response.status_code).json(response);
     }
 

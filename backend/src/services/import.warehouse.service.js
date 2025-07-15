@@ -346,9 +346,6 @@ async function getProcessImportWarehouseService(importWarehouseId) {
         GROUP BY di.product_id
     `
 
-    console.log("queryProductNeed", queryProductNeed)
-    console.log("queryProductImported", queryProductImported)
-
     const resultProductNeed = await queryHelper.queryRaw(queryProductNeed)
     const resultProductImported = await queryHelper.queryRaw(queryProductImported)
 

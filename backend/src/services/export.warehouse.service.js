@@ -969,10 +969,10 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
     }
 }
 
-async function getExportWarehouseNotFinishForEmployee(userId) {
+async function getExportWarehouseNotFinishForEmployee(accountId) {
     const account = await prisma.account.findFirst({
         where: {
-            id: userId,
+            account_id: accountId,
             deleted_at: null
         }
     })
@@ -988,7 +988,9 @@ async function getExportWarehouseNotFinishForEmployee(userId) {
     const exportWarehouse = await prisma.export_warehouse.findMany({
         where: {
             employee_id: account.employee_id,
-            status: EXPORT_WAREHOUSE.PROCESSING,
+            status: {
+                in: [EXPORT_WAREHOUSE.PROCESSING, EXPORT_WAREHOUSE.PENDING]
+            } ,
             deleted_at: null
         },
         include: {
