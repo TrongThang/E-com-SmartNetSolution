@@ -12,7 +12,7 @@ const {
     respondListOrder, 
     getOrdersForWarehouseEmployee, 
     assignShipperToOrders, 
-    shippingOrder, 
+    startShippingOrder, 
     confirmShippingOrder, 
     confirmFinishedOrder 
 } = require('../controllers/order.controller');
@@ -44,7 +44,7 @@ orderRouter.patch('/finished', asyncHandler(confirmFinishedOrder))
 // Confirm đơn hàng
 orderRouter.patch('/admin/respond-orders', asyncHandler(respondListOrder));
 orderRouter.patch('/admin/assign-shipper', asyncHandler(assignShipperToOrders));
-orderRouter.patch('/admin/shipping-order', asyncHandler(shippingOrder));
+orderRouter.patch('/admin/shipping-order', asyncHandler(startShippingOrder));
 orderRouter.patch('/admin/finish-shipping-order', asyncHandler(confirmShippingOrder));
 
 // VNPAY

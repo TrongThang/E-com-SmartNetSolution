@@ -399,19 +399,19 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
             }
 
             // Cập nhật số lượng tồn kho
-            const updatedProduct = await tx.product.update({
-                where: { id: orderProduct.id },
-                data: {
-                    stock: {
-                        decrement: orderProduct.quantity
-                    },
-                    updated_at: new Date()
-                }
-            });
+            // const updatedProduct = await tx.product.update({
+            //     where: { id: orderProduct.id },
+            //     data: {
+            //         stock: {
+            //             decrement: orderProduct.quantity
+            //         },
+            //         updated_at: new Date()
+            //     }
+            // });
 
-            if (!updatedProduct) {
-                throw new Error(`Không thể cập nhật tồn kho cho sản phẩm ID ${orderProduct.id}`);
-            }
+            // if (!updatedProduct) {
+            //     throw new Error(`Không thể cập nhật tồn kho cho sản phẩm ID ${orderProduct.id}`);
+            // }
         }
 
         // Cập nhật trạng thái đơn hàng (chỉ cập nhật một lần cho mỗi order)
