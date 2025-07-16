@@ -572,7 +572,7 @@ async function getImportWarehouseNotFinishForEmployee(accountId) {
         where: {
             employee_id: account.employee_id,
             status: {
-                in: [IMPORT_WAREHOUSE.PENDING, IMPORT_WAREHOUSE.PENDING]
+                in: [IMPORT_WAREHOUSE.PENDING, IMPORT_WAREHOUSE.IMPORTING]
             },
             deleted_at: null
         }
