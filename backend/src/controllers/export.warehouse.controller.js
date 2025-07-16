@@ -1,6 +1,7 @@
 const { createExportWarehouseService, getExportWarehouseService, getExportWarehouseDetailService, startExportWarehouseService, exportProductService, getProcessExportWarehouseService, getExportWarehouseNotFinishForEmployee, exportProductByOrderService,  validateExportDeviceService,
     getDeviceDetailsService,
-    scanExportDeviceService } = require('../services/export.warehouse.service');
+    scanExportDeviceService, 
+    exportSingleProductService} = require('../services/export.warehouse.service');
 
 
 class ExportWarehouseController {
@@ -44,8 +45,10 @@ class ExportWarehouseController {
 
     async exportProduct(req, res) {
         const account_id = req.user.employeeId;
-        const { export_id, order_id, list_product } = req.body;
-        const response = await exportProductByOrderService(export_id, order_id, list_product, account_id);
+        const { export_id, order_id, batch_production_id, template_id, serial_number } = req.body;
+
+        console.log('Dữ liệu xuất sản phẩm', req.body)
+        const response = await exportSingleProductService(export_id, order_id, batch_production_id, template_id, serial_number, account_id);
         return res.status(response.status_code).json(response);
     }
 

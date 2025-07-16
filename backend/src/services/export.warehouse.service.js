@@ -87,7 +87,7 @@ async function getExportWarehouseService(filter, limit, sort, order) {
     `;
 
     try {
-        const exportWarehouse = await executeSelectData ({
+        const exportWarehouse = await executeSelectData({
             table: get_table,
             queryJoin: query_join,
             strGetColumn: get_attr,
@@ -146,7 +146,7 @@ async function getExportWarehouseDetailService(id) {
     `;
 
     try {
-        const exportWarehouse = await executeSelectData ({
+        const exportWarehouse = await executeSelectData({
             table: get_table,
             queryJoin: query_join,
             strGetColumn: get_attr,
@@ -241,7 +241,7 @@ async function createExportWarehouse(exportWarehouse, account_id) {
         // Tạo bản ghi xuất kho trong transaction
         const exportNumber = await getExportNumber(export_date);
         const batch_code_export = generateExportNumber(exportNumber) + 1;
-        
+
         const exportWarehouseData = await prisma.$transaction(async (tx) => {
             // Tạo bản ghi xuất kho
             const exportData = await tx.export_warehouse.create({
@@ -301,29 +301,29 @@ async function createExportWarehouse(exportWarehouse, account_id) {
             message: 'Tạo phiếu xuất kho thành công',
             data: exportWarehouseData,
             status_code: STATUS_CODE.OK
-        };   
+        };
     } catch (error) {
         console.error('❌ Lỗi tạo phiếu xuất kho:', error);
-        
+
         // Nếu là validation error hoặc business logic error
-        if (error.message.includes('không tồn tại') || 
+        if (error.message.includes('không tồn tại') ||
             error.message.includes('không đủ số lượng') ||
             error.message.includes('không thể xuất kho')) {
             return get_error_response(error.message, STATUS_CODE.BAD_REQUEST);
         }
-        
+
         // Nếu là database error hoặc system error
         if (error.code) {
             console.error('Database error code:', error.code);
             return get_error_response(
-                'Lỗi hệ thống khi tạo phiếu xuất kho', 
+                'Lỗi hệ thống khi tạo phiếu xuất kho',
                 STATUS_CODE.INTERNAL_SERVER_ERROR
             );
         }
-        
+
         // Generic error
         return get_error_response(
-            error.message || 'Lỗi tạo phiếu xuất kho thất bại', 
+            error.message || 'Lỗi tạo phiếu xuất kho thất bại',
             STATUS_CODE.INTERNAL_SERVER_ERROR
         );
     }
@@ -428,7 +428,7 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
         }
 
         console.log(`✅ Đã xử lý thành công đơn hàng ID ${order.id} với ${order.products.length} sản phẩm`);
-        
+
     } catch (error) {
         console.error(`❌ Lỗi xử lý đơn hàng ID ${order.id}:`, error.message);
         throw error; // Re-throw để transaction rollback
@@ -438,7 +438,7 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
 async function startExportWarehouseService(export_id, account_id) {
     const exportWarehouse = await prisma.export_warehouse.findFirst({
         where: {
-            export_code: export_id,
+            id: export_id,
             deleted_at: null
         }
     })
@@ -740,7 +740,7 @@ async function scanExportDeviceService(export_id, serial_number, account_id) {
 /**
  * Hàm xuất kho cho một sản phẩm theo serial number - Enhanced version
  */
-async function exportProductByOrderService(export_id, order_id, list_product, account_id) {
+async function exportProductByOrderServiceByList(export_id, order_id, list_product, account_id) {
     try {
         // 1. Kiểm tra order_id có tồn tại không
         const order = await prisma.order.findFirst({
@@ -846,7 +846,7 @@ async function exportProductByOrderService(export_id, order_id, list_product, ac
                 throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED);
             }
 
-            if(account.employee_id !== exportWarehouse.employee_id) {
+            if (account.employee_id !== exportWarehouse.employee_id) {
                 throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED);
             }
 
@@ -1052,7 +1052,7 @@ async function getExportWarehouseNotFinishForEmployee(accountId) {
             employee_id: account.employee_id,
             status: {
                 in: [EXPORT_WAREHOUSE.PROCESSING, EXPORT_WAREHOUSE.PENDING]
-            } ,
+            },
             deleted_at: null
         },
         include: {
@@ -1067,15 +1067,258 @@ async function getExportWarehouseNotFinishForEmployee(accountId) {
     return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, exportWarehouse);
 }
 
+/**
+ * Xuất kho 1 sản phẩm duy nhất theo serial – phiên bản tối ưu (Senior‑level)
+ *
+ * @param export_id              Mã phiếu xuất kho
+ * @param order_id               Mã đơn hàng
+ * @param batch_production_id    Mã lô sản xuất chứa serial
+ * @param template_id            ID sản phẩm (template)
+ * @param serial_number          Số serial thiết bị
+ * @param account_id             ID tài khoản thực hiện xuất kho
+ *
+ * – Quy trình:
+ *   1. Xác thực đơn hàng & phiếu xuất kho
+ *   2. Kiểm tra quyền & nhân viên thực hiện
+ *   3. Đối chiếu số lượng trong đơn hàng
+ *   4. Kiểm tra serial hợp lệ, còn tồn kho
+ *   5. Chạy transaction:
+ *        • Cập nhật batch_product_detail
+ *        • Trừ tồn kho
+ *        • Cập nhật production_tracking
+ *        • Chuyển trạng thái đơn hàng / phiếu xuất
+ *   6. Trả về kết quả / xử lý lỗi chi tiết
+ */
+async function exportSingleProductService(
+    export_id,
+    order_id,
+    batch_production_id,
+    template_id,
+    serial_number,
+    account_id
+) {
+    try {
+        /* ---------- 1. Kiểm tra đơn hàng ---------- */
+        const order = await prisma.order.findFirst({
+            where: { id: order_id, deleted_at: null },
+        });
+
+        if (!order) {
+            return get_error_response(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
+                { order_id }
+            );
+        }
+        if (order.status !== ORDER.PREPARING) {
+            return get_error_response(
+                ERROR_CODES.ORDER_NOT_PREPARING,
+                STATUS_CODE.BAD_REQUEST,
+                { order_id }
+            );
+        }
+
+        /* ---------- 2. Lấy chi tiết đơn hàng cho template_id ---------- */
+        const orderDetail = await prisma.order_detail.findFirst({
+            where: {
+                order_id,
+                product_id: template_id,
+                deleted_at: null,
+            },
+            select: { quantity_sold: true },
+        });
+
+        if (!orderDetail) {
+            return get_error_response(
+                ERROR_CODES.DETAIL_ORDER_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
+                { order_id, template_id }
+            );
+        }
+
+        /* ---------- 3. Lấy batch_code trong detail_export ---------- */
+        const detailExport = await prisma.detail_export.findFirst({
+            where: { export_id, product_id: template_id, deleted_at: null },
+            select: { batch_code: true },
+        });
+
+        if (!detailExport) {
+            return get_error_response(
+                ERROR_CODES.EXPORT_WAREHOUSE_DETAIL_EXPORT_NOT_FOUND,
+                STATUS_CODE.BAD_REQUEST,
+                { template_id }
+            );
+        }
+        /* ---------- 4. Transaction xuất kho ---------- */
+        const result = await prisma.$transaction(async (tx) => {
+            /* 4.1. Kiểm tra phiếu xuất kho */
+            const exportWarehouse = await tx.export_warehouse.findFirst({
+                where: { id: export_id, deleted_at: null },
+            });
+
+            if (!exportWarehouse) {
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_NOT_FOUND);
+            }
+            if (exportWarehouse.status !== EXPORT_WAREHOUSE.PROCESSING) {
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_NOT_PENDING);
+            }
+
+            /* 4.2. Kiểm tra người dùng */
+            const account = await tx.account.findFirst({
+                where: { account_id, deleted_at: null },
+            });
+
+            if (!account) throw new Error(ERROR_CODES.ACCOUNT_NOT_FOUND);
+            if (account.role_id !== ROLE.EMPLOYEE_WAREHOUSE)
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED);
+            if (account.employee_id !== exportWarehouse.employee_id)
+                throw new Error(ERROR_CODES.EXPORT_WAREHOUSE_EMPLOYEE_NOT_AUTHORIZED);
+
+            /* 4.3. Kiểm tra serial còn tồn kho */
+            const serialInfo = await queryHelper.queryRaw(`
+          SELECT
+            pt.device_serial,
+            pb.template_id,
+            pt.status,
+            pt.production_id
+          FROM production_tracking pt
+          JOIN production_batches pb
+            ON pt.production_batch_id = pb.production_batch_id
+          WHERE pt.device_serial = '${serial_number}'
+            AND pt.is_deleted IS FALSE
+            AND pb.template_id = '${template_id}'
+        `);
+
+            if (!serialInfo?.length)
+                throw new Error(
+                    `${ERROR_CODES.SERIAL_NUMBER_NOT_FOUND}: ${serial_number}`
+                );
+            if (serialInfo[0].status !== "in_stock")
+                throw new Error(
+                    `${ERROR_CODES.SERIAL_NUMBER_NOT_IN_STOCK}: ${serial_number}`
+                );
+
+            /* 4.4. Kiểm tra batch_product_detail */
+            const batchDetail = await tx.batch_product_detail.findFirst({
+                where: {
+                    batch_production_id,
+                    serial_number,
+                    deleted_at: null,
+                },
+            });
+
+            if (!batchDetail)
+                throw new Error(
+                    `${ERROR_CODES.SERIAL_NUMBER_NOT_FOUND_IN_BATCH_PRODUCTION}: ${serial_number}`
+                );
+            if (batchDetail.exp_batch_id)
+                throw new Error(
+                    `${ERROR_CODES.SERIAL_NUMBER_IS_EXPORTED}: ${serial_number}`
+                );
+
+            /* 4.5. Trừ tồn kho */
+            const warehouseInventory = await tx.warehouse_inventory.findFirst({
+                where: {
+                    batch_code: batchDetail.imp_batch_id,
+                    product_id: template_id,
+                    deleted_at: null,
+                },
+            });
+
+            if (!warehouseInventory)
+                throw new Error(
+                    `${ERROR_CODES.WAREHOUSE_INVENTORY_NOT_FOUND}: ${serial_number}`
+                );
+            if (warehouseInventory.stock <= 0)
+                throw new Error(
+                    `${ERROR_CODES.INSUFFICIENT_STOCK}: ${serial_number}`
+                );
+
+            /* ---------- 5. Cập nhật dữ liệu ---------- */
+            await Promise.all([
+                // Batch detail
+                tx.batch_product_detail.update({
+                    where: { id: batchDetail.id },
+                    data: {
+                        exp_batch_id: detailExport.batch_code,
+                        updated_at: new Date(),
+                    },
+                }),
+                // Tồn kho
+                tx.warehouse_inventory.update({
+                    where: { id: warehouseInventory.id },
+                    data: {
+                        stock: warehouseInventory.stock - 1,
+                        updated_at: new Date(),
+                    },
+                }),
+                // Tracking
+                tx.production_tracking.updateMany({
+                    where: {
+                        production_batch_id: batch_production_id,
+                        device_serial: serial_number,
+                        is_deleted: false,
+                    },
+                    data: { status: "stock_out" },
+                }),
+            ]);
+
+            /* 5.1. Đổi trạng thái đơn hàng & phiếu xuất */
+            await tx.order.update({
+                where: { id: order_id },
+                data: { status: ORDER.PENDING_SHIPPING },
+            });
+
+            await tx.export_warehouse.update({
+                where: { id: export_id },
+                data: { status: EXPORT_WAREHOUSE.COMPLETED, updated_at: new Date() },
+            });
+
+            /* ---------- 6. Kết quả ---------- */
+            return {
+                template_id,
+                serial_number,
+                batch_production_id,
+                batch_code: detailExport.batch_code,
+                success: true,
+            };
+        });
+
+        return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, result);
+    } catch (err) {
+        console.error("[Export Product] Lỗi", {
+            error: err.message,
+            export_id,
+            order_id,
+            serial_number,
+        });
+
+        // Bóc tách lỗi kèm serial (nếu có)
+        if (typeof err.message === "string" && err.message.includes(":")) {
+            const [code, serial] = err.message.split(":").map((s) => s.trim());
+            return get_error_response(code, STATUS_CODE.BAD_REQUEST, {
+                serial_number: serial,
+            });
+        }
+
+        return get_error_response(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            STATUS_CODE.INTERNAL_SERVER_ERROR,
+            { message: "Đã xảy ra lỗi không xác định khi xuất kho" }
+        );
+    }
+}
+
 module.exports = {
     createExportWarehouseService: createExportWarehouse,
     getExportWarehouseService,
     getExportWarehouseDetailService,
     startExportWarehouseService,
-    exportProductByOrderService,
+    exportSingleProductService,
     getProcessExportWarehouseService,
     getExportWarehouseNotFinishForEmployee,
     validateExportDeviceService,
     getDeviceDetailsService,
-    scanExportDeviceService
+    scanExportDeviceService,
+    exportProductByOrderServiceByList
 }
