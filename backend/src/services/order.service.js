@@ -1333,8 +1333,8 @@ async function confirmShippingOrderService(order_id, image_proof, account_id) {
             );
         }
 
-        const employee = await prisma.account.findUnique({
-            where: { id: account_id, deleted_at: null }
+        const employee = await prisma.account.findFirst({
+            where: { account_id: account_id, deleted_at: null }
         });
 
         if (!employee) {
