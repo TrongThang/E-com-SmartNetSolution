@@ -621,14 +621,15 @@ async function getOrdersForCustomer(customer_id, filters, logic, limit, sort, or
  * @param {string} order - Thứ tự sắp xếp
  * @returns {Object} - Danh sách đơn hàng của shipper
  */
-async function getOrdersForShipper(account_id, filters = [], logic = 'AND', limit = 20, sort = 'order.created_at', order = 'DESC') {
+async function getOrdersForShipper(username_shipper, filters = [], logic = 'AND', limit = 20, sort = 'order.created_at', order = 'DESC') {
     const account = await prisma.account.findFirst({
         where: {
-            account_id: account_id,
+            username: username_shipper,
             deleted_at: null
         }
     });
     const shipper_id = account.employee_id
+    console.log(account)
 
     // Thêm filter cho shipper_id
     const shipperFilter = {

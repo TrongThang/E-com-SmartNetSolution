@@ -67,11 +67,11 @@ class OrderController {
      * Lấy đơn hàng cho shipper cụ thể
      */
     async getOrdersForShipper(req, res) {
-        const { shipper_id } = req.params;
+        const { username_shipper } = req.params
         const { filter, logic, limit, sort, order } = req.query;
         
         const result = await getOrdersForShipper(
-            shipper_id,
+            username_shipper,
             filter,
             logic,
             limit,

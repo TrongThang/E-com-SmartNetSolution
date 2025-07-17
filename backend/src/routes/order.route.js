@@ -32,7 +32,7 @@ orderRouter.get('/admin/warehouse', asyncHandler(getOrdersForWarehouseEmployee))
 orderRouter.get('/admin/detail/:order_id', asyncHandler(getOrderDetailForAdministrator));
 
 // Routes cho shipper và employee
-orderRouter.get('/shipper/:shipper_id', asyncHandler(getOrdersForShipper));
+orderRouter.get('/shipper/:username_shipper', asyncHandler(getOrdersForShipper));
 orderRouter.get('/employee/:employee_id', asyncHandler(getOrdersForEmployee));
 
 // Routes cho customer
