@@ -216,7 +216,7 @@ async function check_info_product(product) {
             p.name, p.selling_price, p.status, COALESCE(SUM(w.stock), 0) AS total_quantity
         FROM product p
         LEFT JOIN warehouse_inventory w ON p.id = w.product_id
-        WHERE p.id = ${product.id}
+        WHERE p.id = '${product.id}'
         GROUP BY p.id, p.selling_price, p.status
     `);
     const product_actual = result_query[0];

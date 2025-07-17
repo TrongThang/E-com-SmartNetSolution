@@ -78,7 +78,8 @@ async function getExportWarehouseService(filter, limit, sort, order) {
         export_warehouse.export_date,
         export_warehouse.file_authenticate,
         export_warehouse.total_profit,
-        export_warehouse.note
+        export_warehouse.note,
+        export_warehouse.status
     `;
 
     let get_table = `export_warehouse`;
@@ -1105,7 +1106,7 @@ async function exportSingleProductService(
                 { order_id }
             );
         }
-        if (order.status !== ORDER.PREPARING) {
+        if (order.status !== ORDER.PREPARING || order.status !== ORDER.PENDING_SHIPPING) {
             return get_error_response(
                 ERROR_CODES.ORDER_NOT_PREPARING,
                 STATUS_CODE.BAD_REQUEST,

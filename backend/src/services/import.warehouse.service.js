@@ -126,7 +126,8 @@ async function getImportWarehouseService(filter, limit, sort, order) {
         import_warehouse.import_date,
         import_warehouse.file_authenticate,
         import_warehouse.total_money,
-        import_warehouse.note
+        import_warehouse.note,
+        import_warehouse.status
     `;
 
     let get_table = `\`import_warehouse\``;
@@ -585,6 +586,43 @@ async function getImportWarehouseNotFinishForEmployee(accountId) {
     return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, importWarehouse);
 }
 
+async function confirmFinishedImportWarehouseService(import_id, account_id) {
+    const account = await prisma.account.findFirst({
+        where: {
+            account_id: account_id,
+            deleted_at: null
+        }
+    })
+
+    if (!account) {
+        return get_error_response(ERROR_CODES.ACCOUNT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+    
+    const processImportWarehouse = await getProcessImportWarehouseService(import_id)
+
+    if (!processImportWarehouse) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+    
+    if (processImportWarehouse.data[0].total_serial_need > 0) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_NOT_FINISH, STATUS_CODE.NOT_FOUND);
+    }
+
+    const importWarehouseUpdate = await prisma.import_warehouse.update({
+        where: {
+            id: import_id
+        },
+        data: {
+            status: IMPORT_WAREHOUSE.FINISHED
+        }
+    })
+
+    if (!importWarehouseUpdate) {
+        return get_error_response(ERROR_CODES.IMPORT_WAREHOUSE_UPDATE_FAILED, STATUS_CODE.BAD_REQUEST);
+    }
+
+    return get_error_response(ERROR_CODES.SUCCESS, STATUS_CODE.OK, importWarehouseUpdate);
+}
 module.exports = {
     createImportWarehouse,
     getImportWarehouseService,
@@ -592,5 +630,6 @@ module.exports = {
     getProcessImportWarehouseService,
     StartImportWarehouseService,
     importProductService,
-    getImportWarehouseNotFinishForEmployee
+    getImportWarehouseNotFinishForEmployee,
+    confirmFinishedImportWarehouseService
 }

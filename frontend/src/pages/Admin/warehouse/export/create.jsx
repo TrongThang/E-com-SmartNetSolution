@@ -69,8 +69,8 @@ export default function CreateExportWarehousePage() {
 
             // API call would go here
             const response = await employeePrivate.post("/export-warehouse", { data: dataToSubmit })
-            console.log(response)
-            if (response.data.status_code === 200) {
+            
+            if (response.status_code === 200) {
                 const result = await Swal.fire({
                     title: "Thành công",
                     text: "Phiếu xuất kho đã được tạo thành công",

@@ -32,8 +32,8 @@ ORDER = {
 IMPORT_WAREHOUSE = {
     PENDING: 0, // Chờ thực hiện
     IMPORTING: 1,
-    COMPLETED: 2,
-    CANCELLED: 3
+    FINISHED: 2,
+    CANCELLED: 3,
 }
 
 EXPORT_WAREHOUSE = {
