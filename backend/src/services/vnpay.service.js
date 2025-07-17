@@ -147,12 +147,12 @@ const vnpay_return = (req, res, next) => {
     } else {
         console.log('❌ Sai chữ ký VNPay');
         // Redirect về trang lỗi
-        return res.redirect(`http://localhost:3000/profile/orders?paymentStatus=invalid`);
+        return res.redirect(`https://www.smartnetsolutions.io.vn/profile/orders?paymentStatus=invalid`);
     }
 };
 
 function getRedirectUrl(req, vnp_Params) {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const baseUrl = process.env.FRONTEND_URL || 'https://www.smartnetsolutions.io.vn';
     const mobileAppScheme = process.env.MOBILE_APP_SCHEME || 'myapp';
     
     // Xác định status dựa trên response code

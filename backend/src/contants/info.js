@@ -23,9 +23,6 @@ ORDER = {
     SHIPPING : 3,  // Đang giao hàng
     DELIVERED: 4,  // Đã giao hàng
     COMPLETED: 5,  // Hoàn thành
-    RETURNED : 6,  // Trả hàng
-    EXCHANGED: 7,  // Đổi hàng
-    REFUNDED : 8,   // Hoàn tiền
     PENDING_PAYMENT: 9, // Chờ thanh toán
 }
 
