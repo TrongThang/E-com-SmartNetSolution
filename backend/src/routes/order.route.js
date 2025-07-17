@@ -18,6 +18,7 @@ const {
 } = require('../controllers/order.controller');
 const orderRouter = express.Router();
 const { create_payment_url, vnpay_return } = require('../services/vnpay.service');
+const authMiddleware = require('../middleware/auth.middleware');
 
 const asyncHandler = (fn) => {
     return (req, res, next) => {
@@ -43,8 +44,8 @@ orderRouter.patch('/finished', asyncHandler(confirmFinishedOrder))
 
 // Confirm đơn hàng
 orderRouter.patch('/admin/respond-orders', asyncHandler(respondListOrder));
-orderRouter.patch('/admin/assign-shipper', asyncHandler(assignShipperToOrders));
-orderRouter.patch('/admin/shipping-order', asyncHandler(startShippingOrder));
+orderRouter.patch('/admin/assign-shipper', authMiddleware, asyncHandler(assignShipperToOrders));
+orderRouter.patch('/admin/shipping-order', authMiddleware,asyncHandler(startShippingOrder));
 orderRouter.patch('/admin/finish-shipping-order', asyncHandler(confirmShippingOrder));
 
 // VNPAY

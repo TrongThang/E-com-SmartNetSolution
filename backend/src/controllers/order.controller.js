@@ -135,7 +135,7 @@ class OrderController {
     }
 
     async startShippingOrder(req, res) {
-        const account_id = req.user.userId;
+        const account_id = req.user.employeeId;
         const { order_id } = req.body;
 
         const result = await StartShippingOrderService(order_id, account_id);
@@ -143,7 +143,7 @@ class OrderController {
     }
 
     async confirmShippingOrder(req, res) {
-        const account_id = req.user.userId;
+        const account_id = req.user.employeeId;
         const { order_id, image_proof } = req.body;
 
         const result = await confirmShippingOrderService(order_id, image_proof, account_id);
