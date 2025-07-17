@@ -1106,7 +1106,7 @@ async function exportSingleProductService(
                 { order_id }
             );
         }
-        if (order.status !== ORDER.PREPARING || order.status !== ORDER.PENDING_SHIPPING) {
+        if (order.status !== ORDER.PREPARING && order.status !== ORDER.PENDING_SHIPPING) {
             return get_error_response(
                 ERROR_CODES.ORDER_NOT_PREPARING,
                 STATUS_CODE.BAD_REQUEST,
