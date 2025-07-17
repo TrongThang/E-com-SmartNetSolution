@@ -44,9 +44,9 @@ orderRouter.patch('/finished', asyncHandler(confirmFinishedOrder))
 
 // Confirm đơn hàng
 orderRouter.patch('/admin/respond-orders', asyncHandler(respondListOrder));
-orderRouter.patch('/admin/assign-shipper', authMiddleware, asyncHandler(assignShipperToOrders));
+orderRouter.patch('/admin/assign-shipper', asyncHandler(assignShipperToOrders));
 orderRouter.patch('/admin/shipping-order', authMiddleware,asyncHandler(startShippingOrder));
-orderRouter.patch('/admin/finish-shipping-order', asyncHandler(confirmShippingOrder));
+orderRouter.patch('/admin/finish-shipping-order', authMiddleware, asyncHandler(confirmShippingOrder));
 
 // VNPAY
 orderRouter.post('/create_payment_url', create_payment_url);

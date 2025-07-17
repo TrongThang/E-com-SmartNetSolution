@@ -77,7 +77,7 @@ export default function CreateExportWarehousePage() {
                     icon: "success",
                 })
 
-                router("/warehouses/export")
+                router("/admin/warehouses/export")
 
             } else {
                 Swal.fire({
