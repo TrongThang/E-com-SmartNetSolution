@@ -86,7 +86,7 @@ class OrderController {
      * Lấy đơn hàng cho nhân viên saler cụ thể
      */
     async getOrdersForEmployee(req, res) {
-        const { employee_id } = req.params;
+        const { employee_id } = req.user.employeeId;
         const { filter, logic, limit, sort, order } = req.query;
         
         const result = await getOrdersForEmployee(
