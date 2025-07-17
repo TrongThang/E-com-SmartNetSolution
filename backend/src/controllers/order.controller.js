@@ -136,6 +136,7 @@ class OrderController {
 
     async startShippingOrder(req, res) {
         const account_id = req.user.employeeId;
+        console.log('body', req.body)
         const { order_id } = req.body;
 
         const result = await StartShippingOrderService(order_id, account_id);

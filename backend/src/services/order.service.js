@@ -1257,15 +1257,15 @@ async function StartShippingOrderService(order_id, account_id) {
             );
         }
 
-        if (order.status !== ORDER.PREPARING) {
+        if (order.status !== ORDER.PENDING_SHIPPING) {
             return get_error_response(
                 errors=ERROR_CODES.ORDER_REQUIRE_STATUS_SHIPPING,
                 status_code=STATUS_CODE.BAD_REQUEST
             );
         }
 
-        const employee = await prisma.account.findUnique({
-            where: { id: account_id, deleted_at: null }
+        const employee = await prisma.account.findFirst({
+            where: { account_id: account_id, deleted_at: null }
         });
 
         if (!employee) {
