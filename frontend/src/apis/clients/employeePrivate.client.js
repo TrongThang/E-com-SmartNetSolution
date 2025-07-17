@@ -29,7 +29,7 @@ axiosPrivate.interceptors.request.use(
         });
 
         // Ưu tiên lấy token từ localStorage
-        const token = localStorage.getItem("authToken") || Cookies.get("token");
+        const token = localStorage.getItem("employeeToken") || Cookies.get("employeeToken");
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;

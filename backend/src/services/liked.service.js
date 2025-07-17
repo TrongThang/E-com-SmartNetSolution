@@ -69,16 +69,7 @@ const checkLikedService = async (customer_id, product_id) => {
 
 const createLikedService = async (product_id, customer_id) => {
     try {
-        // Chuyển đổi product_id từ chuỗi sang số nguyên
         const productId = product_id;
-        
-        if (isNaN(productId)) {
-            return get_error_response(
-                errors=ERROR_CODES.LIKED_PRODUCT_ID_REQUIRED,
-                status_code=STATUS_CODE.BAD_REQUEST,
-                data="Invalid product ID format"
-            );
-        }
 
         // Kiểm tra xem đã like sản phẩm này chưa
         const existingLike = await prisma.liked.findFirst({

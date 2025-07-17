@@ -274,17 +274,10 @@ async function createExportWarehouse(exportWarehouse, account_id) {
             const result = await tx.export_warehouse.findUnique({
                 where: { id: exportData.id },
                 include: {
-                    detail_exports: {
+                    detail_export: {
                         include: {
                             product: true,
                             order: true
-                        }
-                    },
-                    account: {
-                        select: {
-                            employee_id: true,
-                            username: true,
-                            fullname: true
                         }
                     }
                 }
@@ -356,7 +349,7 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
 
         // Kiểm tra tất cả sản phẩm trong một truy vấn
         const productIds = order.products.map((p) => p.id);
-
+        console.log('-----Product IDs', productIds)
         const products = await tx.product.findMany({
             where: {
                 id: { in: productIds },
@@ -364,6 +357,8 @@ async function addProductionForOrderWarehouse(tx, exportWarehouse_id, order, exp
             },
         });
 
+        console.log('-----Sản phẩm', products.length)
+        console.log(productIds.length)
         if (products.length !== productIds.length) {
             const missingProducts = productIds.filter(id => !products.find(p => p.id === id));
             throw new Error(`Không tìm thấy sản phẩm với ID: ${missingProducts.join(', ')}`);
