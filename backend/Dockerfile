@@ -1,5 +1,5 @@
 # Use Node.js LTS version as the base image with multi-architecture support
-FROM --platform=$TARGETPLATFORM node:18-alpine
+FROM --platform=$TARGETPLATFORM node:22-alpine
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++

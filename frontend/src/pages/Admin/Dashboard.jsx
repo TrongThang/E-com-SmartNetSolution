@@ -120,8 +120,7 @@ const AdminDashboard = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-6 mb-8">
+                {/* <div className="grid grid-cols-4 gap-6 mb-8">
                     {quickStats.map((stat, index) => (
                         <Card key={index} className="hover:shadow-lg transition-shadow">
                             <CardContent className="p-6">
@@ -140,7 +139,7 @@ const AdminDashboard = () => {
                             </CardContent>
                         </Card>
                     ))}
-                </div>
+                </div> */}
 
                 {/* Process Flow */}
                 <div className="mb-8">
