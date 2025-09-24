@@ -1,6 +1,6 @@
 # SmartNet Solutions Backend
 
-This is the backend service for the SmartNet Solutions E-commerce platform.
+This is the backend service for the SmartNet Solutions E-commerce platform by SNS Team CKC
 
 ## Project Setup
 
